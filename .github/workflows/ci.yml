@@ -43,6 +43,11 @@ jobs:
 
       - name: Run CI Checks
         run: composer ci:check
+        env:
+          # Vitest boots vite.config.ts, and laravel-vite-plugin refuses to
+          # start under CI=true because it takes it for an HMR dev server.
+          # Vitest serves nothing; the plugin is needed for the `@/` alias.
+          LARAVEL_BYPASS_ENV_CHECK: '1'
 
   # The Pest suite again on PostgreSQL 17, the production engine (ADR 006).
   pgsql:
