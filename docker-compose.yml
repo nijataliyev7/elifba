@@ -123,7 +123,7 @@ services:
                 condition: service_healthy
 
     db:
-        image: postgres:17.11
+        image: postgres:18.4
         restart: unless-stopped
         environment:
             POSTGRES_DB: elifba
@@ -140,7 +140,7 @@ services:
     # A pg_dump every night at BACKUP_AT Baku time into the `backups` volume,
     # kept BACKUP_KEEP_DAYS days. Now: `docker compose exec backup elifba-backup now`.
     backup:
-        image: postgres:17.11
+        image: postgres:18.4
         restart: unless-stopped
         init: true
         entrypoint: ['sh', '/usr/local/bin/elifba-backup']
