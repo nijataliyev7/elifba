@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, School } from 'lucide-react';
+import { BookOpenText, LayoutGrid, School } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as classes } from '@/routes/classes';
+import { index as words } from '@/routes/words';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'nav.classes',
         href: classes(),
         icon: School,
+    },
+    {
+        title: 'nav.words',
+        href: words(),
+        icon: BookOpenText,
     },
 ];
 

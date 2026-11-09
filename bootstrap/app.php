@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Children's names and the pasted list (which holds surnames) never go
         // into the session as old input when validation fails (§7).
-        $exceptions->dontFlash(['text', 'names', 'display_name']);
+        $exceptions->dontFlash(['text', 'syllables', 'word', 'names', 'display_name']);
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

@@ -2,8 +2,8 @@
 
 namespace App\Domain\Classroom\Models;
 
-use App\Domain\Classroom\Models\Concerns\BelongsToTeacher;
 use App\Domain\Classroom\Policies\StudentPolicy;
+use App\Models\Concerns\BelongsToTeacher;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\StudentFactory;

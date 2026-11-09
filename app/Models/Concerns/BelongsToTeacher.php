@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Classroom\Models\Concerns;
+namespace App\Models\Concerns;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;

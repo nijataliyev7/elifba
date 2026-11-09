@@ -39,6 +39,22 @@ final readonly class HiddenWordData
     }
 
     /**
+     * The field names in validation messages, in the interface language.
+     *
+     * @return array<string, string>
+     */
+    public static function attributes(): array
+    {
+        $name = static function (string $field): string {
+            $name = __("words.attributes.{$field}");
+
+            return is_string($name) ? $name : $field;
+        };
+
+        return ['pack' => $name('pack'), 'word' => $name('text')];
+    }
+
+    /**
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
      */
@@ -69,7 +85,7 @@ final readonly class HiddenWordData
      */
     public static function validate(array $input): self
     {
-        return self::fromArray(Validator::make(self::prepare($input), self::rules())->validate());
+        return self::fromArray(Validator::make(self::prepare($input), self::rules(), [], self::attributes())->validate());
     }
 
     /**

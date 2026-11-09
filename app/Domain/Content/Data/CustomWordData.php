@@ -14,9 +14,10 @@ use Illuminate\Validation\ValidationException;
 /**
  * A teacher's own word as the teacher adds or edits it
  * (docs/architecture.md §3 "Teacher words", ADR 007): the pack, the word as
- * written and an optional syllable override. `prepare()` normalizes the
- * input (phone keyboards type Cyrillic ә) and drops an override equal to
- * the Syllabifier's split; `rules()` holds the pack-word rules
+ * written and an optional syllable override. `prepare()` reads an override
+ * typed as one string with hyphens (`pom-i-dor`, the page's field) as its
+ * parts, normalizes the input (phone keyboards type Cyrillic ә) and drops an
+ * override equal to the Syllabifier's split; `rules()` holds the pack-word rules
  * (`WordRules`), the length cap, no collision with the pack's built-in
  * words and a word level that fits. The teacher's own duplicates and the
  * count cap need the teacher: `AddCustomWord` and `UpdateCustomWord` check
@@ -49,8 +50,41 @@ final readonly class CustomWordData
     }
 
     /**
-     * Normalizes the word and each override part; an empty override, or one
-     * equal to the Syllabifier's split, becomes null.
+     * The field names in validation messages, in the interface language.
+     *
+     * @return array<string, string>
+     */
+    public static function attributes(): array
+    {
+        return [
+            'pack' => self::attribute('pack'),
+            'text' => self::attribute('text'),
+            'syllables' => self::attribute('syllables'),
+            'syllables.*' => self::attribute('syllables'),
+        ];
+    }
+
+    /**
+     * An override typed as one string, split at its hyphens (a dash a phone
+     * keyboard puts in place of one counts too); empty parts are dropped,
+     * so a blank field is no override.
+     *
+     * @return list<string>
+     */
+    public static function parseSyllables(string $typed): array
+    {
+        $parts = preg_split('/[-\x{2010}\x{2011}\x{2012}\x{2013}\x{2014}\x{2212}]/u', $typed) ?: [];
+
+        return array_values(array_filter(
+            array_map(static fn (string $part): string => Az::normalize($part), $parts),
+            static fn (string $part): bool => $part !== '',
+        ));
+    }
+
+    /**
+     * Normalizes the word and each override part; an override typed as one
+     * string is split at its hyphens first. An empty override, or one equal
+     * to the Syllabifier's split, becomes null.
      *
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
@@ -59,6 +93,10 @@ final readonly class CustomWordData
     {
         if (is_string($input['text'] ?? null)) {
             $input['text'] = Az::normalize($input['text']);
+        }
+
+        if (is_string($input['syllables'] ?? null)) {
+            $input['syllables'] = self::parseSyllables($input['syllables']);
         }
 
         if (is_array($input['syllables'] ?? null)) {
@@ -93,7 +131,7 @@ final readonly class CustomWordData
      */
     public static function validate(array $input): self
     {
-        return self::fromArray(Validator::make(self::prepare($input), self::rules())->validate());
+        return self::fromArray(Validator::make(self::prepare($input), self::rules(), [], self::attributes())->validate());
     }
 
     /**
@@ -108,6 +146,13 @@ final readonly class CustomWordData
             'text' => $this->text,
             'syllables' => $this->syllables,
         ];
+    }
+
+    private static function attribute(string $field): string
+    {
+        $name = __("words.attributes.{$field}");
+
+        return is_string($name) ? $name : $field;
     }
 
     /**

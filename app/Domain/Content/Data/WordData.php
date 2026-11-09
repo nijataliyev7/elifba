@@ -47,6 +47,15 @@ final readonly class WordData
     }
 
     /**
+     * The syllables joined with hyphens (`al-ma`), as a teacher reads and
+     * types them.
+     */
+    public function hyphenated(): string
+    {
+        return implode('-', $this->syllables);
+    }
+
+    /**
      * The lowercase letters the word uses, for the learned-letters filter.
      *
      * @return list<string>

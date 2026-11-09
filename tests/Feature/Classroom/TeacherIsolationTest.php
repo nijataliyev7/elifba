@@ -2,6 +2,7 @@
 
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
+use App\Domain\Content\Models\CustomWord;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Play\Models\GameSession;
 use App\Models\User;
@@ -14,7 +15,7 @@ use Tests\Support\Games;
 
 /*
  * Teacher isolation (docs/architecture.md §7). Every route with a `{class}`,
- * `{student}` or `{game}` parameter must have a case below; the first test
+ * `{student}`, `{game}` or `{word}` parameter must have a case below; the first test
  * fails when one is missing, so a new route cannot skip this file.
  *
  * Each case is a request teacher A may make on A's own data. The tests make
@@ -23,14 +24,14 @@ use Tests\Support\Games;
  * route, and B's refusal is the isolation, not a wrong URL).
  */
 
-const ISOLATED_PARAMETERS = ['class', 'student', 'game'];
+const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word'];
 
 /**
  * Teacher A owns 1A (two active students, an archived one and a live
- * game), 1B (one student) and an archived 2A; teacher B owns their own 1A
- * with one student and a game.
+ * game), 1B (one student), an archived 2A and a word of their own; teacher
+ * B owns their own 1A with one student and a game, and a word.
  *
- * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession}
+ * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord}
  */
 function isolationWorld(): array
 {
@@ -57,6 +58,9 @@ function isolationWorld(): array
         'classB' => $classB,
         'studentB' => Student::factory()->for($classB)->create(['display_name' => 'Nigar']),
         'gameB' => Games::start($classB, seed: 2),
+        // A teacher word may be a child's name, like a display name.
+        'wordA' => CustomWord::factory()->for($a, 'teacher')->create(['pack' => 'fruit', 'text' => 'Aysel']),
+        'wordB' => CustomWord::factory()->for($b, 'teacher')->create(['pack' => 'fruit', 'text' => 'pomidor']),
     ];
 }
 
@@ -71,6 +75,7 @@ function isolationCases(): array
     $classA = static fn (array $w): array => ['class' => $w['classA']->id];
     $studentA = static fn (array $w): array => ['class' => $w['classA']->id, 'student' => $w['studentA']->id];
     $gameA = static fn (array $w): array => ['game' => $w['gameA']->id];
+    $wordA = static fn (array $w): array => ['word' => $w['wordA']->id];
 
     return [
         'GET classes/{class}' => ['classes.show', $classA, $none],
@@ -99,6 +104,8 @@ function isolationCases(): array
         'GET games/{game}/remote' => ['games.remote', $gameA, $none],
         'GET classes/{class}/rankings' => ['classes.rankings', $classA, $none],
         'GET classes/{class}/podium' => ['classes.podium', $classA, $none],
+        'PATCH words/{word}' => ['words.update', $wordA, static fn (array $w): array => ['pack' => 'fruit', 'text' => 'kələm', 'syllables' => 'kə-ləm']],
+        'DELETE words/{word}' => ['words.destroy', $wordA, $none],
     ];
 }
 
@@ -142,6 +149,8 @@ function isolationSnapshot(): array
         'game_rounds' => $rows('game_rounds'),
         'game_answers' => $rows('game_answers'),
         'guest_boards' => $rows('guest_boards'),
+        'custom_words' => $rows('custom_words'),
+        'hidden_words' => $rows('hidden_words'),
     ];
 }
 
@@ -160,7 +169,7 @@ function isolationRequest(string $case, array $world): TestResponse
 
 $caseNames = static fn (): array => array_combine(array_keys(isolationCases()), array_keys(isolationCases()));
 
-it('has an isolation case for every route with {class}, {student} or {game}', function (): void {
+it('has an isolation case for every route with {class}, {student}, {game} or {word}', function (): void {
     $routes = array_keys(isolatedRoutes());
     $cases = array_keys(isolationCases());
 
@@ -296,7 +305,9 @@ it('lets the policies refuse another teacher on their own', function (): void {
 
     foreach (['update', 'delete'] as $ability) {
         expect(Gate::forUser($world['a'])->allows($ability, $student))->toBeTrue()
-            ->and(Gate::forUser($world['b'])->allows($ability, $student))->toBeFalse();
+            ->and(Gate::forUser($world['b'])->allows($ability, $student))->toBeFalse()
+            ->and(Gate::forUser($world['a'])->allows($ability, $world['wordA']))->toBeTrue()
+            ->and(Gate::forUser($world['b'])->allows($ability, $world['wordA']))->toBeFalse();
     }
 });
 

@@ -3,13 +3,16 @@
 namespace App\Domain\Content\Models;
 
 use App\Domain\Content\Data\WordData;
+use App\Domain\Content\Policies\CustomWordPolicy;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\Syllabifier;
+use App\Models\Concerns\BelongsToTeacher;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\CustomWordFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -24,6 +27,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * `build_word`. Setting `text` sets `word_key` (`word:{lower}`), which the
  * unique index on `(user_id, pack, word_key)` compares. The text may be a
  * child's name: never log it or put it in a URL; routes use the ULID.
+ * `{word}` binds only the current teacher's words (`BelongsToTeacher`) and
+ * passes `CustomWordPolicy`.
  *
  * @property string $id
  * @property int $user_id
@@ -36,11 +41,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read User $teacher
  */
 #[UseFactory(CustomWordFactory::class)]
+#[UsePolicy(CustomWordPolicy::class)]
 #[Fillable(['pack', 'text', 'syllables'])]
 class CustomWord extends Model
 {
     /** @use HasFactory<CustomWordFactory> */
-    use HasFactory, HasUlids;
+    use BelongsToTeacher, HasFactory, HasUlids;
 
     /**
      * `word:{lower}`, the content key a word plays under.

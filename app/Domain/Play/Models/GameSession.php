@@ -2,13 +2,13 @@
 
 namespace App\Domain\Play\Models;
 
-use App\Domain\Classroom\Models\Concerns\BelongsToTeacher;
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Policies\GameSessionPolicy;
 use App\Domain\Play\Support\Requester;
+use App\Models\Concerns\BelongsToTeacher;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\GameSessionFactory;

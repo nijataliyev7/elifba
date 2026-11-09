@@ -26,3 +26,4 @@ require __DIR__.'/classroom.php';
 require __DIR__.'/play.php';
 require __DIR__.'/rankings.php';
 require __DIR__.'/settings.php';
+require __DIR__.'/words.php';
