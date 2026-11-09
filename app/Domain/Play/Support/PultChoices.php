@@ -62,7 +62,9 @@ final class PultChoices
     public static function forGuestBoard(User $teacher): array
     {
         $classes = AzCollator::sortBy(
-            SchoolClass::query()->where('user_id', $teacher->id)->whereNull('archived_at')->get(),
+            // The setup options read the teacher's packs through `$class->teacher`.
+            SchoolClass::query()->where('user_id', $teacher->id)->whereNull('archived_at')->get()
+                ->each(static fn (SchoolClass $class): SchoolClass => $class->setRelation('teacher', $teacher)),
             static fn (SchoolClass $class): string => $class->name,
         );
         $perClass = [];

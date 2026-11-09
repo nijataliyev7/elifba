@@ -38,6 +38,7 @@ it('builds ten solvable rounds in every pack and level with all letters learned'
             foreach (LetterCase::cases() as $case) {
                 $rounds = $builder->build(
                     new GameSetupData($mechanic, $pack->key, $level->key, 10, $case),
+                    $pack,
                     Alphabet::letters(),
                     new Randomizer(new Mt19937(2026)),
                 );

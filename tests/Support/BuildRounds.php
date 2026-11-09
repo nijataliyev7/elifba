@@ -3,6 +3,7 @@
 namespace Tests\Support;
 
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
 use App\Domain\Play\Data\GameSetupData;
@@ -15,7 +16,7 @@ use Random\Randomizer;
 
 /**
  * Rounds of the build mechanics for unit tests, built from the real
- * content through `Playable::builder()` with a fixed seed, and the views of
+ * built-in content through `Playable::builder()` with a fixed seed, and the views of
  * a round the tests compare.
  */
 final class BuildRounds
@@ -28,6 +29,7 @@ final class BuildRounds
     {
         return Playable::builder($mechanic)->build(
             new GameSetupData($mechanic, $pack, $level, $rounds, $case),
+            app(ContentRepository::class)->pack($pack),
             $learned ?? Alphabet::letters(),
             new Randomizer(new Mt19937($seed)),
         );

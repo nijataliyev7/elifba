@@ -26,7 +26,8 @@ use Random\Randomizer;
  *
  * - Content: letters are the class's learned letters (targets: the
  *   teacher's choice among them, when given); syllables and words are
- *   `LevelData::keysFrom()` of the pack with the learned letters.
+ *   `LevelData::keysFrom()` of the teacher's pack with the learned letters,
+ *   so a teacher's own words and their syllables play too.
  * - Targets go round in shuffled decks (`RoundParts::deck()`), so every
  *   target comes up equally often and never twice in a row.
  * - Decoys for a letter are its confusables first (`Alphabet::confusables`,
@@ -61,9 +62,9 @@ final readonly class FindRoundBuilder implements RoundBuilder
         };
     }
 
-    public function build(GameSetupData $setup, array $learned, Randomizer $random): array
+    public function build(GameSetupData $setup, PackData $pack, array $learned, Randomizer $random): array
     {
-        $pack = $this->content->pack($setup->pack);
+        RoundParts::ensurePack($setup, $pack);
         $level = $this->content->level($setup->level);
 
         if ($this->shortage($pack, $level, $learned, $setup->letters) !== null) {

@@ -87,7 +87,7 @@ final class GameSetupOptions
                 'drawable' => Playable::draws($option['mechanic'], $option['pack']),
                 'startable' => $option['reason'] === null,
                 'reason' => $option['reason'],
-            ], Playable::options($learned)),
+            ], Playable::options($class->teacher, $learned)),
             'letters' => array_map(
                 static fn (string $letter): array => ['lower' => $letter, 'upper' => Az::upper($letter)],
                 $learned,

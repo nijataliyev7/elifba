@@ -21,7 +21,7 @@ Elifba's content — the 32-letter alphabet, six theme packs with words, picture
 
 - Teachers and contributors change content with a pull request whose diff the owner can review; CI rejects letters outside the alphabet, broken overrides, missing pictures and missing credits.
 - Deploys need no seeding step; tests read exactly what production reads.
-- There is no admin panel for content in v1; teacher-authored words, when they come, are a new `custom_words` table merged by `ContentRepository` (additive).
+- There is no admin panel for content in v1. Teacher-authored words came as foreseen, additively: `custom_words` and `hidden_words` tables merged per teacher by `Content\Support\TeacherPacks` next to `ContentRepository`, which still reads only the files ([007 teacher words](007-teacher-words.md)).
 - The syllabifier is right for native words; disputed or loanword splits are fixed by overrides, not by changing the algorithm.
 
 ## Alternatives rejected

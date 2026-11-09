@@ -86,9 +86,9 @@ abstract readonly class BuildRoundBuilder implements RoundBuilder
             : null;
     }
 
-    public function build(GameSetupData $setup, array $learned, Randomizer $random): array
+    public function build(GameSetupData $setup, PackData $pack, array $learned, Randomizer $random): array
     {
-        $pack = $this->content->pack($setup->pack);
+        RoundParts::ensurePack($setup, $pack);
         $level = $this->content->level($setup->level);
 
         if ($this->shortage($pack, $level, $learned) !== null) {

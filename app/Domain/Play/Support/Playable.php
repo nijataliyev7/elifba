@@ -10,11 +10,13 @@ use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\SlotStyle;
 use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\TeacherPacks;
 use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildWordRoundBuilder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
 use App\Domain\Play\Support\Mechanics\RoundBuilder;
+use App\Models\User;
 
 /**
  * The one server-side list of what the board can draw
@@ -94,7 +96,9 @@ final class Playable
 
     /**
      * Why this game cannot start for a class with these learned letters, as
-     * a message for the teacher; null when it can. The setup page and
+     * a message for the teacher; null when it can. `$pack` is the pack as the
+     * class's teacher plays it (`TeacherPacks`), so words the teacher hid can
+     * leave a level short (`too_few_*`). The setup page and
      * `GameSetupData::rules()` ask the same question.
      *
      * @param  list<string>  $learned
@@ -112,20 +116,21 @@ final class Playable
 
     /**
      * Every game the class could set up — each mechanic its level allows,
-     * in every pack — with the reason it cannot start, or null: what the
-     * setup page offers.
+     * in every pack as the class's teacher plays it — with the reason it
+     * cannot start, or null: what the setup page offers.
      *
      * @param  list<string>  $learned
      * @return list<array{mechanic: Mechanic, pack: PackData, level: LevelData, reason: string|null}>
      */
-    public static function options(array $learned): array
+    public static function options(User $teacher, array $learned): array
     {
         $content = app(ContentRepository::class);
+        $packs = app(TeacherPacks::class)->packs($teacher);
         $options = [];
 
         foreach ($content->levels() as $level) {
             foreach ($level->mechanics as $mechanic) {
-                foreach ($content->packs() as $pack) {
+                foreach ($packs as $pack) {
                     $options[] = [
                         'mechanic' => $mechanic,
                         'pack' => $pack,

@@ -36,6 +36,14 @@ return [
         'default' => 10,
     ],
 
+    // Teachers' own words in the theme packs (§3 "Teacher words", ADR 007):
+    // the longest word, in characters (at most 32, the column), and how many
+    // words one teacher may keep over all packs.
+    'custom_words' => [
+        'max_length' => 20,
+        'max_per_teacher' => 200,
+    ],
+
     // Who runs this instance; shown on /privacy (§7).
     'operator' => [
         'name' => env('ELIFBA_OPERATOR_NAME'),

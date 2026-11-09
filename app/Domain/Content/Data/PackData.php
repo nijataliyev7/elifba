@@ -42,6 +42,16 @@ final readonly class PackData
         );
     }
 
+    /**
+     * The same pack with other words: a teacher's pack (`TeacherPacks`).
+     *
+     * @param  list<WordData>  $words
+     */
+    public function withWords(array $words): self
+    {
+        return new self($this->key, $this->version, $this->title, $this->style, $words, $this->sentences);
+    }
+
     public function word(string $text): ?WordData
     {
         $lower = Az::lower($text);

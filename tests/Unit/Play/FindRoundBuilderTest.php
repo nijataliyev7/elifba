@@ -37,7 +37,7 @@ function findRounds(string $level, ?array $learned = null, int $seed = 7, int $r
         letters: $letters,
     );
 
-    return app(FindRoundBuilder::class)->build($setup, $learned ?? Alphabet::letters(), new Randomizer(new Mt19937($seed)));
+    return app(FindRoundBuilder::class)->build($setup, app(ContentRepository::class)->pack($pack), $learned ?? Alphabet::letters(), new Randomizer(new Mt19937($seed)));
 }
 
 /**

@@ -21,7 +21,8 @@ use Illuminate\Validation\ValidationException;
  * level, the letters to ask for. Every entry point (the setup page, A7's
  * phone and guest board) validates through `rules()`, which also refuses a
  * game the board cannot draw (`Playable`) or that the class's learned
- * letters leave too little content for, with a translated reason.
+ * letters, or the words its teacher hid, leave too little content for, with
+ * a translated reason.
  */
 final readonly class GameSetupData
 {
@@ -48,7 +49,7 @@ final readonly class GameSetupData
         return [
             'mechanic' => ['required', 'string', Rule::enum(Mechanic::class)],
             'pack' => ['required', 'string', Rule::in(array_keys($content->packs()))],
-            'level' => ['required', 'string', Rule::in(array_keys($content->levels())), new StartableGame($learned)],
+            'level' => ['required', 'string', Rule::in(array_keys($content->levels())), new StartableGame($learned, $class->teacher)],
             'rounds' => ['sometimes', 'integer', 'between:'.Config::integer('elifba.rounds.min').','.Config::integer('elifba.rounds.max')],
             'letter_case' => ['sometimes', 'nullable', 'string', Rule::enum(LetterCase::class)],
             'letters' => ['sometimes', 'nullable', 'array', 'list', 'max:'.Alphabet::count()],

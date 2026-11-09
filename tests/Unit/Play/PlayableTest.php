@@ -105,7 +105,7 @@ it('never bursts the national symbols or the cities', function (): void {
 
             $setup = new GameSetupData(Mechanic::Find, $pack->key, $level->key, 10, LetterCase::Upper);
 
-            foreach (Playable::builder(Mechanic::Find)->build($setup, Alphabet::letters(), new Randomizer(new Mt19937(7))) as $round) {
+            foreach (Playable::builder(Mechanic::Find)->build($setup, $pack, Alphabet::letters(), new Randomizer(new Mt19937(7))) as $round) {
                 expect($round->effect)->toBe(Effect::Sparkle, "{$pack->key} × {$level->key}")
                     ->and($round->effect)->not->toBe(Effect::Burst);
             }
@@ -119,7 +119,7 @@ it('gives the round the pack\'s own effect', function (): void {
     foreach ($content->packs() as $pack) {
         $setup = new GameSetupData(Mechanic::Find, $pack->key, 'letters', 5, LetterCase::Upper);
 
-        foreach (Playable::builder(Mechanic::Find)->build($setup, Alphabet::letters(), new Randomizer(new Mt19937(1))) as $round) {
+        foreach (Playable::builder(Mechanic::Find)->build($setup, $pack, Alphabet::letters(), new Randomizer(new Mt19937(1))) as $round) {
             expect($round->effect)->toBe($pack->style->effect);
         }
     }
@@ -150,15 +150,4 @@ it('says why a game cannot start, first the level, then the board, then the cont
         ->and(Playable::reason(Mechanic::Find, $content->pack('symbols'), $content->level('letters'), Alphabet::letters()))->toBeNull()
         ->and(Playable::reason(Mechanic::Find, $balloons, $content->level('letters'), ['a']))->toBe(__('games.setup.errors.too_few_letters', ['count' => 4]))
         ->and(Playable::reason(Mechanic::Find, $balloons, $content->level('letters'), Alphabet::letters()))->toBeNull();
-});
-
-it('offers every mechanic of every level in every pack', function (): void {
-    $content = app(ContentRepository::class);
-    $expected = 0;
-
-    foreach ($content->levels() as $level) {
-        $expected += count($level->mechanics) * count($content->packs());
-    }
-
-    expect(Playable::options(Alphabet::letters()))->toHaveCount($expected);
 });

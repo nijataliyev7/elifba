@@ -4,6 +4,8 @@ namespace App\Domain\Play\Support\Mechanics;
 
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Enums\Unit;
+use App\Domain\Play\Data\GameSetupData;
+use LogicException;
 use Random\Randomizer;
 
 /**
@@ -46,6 +48,18 @@ final class RoundParts
         }
 
         return $sequence;
+    }
+
+    /**
+     * A builder builds from the setup's own pack (as the teacher plays it).
+     *
+     * @throws LogicException when the pack is another one
+     */
+    public static function ensurePack(GameSetupData $setup, PackData $pack): void
+    {
+        if ($pack->key !== $setup->pack) {
+            throw new LogicException("The game is set up for the pack \"{$setup->pack}\", not \"{$pack->key}\".");
+        }
     }
 
     /**

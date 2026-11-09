@@ -20,10 +20,12 @@ use LogicException;
  * word.
  *
  * - Targets: the level's words of two or more syllables, with a picture.
+ *   A teacher's own word has none (ADR 007), so it never plays here.
  * - Tiles: the word's syllables as split from the word as written (its
  *   override when it has one), so «Bakı» gives «Ba», «kı» in lower case;
  *   `nə-nə` is one `nə` tile, used twice.
- * - Decoys: syllables of the level's other words, written lowercase.
+ * - Decoys: syllables of the level's other words with a picture, written
+ *   lowercase; a teacher's word gives none either.
  *
  * @phpstan-import-type Tile from BuildRoundBuilder
  */
@@ -61,8 +63,10 @@ final readonly class BuildWordRoundBuilder extends BuildRoundBuilder
         $decoys = [];
 
         foreach ($level->keysFrom($pack, $learned) as $key) {
-            if ($key !== $target) {
-                foreach (self::word($key, $pack)->syllables as $syllable) {
+            $word = self::word($key, $pack);
+
+            if ($key !== $target && $word->image !== null) {
+                foreach ($word->syllables as $syllable) {
                     $decoys[] = self::syllable(Az::lower($syllable));
                 }
             }
@@ -73,7 +77,7 @@ final readonly class BuildWordRoundBuilder extends BuildRoundBuilder
 
     protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template): PromptData
     {
-        $image = self::word($target, $pack)->image ?? throw new LogicException("{$target} has no picture.");
+        $image = self::word($target, $pack)->image ?? throw new LogicException('A build_word target has no picture.');
 
         return new PromptData(
             text: $template->text,
@@ -94,6 +98,7 @@ final readonly class BuildWordRoundBuilder extends BuildRoundBuilder
 
     private static function word(string $key, PackData $pack): WordData
     {
-        return $pack->word(RoundParts::value($key)) ?? throw new LogicException("{$pack->key} has no {$key}.");
+        // The key's text stays out of the message: a teacher's word may be a child's name.
+        return $pack->word(RoundParts::value($key)) ?? throw new LogicException("The pack \"{$pack->key}\" has no such word.");
     }
 }

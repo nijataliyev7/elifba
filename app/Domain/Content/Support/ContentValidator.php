@@ -13,6 +13,7 @@ use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\SlotStyle;
 use App\Domain\Content\Enums\Sound;
 use App\Domain\Content\Enums\Unit;
+use App\Domain\Content\Enums\WordProblem;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\Syllabifier;
@@ -690,13 +691,13 @@ final class ContentValidator
             $where .= " \"{$text}\"";
             $lower = Az::lower($text);
 
-            if (preg_match('/^\p{L}+$/u', $text) !== 1 || ! Alphabet::covers($text)) {
+            if (! WordRules::isWord($text)) {
                 $this->problem($file, "{$where} must be one word of alphabet letters, with no space, hyphen or sign");
 
                 continue;
             }
 
-            if ($text !== $lower && $text !== Az::upper(mb_substr($text, 0, 1)).mb_substr($lower, 1)) {
+            if (! WordRules::isCased($text)) {
                 $this->problem($file, "{$where} must be lowercase, or capitalised as a proper noun");
             }
 
@@ -712,34 +713,42 @@ final class ContentValidator
                 $this->problem($file, "{$where} needs an `image`");
             }
 
-            if (array_key_exists('syllables', $word)) {
-                $this->override($text, $word['syllables'], $file, $where);
-            } elseif (Syllabifier::vowelCount($text) === 0) {
-                $this->problem($file, "{$where} has no vowel, so it has no syllables");
-            }
+            $this->syllables($text, $word, $file, $where);
         }
 
         return $words === null ? null : count($words);
     }
 
     /**
-     * A `syllables` override must join back to the word exactly, with one
-     * vowel in each part (§3), and must differ from what the rule gives.
+     * A word without an override needs a vowel; an override must join back
+     * to the word exactly, with one vowel in each part (§3), and must differ
+     * from what the rule gives. The rules are `WordRules`, shared with
+     * teachers' words.
+     *
+     * @param  array<array-key, mixed>  $word
      */
-    private function override(string $text, mixed $syllables, string $file, string $where): void
+    private function syllables(string $text, array $word, string $file, string $where): void
     {
-        $parts = $this->strings($syllables, $file, "{$where}.syllables");
+        $parts = null;
 
-        if ($parts === null) {
-            return;
+        if (array_key_exists('syllables', $word)) {
+            $parts = $this->strings($word['syllables'], $file, "{$where}.syllables");
+
+            if ($parts === null) {
+                return;
+            }
         }
 
-        $shown = implode('-', $parts);
+        $shown = implode('-', $parts ?? []);
 
-        if (! Syllabifier::isSplitOf($text, $parts)) {
-            $this->problem($file, "{$where}.syllables \"{$shown}\" must join back to the word exactly, with one vowel in each part");
-        } elseif ($parts === Syllabifier::split($text)) {
-            $this->problem($file, "{$where}.syllables \"{$shown}\" is what the rule gives already; remove the override");
+        foreach (WordRules::problems($text, $parts) as $problem) {
+            match ($problem) {
+                WordProblem::NoVowel => $this->problem($file, "{$where} has no vowel, so it has no syllables"),
+                WordProblem::Split => $this->problem($file, "{$where}.syllables \"{$shown}\" must join back to the word exactly, with one vowel in each part"),
+                WordProblem::SplitByRule => $this->problem($file, "{$where}.syllables \"{$shown}\" is what the rule gives already; remove the override"),
+                // Reported by words() before this runs.
+                WordProblem::Letters, WordProblem::Casing => null,
+            };
         }
     }
 
@@ -806,11 +815,10 @@ final class ContentValidator
             }
         }
 
-        $wordLevels = array_filter($levels, static fn (LevelData $level): bool => $level->unit === Unit::Word);
         $sentenceLevels = array_filter($levels, static fn (LevelData $level): bool => $level->unit === Unit::Sentence);
 
-        foreach ($wordLevels === [] ? [] : $pack->words as $index => $word) {
-            if (array_filter($wordLevels, static fn (LevelData $level): bool => $level->fitsWord($word)) === []) {
+        foreach ($pack->words as $index => $word) {
+            if (! WordRules::fitsALevel($word, $levels)) {
                 $this->problem($file, "words[{$index}] \"{$word->text}\" has ".self::counted(count($word->syllables), 'syllable').' and fits no word level');
             }
         }

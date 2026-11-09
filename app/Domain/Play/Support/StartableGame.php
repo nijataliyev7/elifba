@@ -4,6 +4,8 @@ namespace App\Domain\Play\Support;
 
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\TeacherPacks;
+use App\Models\User;
 use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -11,8 +13,10 @@ use Illuminate\Contracts\Validation\ValidationRule;
 /**
  * The rule on `level` in `GameSetupData::rules()`: the chosen mechanic,
  * pack and level make a game the board can draw, with enough content made
- * of the class's learned letters (`Playable::reason()`). It stays quiet
- * when another field is invalid; that field's own rule reports it.
+ * of the class's learned letters (`Playable::reason()`) in the pack as the
+ * class's teacher plays it (`TeacherPacks`), the pack `StartGame` builds
+ * from. It stays quiet when another field is invalid; that field's own rule
+ * reports it.
  */
 final class StartableGame implements DataAwareRule, ValidationRule
 {
@@ -24,7 +28,10 @@ final class StartableGame implements DataAwareRule, ValidationRule
     /**
      * @param  list<string>  $learned
      */
-    public function __construct(private readonly array $learned) {}
+    public function __construct(
+        private readonly array $learned,
+        private readonly User $teacher,
+    ) {}
 
     /**
      * @param  array<array-key, mixed>  $data
@@ -40,7 +47,9 @@ final class StartableGame implements DataAwareRule, ValidationRule
     {
         $content = app(ContentRepository::class);
         $mechanic = is_string($this->data['mechanic'] ?? null) ? Mechanic::tryFrom($this->data['mechanic']) : null;
-        $pack = is_string($this->data['pack'] ?? null) && $content->hasPack($this->data['pack']) ? $content->pack($this->data['pack']) : null;
+        $pack = is_string($this->data['pack'] ?? null) && $content->hasPack($this->data['pack'])
+            ? app(TeacherPacks::class)->pack($this->teacher, $this->data['pack'])
+            : null;
         $level = is_string($value) ? ($content->levels()[$value] ?? null) : null;
 
         if ($mechanic === null || $pack === null || $level === null) {

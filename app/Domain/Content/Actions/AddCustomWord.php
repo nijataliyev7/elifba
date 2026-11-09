@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Domain\Content\Actions;
+
+use App\Domain\Content\Data\CustomWordData;
+use App\Domain\Content\Models\CustomWord;
+use App\Domain\Content\Support\TeacherLock;
+use App\Domain\Content\Support\WordRules;
+use App\Models\User;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Adds a teacher's own word to a theme pack (docs/architecture.md §3
+ * "Teacher words", ADR 007). `$data` has passed `CustomWordData::rules()`;
+ * under the teacher's lock this checks what needs the teacher: the word is
+ * not already one of theirs in that pack, and they keep at most
+ * `elifba.custom_words.max_per_teacher` words.
+ */
+final readonly class AddCustomWord
+{
+    /**
+     * @throws ValidationException on `text` when the teacher has the word in the pack or has too many words
+     */
+    public function handle(User $teacher, CustomWordData $data): CustomWord
+    {
+        return DB::transaction(function () use ($teacher, $data): CustomWord {
+            TeacherLock::acquire($teacher->id);
+
+            $max = Config::integer('elifba.custom_words.max_per_teacher');
+
+            if (CustomWord::query()->where('user_id', $teacher->id)->count() >= $max) {
+                throw ValidationException::withMessages(['text' => WordRules::message('too_many', ['max' => $max])]);
+            }
+
+            if (CustomWord::isTaken($teacher->id, $data->pack, $data->text)) {
+                throw ValidationException::withMessages(['text' => WordRules::message('taken')]);
+            }
+
+            $word = new CustomWord($data->toArray());
+            $word->user_id = $teacher->id;
+            $word->save();
+
+            return $word;
+        });
+    }
+}

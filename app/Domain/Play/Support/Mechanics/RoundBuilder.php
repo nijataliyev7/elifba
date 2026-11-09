@@ -25,11 +25,13 @@ interface RoundBuilder
     public function shortage(PackData $pack, LevelData $level, array $learned, ?array $letters = null): ?string;
 
     /**
-     * Every round of a game, in order. The same setup, letters and seed give
-     * the same rounds (only the round ids differ).
+     * Every round of a game, in order, from `$pack`: the setup's pack as the
+     * class's teacher plays it (`Content\Support\TeacherPacks`), the same
+     * pack `shortage()` was asked about. The same setup, pack, letters and
+     * seed give the same rounds (only the round ids differ).
      *
      * @param  list<string>  $learned
      * @return list<RoundData>
      */
-    public function build(GameSetupData $setup, array $learned, Randomizer $random): array;
+    public function build(GameSetupData $setup, PackData $pack, array $learned, Randomizer $random): array;
 }
