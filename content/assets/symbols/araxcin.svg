@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- araxçın: an embroidered velvet skullcap. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12,52 C12,22 60,22 60,52 Z" fill="#781E32"/>
+    <path d="M17,36 C24,28 48,28 55,36" fill="none" stroke="#F1B31C" stroke-width="1.8"/>
+    <circle cx="27" cy="42" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="25.5" cy="44.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="22.5" cy="44.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="21" cy="42" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="22.5" cy="39.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="25.5" cy="39.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="24" cy="42" r="1.4" fill="#FCEA2B" stroke="none"/>
+    <circle cx="39" cy="36" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="37.5" cy="38.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="34.5" cy="38.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="33" cy="36" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="34.5" cy="33.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="37.5" cy="33.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="36" cy="36" r="1.4" fill="#FCEA2B" stroke="none"/>
+    <circle cx="51" cy="42" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="49.5" cy="44.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="46.5" cy="44.6" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="45" cy="42" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="46.5" cy="39.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="49.5" cy="39.4" r="1.4" fill="#F1B31C" stroke="none"/>
+    <circle cx="48" cy="42" r="1.4" fill="#FCEA2B" stroke="none"/>
+    <rect x="11" y="50" width="50" height="8" rx="2" fill="#F1B31C"/>
+    <polyline points="14,56 17,52 20,56 23,52 26,56 29,52 32,56 35,52 38,56 41,52 44,56 47,52 50,56 53,52 56,56 59,52" fill="none" stroke="#781E32" stroke-width="1.5"/>
+  </g>
+</svg>

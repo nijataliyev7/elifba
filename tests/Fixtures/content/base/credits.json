@@ -1,0 +1,36 @@
+{
+    "credits": [
+        {
+            "files": [
+                "content/assets/sample/alma.svg",
+                "content/assets/sample/backdrop.svg"
+            ],
+            "title": "Sample pictures",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "CC0-1.0"
+        },
+        {
+            "files": ["content/assets/sounds/*"],
+            "title": "Sample sounds",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "CC0-1.0"
+        },
+        {
+            "files": ["content/assets/avatars/*"],
+            "title": "Sample avatars",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "CC0-1.0",
+            "changes": "Drawn as plain shapes for the tests."
+        },
+        {
+            "files": ["content/assets/sample/words/*"],
+            "title": "Sample word pictures",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "CC0-1.0"
+        }
+    ]
+}

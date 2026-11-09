@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- xalça: a carpet with a medallion and fringes. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="5" x2="18" y2="11"/>
+    <line x1="18" y1="61" x2="18" y2="67"/>
+    <line x1="22" y1="5" x2="22" y2="11"/>
+    <line x1="22" y1="61" x2="22" y2="67"/>
+    <line x1="26" y1="5" x2="26" y2="11"/>
+    <line x1="26" y1="61" x2="26" y2="67"/>
+    <line x1="30" y1="5" x2="30" y2="11"/>
+    <line x1="30" y1="61" x2="30" y2="67"/>
+    <line x1="34" y1="5" x2="34" y2="11"/>
+    <line x1="34" y1="61" x2="34" y2="67"/>
+    <line x1="38" y1="5" x2="38" y2="11"/>
+    <line x1="38" y1="61" x2="38" y2="67"/>
+    <line x1="42" y1="5" x2="42" y2="11"/>
+    <line x1="42" y1="61" x2="42" y2="67"/>
+    <line x1="46" y1="5" x2="46" y2="11"/>
+    <line x1="46" y1="61" x2="46" y2="67"/>
+    <line x1="50" y1="5" x2="50" y2="11"/>
+    <line x1="50" y1="61" x2="50" y2="67"/>
+    <line x1="54" y1="5" x2="54" y2="11"/>
+    <line x1="54" y1="61" x2="54" y2="67"/>
+    <rect x="14" y="10" width="44" height="52" fill="#1E50A0"/>
+    <rect x="20" y="16" width="32" height="40" fill="#D22F27"/>
+    <polygon points="20,16 28,16 20,24" fill="#F1B31C"/>
+    <polygon points="52,16 44,16 52,24" fill="#F1B31C"/>
+    <polygon points="20,56 28,56 20,48" fill="#F1B31C"/>
+    <polygon points="52,56 44,56 52,48" fill="#F1B31C"/>
+    <polygon points="36,21 47,36 36,51 25,36" fill="#F1B31C"/>
+    <polygon points="36,28 41,36 36,44 31,36" fill="#1E50A0"/>
+    <circle cx="17" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="55" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="17" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="55" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="36" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="36" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="17" cy="36" r="1.2" fill="#FCEA2B" stroke="none"/>
+    <circle cx="55" cy="36" r="1.2" fill="#FCEA2B" stroke="none"/>
+  </g>
+</svg>

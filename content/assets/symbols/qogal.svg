@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- qoğal: a round layered Novruz pastry. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8,34 L8,42 A28,15 0 0 0 64,42 L64,34 Z" fill="#E27022"/>
+    <ellipse cx="36" cy="34" rx="28" ry="15" fill="#F1B31C"/>
+    <path d="M36,33 C38,33 39,35 37,36 C34,37.5 31,35 33,32.5 C35.5,29.5 41,30 42,34 C43,38.5 37,41 32,39.5 C26,37.5 26,30.5 32,28 C38,25.5 47,28 47.5,34" fill="none" stroke="#E27022" stroke-width="2"/>
+    <circle cx="24" cy="30" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="28" cy="25" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="45" cy="26" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="50" cy="31" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="22" cy="36" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="49" cy="38" r="0.9" fill="#000" stroke="none"/>
+    <circle cx="40" cy="24" r="0.9" fill="#000" stroke="none"/>
+    <path d="M8,34 L8,42 A28,15 0 0 0 64,42 L64,34" fill="none"/>
+  </g>
+</svg>

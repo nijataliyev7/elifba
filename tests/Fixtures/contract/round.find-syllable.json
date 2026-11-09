@@ -1,0 +1,48 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0B",
+    "index": 1,
+    "total": 10,
+    "mechanic": "find",
+    "unit": "syllable",
+    "pack": "balloons",
+    "level": "syllables-open",
+    "prompt": {
+        "text": "«ma» hecasını tap!",
+        "show": "ma",
+        "image": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "şa",
+            "image": null,
+            "content_key": "syllable:şa"
+        },
+        {
+            "id": "b",
+            "text": "qa",
+            "image": null,
+            "content_key": "syllable:qa"
+        },
+        {
+            "id": "c",
+            "text": "ma",
+            "image": null,
+            "content_key": "syllable:ma"
+        },
+        {
+            "id": "d",
+            "text": "to",
+            "image": null,
+            "content_key": "syllable:to"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["c"]
+    },
+    "effect": "burst"
+}

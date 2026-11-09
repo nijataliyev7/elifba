@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- səməni: green wheat sprouts in a dish, tied with a red ribbon. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18,48 L15,24 L21,34 L20,14 L26,30 L28,8 L32,28 L36,5 L40,28 L44,8 L46,30 L52,14 L51,34 L57,24 L54,48 Z" fill="#B1CC33"/>
+    <path d="M26,46 L26,32 M36,46 L36,26 M46,46 L46,32" fill="none" stroke="#5C9E31" stroke-width="2"/>
+    <path d="M12,48 L60,48 C60,56 52,62 36,62 C20,62 12,56 12,48 Z" fill="#FFF"/>
+    <path d="M14,53 L58,53" fill="none" stroke="#61B2E4" stroke-width="2"/>
+    <rect x="17" y="34" width="38" height="6" fill="#D22F27"/>
+    <path d="M36,37 C30,30 24,31 25,36 C26,41 31,40 36,37 Z" fill="#EA5A47"/>
+    <path d="M36,37 C42,30 48,31 47,36 C46,41 41,40 36,37 Z" fill="#EA5A47"/>
+    <path d="M35,38 L31,46 L34,45 L35,47 Z M37,38 L41,46 L38,45 L37,47 Z" fill="#D22F27"/>
+    <circle cx="36" cy="37" r="2.5" fill="#D22F27"/>
+  </g>
+</svg>

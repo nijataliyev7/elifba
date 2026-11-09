@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- papaq: a striped party hat with a pompom, worn on a face. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="36" cy="48" r="17" fill="#FCEA2B"/>
+    <circle cx="29.5" cy="49" r="2" fill="#000" stroke="none"/>
+    <circle cx="42.5" cy="49" r="2" fill="#000" stroke="none"/>
+    <path d="M29.5,56 C33,59.5 39,59.5 42.5,56" fill="none"/>
+    <path d="M22,38 L42,10 L52,37 C44,40 30,40.5 22,38 Z" fill="#61B2E4"/>
+    <path d="M27.5,30.5 L46.5,22.5 L49.2,29.8 L24,35.4 Z M34.2,21.2 L43.2,17.3 L44.7,21.3 L30.9,26.4 Z" fill="#FCEA2B" stroke-width="1.5"/>
+    <path d="M22,38 L42,10 L52,37 C44,40 30,40.5 22,38 Z" fill="none"/>
+    <circle cx="42" cy="9" r="4.5" fill="#EA5A47"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- əzgil: a brown medlar with its open five-pointed crown. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46,22 Q57.6,20.8 62,10 Q50.4,11.2 46,22 Z" fill="#5C9E31"/><path d="M46,22 L58.8,12.4" fill="none" stroke-width="1.5"/>
+    <circle cx="36" cy="42" r="22" fill="#A57939"/>
+    <path d="M50.1,25.1 A22,22 0 0 1 39.8,63.7 A57.2,57.2 0 0 0 50.1,25.1 Z" fill="#6A462F" stroke="none"/>
+    <circle cx="36" cy="42" r="22" fill="none"/>
+    <path d="M22,26 L14,19 L27,21 L29,11 L36,20 L43,11 L45,21 L58,19 L50,26 C45,23 41,22 36,22 C31,22 27,23 22,26 Z" fill="#6A462F"/>
+    <ellipse cx="36" cy="26" rx="9" ry="4" fill="#6A462F"/>
+    <path d="M19,44 C19,38 21,34 25,31" fill="none" stroke="#FFF" stroke-width="2.5"/>
+  </g>
+</svg>

@@ -1,0 +1,55 @@
+{
+    "levels": [
+        {
+            "key": "letters",
+            "title": { "az": "Hərflər", "en": "Letters" },
+            "unit": "letter",
+            "mechanics": ["find"],
+            "items": 4
+        },
+        {
+            "key": "syllables-open",
+            "title": { "az": "Qısa hecalar", "en": "Short syllables" },
+            "unit": "syllable",
+            "shapes": ["V", "CV", "VC"],
+            "mechanics": ["find", "build_syllable"],
+            "items": 4,
+            "decoys": 1
+        },
+        {
+            "key": "syllables-closed",
+            "title": { "az": "Uzun hecalar", "en": "Long syllables" },
+            "unit": "syllable",
+            "shapes": ["CVC", "VCC", "CVCC"],
+            "mechanics": ["find", "build_syllable"],
+            "items": 4,
+            "decoys": 1
+        },
+        {
+            "key": "words-short",
+            "title": { "az": "Qısa sözlər", "en": "Short words" },
+            "unit": "word",
+            "syllables": { "min": 1, "max": 2 },
+            "mechanics": ["find", "build_word"],
+            "items": 4,
+            "decoys": 1
+        },
+        {
+            "key": "words-long",
+            "title": { "az": "Uzun sözlər", "en": "Long words" },
+            "unit": "word",
+            "syllables": { "min": 3, "max": 4 },
+            "mechanics": ["find", "build_word"],
+            "items": 4,
+            "decoys": 1
+        },
+        {
+            "key": "sentences",
+            "title": { "az": "Cümlələr", "en": "Sentences" },
+            "unit": "sentence",
+            "words": { "min": 2, "max": 4 },
+            "mechanics": ["build_sentence"],
+            "decoys": 1
+        }
+    ]
+}

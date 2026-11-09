@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- kubik: a toy block with a circle, a triangle and a square on its faces. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12,22 36,34 36,62 12,50" fill="#EA5A47"/>
+    <polygon points="30.7,45.4 30.5,47.3 29.8,48.8 28.8,49.9 27.4,50.5 25.7,50.4 24,49.8 22.3,48.7 20.6,47.1 19.2,45.2 18.2,43 17.5,40.8 17.3,38.6 17.5,36.7 18.2,35.2 19.2,34.1 20.6,33.5 22.3,33.6 24,34.2 25.7,35.3 27.4,36.9 28.8,38.8 29.8,41 30.5,43.2" fill="#FCEA2B" stroke-width="1.5"/>
+    <polygon points="36,34 60,22 60,50 36,62" fill="#61B2E4"/>
+    <polygon points="48,33.6 55.2,46.2 40.8,53.4" fill="#FCEA2B" stroke-width="1.5"/>
+    <polygon points="12,22 36,34 60,22 36,10" fill="#FCEA2B"/>
+    <polygon points="24,22 36,28 48,22 36,16" fill="#EA5A47" stroke-width="1.5"/>
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0C",
+    "index": 2,
+    "total": 10,
+    "mechanic": "find",
+    "unit": "word",
+    "pack": "balloons",
+    "level": "words-short",
+    "prompt": {
+        "text": "«ŞAR» sözünü tap!",
+        "show": "ŞAR",
+        "image": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "TOP",
+            "image": null,
+            "content_key": "word:top"
+        },
+        {
+            "id": "b",
+            "text": "KUKLA",
+            "image": null,
+            "content_key": "word:kukla"
+        },
+        {
+            "id": "c",
+            "text": "MAŞIN",
+            "image": null,
+            "content_key": "word:maşın"
+        },
+        {
+            "id": "d",
+            "text": "ŞAR",
+            "image": null,
+            "content_key": "word:şar"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["d"]
+    },
+    "effect": "burst"
+}

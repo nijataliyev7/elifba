@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- əncir: a purple fig and a cut half with pink flesh. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24,14 L24,9" fill="none"/>
+    <path d="M24,14 C21,20 11,26 11,38 C11,47 18,51 24,51 C30,51 37,47 37,38 C37,26 27,20 24,14 Z" fill="#8967AA"/>
+    <path d="M17,24 C16,30 17,36 20,40" fill="none" stroke="#B399C8" stroke-width="2.5"/>
+    <path d="M47,24 C44,30 34,36 34,48 C34,57 41,61 47,61 C53,61 60,57 60,48 C60,36 50,30 47,24 Z" fill="#8967AA"/>
+    <path d="M47,27.5 C44.5,32 36.5,37 36.5,47 C36.5,55 41.5,58 47,58 C52.5,58 57.5,55 57.5,47 C57.5,37 49.5,32 47,27.5 Z" fill="#FFFFFF" stroke="none"/>
+    <path d="M47,31 C45,35 39.5,39 39.5,47 C39.5,53 43,55.5 47,55.5 C51,55.5 54.5,53 54.5,47 C54.5,39 49,35 47,31 Z" fill="#E67A94" stroke="none"/>
+    <ellipse cx="42" cy="46" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="47" cy="43" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="52" cy="46" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="40" cy="52" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="45" cy="50" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="50" cy="51" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="54" cy="53" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="43" cy="56" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="48" cy="55" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <ellipse cx="52" cy="57" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
+    <path d="M47,24 C44,30 34,36 34,48 C34,57 41,61 47,61 C53,61 60,57 60,48 C60,36 50,30 47,24 Z" fill="none"/>
+  </g>
+</svg>

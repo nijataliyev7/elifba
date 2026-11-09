@@ -1,0 +1,35 @@
+# Elifba — notes for coding agents
+
+Elifba is a Laravel 13 + Inertia 3 + React 19 app (the official React starter kit, PHP 8.4) where primary-school teachers in Azerbaijan run reading games — letters, syllables, words, sentences — on the classroom wall and drive them from their phone. Students have no accounts.
+
+**Read first:** `docs/architecture.md` (the contract the code follows), `docs/glossary.md` (Azerbaijani terms and the English names used in code), `docs/frontend.md` (UI rules) and `docs/decisions/` (the hard-to-reverse choices). When the model changes, change the contract first, in the same change.
+
+## Commands
+
+- `composer ci:check` — the gate CI runs: `vp check` (oxlint + oxfmt), `tsc --noEmit`, `vp test` (Vitest: `resources/js/**/*.test.ts` against `tests/Fixtures/contract/`), Pint, PHPStan level 8 (Larastan), Pest. Run it before calling work done.
+- `php artisan test --compact --filter=<name>` — the tests you touched.
+- `vendor/bin/pint --dirty` and `npm run check:fix` — fix formatting.
+- `php artisan wayfinder:generate --with-form` — regenerate typed routes after changing a route.
+- `composer setup` once (it also writes the Reverb keys to `.env`), then `composer dev` (Vite, Reverb, logs, `artisan serve`); Herd serves `http://elifba.test`. `composer dev:lan` runs the same stack on the laptop's LAN IP so a real phone can open `/pult` (architecture §10).
+
+## Rules
+
+- **Domains.** Code lives in `app/Domain/{Language,Content,Classroom,Play,Rankings}`, each with `Actions/`, `Models/`, `Enums/`, `Data/`, `Events/`, `Support/`, `Policies/` as needed. A domain may use the ones before it in that list, never the ones after: `Language → Content → Classroom → Play → Rankings`. The teacher is the starter kit's `App\Models\User`; every domain may reference it. A3 built `Classroom` and the minimum of `Language` (`Alphabet`, `Az`, `AzCollator`) and `Content` (`Avatars`) it needs; A4 extends `Language` (letter names, confusables, `Syllabifier`, `Ordinal`) and builds the rest of `Content`; A6 builds `Play` (games, rounds, answers, the round contract, `RoundJudge`, `PointsRule`, `SchoolCalendar`, `Playable`, the `find` builder, the board endpoints in `routes/play.php`) and A6.2 the board UI; A7 adds pairing and guest boards; A9 builds `Rankings` (read-only: `ClassRanking`, `DenseRank`, `PeriodData` — the `?period=day|week&date=` query A10's podium reuses — and the rankings page in `routes/rankings.php`) with `Language\Support\DateLabel` and `Ordinal::label()`.
+- **Only Actions write.** Controllers, commands and channel callbacks validate, call one action and shape the response. Validation lives in `*Data::rules()` and is reused by every entry point. The kit's own writes follow the same rule (`App\Actions\Fortify\*`, `App\Actions\Settings\UpdateLocale`).
+- **Statuses** change only through `TransitionGameSession` (`GameSessionStatus::allowedTransitions()`); derived things (the current round, rankings, places) are never stored.
+- **Facts are events after commit** (`GameSessionTransitioned`, `RoundSolved`); listeners never run inside the writing transaction.
+- **The board is the only writer of results.** The phone never posts hits; it sends client events. Every result goes through `RecordBoardEvents`, idempotent by `event_id` and fenced by `board_epoch`.
+- **Two board modes, one protocol.** A teacher board uses the teacher's session; a guest board uses its bearer, which reaches only the game it shows — never classes, rankings or other games. Codes come only from `PairingCode` and never authorize anything.
+- **One judge, one points rule.** `RoundJudge` (mirrored by `engine.ts` against the shared fixtures) and `PointsRule` (PHP only). The round contract changes in the PHP DTOs, the zod schemas in `contract.ts` and the fixtures together; TypeScript types are inferred from the schemas, never written by hand.
+- **Content is data.** Never hard-code words, letters, prompts or theme looks in PHP or TypeScript; add them to `content/` and run the validator. Text is cased, syllabified and ordinal-suffixed on the server (`Language`), never in TypeScript.
+- **Children's privacy.** A student is a display name and an avatar. Do not add fields about children. Never put a student's name in a log, an exception, a broadcast or a URL. New routes with `{class}`, `{student}` or `{game}` go into the isolation test. Nothing on the share card but architecture §6's list.
+- **No third-party requests** from pages: no CDNs, external fonts, analytics or trackers. Fonts are committed in `resources/fonts/` and loaded with the `local()` provider in `vite.config.ts`.
+- **Assets** enter only with an entry in `content/credits.json` and an allowed license; OpenMoji files stay in `content/assets/openmoji/` and never on the share card; state symbols follow architecture §8.
+- **Two languages.** Every interface string goes into `lang/az.json` (the base) and `lang/en.json`; `tests/Unit/TranslationsTest.php` fails on a missing or extra key, an empty string or different `:placeholders`. Keys are dotted (`settings.profile.title`); the only sentence keys are the framework's own (mail notifications, Fortify messages). React reads them with `useTranslation()`; layout props, breadcrumbs and nav items carry keys, and the component that renders them translates. Framework messages are `lang/{az,en}/{auth,pagination,passwords,validation}.php` and must keep the same keys. Content stays Azerbaijani in every locale.
+- **Locale** comes from `SetLocale`: `users.locale` → the session's choice → `APP_LOCALE` (`az`); never `Accept-Language`. The switch is `PUT /locale` (`LocaleController` → `UpdateLocale`). Locales are listed in `config/elifba.php`.
+- **Config** for Elifba's own values is `config/elifba.php` (`timezone` Asia/Baku, `locales`, `retention_days`, `pairing_code_ttl_minutes`, `guest_board_hours`, `abandon_after_hours`, `rounds`, `operator.*`); read it with `config('elifba.*')`, never `env()` outside `config/`.
+- **No queue.** `QUEUE_CONNECTION=sync` everywhere; broadcasts are `ShouldBroadcastNow`. `composer dev` runs no queue worker.
+- **Database portability.** Query builder and Eloquent only; no engine-specific SQL; Baku dates come from `SchoolCalendar`; names are sorted in PHP (`AzCollator`). Tests must pass on SQLite (the `ci` job) and PostgreSQL 17 (the `pgsql` job).
+- **PHPStan level 8** covers the kit's code too. Fix the code; never lower the level, add a baseline or `@phpstan-ignore`. Use `#[CurrentUser] User $user` in controllers instead of a nullable `$request->user()`.
+- **Tests** use Pest (`tests/Feature`, `tests/Unit`; both boot the app, only Feature refreshes the database). Fake time with `travelTo` around midnight and Monday boundaries; never call a real Reverb server in a test: tests run the `reverb` broadcaster with test keys and `tests/Support/FakeReverb` (`$this->reverb->sent`, `->down()`) in place of its HTTP client; or fake the event.
+- **Commits**: only when asked. Conventional subjects (`feat:`, `fix:`, `docs:`…).

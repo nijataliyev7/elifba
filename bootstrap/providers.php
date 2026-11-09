@@ -1,0 +1,11 @@
+<?php
+
+use App\Providers\AppServiceProvider;
+use App\Providers\ContentServiceProvider;
+use App\Providers\FortifyServiceProvider;
+
+return [
+    AppServiceProvider::class,
+    ContentServiceProvider::class,
+    FortifyServiceProvider::class,
+];

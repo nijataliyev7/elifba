@@ -1,0 +1,62 @@
+{
+    "key": "symbols",
+    "version": 3,
+    "title": { "az": "Milli rəmzlər", "en": "National symbols" },
+    "style": {
+        "item": "card",
+        "slot": "frame",
+        "effect": "sparkle",
+        "palette": ["#00B5E2", "#EF3340", "#509E2F"],
+        "sounds": {
+            "hit": "sounds/chime.mp3",
+            "miss": "sounds/bong.mp3",
+            "solved": "sounds/success.mp3"
+        }
+    },
+    "words": [
+        { "text": "bayraq", "image": "symbols/bayraq.svg" },
+        { "text": "ulduz", "image": "symbols/ulduz.svg" },
+        { "text": "aypara", "image": "symbols/aypara.svg" },
+        { "text": "buta", "image": "symbols/buta.svg" },
+        { "text": "nar", "image": "symbols/nar.svg" },
+        { "text": "xalça", "image": "symbols/xalca.svg" },
+        { "text": "kəlağayı", "image": "symbols/kelagayi.svg" },
+        { "text": "xarıbülbül", "image": "symbols/xaribulbul.svg" },
+        { "text": "tar", "image": "symbols/tar.svg" },
+        { "text": "kamança", "image": "symbols/kamanca.svg" },
+        { "text": "saz", "image": "symbols/saz.svg" },
+        { "text": "balaban", "image": "symbols/balaban.svg" },
+        { "text": "qaval", "image": "symbols/qaval.svg" },
+        { "text": "Novruz", "image": "symbols/novruz.svg" },
+        { "text": "səməni", "image": "symbols/semeni.svg" },
+        { "text": "tonqal", "image": "symbols/tonqal.svg" },
+        { "text": "yumurta", "image": "symbols/yumurta.svg" },
+        { "text": "şəkərbura", "image": "symbols/sekerbura.svg" },
+        { "text": "paxlava", "image": "symbols/paxlava.svg" },
+        { "text": "qoğal", "image": "symbols/qogal.svg" },
+        { "text": "sini", "image": "symbols/sini.svg" },
+        { "text": "samovar", "image": "symbols/samovar.svg" },
+        { "text": "armudu", "image": "symbols/armudu.svg" },
+        { "text": "çay", "image": "symbols/cay.svg" },
+        { "text": "papaq", "image": "symbols/papaq.svg" },
+        { "text": "çuxa", "image": "symbols/cuxa.svg" },
+        { "text": "araxçın", "image": "symbols/araxcin.svg" }
+    ],
+    "sentences": [
+        { "id": "bayragimiz-ucrenglidir", "text": "Bayrağımız üçrənglidir." },
+        { "id": "bayraqda-aypara-var", "text": "Bayraqda aypara var." },
+        { "id": "bayraqda-ulduz-var", "text": "Bayraqda ulduz var." },
+        { "id": "novruz-bahar-bayramidir", "text": "Novruz bahar bayramıdır." },
+        { "id": "semeni-yasildir", "text": "Səməni yaşıldır." },
+        { "id": "nenem-sekerbura-bisirir", "text": "Nənəm şəkərbura bişirir." },
+        { "id": "tonqal-yanir", "text": "Tonqal yanır." },
+        { "id": "babam-tar-calir", "text": "Babam tar çalır." },
+        { "id": "xalcada-buta-var", "text": "Xalçada buta var." },
+        { "id": "kelagayi-ipekdir", "text": "Kəlağayı ipəkdir." },
+        { "id": "xaribulbul-susada-bitir", "text": "Xarıbülbül Şuşada bitir." },
+        { "id": "biz-yumurta-boyayiriq", "text": "Biz yumurta boyayırıq." },
+        { "id": "armudu-stekanda-cay-var", "text": "Armudu stəkanda çay var." },
+        { "id": "qaval-seslenir", "text": "Qaval səslənir." },
+        { "id": "sinide-paxlava-var", "text": "Sinidə paxlava var." }
+    ]
+}

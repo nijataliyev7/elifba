@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- heyva: a golden quince with a leaf. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36,19 C34,15 34,12 35,8" fill="none"/>
+    <path d="M36,13 Q47.6,16.9 57,9 Q45.4,5.1 36,13 Z" fill="#5C9E31"/><path d="M36,13 L52.8,9.8" fill="none" stroke-width="1.5"/>
+    <path d="M36,19 C29,15 21,19 19,27 C15,31 13,40 16,48 C19,58 29,64 38,63 C48,63 57,56 58,46 C59,38 56,31 53,26 C50,19 42,16 36,19 Z" fill="#F1B31C"/>
+    <path d="M50,23 C57,31 59,43 55,52 C51,59 45,62 38,63 C48,63 57,56 58,46 C59,38 56,31 53,26 Z" fill="#F4AA41" stroke="none"/>
+    <path d="M28,20 C40,24 46,30 50,23 C46,19 40,17 36,19 C33,18 30,18.5 28,20 Z" fill="#F4AA41" stroke="none"/>
+    <path d="M36,19 C29,15 21,19 19,27 C15,31 13,40 16,48 C19,58 29,64 38,63 C48,63 57,56 58,46 C59,38 56,31 53,26 C50,19 42,16 36,19 Z" fill="none"/>
+    <path d="M36,19 C35,24 32,26 28,28" fill="none" stroke-width="1.5"/>
+    <path d="M34,60 l2,-3 l2,3 M33.5,58.5 l5,0" fill="none" stroke-width="1.5"/>
+    <path d="M21,36 C22,31 24,28 28,25" fill="none" stroke="#FFF" stroke-width="2.5"/>
+  </g>
+</svg>

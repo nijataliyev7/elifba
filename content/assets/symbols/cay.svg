@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- çay: hot tea in a pear-shaped glass on a saucer. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="36" cy="61" rx="24" ry="5" fill="#FFF"/>
+    <path d="M27,22 L45,22 C45,28 40,33 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,33 27,28 27,22 Z" fill="#92D3F5"/>
+    <path d="M30.2,28 L41.8,28 C40.6,31.5 40,34.5 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,34.5 31.4,31.5 30.2,28 Z" fill="#D22F27" stroke="none"/>
+    <path d="M30.2,28 L41.8,28" fill="none" stroke-width="1.5"/>
+    <path d="M27,22 L45,22 C45,28 40,33 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,33 27,28 27,22 Z" fill="none"/>
+    <path d="M29,46 C28,49 28.5,52 30.5,54.5" fill="none" stroke="#FFF" stroke-width="2"/>
+    <path d="M30,17 C27,14 33,12 30,8 M36,17 C33,14 39,12 36,8 M42,17 C39,14 45,12 42,8" fill="none" stroke="#9B9B9A" stroke-width="2"/>
+    <path d="M49,59 A6,6 0 0 1 61,59 Z" fill="#FCEA2B"/>
+    <path d="M55,59 L51.5,55.5 M55,59 L55,54 M55,59 L58.5,55.5" fill="none" stroke="#F1B31C" stroke-width="1.2"/>
+  </g>
+</svg>

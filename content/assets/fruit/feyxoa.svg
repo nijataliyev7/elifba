@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- feyxoa: a dark green feijoa and a cut half with pale flesh. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(-25 26 34)"><ellipse cx="26" cy="34" rx="12" ry="19" fill="#5C9E31"/><path d="M30,17 C37,24 38,42 30,52 C36,48 38,40 38,34 C38,26 35,20 30,17 Z" fill="#186648" stroke="none"/><ellipse cx="26" cy="34" rx="12" ry="19" fill="none"/><path d="M22,15 L23,11 L25,14 L26,10 L27,14 L29,11 L30,15" fill="none" stroke-width="1.5"/></g>
+    <circle cx="48" cy="47" r="15" fill="#5C9E31"/>
+    <circle cx="48" cy="47" r="12" fill="#FFF" stroke="none"/>
+    <circle cx="48" cy="47" r="7" fill="#B1CC33" stroke="none"/>
+    <ellipse cx="48" cy="43" rx="1.2" ry="1.2" fill="#6A462F" stroke="none"/>
+    <ellipse cx="51.8" cy="45.8" rx="1.2" ry="1.2" fill="#6A462F" stroke="none"/>
+    <ellipse cx="50.4" cy="50.2" rx="1.2" ry="1.2" fill="#6A462F" stroke="none"/>
+    <ellipse cx="45.6" cy="50.2" rx="1.2" ry="1.2" fill="#6A462F" stroke="none"/>
+    <ellipse cx="44.2" cy="45.8" rx="1.2" ry="1.2" fill="#6A462F" stroke="none"/>
+    <circle cx="48" cy="47" r="15" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- moruq: a red raspberry with its green cap. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36,8 L36,16" fill="none"/>
+    <g transform="translate(36 42) scale(1.25)">
+    <circle cx="-12.4" cy="-10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-6.2" cy="-10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="0" cy="-10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="6.2" cy="-10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="12.4" cy="-10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-9.3" cy="-5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-3.1" cy="-5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="3.1" cy="-5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="9.3" cy="-5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-12.4" cy="0" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-6.2" cy="0" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="6.2" cy="0" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="12.4" cy="0" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-9.3" cy="5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-3.1" cy="5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="3.1" cy="5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="9.3" cy="5.4" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-6.2" cy="10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="0" cy="10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="6.2" cy="10.7" r="4.6" fill="#EA5A47" stroke-width="1.2"/>
+    <circle cx="-14" cy="-12.3" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-7.8" cy="-12.3" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-1.6" cy="-12.3" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="4.6" cy="-12.3" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="10.8" cy="-12.3" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-10.9" cy="-7" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-4.7" cy="-7" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="1.5" cy="-7" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="7.7" cy="-7" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-14" cy="-1.6" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-7.8" cy="-1.6" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-1.6" cy="-1.6" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="4.6" cy="-1.6" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="10.8" cy="-1.6" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-10.9" cy="3.8" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-4.7" cy="3.8" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="1.5" cy="3.8" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="7.7" cy="3.8" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-7.8" cy="9.1" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="-1.6" cy="9.1" r="1.1" fill="#FFF" stroke="none"/>
+    <circle cx="4.6" cy="9.1" r="1.1" fill="#FFF" stroke="none"/>
+    <path d="M-13,-13 L-8,-18 L-5,-14 L0,-21 L5,-14 L8,-18 L13,-13 L6,-12 L0,-9 L-6,-12 Z" fill="#5C9E31"/>
+    </g>
+  </g>
+</svg>

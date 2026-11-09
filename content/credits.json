@@ -1,0 +1,67 @@
+{
+    "credits": [
+        {
+            "files": ["content/assets/avatars/*"],
+            "title": "Animal Pack Redux",
+            "author": "Kenney (kenney.nl)",
+            "source": "https://opengameart.org/content/animal-pack-redux",
+            "license": "CC0-1.0",
+            "changes": "Cut from the pack's vector sheet Vector/roundOutline.svg into one SVG per animal; shapes and colours unchanged."
+        },
+        {
+            "files": ["content/assets/sounds/*"],
+            "title": "Interface Sounds 1.0",
+            "author": "Kenney (kenney.nl)",
+            "source": "https://opengameart.org/content/interface-sounds",
+            "license": "CC0-1.0",
+            "changes": "Converted from OGG to MP3 and renamed: drop_002 → pop, glass_001 → chime, bong_001 → bong, confirmation_004 → success."
+        },
+        {
+            "files": ["content/assets/openmoji/*"],
+            "title": "OpenMoji 17.0.0",
+            "author": "OpenMoji – the open-source emoji and icon project",
+            "source": "https://openmoji.org/",
+            "license": "CC-BY-SA-4.0"
+        },
+        {
+            "files": ["content/assets/symbols/*"],
+            "title": "National and cultural symbols",
+            "author": "Elifba contributors",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
+            "files": [
+                "content/assets/fruit/*",
+                "content/assets/balloons/*",
+                "content/assets/train/*",
+                "content/assets/animals/*"
+            ],
+            "title": "Word pictures OpenMoji lacks, drawn in OpenMoji's style",
+            "author": "Elifba contributors",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
+            "files": ["content/assets/cities/*"],
+            "title": "City maps (outline from Natural Earth, public domain) and the Qız qalası backdrop",
+            "author": "Elifba contributors",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
+            "files": ["resources/fonts/andika/*"],
+            "title": "Andika 7.000",
+            "author": "SIL Global",
+            "source": "https://software.sil.org/andika/",
+            "license": "OFL-1.1"
+        },
+        {
+            "files": ["resources/fonts/inter/*"],
+            "title": "Inter",
+            "author": "The Inter Project Authors",
+            "source": "https://github.com/rsms/inter",
+            "license": "OFL-1.1"
+        }
+    ]
+}

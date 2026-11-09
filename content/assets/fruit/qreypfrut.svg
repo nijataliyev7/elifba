@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- qreypfrut: a yellow grapefruit and a cut half with pink flesh. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="26" cy="32" r="19" fill="#FCEA2B"/>
+    <path d="M35.5,15.5 A19,19 0 0 1 32.5,49.9 A47.5,47.5 0 0 0 35.5,15.5 Z" fill="#F4AA41" stroke="none"/>
+    <circle cx="26" cy="32" r="19" fill="none"/>
+    <path d="M13,30 C13,25 16,20 21,17" fill="none" stroke="#FFF" stroke-width="2.5"/>
+    <circle cx="47" cy="47" r="18" fill="#F1B31C"/>
+    <circle cx="47" cy="47" r="15.5" fill="#FFF" stroke="none"/>
+    <path d="M48.7,47.6 L61,48 A14,14 0 0 1 58.9,54.4 Z" fill="#E67A94" stroke="none"/>
+    <path d="M48.1,48.5 L57.7,56 A14,14 0 0 1 52.2,60 Z" fill="#E67A94" stroke="none"/>
+    <path d="M47,48.8 L50.4,60.6 A14,14 0 0 1 43.6,60.6 Z" fill="#E67A94" stroke="none"/>
+    <path d="M45.9,48.5 L41.8,60 A14,14 0 0 1 36.3,56 Z" fill="#E67A94" stroke="none"/>
+    <path d="M45.3,47.6 L35.1,54.4 A14,14 0 0 1 33,48 Z" fill="#E67A94" stroke="none"/>
+    <path d="M45.3,46.4 L33,46 A14,14 0 0 1 35.1,39.6 Z" fill="#E67A94" stroke="none"/>
+    <path d="M45.9,45.5 L36.3,38 A14,14 0 0 1 41.8,34 Z" fill="#E67A94" stroke="none"/>
+    <path d="M47,45.2 L43.6,33.4 A14,14 0 0 1 50.4,33.4 Z" fill="#E67A94" stroke="none"/>
+    <path d="M48.1,45.5 L52.2,34 A14,14 0 0 1 57.7,38 Z" fill="#E67A94" stroke="none"/>
+    <path d="M48.7,46.4 L58.9,39.6 A14,14 0 0 1 61,46 Z" fill="#E67A94" stroke="none"/>
+    <circle cx="47" cy="47" r="18" fill="none"/>
+  </g>
+</svg>

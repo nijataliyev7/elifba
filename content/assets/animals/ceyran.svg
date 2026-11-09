@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- ceyran: a goitered gazelle with a sandy back, a white belly and black curved horns. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21,42 L18,52 L21,62" fill="none" stroke-width="4.5"/>
+    <path d="M21,42 L18,52 L21,62" fill="none" stroke="#E27022" stroke-width="1.5"/>
+    <path d="M27,42 L25,52 L28,62" fill="none" stroke-width="4.5"/>
+    <path d="M27,42 L25,52 L28,62" fill="none" stroke="#F4AA41" stroke-width="1.5"/>
+    <path d="M44,42 L45,52 L43,62" fill="none" stroke-width="4.5"/>
+    <path d="M44,42 L45,52 L43,62" fill="none" stroke="#E27022" stroke-width="1.5"/>
+    <path d="M49,42 L50,52 L50,62" fill="none" stroke-width="4.5"/>
+    <path d="M49,42 L50,52 L50,62" fill="none" stroke="#F4AA41" stroke-width="1.5"/>
+    <path d="M19.5,63 L22.5,63" fill="none" stroke-width="3"/>
+    <path d="M26.5,63 L29.5,63" fill="none" stroke-width="3"/>
+    <path d="M41.5,63 L44.5,63" fill="none" stroke-width="3"/>
+    <path d="M48.5,63 L51.5,63" fill="none" stroke-width="3"/>
+    <path d="M16,36 C16,30 22,28 30,28 L46,28 C50,28 52,30 53,32 L55,36 C55,40 52,44 48,44 L22,44 C18,44 16,40 16,36 Z" fill="#F4AA41"/>
+    <path d="M20,40 C26,38 40,38 50,40 C50,42 49,44 48,44 L22,44 C21,44 20.5,42 20,40 Z" fill="#FFF" stroke="none"/>
+    <path d="M16,36 C16,30 22,28 30,28 L46,28 C50,28 52,30 53,32 L55,36 C55,40 52,44 48,44 L22,44 C18,44 16,40 16,36 Z" fill="none"/>
+    <path d="M16,33 C14,31 13,29 14,26" fill="none" stroke-width="2"/>
+    <path d="M49,31 C50,24 52,18 54,15 L60,17 C58,22 56,28 55,34 Z" fill="#F4AA41"/>
+    <path d="M54,15 C55,12 59,11 61,12 L66,18 C66,20 64,21 62,20 L58,19 Z" fill="#F4AA41"/>
+    <path d="M56,13 C54,8 55,4 58,3 M59,12 C59,7 61,4 64,4" fill="none" stroke-width="2.5"/>
+    <path d="M54,14 L51,11 L55,12 Z" fill="#F4AA41" stroke-width="1.5"/>
+    <circle cx="59.5" cy="15" r="1.2" fill="#000" stroke="none"/>
+    <path d="M58,17 L65,19.5" fill="none" stroke="#FFF" stroke-width="1.2"/>
+  </g>
+</svg>

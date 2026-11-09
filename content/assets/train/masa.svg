@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- masa: a wooden table. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="17" y="30" width="5" height="26" fill="#6A462F"/>
+    <rect x="50" y="30" width="5" height="26" fill="#6A462F"/>
+    <rect x="10" y="32" width="6" height="32" fill="#A57939"/>
+    <rect x="56" y="32" width="6" height="32" fill="#A57939"/>
+    <polygon points="14,22 58,22 66,30 6,30" fill="#A57939"/>
+    <rect x="6" y="30" width="60" height="6" fill="#6A462F"/>
+  </g>
+</svg>

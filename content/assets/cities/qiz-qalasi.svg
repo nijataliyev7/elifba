@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90">
+  <!-- The cities pack's backdrop: Qız qalası (the Maiden Tower) and the wall of İçərişəhər in Baku, by the Caspian. Elifba own art, MIT. -->
+  <!-- 16:9 and low contrast so cards stay readable: OpenMoji palette colours at low opacity over white, no black outline; the tower and wall stay in the bottom fifth (y 72–90). -->
+  <rect width="160" height="90" fill="#FFF"/>
+  <rect width="160" height="90" fill="#92D3F5" fill-opacity="0.22"/>
+  <g fill="#FFF" fill-opacity="0.75">
+    <ellipse cx="30" cy="18" rx="13" ry="4"/>
+    <ellipse cx="38" cy="15.5" rx="8" ry="4"/>
+    <ellipse cx="122" cy="26" rx="15" ry="4.5"/>
+    <ellipse cx="114" cy="23" rx="8" ry="4"/>
+    <ellipse cx="78" cy="10" rx="9" ry="3"/>
+  </g>
+  <rect y="86.5" width="160" height="3.5" fill="#61B2E4" fill-opacity="0.3"/>
+  <g stroke="#A57939" stroke-opacity="0.35" stroke-width="0.4" stroke-linejoin="round">
+    <path d="M58,86.5 L58,80 L66,80 L66,77 L74,77 L74,80 L84,80 L84,78.5 L92,78.5 L92,80 L100,80 L100,86.5 Z M124,86.5 L124,79.5 L132,79.5 L132,77.5 L141,77.5 L141,80 L150,80 L150,86.5 Z" fill="#F1B31C" fill-opacity="0.16"/>
+    <path d="M10,86.5 L10,82 L12,82 L12,80.5 L14,80.5 L14,82 L17,82 L17,80.5 L19,80.5 L19,82 L22,82 L22,80.5 L24,80.5 L24,82 L27,82 L27,80.5 L29,80.5 L29,82 L32,82 L32,80.5 L34,80.5 L34,82 L37,82 L37,80.5 L39,80.5 L39,82 L42,82 L42,80.5 L44,80.5 L44,82 L47,82 L47,80.5 L49,80.5 L49,82 L52,82 L52,80.5 L54,80.5 L54,82 L57,82 L57,80.5 L59,80.5 L59,82 L62,82 L62,80.5 L64,80.5 L64,82 L67,82 L67,80.5 L69,80.5 L69,82 L72,82 L72,80.5 L74,80.5 L74,82 L77,82 L77,80.5 L79,80.5 L79,82 L82,82 L82,80.5 L84,80.5 L84,82 L87,82 L87,80.5 L89,80.5 L89,82 L92,82 L92,80.5 L94,80.5 L94,82 L97,82 L97,80.5 L99,80.5 L99,82 L102,82 L102,80.5 L104,80.5 L104,82 L106,82 L106,86.5 Z" fill="#F1B31C" fill-opacity="0.28"/>
+    <path d="M121,86.5 L121,82 L123,82 L123,80.5 L125,80.5 L125,82 L128,82 L128,80.5 L130,80.5 L130,82 L133,82 L133,80.5 L135,80.5 L135,82 L138,82 L138,80.5 L140,80.5 L140,82 L143,82 L143,80.5 L145,80.5 L145,82 L148,82 L148,80.5 L150,80.5 L150,82 L153,82 L153,86.5 Z" fill="#F1B31C" fill-opacity="0.28"/>
+    <path d="M45,86.5 L45,79 C45,77.5 49,77.5 49,79 L49,86.5 Z" fill="#F1B31C" fill-opacity="0.3"/>
+    <path d="M115.4,74.8 L119.8,76.2 L121,86.5 L116.4,86.5 Z" fill="#F4AA41" fill-opacity="0.38"/>
+    <path d="M107.4,86.5 L108.2,74 L115.4,74 L116.4,86.5 Z" fill="#F4AA41" fill-opacity="0.32"/>
+    <path d="M113.4,74 L115.4,74 L116.4,86.5 L114,86.5 Z" fill="#A57939" fill-opacity="0.12" stroke="none"/>
+    <path d="M107.6,72.4 L116,72.4 L115.8,74 L107.8,74 Z" fill="#F4AA41" fill-opacity="0.36"/>
+    <g fill="none">
+      <path d="M108.1,76.2 L115.6,76.2 M107.9,78.8 L115.8,78.8 M107.8,81.3 L116,81.3 M107.6,83.9 L116.2,83.9"/>
+      <path d="M111.6,77 L111.6,78 M111.4,82 L111.4,83"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+{
+    "avatars": [
+        { "key": "panda", "image": "avatars/panda.svg" },
+        { "key": "rabbit", "image": "avatars/rabbit.svg" },
+        { "key": "owl", "image": "avatars/owl.svg" }
+    ]
+}

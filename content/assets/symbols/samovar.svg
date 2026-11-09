@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- samovar: a brass samovar with a teapot on top. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30,13 C30,8 42,8 42,13 L44,13 L48,10 L46,16 L42,18 L30,18 Z" fill="#FFF"/>
+    <rect x="34" y="5.5" width="4" height="3" rx="1" fill="#61B2E4"/>
+    <path d="M30,13 L42,13" fill="none" stroke="#61B2E4" stroke-width="1.5"/>
+    <path d="M26,18 L46,18 L44,23 L28,23 Z" fill="#E27022"/>
+    <path d="M14,30 C10,30 10,38 14,38 M58,30 C62,30 62,38 58,38" fill="none" stroke="#3F3F3F" stroke-width="3"/>
+    <path d="M26,23 L46,23 C56,27 58,34 57,42 C56,49 52,53 46,55 L26,55 C20,53 16,49 15,42 C14,34 16,27 26,23 Z" fill="#F1B31C"/>
+    <path d="M15.6,36 L56.4,36" fill="none" stroke="#E27022" stroke-width="3"/>
+    <path d="M15,42 C14,34 16,27 26,23 L46,23 C56,27 58,34 57,42" fill="none"/>
+    <path d="M55.6,45 L61,46 L62,51 L59.5,51 L58.6,48.5 L55,48.5 Z" fill="#E27022"/>
+    <circle cx="58.5" cy="43.5" r="1.8" fill="#3F3F3F"/>
+    <path d="M28,55 L44,55 L42,59 L30,59 Z" fill="#E27022"/>
+    <path d="M24,59 L48,59 L52,65 L20,65 Z" fill="#F1B31C"/>
+  </g>
+</svg>

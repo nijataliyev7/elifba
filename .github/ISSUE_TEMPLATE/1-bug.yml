@@ -1,0 +1,65 @@
+name: Xəta / Bug report
+description: Nəsə işləmir və ya gözlənilən kimi işləmir. / Something does not work, or not as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Uşaqların adlarını heç vaxt yazmayın.** Ekran görüntüsündə real şagird adları görünürsə, onları əvvəlcə silin və ya örtün, ya da uydurma adlarla sinif yaradıb xətanı orada göstərin.
+        **Never paste children's names.** If a screenshot shows real students' names, blur or crop them first, or reproduce the bug in a class with made-up names.
+
+        Təhlükəsizlik problemi? Burada yox, [SECURITY.md](https://github.com/nijataliyev7/elifba/blob/main/SECURITY.md) üzrə gizli bildirin. / A security problem? Report it privately as [SECURITY.md](https://github.com/nijataliyev7/elifba/blob/main/SECURITY.md) explains.
+  - type: textarea
+    id: what
+    attributes:
+      label: Nə baş verdi? / What happened?
+      description: Gördüyünüz xəta mesajı varsa, onu da yazın. / Include any error message you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Necə təkrarlamaq olar? / Steps to reproduce
+      placeholder: |
+        1. Sinif səhifəsini açın / Open the class page
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Nə gözləyirdiniz? / What did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Harada? / Where?
+      multiple: true
+      options:
+        - Lövhə (proyektordakı oyun) / Board (the game on the wall)
+        - Pult (telefon) / Remote (phone)
+        - Qonaq lövhəsi (/lovhe) / Guest board (/lovhe)
+        - Sinif və şagirdlər / Class and students
+        - Reytinq və ya qaliblər kürsüsü / Rankings or podium
+        - Qeydiyyat, giriş, ayarlar / Sign-up, login, settings
+        - Quraşdırma (composer setup, docker compose) / Installation (composer setup, docker compose)
+        - Başqa / Other
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Cihaz və brauzer / Device and browser
+      placeholder: Noutbukda Chrome 131, telefonda Safari (iOS 18) / Chrome 131 on the laptop, Safari on iOS 18
+  - type: input
+    id: instance
+    attributes:
+      label: Hansı server? / Which instance?
+      description: Öz serveriniz, `composer dev` və ya ictimai server; bilirsinizsə, versiya və ya commit. / Your own, `composer dev` or a public one; the version or commit if you know it.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Loglar / Logs
+      description: Tətbiqin və ya brauzer konsolunun logları. Göndərməzdən əvvəl adları, e-poçtları və açarları silin. / From the app or the browser console. Remove names, e-mails and keys first.
+      render: text

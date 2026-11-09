@@ -1,0 +1,59 @@
+name: Məzmun düzəlişi / Content correction
+description: Söz, heca bölgüsü, cümlə və ya şəkil səhvdir. / A word, syllable split, sentence or picture is wrong.
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Uşaqların adlarını heç vaxt yazmayın** və real şagird adları görünən ekran görüntüsü əlavə etməyin.
+        **Never paste children's names** or screenshots that show real students' names.
+
+        Oyunların məzmunu `content/` qovluğundakı fayllardadır (sözlər və cümlələr `content/packs/*.json`, hərflər `content/alphabet.json`, tapşırıqlar `content/prompts.json`). Düzəlişi pull request kimi də göndərə bilərsiniz; `php artisan content:validate` onu yoxlayır.
+        Game content lives in `content/` (words and sentences in `content/packs/*.json`, letters in `content/alphabet.json`, prompts in `content/prompts.json`). A pull request is welcome too; `php artisan content:validate` checks it.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Nə səhvdir? / What is wrong?
+      options:
+        - Söz / Word
+        - Heca bölgüsü / Syllable split
+        - Cümlə / Sentence
+        - Şəkil / Picture
+        - Tapşırıq mətni / Prompt
+        - Hərf / Letter
+        - Başqa / Other
+    validations:
+      required: true
+  - type: dropdown
+    id: pack
+    attributes:
+      label: Hansı tema? / Which theme?
+      options:
+        - Qatar / Train
+        - Şarlar / Balloons
+        - Heyvanlar / Animals
+        - Meyvələr / Fruit
+        - Şəhərlərimiz / Our cities
+        - Milli rəmzlər / National symbols
+        - Bilmirəm / Not sure
+    validations:
+      required: true
+  - type: input
+    id: now
+    attributes:
+      label: İndi necədir? / What is shown now?
+      placeholder: "qa-tar → qat-ar"
+    validations:
+      required: true
+  - type: input
+    id: should
+    attributes:
+      label: Necə olmalıdır? / What should it be?
+      placeholder: "qa-tar"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Niyə? / Why?
+      description: Mənbə (dərslik, orfoqrafiya lüğəti) və ya izah. Şəkil üçün nəyi düzgün göstərmədiyini yazın. / A source (a textbook, the orthographic dictionary) or a reason. For a picture, say what it gets wrong.

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- Novruz: a holiday tray (xonça) with candles and painted eggs. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="36" cy="52" rx="31" ry="11" fill="#E27022"/>
+    <ellipse cx="36" cy="50" rx="27" ry="8" fill="#F1B31C"/>
+    <rect x="20" y="28" width="6" height="20" fill="#FFF"/>
+    <rect x="33" y="22" width="6" height="25" fill="#FFF"/>
+    <rect x="46" y="28" width="6" height="20" fill="#FFF"/>
+    <path d="M23,26 C20.5,23 21.5,19.5 23,17 C24.5,19.5 25.5,23 23,26 Z" fill="#F1B31C"/>
+    <path d="M36,20 C33.5,17 34.5,13.5 36,11 C37.5,13.5 38.5,17 36,20 Z" fill="#F1B31C"/>
+    <path d="M49,26 C46.5,23 47.5,19.5 49,17 C50.5,19.5 51.5,23 49,26 Z" fill="#F1B31C"/>
+    <ellipse cx="24" cy="53" rx="4.5" ry="6" fill="#D22F27"/>
+    <ellipse cx="36" cy="55" rx="4.5" ry="6" fill="#61B2E4"/>
+    <ellipse cx="48" cy="53" rx="4.5" ry="6" fill="#B1CC33"/>
+  </g>
+</svg>

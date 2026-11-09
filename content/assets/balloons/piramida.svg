@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- piramida: a stacking toy, coloured rings on a pole, smallest on top. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="33" y="10" width="6" height="52" rx="3" fill="#A57939"/>
+    <rect x="10" y="57" width="52" height="8" rx="4" fill="#A57939"/>
+    <rect x="13" y="49" width="46" height="8" rx="4" fill="#EA5A47"/>
+    <rect x="16" y="41.8" width="40" height="8" rx="4" fill="#F4AA41"/>
+    <rect x="19" y="34.6" width="34" height="8" rx="4" fill="#FCEA2B"/>
+    <rect x="22" y="27.4" width="28" height="8" rx="4" fill="#B1CC33"/>
+    <rect x="25" y="20.2" width="22" height="8" rx="4" fill="#61B2E4"/>
+    <rect x="28" y="13" width="16" height="8" rx="4" fill="#8967AA"/>
+    <circle cx="36" cy="10" r="5.5" fill="#EA5A47"/>
+  </g>
+</svg>

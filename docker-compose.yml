@@ -1,0 +1,172 @@
+# Elifba in production (docs/architecture.md §10). From a copy of the
+# repository:
+#
+#   scripts/docker-env.sh elifba.example.az    # .env from .env.production.example, with fresh secrets
+#   docker compose up -d --build --wait
+#
+# One image (Dockerfile) runs as `app`, `reverb` and `scheduler`; Caddy is the
+# only service with published ports. `.env` is read twice: for the ${...}
+# values below and as the environment of the PHP containers. What follows from
+# the services themselves (database host, Reverb's internal address, APP_URL)
+# is set here and wins over .env.
+
+name: elifba
+
+x-build: &build
+    context: .
+    args:
+        VITE_APP_NAME: ${APP_NAME:-Elifba}
+        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is empty; run scripts/docker-env.sh}
+        VITE_REVERB_HOST: ${ELIFBA_DOMAIN:?ELIFBA_DOMAIN is empty; copy .env.production.example to .env}
+        VITE_REVERB_PORT: ${ELIFBA_PORT:?ELIFBA_PORT is empty}
+        VITE_REVERB_SCHEME: ${ELIFBA_SCHEME:?ELIFBA_SCHEME is empty (https or http)}
+
+x-laravel-env: &laravel-env
+    APP_ENV: production
+    APP_DEBUG: 'false'
+    APP_KEY: ${APP_KEY:?APP_KEY is empty; run scripts/docker-env.sh}
+    APP_URL: ${ELIFBA_SCHEME}://${ELIFBA_DOMAIN}:${ELIFBA_PORT}
+    APP_MAINTENANCE_DRIVER: file
+    LOG_CHANNEL: stderr
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: '5432'
+    DB_DATABASE: elifba
+    DB_USERNAME: elifba
+    DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is empty; run scripts/docker-env.sh}
+    SESSION_DRIVER: database
+    CACHE_STORE: database
+    QUEUE_CONNECTION: sync
+    # app and scheduler broadcast to Reverb on the internal network; its HTTP
+    # API (/apps/*) is never published. Browsers reach it through Caddy.
+    BROADCAST_CONNECTION: reverb
+    REVERB_HOST: reverb
+    REVERB_PORT: '8080'
+    REVERB_SCHEME: http
+    # Caddy is the only peer that reaches `app` and it replaces any
+    # X-Forwarded-* a browser sends; the session cookie follows its scheme.
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+
+x-laravel: &laravel
+    image: elifba:local
+    build: *build
+    env_file: .env
+    restart: unless-stopped
+
+services:
+    proxy:
+        image: caddy:2.11.9-alpine
+        restart: unless-stopped
+        ports:
+            - '${ELIFBA_PORT}:${ELIFBA_PORT}'
+            - '${ELIFBA_REDIRECT_PORT:-80}:80'
+        environment:
+            ELIFBA_SITE: ${ELIFBA_SCHEME}://${ELIFBA_DOMAIN}:${ELIFBA_PORT}
+        volumes:
+            - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy-data:/data
+            - caddy-config:/config
+        depends_on:
+            app:
+                condition: service_healthy
+            reverb:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'wget -qO /dev/null http://127.0.0.1:2019/config/',
+                ]
+            interval: 10s
+            timeout: 3s
+            retries: 3
+            start_period: 10s
+
+    app:
+        <<: *laravel
+        environment:
+            <<: *laravel-env
+            # storage:link, migrate --force and optimize (with content:cache) at
+            # start, here only. The image's health check asks /up.
+            AUTORUN_ENABLED: 'true'
+        depends_on:
+            db:
+                condition: service_healthy
+
+    reverb:
+        <<: *laravel
+        command:
+            ['php', 'artisan', 'reverb:start', '--host=0.0.0.0', '--port=8080']
+        stop_signal: SIGTERM
+        environment:
+            <<: *laravel-env
+            AUTORUN_ENABLED: 'false'
+        healthcheck:
+            test: ['CMD', 'healthcheck-reverb']
+            start_period: 10s
+        depends_on:
+            app:
+                condition: service_healthy
+
+    scheduler:
+        <<: *laravel
+        command: ['php', 'artisan', 'schedule:work']
+        stop_signal: SIGTERM
+        environment:
+            <<: *laravel-env
+            AUTORUN_ENABLED: 'false'
+        healthcheck:
+            test: ['CMD', 'healthcheck-schedule']
+            start_period: 10s
+        depends_on:
+            app:
+                condition: service_healthy
+
+    db:
+        image: postgres:17.11
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: elifba
+            POSTGRES_USER: elifba
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U elifba -d elifba']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    # A pg_dump every night at BACKUP_AT Baku time into the `backups` volume,
+    # kept BACKUP_KEEP_DAYS days. Now: `docker compose exec backup elifba-backup now`.
+    backup:
+        image: postgres:17.11
+        restart: unless-stopped
+        init: true
+        entrypoint: ['sh', '/usr/local/bin/elifba-backup']
+        command: ['nightly']
+        environment:
+            TZ: Asia/Baku
+            BACKUP_AT: ${BACKUP_AT:-03:00}
+            BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+            PGHOST: db
+            PGUSER: elifba
+            PGDATABASE: elifba
+            PGPASSWORD: ${DB_PASSWORD}
+        volumes:
+            - ./docker/backup/elifba-backup.sh:/usr/local/bin/elifba-backup:ro
+            - backups:/backups
+        healthcheck:
+            test: ['CMD', 'pg_isready', '-q']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        depends_on:
+            db:
+                condition: service_healthy
+
+volumes:
+    db-data:
+    backups:
+    caddy-data:
+    caddy-config:

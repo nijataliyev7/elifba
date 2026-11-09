@@ -1,0 +1,464 @@
+{
+    "alphabet: a confusable that does not list the letter back": {
+        "file": "alphabet.json",
+        "set": { "letters.5.confusables": [] },
+        "problem": "alphabet.json: letters[6] \"ə\": confusable \"e\" does not list \"ə\" back"
+    },
+    "alphabet: a confusable outside the alphabet": {
+        "file": "alphabet.json",
+        "set": { "letters.0.confusables": ["ə", "w"] },
+        "problem": "alphabet.json: letters[0] \"a\": confusable \"w\" is not a lowercase letter of the alphabet"
+    },
+    "alphabet: a letter confusable with itself": {
+        "file": "alphabet.json",
+        "set": { "letters.7.confusables": ["f"] },
+        "problem": "alphabet.json: letters[7] \"f\" lists itself as a confusable"
+    },
+    "alphabet: a letter without a name": {
+        "file": "alphabet.json",
+        "unset": ["letters.1.name"],
+        "problem": "alphabet.json: letters[1] needs `name`"
+    },
+    "alphabet: a name with the Cyrillic \u04d9": {
+        "file": "alphabet.json",
+        "set": { "letters.6.name": "\u04d9" },
+        "problem": "alphabet.json: letters[6] \"ə\".name \"\u04d9\" is not normalized (U+04D9)"
+    },
+    "alphabet: a name in capitals": {
+        "file": "alphabet.json",
+        "set": { "letters.1.name": "BE" },
+        "problem": "alphabet.json: letters[1] \"b\".name \"BE\" must be lowercase letters of the alphabet"
+    },
+    "avatars: a key used twice": {
+        "file": "avatars.json",
+        "set": { "avatars.1.key": "panda" },
+        "problem": "avatars.json: avatars[1] \"panda\" needs a unique key"
+    },
+    "avatars: an avatar without a picture": {
+        "file": "avatars.json",
+        "unset": ["avatars.0.image"],
+        "problem": "avatars.json: avatars[0] needs `image`"
+    },
+    "avatars: a picture that does not exist": {
+        "file": "avatars.json",
+        "set": { "avatars.2.image": "avatars/unicorn.svg" },
+        "problem": "avatars.json: avatars[2] \"owl\".image: content/assets/avatars/unicorn.svg does not exist"
+    },
+    "avatars: two avatars with one picture": {
+        "file": "avatars.json",
+        "set": { "avatars.1.image": "avatars/panda.svg" },
+        "problem": "avatars.json: avatars[1] \"rabbit\".image \"avatars/panda.svg\" is already the picture of avatars[0] \"panda\""
+    },
+    "levels: an unknown mechanic": {
+        "file": "levels.json",
+        "set": { "levels.0.mechanics": ["tap"] },
+        "problem": "levels.json: levels[0] \"letters\".mechanics[0] must be one of find, build_syllable, build_word, build_sentence"
+    },
+    "levels: a mechanic that cannot play the unit": {
+        "file": "levels.json",
+        "set": { "levels.0.mechanics": ["find", "build_syllable"] },
+        "problem": "levels.json: levels[0] \"letters\": build_syllable cannot be played with letters"
+    },
+    "levels: a word level without its filter": {
+        "file": "levels.json",
+        "unset": ["levels.3.syllables"],
+        "problem": "levels.json: levels[3] \"words-short\" needs `syllables`"
+    },
+    "levels: a filter of another unit": {
+        "file": "levels.json",
+        "set": { "levels.0.shapes": ["V"] },
+        "problem": "levels.json: levels[0] \"letters\": `shapes` belongs to syllable levels only"
+    },
+    "levels: a shape that is not a syllable shape": {
+        "file": "levels.json",
+        "set": { "levels.1.shapes": ["V", "CVCV"] },
+        "problem": "levels.json: levels[1] \"syllables-open\".shapes: \"CVCV\" is not a syllable shape"
+    },
+    "levels: sentences longer than build_sentence lays out": {
+        "file": "levels.json",
+        "set": { "levels.5.words": { "min": 2, "max": 6 } },
+        "problem": "levels.json: levels[5] \"sentences\".words needs whole numbers from 2 to 4, min ≤ max"
+    },
+    "levels: find without an item count": {
+        "file": "levels.json",
+        "unset": ["levels.0.items"],
+        "problem": "levels.json: levels[0] \"letters\".items must be a whole number from 2 to 8 for levels with find"
+    },
+    "levels: decoys on a level without a build mechanic": {
+        "file": "levels.json",
+        "set": { "levels.0.decoys": 1 },
+        "problem": "levels.json: levels[0] \"letters\": `decoys` belongs to levels with a build mechanic only"
+    },
+    "levels: a key used twice": {
+        "file": "levels.json",
+        "set": { "levels.1.key": "letters" },
+        "problem": "levels.json: levels[1] \"letters\" needs a unique key"
+    },
+    "levels: a title without English": {
+        "file": "levels.json",
+        "unset": ["levels.0.title.en"],
+        "problem": "levels.json: levels[0] \"letters\".title needs `en`"
+    },
+    "prompts: a suffix attached to the inserted text": {
+        "file": "prompts.json",
+        "set": { "prompts.1.text": "«{x}»nı tap!" },
+        "problem": "prompts.json: prompts[1].text \"«{x}»nı tap!\" must wrap {x} in «» with nothing attached"
+    },
+    "prompts: the inserted text without «»": {
+        "file": "prompts.json",
+        "set": { "prompts.1.text": "{x} hecasını tap!" },
+        "problem": "prompts.json: prompts[1].text \"{x} hecasını tap!\" must wrap {x} in «» with nothing attached"
+    },
+    "prompts: a letter outside the alphabet": {
+        "file": "prompts.json",
+        "set": { "prompts.4.text": "Sözü hecalardan yığ, wow!" },
+        "problem": "prompts.json: prompts[4].text \"Sözü hecalardan yığ, wow!\" may hold only alphabet letters"
+    },
+    "prompts: no final mark": {
+        "file": "prompts.json",
+        "set": { "prompts.0.text": "«{x}» hərfini tap" },
+        "problem": "prompts.json: prompts[0].text \"«{x}» hərfini tap\" must end with . ! or ?"
+    },
+    "prompts: a mechanic and unit that a level allows have no prompt": {
+        "file": "prompts.json",
+        "unset": ["prompts.5"],
+        "problem": "prompts.json: no prompt for build_sentence × sentence, which levels.json allows"
+    },
+    "prompts: a prompt that no level uses": {
+        "file": "prompts.json",
+        "set": {
+            "prompts.6": {
+                "mechanic": "find",
+                "unit": "sentence",
+                "text": "Cümləni tap!"
+            }
+        },
+        "problem": "prompts.json: prompts[6]: no level allows find × sentence"
+    },
+    "prompts: two prompts for one mechanic and unit": {
+        "file": "prompts.json",
+        "set": {
+            "prompts.6": {
+                "mechanic": "find",
+                "unit": "letter",
+                "text": "«{x}» hərfini göstər!"
+            }
+        },
+        "problem": "prompts.json: prompts[6]: find × letter has a prompt already"
+    },
+    "credits: a license outside the allow list": {
+        "file": "credits.json",
+        "set": { "credits.0.license": "CC-BY-NC-4.0" },
+        "problem": "credits.json: credits[0].license must be one of CC0-1.0, CC-BY-4.0, CC-BY-SA-4.0, OFL-1.1, MIT"
+    },
+    "credits: an asset without an entry": {
+        "file": "credits.json",
+        "write": {
+            "assets/sample/stray.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+        },
+        "problem": "credits.json: content/assets/sample/stray.svg has no entry"
+    },
+    "credits: a font without an entry": {
+        "file": "credits.json",
+        "write": { "../resources/fonts/sample/Sample.woff2": "wOF2" },
+        "problem": "credits.json: resources/fonts/sample/Sample.woff2 has no entry"
+    },
+    "credits: an entry that matches no file": {
+        "file": "credits.json",
+        "set": { "credits.0.files.1": "content/assets/sample/ghost.svg" },
+        "problem": "credits.json: credits[0].files \"content/assets/sample/ghost.svg\" matches no file"
+    },
+    "credits: share-alike files outside the openmoji folder": {
+        "file": "credits.json",
+        "set": { "credits.1.license": "CC-BY-SA-4.0" },
+        "problem": "credits.json: credits[1].files \"content/assets/sounds/*\": CC-BY-SA-4.0 files must stay in content/assets/openmoji/"
+    },
+    "credits: a file outside the credited folders": {
+        "file": "credits.json",
+        "set": { "credits.0.files.0": "LICENSE" },
+        "problem": "credits.json: credits[0].files \"LICENSE\" must be under content/assets/ or resources/fonts/"
+    },
+    "credits: a source that is not https": {
+        "file": "credits.json",
+        "set": { "credits.0.source": "http://example.org" },
+        "problem": "credits.json: credits[0].source must be an https:// URL"
+    },
+    "credits: empty changes": {
+        "file": "credits.json",
+        "set": { "credits.2.changes": "" },
+        "problem": "credits.json: credits[2].changes must be a non-empty string"
+    },
+    "packs: the Cyrillic \u04d9 in a word": {
+        "file": "packs/sample.json",
+        "set": { "words.3.text": "n\u04d9n\u04d9" },
+        "problem": "packs/sample.json: words[3].text \"n\u04d9n\u04d9\" is not normalized (U+04D9)"
+    },
+    "packs: the reversed \u01dd in a title": {
+        "file": "packs/sample.json",
+        "set": { "title.az": "Nümun\u01dd" },
+        "problem": "packs/sample.json: title.az \"Nümun\u01dd\" is not normalized (U+01DD)"
+    },
+    "packs: an invisible character in a word": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "a\u200bta" },
+        "problem": "packs/sample.json: words[1].text \"a\u200bta\" is not normalized (U+200B)"
+    },
+    "packs: a double space in a sentence": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Ata  gəldi." },
+        "problem": "packs/sample.json: sentences[0].text \"Ata  gəldi.\" is not normalized (extra spaces)"
+    },
+    "packs: a word with a space": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "ana bala" },
+        "problem": "packs/sample.json: words[1] \"ana bala\" must be one word of alphabet letters, with no space, hyphen or sign"
+    },
+    "packs: a word with a hyphen": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "ana-bala" },
+        "problem": "packs/sample.json: words[1] \"ana-bala\" must be one word of alphabet letters, with no space, hyphen or sign"
+    },
+    "packs: a word with a letter outside the alphabet": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "watt" },
+        "problem": "packs/sample.json: words[1] \"watt\" must be one word of alphabet letters, with no space, hyphen or sign"
+    },
+    "packs: a word in capitals": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "ATA" },
+        "problem": "packs/sample.json: words[1] \"ATA\" must be lowercase, or capitalised as a proper noun"
+    },
+    "packs: a word twice, in another case": {
+        "file": "packs/sample.json",
+        "set": { "words.2.text": "Ata" },
+        "problem": "packs/sample.json: words[2] \"Ata\" repeats words[1] \"ata\""
+    },
+    "packs: a word without a vowel": {
+        "file": "packs/sample.json",
+        "set": { "words.1.text": "hmm" },
+        "problem": "packs/sample.json: words[1] \"hmm\" has no vowel, so it has no syllables"
+    },
+    "packs: an override that does not join back to the word": {
+        "file": "packs/sample.json",
+        "set": { "words.20.syllables": ["qreyp", "fru"] },
+        "problem": "packs/sample.json: words[20] \"qreypfrut\".syllables \"qreyp-fru\" must join back to the word exactly, with one vowel in each part"
+    },
+    "packs: an override in another case": {
+        "file": "packs/sample.json",
+        "set": { "words.20.syllables": ["Qreyp", "frut"] },
+        "problem": "packs/sample.json: words[20] \"qreypfrut\".syllables \"Qreyp-frut\" must join back to the word exactly, with one vowel in each part"
+    },
+    "packs: an override part with two vowels": {
+        "file": "packs/sample.json",
+        "set": { "words.20.syllables": ["qreypfrut"] },
+        "problem": "packs/sample.json: words[20] \"qreypfrut\".syllables \"qreypfrut\" must join back to the word exactly, with one vowel in each part"
+    },
+    "packs: an override part without a vowel": {
+        "file": "packs/sample.json",
+        "set": { "words.20.syllables": ["qre", "yp", "frut"] },
+        "problem": "packs/sample.json: words[20] \"qreypfrut\".syllables \"qre-yp-frut\" must join back to the word exactly, with one vowel in each part"
+    },
+    "packs: an override the rule gives already": {
+        "file": "packs/sample.json",
+        "set": { "words.20.syllables": ["qreypf", "rut"] },
+        "problem": "packs/sample.json: words[20] \"qreypfrut\".syllables \"qreypf-rut\" is what the rule gives already; remove the override"
+    },
+    "packs: a picture that does not exist": {
+        "file": "packs/sample.json",
+        "set": { "words.0.image": "sample/armud.svg" },
+        "problem": "packs/sample.json: words[0] \"alma\".image: content/assets/sample/armud.svg does not exist"
+    },
+    "packs: a picture of another type": {
+        "file": "packs/sample.json",
+        "set": { "words.0.image": "sample/alma.gif" },
+        "problem": "packs/sample.json: words[0] \"alma\".image \"sample/alma.gif\" must end in .svg, .png, .webp"
+    },
+    "packs: a picture outside the assets folder": {
+        "file": "packs/sample.json",
+        "set": { "words.0.image": "../alma.svg" },
+        "problem": "packs/sample.json: words[0] \"alma\".image must be a path under content/assets with lowercase folders, like fruit/alma.svg"
+    },
+    "packs: a picture spelled in another case": {
+        "file": "packs/sample.json",
+        "set": { "words.0.image": "sample/ALMA.svg" },
+        "problem": "packs/sample.json: words[0] \"alma\".image: content/assets/sample/ALMA.svg does not exist"
+    },
+    "packs: two words with one picture": {
+        "file": "packs/sample.json",
+        "set": { "words.1.image": "sample/alma.svg" },
+        "problem": "packs/sample.json: words[1] \"ata\".image \"sample/alma.svg\" is already the picture of words[0] \"alma\""
+    },
+    "packs: a word without a picture": {
+        "file": "packs/sample.json",
+        "unset": ["words.1.image"],
+        "problem": "packs/sample.json: words[1] \"ata\" needs an `image`"
+    },
+    "packs: a backdrop that does not exist": {
+        "file": "packs/sample.json",
+        "set": { "style.backdrop": "sample/sky.svg" },
+        "problem": "packs/sample.json: style.backdrop: content/assets/sample/sky.svg does not exist"
+    },
+    "packs: a sound for an unknown moment": {
+        "file": "packs/sample.json",
+        "set": { "style.sounds.boom": "sounds/pop.ogg" },
+        "problem": "packs/sample.json: style.sounds has an unknown key `boom`"
+    },
+    "packs: an unknown item style": {
+        "file": "packs/sample.json",
+        "set": { "style.item": "kite" },
+        "problem": "packs/sample.json: style.item must be one of balloon, wagon, card, bubble"
+    },
+    "packs: an unknown effect": {
+        "file": "packs/sample.json",
+        "set": { "style.effect": "explode" },
+        "problem": "packs/sample.json: style.effect must be one of burst, sparkle"
+    },
+    "packs: a colour that is not #RRGGBB": {
+        "file": "packs/sample.json",
+        "set": { "style.palette.0": "red" },
+        "problem": "packs/sample.json: style.palette[0] \"red\" must be a colour like #F6C445"
+    },
+    "packs: a key that is not the file name": {
+        "file": "packs/sample.json",
+        "set": { "key": "other" },
+        "problem": "packs/sample.json: `key` must be \"sample\", the file name"
+    },
+    "packs: version 0": {
+        "file": "packs/sample.json",
+        "set": { "version": 0 },
+        "problem": "packs/sample.json: `version` must be a whole number from 1, bumped on every change"
+    },
+    "packs: a title without English": {
+        "file": "packs/sample.json",
+        "unset": ["title.en"],
+        "problem": "packs/sample.json: title needs `en`"
+    },
+    "packs: an unknown key, such as a typo": {
+        "file": "packs/sample.json",
+        "set": { "words.1.syllabels": ["a", "ta"] },
+        "problem": "packs/sample.json: words[1] has an unknown key `syllabels`"
+    },
+    "packs: fewer than 20 words": {
+        "file": "packs/sample.json",
+        "keep": { "words": 19 },
+        "problem": "packs/sample.json: has 19 words; every pack needs at least 20"
+    },
+    "packs: fewer than 10 sentences": {
+        "file": "packs/sample.json",
+        "keep": { "sentences": 9 },
+        "problem": "packs/sample.json: has 9 sentences; every pack needs at least 10"
+    },
+    "packs: a level with fewer than 6 distinct items": {
+        "file": "packs/sample.json",
+        "keep": { "words": 26 },
+        "problem": "packs/sample.json: level \"words-long\" gets 5 distinct words from this pack; it needs at least 6"
+    },
+    "packs: a word that fits no word level": {
+        "file": "packs/sample.json",
+        "set": {
+            "words.27": {
+                "text": "müəllimələr",
+                "image": "sample/words/muellimeler.svg"
+            }
+        },
+        "write": {
+            "assets/sample/words/muellimeler.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+        },
+        "problem": "packs/sample.json: words[27] \"müəllimələr\" has 5 syllables and fits no word level"
+    },
+    "packs: a sentence too long for every sentence level": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Ata bu gün evə gəldi." },
+        "problem": "packs/sample.json: sentences[0] \"Ata bu gün evə gəldi.\" has 5 words and fits no sentence level"
+    },
+    "packs: a one-word sentence": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Gəldi." },
+        "problem": "packs/sample.json: sentences[0] \"Gəldi.\" has 1 word and fits no sentence level"
+    },
+    "packs: a sentence without a final mark": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Ata gəldi" },
+        "problem": "packs/sample.json: sentences[0] \"Ata gəldi\" must be words of alphabet letters with single spaces, starting with a capital letter and ending with one . ! or ?"
+    },
+    "packs: a sentence with two final marks": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Ata gəldi!!" },
+        "problem": "packs/sample.json: sentences[0] \"Ata gəldi!!\" must be words of alphabet letters with single spaces"
+    },
+    "packs: a sentence with a comma": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "Ata, gəl!" },
+        "problem": "packs/sample.json: sentences[0] \"Ata, gəl!\" must be words of alphabet letters with single spaces"
+    },
+    "packs: a sentence starting in lowercase": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.text": "ata gəldi." },
+        "problem": "packs/sample.json: sentences[0] \"ata gəldi.\" must be words of alphabet letters with single spaces"
+    },
+    "packs: a sentence id that is not a key": {
+        "file": "packs/sample.json",
+        "set": { "sentences.0.id": "Ata_geldi" },
+        "problem": "packs/sample.json: sentences[0].id \"Ata_geldi\" needs a unique id of a-z, 0-9 and single hyphens"
+    },
+    "packs: a sentence id twice": {
+        "file": "packs/sample.json",
+        "set": { "sentences.1.id": "ata-geldi" },
+        "problem": "packs/sample.json: sentences[1].id \"ata-geldi\" needs a unique id of a-z, 0-9 and single hyphens"
+    },
+    "packs: a sentence twice": {
+        "file": "packs/sample.json",
+        "set": { "sentences.1.text": "Ata gəldi." },
+        "problem": "packs/sample.json: sentences[1] \"Ata gəldi.\" repeats an earlier sentence"
+    },
+    "packs: a file that is not JSON": {
+        "file": "packs/sample.json",
+        "write": { "packs/sample.json": "{ \"key\": " },
+        "problem": "packs/sample.json: is not valid JSON"
+    },
+    "files: levels.json is missing": {
+        "file": "levels.json",
+        "delete": ["levels.json"],
+        "problem": "levels.json: is missing"
+    },
+    "syllable tests: a part without a vowel": {
+        "file": "tests/syllables.json",
+        "set": { "groups.broken": ["al-m"] },
+        "problem": "tests/syllables.json: groups \"broken\": \"al-m\" must be alphabet letters with a hyphen between syllables of one vowel each"
+    },
+    "svg: a script": {
+        "file": "assets/sample/alma.svg",
+        "write": {
+            "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><script>alert(1)</script></svg>"
+        },
+        "problem": "assets/sample/alma.svg: has a <script> element"
+    },
+    "svg: an event attribute": {
+        "file": "assets/sample/alma.svg",
+        "write": {
+            "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><rect width=\"1\" height=\"1\" onclick=\"alert(1)\"/></svg>"
+        },
+        "problem": "assets/sample/alma.svg: has an event attribute (on…=)"
+    },
+    "svg: foreign HTML": {
+        "file": "assets/sample/alma.svg",
+        "write": {
+            "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><foreignObject width=\"1\" height=\"1\"><div xmlns=\"http://www.w3.org/1999/xhtml\">x</div></foreignObject></svg>"
+        },
+        "problem": "assets/sample/alma.svg: has a <foreignObject> element"
+    },
+    "svg: a link to another file": {
+        "file": "assets/sample/alma.svg",
+        "write": {
+            "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><image href=\"https://example.org/cat.png\" width=\"1\" height=\"1\"/></svg>"
+        },
+        "problem": "assets/sample/alma.svg: links to \"https://example.org/cat.png\""
+    },
+    "svg: an xlink to a data URL": {
+        "file": "assets/sample/alma.svg",
+        "write": {
+            "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 1 1\"><image xlink:href=\"data:image/svg+xml;base64,PHN2Zy8+\" width=\"1\" height=\"1\"/></svg>"
+        },
+        "problem": "assets/sample/alma.svg: links to \"data:image/svg+xml;base64,PHN2Zy8+\""
+    }
+}

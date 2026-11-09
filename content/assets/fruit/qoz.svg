@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- qoz: a walnut in its shell and a half shell with the kernel. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="28" cy="38" rx="18" ry="20" fill="#A57939"/>
+    <path d="M37,22.4 A18,18 0 0 1 34.2,54.9 A45,45 0 0 0 37,22.4 Z" fill="#6A462F" stroke="none"/>
+    <ellipse cx="28" cy="38" rx="18" ry="20" fill="none"/>
+    <path d="M28,18 C24,26 32,34 27,42 C23,49 29,54 28,58" fill="none"/>
+    <path d="M16,30 C18,34 15,38 18,42 M40,28 C37,33 41,37 38,42 M17,48 C21,50 21,53 24,55 M38,50 C35,51 34,54 32,56" fill="none" stroke-width="1.5"/>
+    <circle cx="51" cy="50" r="14" fill="#6A462F"/>
+    <circle cx="51" cy="50" r="11" fill="#F1B31C" stroke="none"/>
+    <path d="M44,45 C47,42 49,47 51,44 C53,41 56,46 58,44 M43,51 C46,49 47,54 51,52 C54,50 56,55 59,52 M51,40 L51,60" fill="none" stroke-width="1.5" stroke="#A57939"/>
+    <circle cx="51" cy="50" r="14" fill="none"/>
+  </g>
+</svg>

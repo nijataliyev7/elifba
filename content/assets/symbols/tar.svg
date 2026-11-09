@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- tar: the Azerbaijani long-necked lute with a figure-eight body. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(38 36 36)">
+      <rect x="33.5" y="4" width="5" height="10" rx="1" fill="#6A462F"/>
+      <line x1="33.5" y1="6" x2="30.5" y2="6"/>
+      <line x1="33.5" y1="9.5" x2="30.5" y2="9.5"/>
+      <line x1="38.5" y1="6" x2="41.5" y2="6"/>
+      <line x1="38.5" y1="9.5" x2="41.5" y2="9.5"/>
+      <rect x="34" y="13" width="4" height="22" fill="#6A462F"/>
+      <path d="M36,30 C42,30 45,33 44.5,37.5 C44.2,40 42.5,41.5 41,42.5 C46.5,43.5 49,48 48,54 C47,61 41,64 36,64 C31,64 25,61 24,54 C23,48 25.5,43.5 31,42.5 C29.5,41.5 27.8,40 27.5,37.5 C27,33 30,30 36,30 Z" fill="#A57939"/>
+      <ellipse cx="36" cy="36.5" rx="5" ry="3.8" fill="#FFF"/>
+      <ellipse cx="36" cy="53" rx="8.5" ry="7.5" fill="#FFF"/>
+      <line x1="34.8" y1="10" x2="34.8" y2="60" stroke-width="0.8"/>
+      <line x1="37.2" y1="10" x2="37.2" y2="60" stroke-width="0.8"/>
+      <rect x="32" y="55" width="8" height="2" fill="#6A462F" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

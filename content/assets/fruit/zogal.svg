@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- zoğal: three oblong red cornelian cherries on a twig. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12,16 C26,12 40,12 58,16" fill="none" stroke="#6A462F" stroke-width="3"/>
+    <path d="M12,16 C26,12 40,12 58,16" fill="none"/>
+    <path d="M20,14 Q10.8,19.4 10,30 Q19.2,24.6 20,14 Z" fill="#5C9E31"/><path d="M20,14 L12,26.8" fill="none" stroke-width="1.5"/>
+    <path d="M50,15 Q52.2,25.3 62,29 Q59.8,18.7 50,15 Z" fill="#5C9E31"/><path d="M50,15 L59.6,26.2" fill="none" stroke-width="1.5"/>
+    <path d="M32,14 C30,22 24,26 24,33" fill="none"/>
+    <g transform="rotate(12 24 44)"><ellipse cx="24" cy="44" rx="6.5" ry="11" fill="#D22F27"/><path d="M21,40 C21,37 22,36 24,35" fill="none" stroke="#FFF" stroke-width="2.5"/></g>
+    <path d="M37,14 C37,22 37,32 37,39" fill="none"/>
+    <g transform="rotate(0 37 50)"><ellipse cx="37" cy="50" rx="6.5" ry="11" fill="#D22F27"/><path d="M34,46 C34,43 35,42 37,41" fill="none" stroke="#FFF" stroke-width="2.5"/></g>
+    <path d="M41,14 C43,22 50,25 50,32" fill="none"/>
+    <g transform="rotate(-12 50 43)"><ellipse cx="50" cy="43" rx="6.5" ry="11" fill="#D22F27"/><path d="M47,39 C47,36 48,35 50,34" fill="none" stroke="#FFF" stroke-width="2.5"/></g>
+  </g>
+</svg>

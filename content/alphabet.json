@@ -1,0 +1,235 @@
+{
+    "letters": [
+        {
+            "upper": "A",
+            "lower": "a",
+            "vowel": true,
+            "name": "a",
+            "confusables": ["ə"]
+        },
+        {
+            "upper": "B",
+            "lower": "b",
+            "vowel": false,
+            "name": "be",
+            "confusables": ["d", "p"]
+        },
+        {
+            "upper": "C",
+            "lower": "c",
+            "vowel": false,
+            "name": "ce",
+            "confusables": ["ç"]
+        },
+        {
+            "upper": "Ç",
+            "lower": "ç",
+            "vowel": false,
+            "name": "çe",
+            "confusables": ["c"]
+        },
+        {
+            "upper": "D",
+            "lower": "d",
+            "vowel": false,
+            "name": "de",
+            "confusables": ["b"]
+        },
+        {
+            "upper": "E",
+            "lower": "e",
+            "vowel": true,
+            "name": "e",
+            "confusables": ["ə"]
+        },
+        {
+            "upper": "Ə",
+            "lower": "ə",
+            "vowel": true,
+            "name": "ə",
+            "confusables": ["e", "a"]
+        },
+        {
+            "upper": "F",
+            "lower": "f",
+            "vowel": false,
+            "name": "fe",
+            "confusables": []
+        },
+        {
+            "upper": "G",
+            "lower": "g",
+            "vowel": false,
+            "name": "ge",
+            "confusables": ["ğ", "q"]
+        },
+        {
+            "upper": "Ğ",
+            "lower": "ğ",
+            "vowel": false,
+            "name": "ğe",
+            "confusables": ["g"]
+        },
+        {
+            "upper": "H",
+            "lower": "h",
+            "vowel": false,
+            "name": "he",
+            "confusables": ["x"]
+        },
+        {
+            "upper": "X",
+            "lower": "x",
+            "vowel": false,
+            "name": "xe",
+            "confusables": ["h"]
+        },
+        {
+            "upper": "I",
+            "lower": "ı",
+            "vowel": true,
+            "name": "ı",
+            "confusables": ["i"]
+        },
+        {
+            "upper": "İ",
+            "lower": "i",
+            "vowel": true,
+            "name": "i",
+            "confusables": ["ı"]
+        },
+        {
+            "upper": "J",
+            "lower": "j",
+            "vowel": false,
+            "name": "je",
+            "confusables": []
+        },
+        {
+            "upper": "K",
+            "lower": "k",
+            "vowel": false,
+            "name": "ke",
+            "confusables": ["q"]
+        },
+        {
+            "upper": "Q",
+            "lower": "q",
+            "vowel": false,
+            "name": "qe",
+            "confusables": ["k", "g"]
+        },
+        {
+            "upper": "L",
+            "lower": "l",
+            "vowel": false,
+            "name": "el",
+            "confusables": []
+        },
+        {
+            "upper": "M",
+            "lower": "m",
+            "vowel": false,
+            "name": "em",
+            "confusables": ["n"]
+        },
+        {
+            "upper": "N",
+            "lower": "n",
+            "vowel": false,
+            "name": "en",
+            "confusables": ["m"]
+        },
+        {
+            "upper": "O",
+            "lower": "o",
+            "vowel": true,
+            "name": "o",
+            "confusables": ["ö"]
+        },
+        {
+            "upper": "Ö",
+            "lower": "ö",
+            "vowel": true,
+            "name": "ö",
+            "confusables": ["o"]
+        },
+        {
+            "upper": "P",
+            "lower": "p",
+            "vowel": false,
+            "name": "pe",
+            "confusables": ["b"]
+        },
+        {
+            "upper": "R",
+            "lower": "r",
+            "vowel": false,
+            "name": "er",
+            "confusables": []
+        },
+        {
+            "upper": "S",
+            "lower": "s",
+            "vowel": false,
+            "name": "se",
+            "confusables": ["ş"]
+        },
+        {
+            "upper": "Ş",
+            "lower": "ş",
+            "vowel": false,
+            "name": "şe",
+            "confusables": ["s"]
+        },
+        {
+            "upper": "T",
+            "lower": "t",
+            "vowel": false,
+            "name": "te",
+            "confusables": []
+        },
+        {
+            "upper": "U",
+            "lower": "u",
+            "vowel": true,
+            "name": "u",
+            "confusables": ["ü"]
+        },
+        {
+            "upper": "Ü",
+            "lower": "ü",
+            "vowel": true,
+            "name": "ü",
+            "confusables": ["u"]
+        },
+        {
+            "upper": "V",
+            "lower": "v",
+            "vowel": false,
+            "name": "ve",
+            "confusables": []
+        },
+        {
+            "upper": "Y",
+            "lower": "y",
+            "vowel": false,
+            "name": "ye",
+            "confusables": []
+        },
+        {
+            "upper": "Z",
+            "lower": "z",
+            "vowel": false,
+            "name": "ze",
+            "confusables": []
+        }
+    ],
+    "lookalikes": {
+        "\u04d8": "Ə",
+        "\u04d9": "ə",
+        "\u018e": "Ə",
+        "\u01dd": "ə",
+        "i\u0307": "i"
+    }
+}

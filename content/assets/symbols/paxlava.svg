@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- paxlava: a diamond-shaped piece of layered nut pastry. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="16,32 36,54 36,63 16,41" fill="#F4AA41"/>
+    <polygon points="56,32 36,54 36,63 56,41" fill="#E27022"/>
+    <polyline points="16,36.5 36,58.5 56,36.5" fill="none" stroke="#6A462F" stroke-width="2"/>
+    <polygon points="36,8 56,32 36,54 16,32" fill="#F1B31C"/>
+    <polyline points="26,20 36,32 46,20 M26,44 36,32 46,44" fill="none" stroke="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="31" rx="4.5" ry="6" fill="#A57939"/>
+    <line x1="36" y1="26" x2="36" y2="36" stroke-width="1.2"/>
+  </g>
+</svg>

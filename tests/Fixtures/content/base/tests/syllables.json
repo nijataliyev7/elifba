@@ -1,0 +1,7 @@
+{
+    "description": "A small syllable test set for the validator fixtures.",
+    "groups": {
+        "one consonant": ["a-ta", "a-na"],
+        "two consonants": ["al-ma"]
+    }
+}

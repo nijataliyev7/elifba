@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- kukla: a rag doll with pigtails, a dress and stiff arms and legs. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28,58 L27,65 M44,58 L45,65" fill="none" stroke-width="7"/>
+    <path d="M28,58 L27,65 M44,58 L45,65" fill="none" stroke="#FFF" stroke-width="3"/>
+    <ellipse cx="27" cy="66" rx="4" ry="2.2" fill="#EA5A47"/>
+    <ellipse cx="45" cy="66" rx="4" ry="2.2" fill="#EA5A47"/>
+    <path d="M24,40 L14,52" fill="none" stroke-width="7"/>
+    <path d="M48,40 L58,52" fill="none" stroke-width="7"/>
+    <path d="M24,40 L14,52 M48,40 L58,52" fill="none" stroke="#FADCBC" stroke-width="3"/>
+    <path d="M27,36 L45,36 L53,60 C42,63 30,63 19,60 Z" fill="#EA5A47"/>
+    <path d="M30,38 L42,38 L44,50 L28,50 Z" fill="#FFF" stroke-width="1.5"/>
+    <circle cx="36" cy="41.5" r="1.3" fill="#000" stroke="none"/>
+    <circle cx="36" cy="46" r="1.3" fill="#000" stroke="none"/>
+    <path d="M19,24 C12,26 10,34 12,40 C15,36 18,32 21,28 Z" fill="#6A462F"/>
+    <path d="M53,24 C60,26 62,34 60,40 C57,36 54,32 51,28 Z" fill="#6A462F"/>
+    <path d="M17,24 L13,20 L13,28 Z M55,24 L59,20 L59,28 Z" fill="#FCEA2B" stroke-width="1.5"/>
+    <circle cx="36" cy="24" r="13" fill="#FADCBC"/>
+    <path d="M23,23 C24,13 30,10 36,10 C42,10 48,13 49,23 C45,18 40,16 36,16 C32,16 27,18 23,23 Z" fill="#6A462F"/>
+    <circle cx="31" cy="25" r="2.2" fill="#000" stroke="none"/>
+    <circle cx="41" cy="25" r="2.2" fill="#000" stroke="none"/>
+    <circle cx="27.5" cy="29.5" r="2.4" fill="#FFA7C0" stroke="none"/>
+    <circle cx="44.5" cy="29.5" r="2.4" fill="#FFA7C0" stroke="none"/>
+    <path d="M32,30 C34,32.5 38,32.5 40,30" fill="none" stroke-width="1.5"/>
+  </g>
+</svg>

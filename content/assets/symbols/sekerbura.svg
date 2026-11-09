@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- şəkərbura: the half-moon Novruz pastry with a twisted rim and pinched pattern. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5,50 A2.6,2.6 0 0 1 10.61,43.63 A2.6,2.6 0 0 1 12.96,38.24 A2.6,2.6 0 0 1 16.34,33.84 A2.6,2.6 0 0 1 20.53,30.41 A2.6,2.6 0 0 1 25.35,27.96 A2.6,2.6 0 0 1 30.57,26.49 A2.6,2.6 0 0 1 36,26 A2.6,2.6 0 0 1 41.43,26.49 A2.6,2.6 0 0 1 46.65,27.96 A2.6,2.6 0 0 1 51.47,30.41 A2.6,2.6 0 0 1 55.66,33.84 A2.6,2.6 0 0 1 59.04,38.24 A2.6,2.6 0 0 1 61.39,43.63 A2.6,2.6 0 0 1 62.5,50 C51,56 21,56 9.5,50 Z" fill="#FCEA2B"/>
+    <path d="M14.5,48.5 C16.5,28 55.5,28 57.5,48.5" fill="none" stroke="#F1B31C" stroke-width="3"/>
+    <path d="M13.21,43.09 L17.55,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M19.38,45.94 L17.55,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M16.21,36.76 L20.74,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M21.1,41.48 L20.74,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M20.88,31.97 L25.14,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M24.14,37.93 L25.14,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M26.66,28.83 L30.37,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M28.24,35.44 L30.37,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M33.04,27.31 L36,30.75" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M32.96,34.11 L36,30.75" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M39.6,27.39 L41.63,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M37.86,33.96 L41.63,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M45.98,29.06 L46.86,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M42.55,34.93 L46.86,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M51.78,32.45 L51.26,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M46.73,37.01 L51.26,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M56.42,37.71 L54.45,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M50.15,40.34 L54.45,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
+    <path d="M9.5,50 A2.6,2.6 0 0 1 10.61,43.63 A2.6,2.6 0 0 1 12.96,38.24 A2.6,2.6 0 0 1 16.34,33.84 A2.6,2.6 0 0 1 20.53,30.41 A2.6,2.6 0 0 1 25.35,27.96 A2.6,2.6 0 0 1 30.57,26.49 A2.6,2.6 0 0 1 36,26 A2.6,2.6 0 0 1 41.43,26.49 A2.6,2.6 0 0 1 46.65,27.96 A2.6,2.6 0 0 1 51.47,30.41 A2.6,2.6 0 0 1 55.66,33.84 A2.6,2.6 0 0 1 59.04,38.24 A2.6,2.6 0 0 1 61.39,43.63 A2.6,2.6 0 0 1 62.5,50 C51,56 21,56 9.5,50 Z" fill="none"/>
+  </g>
+</svg>

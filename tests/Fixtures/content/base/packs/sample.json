@@ -1,0 +1,59 @@
+{
+    "key": "sample",
+    "version": 1,
+    "title": { "az": "Nümunə", "en": "Sample" },
+    "style": {
+        "item": "card",
+        "slot": "frame",
+        "effect": "burst",
+        "backdrop": "sample/backdrop.svg",
+        "palette": ["#F6C445", "#5DB075"],
+        "sounds": { "hit": "sounds/pop.ogg" }
+    },
+    "words": [
+        { "text": "alma", "image": "sample/alma.svg" },
+        { "text": "ata", "image": "sample/words/ata.svg" },
+        { "text": "ana", "image": "sample/words/ana.svg" },
+        { "text": "nənə", "image": "sample/words/nene.svg" },
+        { "text": "baba", "image": "sample/words/baba.svg" },
+        { "text": "dədə", "image": "sample/words/dede.svg" },
+        { "text": "bacı", "image": "sample/words/baci.svg" },
+        { "text": "kitab", "image": "sample/words/kitab.svg" },
+        { "text": "qələm", "image": "sample/words/qelem.svg" },
+        { "text": "ulduz", "image": "sample/words/ulduz.svg" },
+        { "text": "bulud", "image": "sample/words/bulud.svg" },
+        { "text": "dəniz", "image": "sample/words/deniz.svg" },
+        { "text": "gül", "image": "sample/words/gul.svg" },
+        { "text": "ev", "image": "sample/words/ev.svg" },
+        { "text": "su", "image": "sample/words/su.svg" },
+        { "text": "ay", "image": "sample/words/ay.svg" },
+        { "text": "çiçək", "image": "sample/words/cicek.svg" },
+        { "text": "dovşan", "image": "sample/words/dovsan.svg" },
+        { "text": "pələng", "image": "sample/words/peleng.svg" },
+        { "text": "Bakı", "image": "sample/words/baki.svg" },
+        {
+            "text": "qreypfrut",
+            "image": "sample/words/qreypfrut.svg",
+            "syllables": ["qreyp", "frut"]
+        },
+        { "text": "kəpənək", "image": "sample/words/kepenek.svg" },
+        { "text": "qaranquş", "image": "sample/words/qaranqus.svg" },
+        { "text": "hörümçək", "image": "sample/words/horumcek.svg" },
+        { "text": "zürafə", "image": "sample/words/zurafe.svg" },
+        { "text": "canavar", "image": "sample/words/canavar.svg" },
+        { "text": "Azərbaycan", "image": "sample/words/azerbaycan.svg" }
+    ],
+    "sentences": [
+        { "id": "ata-geldi", "text": "Ata gəldi." },
+        { "id": "ana-gul-aldi", "text": "Ana gül aldı." },
+        { "id": "su-soyuqdur", "text": "Su soyuqdur." },
+        { "id": "ay-parlayir", "text": "Ay parlayır." },
+        { "id": "kitab-maraqlidir", "text": "Kitab maraqlıdır." },
+        { "id": "nene-cay-icir", "text": "Nənə çay içir." },
+        { "id": "baba-bagda-isleyir", "text": "Baba bağda işləyir." },
+        { "id": "ulduz-yanir", "text": "Ulduz yanır." },
+        { "id": "deniz-mavidir", "text": "Dəniz mavidir." },
+        { "id": "bu-nedir", "text": "Bu nədir?" },
+        { "id": "qelemi-gotur", "text": "Qələmi götür!" }
+    ]
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- nar: a pomegranate with its crown. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28,22 L26,9 L31,13 L33.5,6.5 L36,12 L38.5,6.5 L41,13 L46,9 L44,22 Z" fill="#D22F27"/>
+    <circle cx="36" cy="42" r="23" fill="#EA5A47"/>
+    <path d="M53,30 C58,42 54,56 40,62 C50,60 58,52 59,42 C59.4,37 57.4,33 53,30 Z" fill="#D22F27" stroke="none"/>
+    <circle cx="36" cy="42" r="23" fill="none"/>
+    <path d="M24,32 C25,28 28,25.5 31,24.5" fill="none" stroke="#FFF" stroke-width="2.5"/>
+  </g>
+</svg>

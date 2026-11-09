@@ -1,0 +1,38 @@
+{
+    "results": [
+        {
+            "event_id": "01JC8ZA0000000000000000001",
+            "status": "miss",
+            "round_solved": false,
+            "points": null
+        },
+        {
+            "event_id": "01JC8ZA0000000000000000002",
+            "status": "correct",
+            "round_solved": true,
+            "points": 2
+        },
+        {
+            "event_id": "01JC8ZA0000000000000000003",
+            "status": "duplicate",
+            "round_solved": true,
+            "points": 3
+        },
+        {
+            "event_id": "01JC8ZA0000000000000000004",
+            "status": "skipped",
+            "round_solved": false,
+            "points": null
+        },
+        {
+            "event_id": "01JC8ZA0000000000000000005",
+            "status": "stale",
+            "round_solved": false,
+            "points": null
+        }
+    ],
+    "game": {
+        "status": "finished",
+        "board_epoch": 3
+    }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- körpü: a stone bridge with three arches over a river. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="50" width="64" height="12" fill="#92D3F5" stroke="none"/>
+    <path d="M4,56 C10,54 14,58 20,56 M30,58 C36,56 40,60 46,58 M54,55 C58,53 62,57 66,55" fill="none" stroke="#61B2E4" stroke-width="2"/>
+    <path d="M4,28 L68,28 L68,62 L60,62 L60,54 C60,42 48,42 48,54 L48,62 L42,62 L42,54 C42,42 30,42 30,54 L30,62 L24,62 L24,54 C24,42 12,42 12,54 L12,62 L4,62 Z" fill="#D0CFCE"/>
+    <rect x="4" y="22" width="64" height="6" fill="#9B9B9A"/>
+    <path d="M4,62 L68,62 M4,62 L4,22 M68,62 L68,22" fill="none"/>
+    <path d="M4,36 L12,36 M60,36 L68,36 M22,34 L22,40 M36,32 L36,40 M50,34 L50,40 M30,30 L30,34 M43,30 L43,34 M16,30 L16,34 M56,30 L56,34" fill="none" stroke="#9B9B9A" stroke-width="1.5"/>
+  </g>
+</svg>

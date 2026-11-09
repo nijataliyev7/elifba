@@ -1,0 +1,318 @@
+{
+    "cases": [
+        {
+            "name": "find: the target solves the round",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b"]
+            },
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "find: a miss, then the target",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b"]
+            },
+            "hits": [
+                {
+                    "item_id": "a",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 1,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "find: two misses on the same decoy count twice",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b"]
+            },
+            "hits": [
+                {
+                    "item_id": "c",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "c",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 2,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 2,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "find: a hit after the round is solved is stale",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b"]
+            },
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": true
+                },
+                {
+                    "item_id": "a",
+                    "status": "stale",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": true
+                },
+                {
+                    "item_id": "b",
+                    "status": "stale",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "find: an item that is not in the round is stale",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b"]
+            },
+            "hits": [
+                {
+                    "item_id": "z",
+                    "status": "stale",
+                    "progress": [],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "any: a burst item hit again is stale; the round needs every target",
+            "items": ["a", "b", "c", "d"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["b", "d"]
+            },
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "stale",
+                    "progress": ["b"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "miss",
+                    "progress": ["b"],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "d",
+                    "status": "correct",
+                    "progress": ["b", "d"],
+                    "misses": 1,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "sequence: a reused tile (nə-nə)",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "sequence",
+                "item_ids": ["a", "a"]
+            },
+            "hits": [
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["a"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["a", "a"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "sequence: the next item is the only correct one",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "sequence",
+                "item_ids": ["a", "b"]
+            },
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["a"],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "miss",
+                    "progress": ["a"],
+                    "misses": 2,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["a", "b"],
+                    "misses": 2,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "sequence: two misses on the same decoy count twice",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "sequence",
+                "item_ids": ["a", "b"]
+            },
+            "hits": [
+                {
+                    "item_id": "c",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "c",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 2,
+                    "solved": false
+                }
+            ]
+        },
+        {
+            "name": "sequence: a hit after the round is solved is stale",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "sequence",
+                "item_ids": ["a", "a"]
+            },
+            "hits": [
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["a"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["a", "a"],
+                    "misses": 0,
+                    "solved": true
+                },
+                {
+                    "item_id": "a",
+                    "status": "stale",
+                    "progress": ["a", "a"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
+            "name": "sequence: resumes from stored progress",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "sequence",
+                "item_ids": ["b", "a", "b"]
+            },
+            "progress": ["b"],
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "miss",
+                    "progress": ["b"],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["b", "a"],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["b", "a", "b"],
+                    "misses": 1,
+                    "solved": true
+                }
+            ]
+        }
+    ]
+}

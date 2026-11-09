@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- ərik: an apricot and a half with its stone. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M25,21 C26,16 28,13 31,11" fill="none"/>
+    <path d="M28,15 Q37.8,16.7 44,9 Q34.2,7.3 28,15 Z" fill="#5C9E31"/><path d="M28,15 L40.8,10.2" fill="none" stroke-width="1.5"/>
+    <circle cx="25" cy="37" r="16" fill="#F4AA41"/>
+    <path d="M33,23.1 A16,16 0 0 1 33,50.9 A48,48 0 0 0 33,23.1 Z" fill="#E27022" stroke="none"/>
+    <circle cx="25" cy="37" r="16" fill="none"/>
+    <path d="M25,21.5 C20,28 20,40 24,52" fill="none" stroke-width="1.5"/>
+    <circle cx="47" cy="49" r="15" fill="#E27022"/>
+    <circle cx="47" cy="49" r="11.5" fill="#F4AA41" stroke="none"/>
+    <ellipse cx="47" cy="49" rx="5" ry="6.5" fill="#A57939"/>
+    <path d="M47,44 L47,54" fill="none" stroke-width="1.2"/>
+  </g>
+</svg>

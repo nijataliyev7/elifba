@@ -1,0 +1,42 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0D",
+    "index": 3,
+    "total": 10,
+    "mechanic": "build_word",
+    "unit": "word",
+    "pack": "animals",
+    "level": "words-short",
+    "prompt": {
+        "text": "Sözü hecalardan yığ!",
+        "show": null,
+        "image": "http://localhost/content/openmoji/1F475.svg?v=2",
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "nə",
+            "image": null,
+            "content_key": "syllable:nə"
+        },
+        {
+            "id": "b",
+            "text": "ba",
+            "image": null,
+            "content_key": "syllable:ba"
+        },
+        {
+            "id": "c",
+            "text": "də",
+            "image": null,
+            "content_key": "syllable:də"
+        }
+    ],
+    "slots": 2,
+    "solution": {
+        "order": "sequence",
+        "item_ids": ["a", "a"]
+    },
+    "effect": "burst"
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- buta: the paisley motif. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" fill="#1E50A0"/>
+    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" transform="translate(34 46) scale(0.62) translate(-34 -46)" fill="#D22F27" stroke-width="3.2"/>
+    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" transform="translate(34 50) scale(0.28) translate(-34 -46)" fill="#FCEA2B" stroke-width="7"/>
+    <circle cx="19" cy="44" r="1.5" fill="#FCEA2B" stroke="none"/>
+    <circle cx="22" cy="31" r="1.5" fill="#FCEA2B" stroke="none"/>
+    <circle cx="33" cy="22" r="1.5" fill="#FCEA2B" stroke="none"/>
+    <circle cx="24" cy="56" r="1.5" fill="#FCEA2B" stroke="none"/>
+    <circle cx="38" cy="59" r="1.5" fill="#FCEA2B" stroke="none"/>
+    <circle cx="48" cy="50" r="1.5" fill="#FCEA2B" stroke="none"/>
+  </g>
+</svg>

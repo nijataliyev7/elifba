@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- xarıbülbül: the Shusha flower that looks like a nightingale sitting on a flower. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36,42 L36,65" fill="none" stroke="#000" stroke-width="5"/>
+    <path d="M36,42 L36,65" fill="none" stroke="#5C9E31" stroke-width="2"/>
+    <path d="M35,64 C26,60 20,50 18,40 C26,44 32,52 35,64 Z" fill="#B1CC33"/>
+    <path d="M37,64 C46,60 52,50 54,40 C46,44 40,52 37,64 Z" fill="#B1CC33"/>
+    <ellipse cx="36" cy="15.5" rx="6" ry="10" fill="#B399C8"/>
+    <ellipse cx="21" cy="24" rx="5.5" ry="11" transform="rotate(-60 21 24)" fill="#B399C8"/>
+    <ellipse cx="51" cy="24" rx="5.5" ry="11" transform="rotate(60 51 24)" fill="#B399C8"/>
+    <path d="M30,28 C25,28 23,31 24,33 C27,33 30,32 32,30 Z" fill="#E67A94"/>
+    <path d="M42,28 C47,28 49,31 48,33 C45,33 42,32 40,30 Z" fill="#E67A94"/>
+    <ellipse cx="36" cy="36" rx="7" ry="8.5" fill="#781E32"/>
+    <path d="M30.5,34 C33,38 38,39 42,36.5" fill="none" stroke="#E67A94" stroke-width="2"/>
+    <path d="M33.2,25.6 L28.5,25 L32.6,28.4 Z" fill="#F1B31C" stroke-width="1.2"/>
+    <circle cx="36" cy="26" r="4" fill="#781E32"/>
+    <circle cx="34.9" cy="25.2" r="1" fill="#FFF" stroke="none"/>
+  </g>
+</svg>

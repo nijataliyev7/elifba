@@ -1,0 +1,70 @@
+# What the Docker image never gets (Dockerfile, docs/architecture.md §10). The
+# repository may be a plain folder, so this list is the only filter: it
+# repeats .gitignore and adds what the image does not need.
+
+# Secrets and local settings
+.env
+.env.*
+auth.json
+
+# Installed and built on the host; the image installs and builds its own
+node_modules
+vendor
+public/build
+public/hot
+public/fonts-manifest.dev.json
+bootstrap/ssr
+resources/js/actions
+resources/js/routes
+resources/js/wayfinder
+
+# Symlinks into the host (`storage:link` makes them again in the container)
+public/content
+public/storage
+
+# Runtime state; the Dockerfile makes the empty folders
+storage
+bootstrap/cache
+database/*.sqlite
+database/*.sqlite-*
+
+# Not used at run time
+.git
+.github
+.editorconfig
+.phpunit.cache
+.phpunit.result.cache
+docs
+tests
+scripts
+docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+*.md
+!CREDITS.md
+npm-debug.log
+yarn-error.log
+.DS_Store
+
+# Editor and agent folders
+.fleet
+.idea
+.nova
+.vscode
+.zed
+.agents
+.amp
+.claude
+.codex
+.cursor
+.factory
+.grok
+.junie
+.kiro
+.pi
+.mcp.json
+boost.json
+opencode.json
+opencode.jsonc
+graphify-out

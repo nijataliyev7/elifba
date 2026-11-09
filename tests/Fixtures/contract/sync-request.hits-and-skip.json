@@ -1,0 +1,38 @@
+{
+    "board_epoch": 3,
+    "events": [
+        {
+            "type": "hit",
+            "event_id": "01JC8ZA0000000000000000001",
+            "round_id": "01JC8Z6V8Q4B2X5N7M9P3R6T0B",
+            "item_id": "a",
+            "source": "board",
+            "student_id": "01JC8Z4N3M2K1J0H9G8F7E6D5C",
+            "client_at": "2026-11-09T08:15:30.125Z"
+        },
+        {
+            "type": "hit",
+            "event_id": "01JC8ZA0000000000000000002",
+            "round_id": "01JC8Z6V8Q4B2X5N7M9P3R6T0B",
+            "item_id": "c",
+            "source": "remote",
+            "student_id": "01JC8Z4N3M2K1J0H9G8F7E6D5C",
+            "client_at": "2026-11-09T08:15:31.400Z"
+        },
+        {
+            "type": "hit",
+            "event_id": "01JC8ZA0000000000000000003",
+            "round_id": "01JC8Z6V8Q4B2X5N7M9P3R6T0C",
+            "item_id": "d",
+            "source": "board",
+            "student_id": null,
+            "client_at": null
+        },
+        {
+            "type": "skip",
+            "event_id": "01JC8ZA0000000000000000004",
+            "round_id": "01JC8Z6V8Q4B2X5N7M9P3R6T0D",
+            "client_at": "2026-11-09T08:16:02.000Z"
+        }
+    ]
+}

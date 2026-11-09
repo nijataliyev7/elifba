@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- tonqal: a bonfire on crossed logs. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36,6 C40,14 50,18 51,32 C53,28 52,24 54,22 C58,30 60,40 56,48 C52,56 44,58 36,58 C28,58 20,56 16,48 C12,40 14,30 18,22 C20,24 19,28 21,32 C22,20 32,16 36,6 Z" fill="#E27022"/>
+    <path d="M36,24 C38,30 45,34 45,42 C45,50 41,54 36,54 C31,54 27,50 27,42 C27,36 33,32 36,24 Z" fill="#FCEA2B"/>
+    <g transform="rotate(14 36 58)"><rect x="10" y="54" width="52" height="8" rx="4" fill="#A57939"/><ellipse cx="58" cy="58" rx="2.5" ry="4" fill="#F4AA41"/></g>
+    <g transform="rotate(-14 36 58)"><rect x="10" y="54" width="52" height="8" rx="4" fill="#6A462F"/><ellipse cx="14" cy="58" rx="2.5" ry="4" fill="#F4AA41"/></g>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- saz: a long-necked lute with a pear-shaped body. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(-38 36 36)">
+      <rect x="33" y="3" width="6" height="9" rx="1" fill="#6A462F"/>
+      <line x1="33" y1="5" x2="30" y2="5"/>
+      <line x1="33" y1="8.5" x2="30" y2="8.5"/>
+      <line x1="39" y1="5" x2="42" y2="5"/>
+      <line x1="39" y1="8.5" x2="42" y2="8.5"/>
+      <rect x="34.2" y="11" width="3.6" height="28" fill="#6A462F"/>
+      <line x1="34.2" y1="17" x2="37.8" y2="17" stroke-width="1"/>
+      <line x1="34.2" y1="22" x2="37.8" y2="22" stroke-width="1"/>
+      <line x1="34.2" y1="27" x2="37.8" y2="27" stroke-width="1"/>
+      <line x1="34.2" y1="32" x2="37.8" y2="32" stroke-width="1"/>
+      <path d="M34,37 L38,37 C41,41 50,47 50,56 C50,63 43,67 36,67 C29,67 22,63 22,56 C22,47 31,41 34,37 Z" fill="#F4AA41"/>
+      <circle cx="36" cy="51" r="2.2" fill="#6A462F"/>
+      <rect x="32" y="60" width="8" height="2" fill="#6A462F" stroke-width="1"/>
+      <line x1="35" y1="8" x2="35" y2="61" stroke-width="0.8"/>
+      <line x1="37" y1="8" x2="37" y2="61" stroke-width="0.8"/>
+    </g>
+  </g>
+</svg>

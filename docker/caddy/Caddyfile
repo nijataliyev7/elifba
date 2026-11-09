@@ -1,0 +1,29 @@
+# The `proxy` service (docker-compose.yml, docs/architecture.md §10).
+# ELIFBA_SITE is `{scheme}://{domain}:{port}` from .env. With https Caddy gets
+# and renews a Let's Encrypt certificate for the domain itself and redirects
+# port 80 to it; with http it serves only that port, without certificates.
+
+{
+	# Only the container's own health check uses the admin API.
+	admin 127.0.0.1:2019
+}
+
+{$ELIFBA_SITE} {
+	# Reverb's HTTP API is for `app` and `scheduler` on the internal network.
+	@reverb_api path /apps /apps/*
+	handle @reverb_api {
+		respond 404
+	}
+
+	# The browser's WebSocket to Reverb (Pusher protocol, /app/{key}).
+	handle /app/* {
+		reverse_proxy reverb:8080
+	}
+
+	# Everything else: nginx + PHP-FPM. Caddy sets X-Forwarded-For, -Proto
+	# and -Host from the connection and drops any a browser sent.
+	handle {
+		encode zstd gzip
+		reverse_proxy app:8080
+	}
+}

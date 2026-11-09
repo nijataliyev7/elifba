@@ -1,0 +1,42 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0E",
+    "index": 4,
+    "total": 10,
+    "mechanic": "build_sentence",
+    "unit": "sentence",
+    "pack": "symbols",
+    "level": "sentences",
+    "prompt": {
+        "text": "Sözlərdən cümlə qur!",
+        "show": null,
+        "image": null,
+        "audio": null,
+        "tail": "."
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "Tar",
+            "image": null,
+            "content_key": "word:tar"
+        },
+        {
+            "id": "b",
+            "text": "gözəldir",
+            "image": null,
+            "content_key": "word:gözəldir"
+        },
+        {
+            "id": "c",
+            "text": "böyükdür",
+            "image": null,
+            "content_key": "word:böyükdür"
+        }
+    ],
+    "slots": 2,
+    "solution": {
+        "order": "sequence",
+        "item_ids": ["a", "b"]
+    },
+    "effect": "sparkle"
+}

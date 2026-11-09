@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- armudu: the pear-shaped tea glass with a gold rim. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23,12 L49,12 C49,20 41,26 41,32 C41,37 53,41 53,49 C53,57 45,61 36,61 C27,61 19,57 19,49 C19,41 31,37 31,32 C31,26 23,20 23,12 Z" fill="#92D3F5"/>
+    <path d="M23.4,12 L48.6,12 L48,16.5 L24,16.5 Z" fill="#F1B31C" stroke="none"/>
+    <path d="M24.5,47 C24,51 25.5,54.5 28.5,56.5" fill="none" stroke="#FFF" stroke-width="3"/>
+    <path d="M27.5,19.5 C29.5,22.5 31,25 32,28" fill="none" stroke="#FFF" stroke-width="2.5"/>
+    <path d="M23,12 L49,12 C49,20 41,26 41,32 C41,37 53,41 53,49 C53,57 45,61 36,61 C27,61 19,57 19,49 C19,41 31,37 31,32 C31,26 23,20 23,12 Z" fill="none"/>
+    <line x1="24" y1="16.5" x2="48" y2="16.5" stroke-width="1.5"/>
+    <rect x="30.6" y="31" width="10.8" height="3.5" rx="1" fill="#F1B31C" stroke-width="1.5"/>
+  </g>
+</svg>

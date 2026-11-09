@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- vağzal: a railway station building with a great arched window. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="26" width="60" height="32" fill="#F4AA41"/>
+    <rect x="4" y="22" width="64" height="5" fill="#E27022"/>
+    <path d="M22,58 L22,34 C22,18 50,18 50,34 L50,58 Z" fill="#92D3F5"/>
+    <path d="M36,21.5 L36,58 M22.5,36 L49.5,36 M27,24.5 L36,36 M45,24.5 L36,36" fill="none" stroke-width="1.5"/>
+    <path d="M22,58 L22,34 C22,14 50,14 50,34 L50,58" fill="none" stroke="#E27022" stroke-width="5"/>
+    <path d="M19.5,58 L19.5,34 C19.5,11 52.5,11 52.5,34 L52.5,58 M24.5,58 L24.5,34 C24.5,18 47.5,18 47.5,34 L47.5,58" fill="none"/>
+    <path d="M9,50 L9,40 C9,35 16,35 16,40 L16,50 Z" fill="#92D3F5"/>
+    <path d="M56,50 L56,40 C56,35 63,35 63,40 L63,50 Z" fill="#92D3F5"/>
+    <rect x="4" y="58" width="64" height="4" fill="#D0CFCE"/>
+    <rect x="7" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="14" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="21" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="28" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="35" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="42" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="49" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="56" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <rect x="63" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
+    <path d="M4,64.5 L68,64.5 M4,67 L68,67" fill="none" stroke-width="1.5"/>
+  </g>
+</svg>

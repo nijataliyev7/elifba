@@ -1,0 +1,39 @@
+name: Təklif / Idea
+description: Yeni oyun, tema və ya müəllimin işini asanlaşdıracaq bir şey. / A new game, theme or something that would make a teacher's day easier.
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Uşaqların adlarını heç vaxt yazmayın** və real şagird adları görünən ekran görüntüsü əlavə etməyin.
+        **Never paste children's names** or screenshots that show real students' names.
+
+        Elifba uşaqlar haqqında yalnız ad və avatar saxlayır; bundan artıq məlumat istəyən təkliflər qəbul olunmur ([arxitektura §7](https://github.com/nijataliyev7/elifba/blob/main/docs/architecture.md#7-childrens-privacy)). / Elifba keeps only a display name and an avatar per child; ideas that need more data about children are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Sinifdə hansı problemi həll edir? / What problem does it solve in the classroom?
+      description: Dərsdə nə baş verir, nəyi çətin və ya yavaş edir? / What happens in the lesson today, and what is hard or slow?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Təklifiniz / Your idea
+      description: Lövhədə, telefonda və ya sinif səhifəsində necə görünəcək? / How would it look on the board, the phone or the class page?
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Siz kimsiniz? / Who are you?
+      options:
+        - İbtidai sinif müəllimi / Primary-school teacher
+        - Valideyn / Parent
+        - Proqramçı / Developer
+        - Başqa / Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: İndi necə edirsiniz? / How do you do it today?
+      description: Bunu Elifba-sız necə edirsiniz və ya başqa hansı yolları düşünmüsünüz? / How you manage without it, or other ways you considered.

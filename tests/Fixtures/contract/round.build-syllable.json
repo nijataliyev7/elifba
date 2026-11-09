@@ -1,0 +1,42 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0F",
+    "index": 2,
+    "total": 10,
+    "mechanic": "build_syllable",
+    "unit": "syllable",
+    "pack": "fruit",
+    "level": "syllables-closed",
+    "prompt": {
+        "text": "«TUT» hecasını qur!",
+        "show": "TUT",
+        "image": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "U",
+            "image": null,
+            "content_key": "letter:u"
+        },
+        {
+            "id": "b",
+            "text": "Ü",
+            "image": null,
+            "content_key": "letter:ü"
+        },
+        {
+            "id": "c",
+            "text": "T",
+            "image": null,
+            "content_key": "letter:t"
+        }
+    ],
+    "slots": 3,
+    "solution": {
+        "order": "sequence",
+        "item_ids": ["c", "a", "c"]
+    },
+    "effect": "burst"
+}

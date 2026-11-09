@@ -1,0 +1,48 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0A",
+    "index": 0,
+    "total": 10,
+    "mechanic": "find",
+    "unit": "letter",
+    "pack": "balloons",
+    "level": "letters",
+    "prompt": {
+        "text": "«Ə» hərfini tap!",
+        "show": "Ə",
+        "image": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "E",
+            "image": null,
+            "content_key": "letter:e"
+        },
+        {
+            "id": "b",
+            "text": "Ə",
+            "image": null,
+            "content_key": "letter:ə"
+        },
+        {
+            "id": "c",
+            "text": "A",
+            "image": null,
+            "content_key": "letter:a"
+        },
+        {
+            "id": "d",
+            "text": "İ",
+            "image": null,
+            "content_key": "letter:i"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["b"]
+    },
+    "effect": "burst"
+}

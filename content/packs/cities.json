@@ -1,0 +1,74 @@
+{
+    "key": "cities",
+    "version": 3,
+    "title": { "az": "Şəhərlərimiz", "en": "Our cities" },
+    "style": {
+        "item": "card",
+        "slot": "frame",
+        "effect": "sparkle",
+        "backdrop": "cities/qiz-qalasi.svg",
+        "palette": ["#3B82C4", "#2BA6A0", "#F6C445"],
+        "sounds": {
+            "hit": "sounds/chime.mp3",
+            "miss": "sounds/bong.mp3",
+            "solved": "sounds/success.mp3"
+        }
+    },
+    "words": [
+        { "text": "Bakı", "image": "cities/baki.svg" },
+        { "text": "Gəncə", "image": "cities/gence.svg" },
+        { "text": "Sumqayıt", "image": "cities/sumqayit.svg" },
+        { "text": "Mingəçevir", "image": "cities/mingecevir.svg" },
+        { "text": "Şəki", "image": "cities/seki.svg" },
+        { "text": "Şuşa", "image": "cities/susa.svg" },
+        { "text": "Lənkəran", "image": "cities/lenkeran.svg" },
+        { "text": "Naxçıvan", "image": "cities/naxcivan.svg" },
+        { "text": "Quba", "image": "cities/quba.svg" },
+        { "text": "Qəbələ", "image": "cities/qebele.svg" },
+        { "text": "Qax", "image": "cities/qax.svg" },
+        { "text": "Zaqatala", "image": "cities/zaqatala.svg" },
+        { "text": "İsmayıllı", "image": "cities/ismayilli.svg" },
+        { "text": "Şamaxı", "image": "cities/samaxi.svg" },
+        { "text": "Astara", "image": "cities/astara.svg" },
+        { "text": "Masallı", "image": "cities/masalli.svg" },
+        { "text": "Lerik", "image": "cities/lerik.svg" },
+        { "text": "Qusar", "image": "cities/qusar.svg" },
+        { "text": "Xaçmaz", "image": "cities/xacmaz.svg" },
+        { "text": "Şirvan", "image": "cities/sirvan.svg" },
+        { "text": "Göygöl", "image": "cities/goygol.svg" },
+        { "text": "Tovuz", "image": "cities/tovuz.svg" },
+        { "text": "Qazax", "image": "cities/qazax.svg" },
+        { "text": "Ordubad", "image": "cities/ordubad.svg" },
+        { "text": "Ağdam", "image": "cities/agdam.svg" },
+        { "text": "Füzuli", "image": "cities/fuzuli.svg" },
+        { "text": "Laçın", "image": "cities/lacin.svg" },
+        { "text": "Kəlbəcər", "image": "cities/kelbecer.svg" },
+        { "text": "Xızı", "image": "cities/xizi.svg" }
+    ],
+    "sentences": [
+        { "id": "baki-paytaxtdir", "text": "Bakı paytaxtdır." },
+        { "id": "baki-deniz-kenarindadir", "text": "Bakı dəniz kənarındadır." },
+        { "id": "bakida-qiz-qalasi-var", "text": "Bakıda Qız qalası var." },
+        { "id": "gence-boyuk-seherdir", "text": "Gəncə böyük şəhərdir." },
+        { "id": "seki-qedim-seherdir", "text": "Şəki qədim şəhərdir." },
+        { "id": "susa-dagdadir", "text": "Şuşa dağdadır." },
+        { "id": "lenkeranda-cay-bitir", "text": "Lənkəranda çay bitir." },
+        { "id": "qubada-alma-baglari-var", "text": "Qubada alma bağları var." },
+        { "id": "zaqatalada-findiq-bitir", "text": "Zaqatalada fındıq bitir." },
+        {
+            "id": "astara-deniz-kenarindadir",
+            "text": "Astara dəniz kənarındadır."
+        },
+        { "id": "qebelede-daglar-var", "text": "Qəbələdə dağlar var." },
+        {
+            "id": "sumqayit-bakiya-yaxindir",
+            "text": "Sumqayıt Bakıya yaxındır."
+        },
+        {
+            "id": "mingecevir-kur-sahilindedir",
+            "text": "Mingəçevir Kür sahilindədir."
+        },
+        { "id": "biz-genceye-gedirik", "text": "Biz Gəncəyə gedirik." },
+        { "id": "senin-seherin-hansidir", "text": "Sənin şəhərin hansıdır?" }
+    ]
+}

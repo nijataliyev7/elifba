@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- sini: a round engraved copper tray. Elifba own art, MIT. -->
+  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="36" cy="36" r="31" fill="#E27022"/>
+    <circle cx="36" cy="36" r="26" fill="#F1B31C"/>
+    <circle cx="36" cy="36" r="19" fill="none" stroke="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(0 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(45 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(90 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(135 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(180 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(225 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(270 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <ellipse cx="36" cy="21" rx="3" ry="5" transform="rotate(315 36 36)" fill="#E27022" stroke-width="1.5"/>
+    <circle cx="36" cy="36" r="6" fill="#E27022" stroke-width="1.5"/>
+    <circle cx="36" cy="36" r="2" fill="#FCEA2B" stroke="none"/>
+  </g>
+</svg>

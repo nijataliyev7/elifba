@@ -1,0 +1,26 @@
+{
+    "prompts": [
+        { "mechanic": "find", "unit": "letter", "text": "«{x}» hərfini tap!" },
+        {
+            "mechanic": "find",
+            "unit": "syllable",
+            "text": "«{x}» hecasını tap!"
+        },
+        { "mechanic": "find", "unit": "word", "text": "«{x}» sözünü tap!" },
+        {
+            "mechanic": "build_syllable",
+            "unit": "syllable",
+            "text": "«{x}» hecasını qur!"
+        },
+        {
+            "mechanic": "build_word",
+            "unit": "word",
+            "text": "Sözü hecalardan yığ!"
+        },
+        {
+            "mechanic": "build_sentence",
+            "unit": "sentence",
+            "text": "Sözlərdən cümlə qur!"
+        }
+    ]
+}
