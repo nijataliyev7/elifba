@@ -10,7 +10,7 @@
 # arguments from .env; changing the domain, scheme, port or REVERB_APP_KEY
 # needs `docker compose up -d --build`.
 
-FROM node:22.23.4-bookworm-slim AS node
+FROM node:26.12.1-bookworm-slim AS node
 
 # PHP 8.4 with intl (composer.json needs ext-intl; pdo_pgsql and pcntl are
 # already in the image).
