@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Sual və ya söhbət / A question or a conversation
+    url: https://github.com/nijataliyev7/elifba/discussions
+    about: Sualları və təcrübənizi Discussions-da yazın. / Ask questions and share how you use Elifba in Discussions.
   - name: Təhlükəsizlik zəifliyi / Security vulnerability
     url: https://github.com/nijataliyev7/elifba/blob/main/SECURITY.md
     about: Zəiflikləri açıq issue ilə yox, gizli bildirin. / Report vulnerabilities privately, not in a public issue.

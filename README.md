@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Use it free at <a href="https://elifba.io"><strong>elifba.io</strong></a>, with nothing to install.
+  Free and open source, made for first-grade reading lessons. Use it at <a href="https://elifba.io"><strong>elifba.io</strong></a>, with nothing to install.
 </p>
 
 <p align="center">
@@ -38,6 +38,16 @@ The interface is Azerbaijani first, with English; the reading content is always 
 | <img src="docs/screenshots/class.png" width="560" alt="The class page of 1A: sixteen students, each with a number, a cartoon animal and a first name"> | <img src="docs/screenshots/remote.png" width="220" alt="The phone remote: the prompt «Ö» hərfini tap!, four letter buttons with Ö marked as the answer, Aysel at the board, and pause, skip and end buttons"> |
 
 <img src="docs/screenshots/podium.png" width="820" alt="The podium of 1A for 9 November 2026: Aysel first with 21 points, Murad second with 18, Nigar third with 15, and the WhatsApp status image beside it">
+
+## Help
+
+Elifba is made together with teachers, and most of the help it needs is not code:
+
+- **Try it in your class** and tell what works and what does not: [an idea](https://github.com/nijataliyev7/elifba/issues/new?template=2-idea.yml), or a question in [Discussions](https://github.com/nijataliyev7/elifba/discussions).
+- **Check the content.** A wrong word, syllable split, sentence or picture is [a content correction](https://github.com/nijataliyev7/elifba/issues/new?template=3-content.yml), and every theme can take more words and sentences.
+- **Translate the interface** into another language: it is two files, as [CONTRIBUTING](CONTRIBUTING.md#translations) explains.
+- **Write code:** issues marked [good first issue](https://github.com/nijataliyev7/elifba/labels/good%20first%20issue) are a good start, and [Develop](#develop) below sets you up.
+- **Star the repository**, so that other teachers and developers find it.
 
 ## Develop
 

@@ -11,25 +11,35 @@ updates:
         patterns:
           - "*"
 
-  # The base images in Dockerfile (serversideup/php, node).
+  # The base images in Dockerfile (serversideup/php, node). A major
+  # version (Node 22 → 26) changes the stack the README and CI pin, so it
+  # is a deliberate step, not a weekly bump.
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       docker:
         patterns:
           - "*"
 
-  # The images docker-compose.yml runs as they are (caddy, postgres).
+  # The images docker-compose.yml runs as they are (caddy, postgres). A
+  # major PostgreSQL (17 → 18) needs a dump and restore of every instance's
+  # database, so it is a deliberate step too.
   - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-compose:
         patterns:

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://elifba.io"><strong>elifba.io</strong></a> ünvanında pulsuz istifadə edin, heç nə quraşdırmaq lazım deyil.
+  Pulsuz və açıq mənbəlidir, 1-ci sinfin savad təlimi dərsləri üçün hazırlanıb. <a href="https://elifba.io"><strong>elifba.io</strong></a> ünvanında istifadə edin, heç nə quraşdırmaq lazım deyil.
 </p>
 
 <p align="center">
@@ -38,6 +38,16 @@
 | <img src="docs/screenshots/class.png" width="560" alt="1A sinfinin səhifəsi: on altı şagird, hər birinin sıra nömrəsi, cizgi heyvanı və adı"> | <img src="docs/screenshots/remote.png" width="220" alt="Telefon pultu: «Ö» hərfini tap! tapşırığı, dörd hərf düyməsi (Ö cavab kimi işarələnib), lövhədə Aysel, fasilə, keç və oyunu bitir düymələri"> |
 
 <img src="docs/screenshots/podium.png" width="820" alt="1A sinfinin 9 noyabr 2026 qalibləri: 1-ci Aysel 21 xal, 2-ci Murad 18 xal, 3-cü Nigar 15 xal, yanında WhatsApp statusu üçün şəkil">
+
+## Kömək edin
+
+Elifba müəllimlərlə birlikdə hazırlanır və ona lazım olan köməyin çoxu kod deyil:
+
+- **Sinifdə yoxlayın** və nəyin işlədiyini, nəyin işləmədiyini yazın: [ideya](https://github.com/nijataliyev7/elifba/issues/new?template=2-idea.yml), sualınızı isə [Discussions](https://github.com/nijataliyev7/elifba/discussions) bölməsində verin.
+- **Məzmunu yoxlayın.** Səhv söz, heca bölgüsü, cümlə və ya şəkil üçün [məzmun düzəlişi](https://github.com/nijataliyev7/elifba/issues/new?template=3-content.yml) göndərin; hər temaya yeni sözlər və cümlələr də əlavə etmək olar.
+- **İnterfeysi başqa dilə tərcümə edin**: cəmi iki fayldır, [CONTRIBUTING](CONTRIBUTING.md#translations) izah edir.
+- **Kod yazın:** [good first issue](https://github.com/nijataliyev7/elifba/labels/good%20first%20issue) etiketli issue-lar başlamaq üçün yaxşıdır, aşağıdakı «İnkişaf» bölməsi isə qurulumu göstərir.
+- **Repoya ulduz verin** ki, başqa müəllimlər və proqramçılar onu tapsın.
 
 ## İnkişaf
 
