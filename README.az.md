@@ -87,6 +87,7 @@ Sonra `.env` faylını açın (`nano .env`) və doldurun:
 
 - `ELIFBA_OPERATOR_NAME` və `ELIFBA_OPERATOR_EMAIL`: bu serverə cavabdeh olan şəxs və ya məktəb. Məxfilik səhifəsi (`/privacy`) onları məlumatı saxlayan və valideynlərə cavab verən tərəf kimi göstərir.
 - `MAIL_*` sətirləri (`MAIL_MAILER=smtp`, host, port, istifadəçi, parol, göndərən ünvan): müəllimlər e-poçtlarını təsdiqləmək və parolu bərpa etmək üçün məktub alırlar. O vaxta qədər məktublar loga yazılır (aşağıya baxın).
+- İstəyə görə: `GOOGLE_CLIENT_ID` və `GOOGLE_CLIENT_SECRET` — müəllimlər Google ilə daxil ola bilsin deyə (Google Cloud Console-da "Web application" tipli OAuth client, yönləndirmə ünvanı `https://<domeniniz>/auth/google/callback`; [ADR 008](docs/decisions/008-google-sign-in.md)). Google-un təsdiqlədiyi Gmail və ya Google Workspace ünvanı müəllimin ünvanını da məktubsuz təsdiqləyir. Boş = Google düyməsi yoxdur.
 
 **İşə salmaq.**
 

@@ -1,5 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { LinkedText } from '@/components/app/linked-text';
+import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -9,14 +10,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login, privacy } from '@/routes';
+import { redirect as google } from '@/routes/google';
 import { store } from '@/routes/register';
 import { useTranslation } from '@/hooks/use-translation';
 
 type Props = {
     passwordRules: string;
+    /** Whether this instance offers Google sign-in (ADR 008). */
+    googleSignIn: boolean;
 };
 
-export default function Register({ passwordRules }: Props) {
+export default function Register({ passwordRules, googleSignIn }: Props) {
     const { t } = useTranslation();
 
     return (
@@ -146,6 +150,15 @@ export default function Register({ passwordRules }: Props) {
                                 {t('auth.register.submit')}
                             </Button>
                         </div>
+
+                        {googleSignIn && (
+                            <GoogleSignIn
+                                href={google.url()}
+                                label={t('auth.google.sign_up')}
+                                separator={t('auth.google.or')}
+                                tabIndex={7}
+                            />
+                        )}
 
                         <div className="text-center text-sm text-muted-foreground">
                             {t('auth.register.have_account')}{' '}

@@ -1,6 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import GoogleSignIn from '@/components/google-sign-in';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -16,10 +17,26 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/use-translation';
+import { confirm as confirmWithGoogle } from '@/routes/google';
 
-export default function DeleteUser() {
+export type Props = {
+    /** False for a teacher who signed up with Google and set no password. */
+    hasPassword: boolean;
+    /** Confirmed recently (password, passkey or Google): enough without a password. */
+    passwordConfirmed: boolean;
+    /** The teacher is linked to Google and this instance offers it (ADR 008). */
+    canConfirmWithGoogle: boolean;
+};
+
+export default function DeleteUser({
+    hasPassword,
+    passwordConfirmed,
+    canConfirmWithGoogle,
+}: Props) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const { t } = useTranslation();
+    // Without a password, a fresh confirmation stands in for it (ADR 008).
+    const mustConfirmFirst = !hasPassword && !passwordConfirmed;
 
     return (
         <div className="space-y-6">
@@ -50,7 +67,11 @@ export default function DeleteUser() {
                             {t('settings.delete.confirm_title')}
                         </DialogTitle>
                         <DialogDescription>
-                            {t('settings.delete.confirm_description')}
+                            {hasPassword
+                                ? t('settings.delete.confirm_description')
+                                : t(
+                                      'settings.delete.confirm_description_no_password',
+                                  )}
                         </DialogDescription>
 
                         <Form
@@ -65,23 +86,49 @@ export default function DeleteUser() {
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
-                                        <Label
-                                            htmlFor="password"
-                                            className="sr-only"
-                                        >
-                                            {t('common.password')}
-                                        </Label>
+                                        {hasPassword && (
+                                            <>
+                                                <Label
+                                                    htmlFor="password"
+                                                    className="sr-only"
+                                                >
+                                                    {t('common.password')}
+                                                </Label>
 
-                                        <PasswordInput
-                                            id="password"
-                                            name="password"
-                                            ref={passwordInput}
-                                            placeholder={t('common.password')}
-                                            autoComplete="current-password"
-                                        />
+                                                <PasswordInput
+                                                    id="password"
+                                                    name="password"
+                                                    ref={passwordInput}
+                                                    placeholder={t(
+                                                        'common.password',
+                                                    )}
+                                                    autoComplete="current-password"
+                                                />
+                                            </>
+                                        )}
+
+                                        {mustConfirmFirst && (
+                                            <p className="text-sm text-muted-foreground">
+                                                {canConfirmWithGoogle
+                                                    ? t(
+                                                          'settings.delete.confirm_with_google',
+                                                      )
+                                                    : t(
+                                                          'settings.delete.no_password',
+                                                      )}
+                                            </p>
+                                        )}
 
                                         <InputError message={errors.password} />
                                     </div>
+
+                                    {mustConfirmFirst &&
+                                        canConfirmWithGoogle && (
+                                            <GoogleSignIn
+                                                href={confirmWithGoogle.url()}
+                                                label={t('auth.google.confirm')}
+                                            />
+                                        )}
 
                                     <DialogFooter className="gap-2">
                                         <DialogClose asChild>
@@ -97,7 +144,9 @@ export default function DeleteUser() {
 
                                         <Button
                                             variant="destructive"
-                                            disabled={processing}
+                                            disabled={
+                                                processing || mustConfirmFirst
+                                            }
                                             asChild
                                         >
                                             <button

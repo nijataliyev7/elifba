@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
+use App\Support\GoogleSignIn;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -51,6 +53,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
+            'googleSignIn' => GoogleSignIn::enabled(),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
@@ -69,11 +72,21 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::registerView(fn () => Inertia::render('auth/register', [
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'googleSignIn' => GoogleSignIn::enabled(),
         ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 
-        Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
+        // A teacher who signed up with Google may have no password: they
+        // confirm with Google instead (ADR 008).
+        Fortify::confirmPasswordView(function (Request $request) {
+            $user = $request->user();
+
+            return Inertia::render('auth/confirm-password', [
+                'hasPassword' => ! $user instanceof User || $user->password !== null,
+                'canConfirmWithGoogle' => $user instanceof User && GoogleSignIn::canConfirm($user),
+            ]);
+        });
     }
 
     /**
@@ -89,6 +102,11 @@ class FortifyServiceProvider extends ServiceProvider
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        // Google sign-in (ADR 008): per address, as a school shares one.
+        RateLimiter::for('google', function (Request $request) {
+            return Limit::perMinute(30)->by('google|'.$request->ip());
         });
 
         RateLimiter::for('passkeys', function (Request $request) {

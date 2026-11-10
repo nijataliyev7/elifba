@@ -87,6 +87,7 @@ Then open `.env` (`nano .env`) and fill in:
 
 - `ELIFBA_OPERATOR_NAME` and `ELIFBA_OPERATOR_EMAIL`: the person or school responsible for this instance. The privacy page (`/privacy`) names them as the one who keeps the data and answers parents.
 - The `MAIL_*` lines (`MAIL_MAILER=smtp`, host, port, user, password, from address): teachers confirm their address and reset passwords by mail. Until then mail goes to the log (see below).
+- Optional: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, to let teachers sign in with Google (an OAuth client of type "Web application" in Google Cloud Console, with the redirect URI `https://<your domain>/auth/google/callback`; [ADR 008](docs/decisions/008-google-sign-in.md)). A Gmail or Google Workspace address confirmed by Google also confirms the teacher's, without mail. Empty = no Google button.
 
 **Start.**
 

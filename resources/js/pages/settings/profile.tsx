@@ -2,6 +2,7 @@ import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import type { Props as DeleteUserProps } from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -19,10 +20,13 @@ type PageProps = {
 export default function Profile({
     mustVerifyEmail,
     status,
+    hasPassword,
+    passwordConfirmed,
+    canConfirmWithGoogle,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
-}) {
+} & DeleteUserProps) {
     const { auth } = usePage<PageProps>().props;
     const { t } = useTranslation();
 
@@ -131,7 +135,11 @@ export default function Profile({
                 </Form>
             </div>
 
-            <DeleteUser />
+            <DeleteUser
+                hasPassword={hasPassword}
+                passwordConfirmed={passwordConfirmed}
+                canConfirmWithGoogle={canConfirmWithGoogle}
+            />
         </>
     );
 }

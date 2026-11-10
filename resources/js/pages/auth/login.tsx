@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
+import { redirect as google } from '@/routes/google';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/passkey-verify';
@@ -16,9 +18,15 @@ import { useTranslation } from '@/hooks/use-translation';
 type Props = {
     status?: string;
     canResetPassword: boolean;
+    /** Whether this instance offers Google sign-in (ADR 008). */
+    googleSignIn: boolean;
 };
 
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({
+    status,
+    canResetPassword,
+    googleSignIn,
+}: Props) {
     const { t } = useTranslation();
 
     return (
@@ -100,6 +108,15 @@ export default function Login({ status, canResetPassword }: Props) {
                                 {t('auth.login.submit')}
                             </Button>
                         </div>
+
+                        {googleSignIn && (
+                            <GoogleSignIn
+                                href={google.url()}
+                                label={t('auth.google.sign_in')}
+                                separator={t('auth.google.or')}
+                                tabIndex={4}
+                            />
+                        )}
 
                         <div className="text-center text-sm text-muted-foreground">
                             {t('auth.login.no_account')}{' '}

@@ -40,6 +40,8 @@ class SecurityController extends Controller
                     ->all()
                 : [],
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            // Signed up with Google: they set a password, with no current one (ADR 008).
+            'hasPassword' => $user->password !== null,
         ];
 
         if (Features::canManageTwoFactorAuthentication()) {

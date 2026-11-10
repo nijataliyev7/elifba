@@ -16,6 +16,8 @@ import { useTranslation } from '@/hooks/use-translation';
 // oxfmt-ignore
 type Props = {
     passwordRules: string;
+    /** False for a teacher who signed up with Google: they set one, with no current password (ADR 008). */
+    hasPassword: boolean;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
@@ -33,8 +35,16 @@ export default function Security(props: Props) {
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title={t('settings.security.password_heading')}
-                    description={t('settings.security.password_description')}
+                    title={
+                        props.hasPassword
+                            ? t('settings.security.password_heading')
+                            : t('settings.security.set_password_heading')
+                    }
+                    description={
+                        props.hasPassword
+                            ? t('settings.security.password_description')
+                            : t('settings.security.set_password_description')
+                    }
                 />
 
                 <Form
@@ -61,24 +71,30 @@ export default function Security(props: Props) {
                 >
                     {({ errors, processing }) => (
                         <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="current_password">
-                                    {t('settings.security.current_password')}
-                                </Label>
+                            {props.hasPassword && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="current_password">
+                                        {t(
+                                            'settings.security.current_password',
+                                        )}
+                                    </Label>
 
-                                <PasswordInput
-                                    id="current_password"
-                                    ref={currentPasswordInput}
-                                    name="current_password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="current-password"
-                                    placeholder={t(
-                                        'settings.security.current_password',
-                                    )}
-                                />
+                                    <PasswordInput
+                                        id="current_password"
+                                        ref={currentPasswordInput}
+                                        name="current_password"
+                                        className="mt-1 block w-full"
+                                        autoComplete="current-password"
+                                        placeholder={t(
+                                            'settings.security.current_password',
+                                        )}
+                                    />
 
-                                <InputError message={errors.current_password} />
-                            </div>
+                                    <InputError
+                                        message={errors.current_password}
+                                    />
+                                </div>
+                            )}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password">

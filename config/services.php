@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // Google sign-in for teachers (docs/decisions/008-google-sign-in.md). Off
+    // unless both the id and the secret are set. The redirect is a path: it is
+    // resolved on the host the teacher used (App\Support\GoogleSignIn).
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => '/auth/google/callback',
+    ],
+
 ];

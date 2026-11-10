@@ -22,6 +22,7 @@ Route::get('credits', CreditsController::class)->name('credits');
 // Old bookmarks of the starter kit's /dashboard follow.
 Route::redirect('dashboard', '/classes');
 
+require __DIR__.'/auth.php';
 require __DIR__.'/classroom.php';
 require __DIR__.'/play.php';
 require __DIR__.'/rankings.php';

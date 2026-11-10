@@ -11,6 +11,8 @@ import { index as classes } from '@/routes/classes';
 
 type Props = {
     retentionDays: number;
+    /** Whether this instance offers Google sign-in: then the notice says what it shares (ADR 008). */
+    googleSignIn: boolean;
     /** Who runs this instance, from `ELIFBA_OPERATOR_*`; null when not set. */
     operator: { name: string | null; email: string | null };
 };
@@ -22,7 +24,11 @@ const SECTIONS = ['stored', 'not_stored', 'why', 'how_long', 'delete', 'where'];
  * The privacy notice (docs/architecture.md §7), public and in every
  * interface language, with a note for parents a teacher can copy.
  */
-export default function Privacy({ retentionDays, operator }: Props) {
+export default function Privacy({
+    retentionDays,
+    googleSignIn,
+    operator,
+}: Props) {
     const { auth, name } = usePage().props;
     const { t } = useTranslation();
     const [, copy] = useClipboard();
@@ -74,6 +80,17 @@ export default function Privacy({ retentionDays, operator }: Props) {
                             </p>
                         </section>
                     ))}
+
+                    {googleSignIn && (
+                        <section className="space-y-2" data-test="google">
+                            <h2 className="text-xl font-semibold">
+                                {t('privacy.google.title')}
+                            </h2>
+                            <p className="leading-relaxed whitespace-pre-line">
+                                {t('privacy.google.body')}
+                            </p>
+                        </section>
+                    )}
 
                     <section className="space-y-2">
                         <h2 className="text-xl font-semibold">

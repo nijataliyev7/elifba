@@ -49,7 +49,7 @@ Use a shared component when one fits; add to the shared layer instead of copying
 ### 4. Buttons
 
 - The main action of a form or page is the default `<Button>`; secondary controls are `outline` or `ghost`; deleting is `destructive` and asks first in a `Dialog`.
-- A navigating action is an Inertia `<Link>` (with `Button asChild` when it should look like a button), never a button with `router.visit`.
+- A navigating action is an Inertia `<Link>` (with `Button asChild` when it should look like a button), never a button with `router.visit`. The one exception leaves the app: the Google buttons (`GoogleSignIn`) are plain `<a>` links to our own `/auth/google/*` routes, whose answer is a redirect to Google (architecture §7 "Google sign-in").
 - A form's submit button shows `Spinner` while processing and is disabled meanwhile.
 - On the board and the remote, targets are big (at least 64px on the remote's item buttons) and never depend on hover.
 
@@ -76,7 +76,7 @@ Use a shared component when one fits; add to the shared layer instead of copying
 
 ### 8. Inertia, not a SPA router
 
-- Links are Inertia `<Link>`; visits are `router.get/put/...` with `preserveScroll` where the page stays.
+- Links are Inertia `<Link>` (except the Google buttons, rule 4); visits are `router.get/put/...` with `preserveScroll` where the page stays.
 - Shared state comes from Inertia props (`usePage().props`: `auth`, `locale`, `locales`, `translations`, `sidebarOpen`), not a client store. No i18next, axios, zustand, TanStack Query or react-hook-form.
 - Routes are Wayfinder functions (`@/routes/*`, `@/actions/*`), never hand-written URLs.
 
