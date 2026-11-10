@@ -21,7 +21,7 @@ export function AppHeader() {
                     prefetch
                     className="flex min-w-0 items-center gap-2 rounded-md px-1 transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-green-700 text-white">
                         <AppLogoIcon className="size-5 fill-current" />
                     </span>
                     <span className="sr-only truncate text-base font-semibold tracking-tight sm:not-sr-only">

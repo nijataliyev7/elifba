@@ -108,11 +108,5 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('google', function (Request $request) {
             return Limit::perMinute(30)->by('google|'.$request->ip());
         });
-
-        RateLimiter::for('passkeys', function (Request $request) {
-            return Limit::perMinute(10)->by(
-                ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
-            );
-        });
     }
 }

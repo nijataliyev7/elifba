@@ -1,4 +1,12 @@
+import type { InstallOffer } from '@/lib/install-banner';
 import type { Auth } from '@/types/auth';
+
+declare global {
+    interface Window {
+        /** Chrome's install offer, kept by the inline script in app.blade.php. */
+        elifbaInstall?: InstallOffer;
+    }
+}
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {

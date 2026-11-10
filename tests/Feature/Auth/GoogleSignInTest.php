@@ -112,14 +112,6 @@ it('takes over an unconfirmed account and drops every credential someone else ma
         'remember_token' => 'someone-elses-token',
     ]);
     $other = User::factory()->create();
-    DB::table('passkeys')->insert([
-        'user_id' => $teacher->id,
-        'name' => 'Not hers',
-        'credential_id' => 'credential-1',
-        'credential' => '{}',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
     DB::table('sessions')->insert([
         ['id' => 'someone-elses-session', 'user_id' => $teacher->id, 'payload' => '', 'last_activity' => time()],
         ['id' => 'another-teachers-session', 'user_id' => $other->id, 'payload' => '', 'last_activity' => time()],
@@ -137,7 +129,6 @@ it('takes over an unconfirmed account and drops every credential someone else ma
         ->and($teacher->two_factor_recovery_codes)->toBeNull()
         ->and($teacher->two_factor_confirmed_at)->toBeNull()
         ->and($teacher->remember_token)->not->toBe('someone-elses-token')
-        ->and($teacher->passkeys()->count())->toBe(0)
         ->and(implode("\n", $logged))->not->toContain('aygun@gmail.com')->not->toContain('Aygün');
     $this->assertDatabaseMissing('sessions', ['id' => 'someone-elses-session']);
     $this->assertDatabaseHas('sessions', ['id' => 'another-teachers-session']);

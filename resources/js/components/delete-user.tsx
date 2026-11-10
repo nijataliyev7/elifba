@@ -22,7 +22,7 @@ import { confirm as confirmWithGoogle } from '@/routes/google';
 export type Props = {
     /** False for a teacher who signed up with Google and set no password. */
     hasPassword: boolean;
-    /** Confirmed recently (password, passkey or Google): enough without a password. */
+    /** Confirmed recently (password or Google): enough without a password. */
     passwordConfirmed: boolean;
     /** The teacher is linked to Google and this instance offers it (ADR 008). */
     canConfirmWithGoogle: boolean;

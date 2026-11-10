@@ -1,8 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import type { ComponentProps } from 'react';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 
 /**
  * Google's own «G», unchanged, only to label its sign-in button
@@ -35,45 +33,32 @@ type Props = {
     /** Our own Google route (Wayfinder): the browser leaves for Google from there. */
     href: string;
     label: string;
-    /** The «or» line above the button, when something comes before it. */
-    separator?: string;
-    tabIndex?: number;
 };
 
 /**
  * «Google ilə daxil ol» and its siblings (architecture §7 "Google sign-in"):
  * a plain link, not an Inertia visit, because the answer is a redirect to
- * Google. Shows why the last round trip failed, from the `google` error.
+ * Google. Drawn to Google's sign-in branding guidelines: the light theme
+ * (white, a 1px #747775 border, #1F1F1F text) and in dark mode the dark one
+ * (#131314, #8E918F, #E3E3E3) with the «G» on its white circle, 12px either
+ * side and about 10px between the «G» and the text. Shows why the last round trip
+ * failed, from the `google` error.
  */
-export default function GoogleSignIn({
-    href,
-    label,
-    separator,
-    tabIndex,
-}: Props) {
+export default function GoogleSignIn({ href, label }: Props) {
     const { errors } = usePage().props;
 
     return (
         <div className="grid gap-2">
-            {separator && (
-                <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                        <Separator className="w-full" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                            {separator}
-                        </span>
-                    </div>
-                </div>
-            )}
-
-            <Button asChild variant="outline" className="w-full">
-                <a href={href} tabIndex={tabIndex} data-test="google-button">
-                    <GoogleMark className="size-4" />
-                    {label}
-                </a>
-            </Button>
+            <a
+                href={href}
+                data-test="google-button"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#747775] bg-white px-3 text-sm font-medium text-[#1F1F1F] transition-colors outline-none hover:bg-[#F2F2F2] focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-[#8E918F] dark:bg-[#131314] dark:text-[#E3E3E3] dark:hover:bg-[#1F1F20]"
+            >
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white">
+                    <GoogleMark className="size-[18px]" />
+                </span>
+                {label}
+            </a>
 
             <InputError
                 message={errors.google}

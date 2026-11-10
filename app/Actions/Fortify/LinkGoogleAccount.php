@@ -91,8 +91,6 @@ final class LinkGoogleAccount
             'remember_token' => Str::random(60),
         ]);
 
-        $user->passkeys()->delete();
-
         if (Config::get('session.driver') === 'database') {
             DB::connection(Config::get('session.connection'))
                 ->table(Config::string('session.table', 'sessions'))

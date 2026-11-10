@@ -1,6 +1,7 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import AuthStatus from '@/components/auth-status';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,8 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <Head title={t('auth.forgot.title')} />
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
+                <div className="mb-6">
+                    <AuthStatus message={status} />
                 </div>
             )}
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CreditsController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\PrivacyController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,13 @@ Route::get('privacy', PrivacyController::class)->name('privacy');
 
 // Who made the pictures, sounds and fonts, and their licenses, public (§8).
 Route::get('credits', CreditsController::class)->name('credits');
+
+// The web app manifest, for installing Elifba from Chrome (§10). Chrome
+// fetches it without cookies: no session, no locale but APP_LOCALE.
+Route::get('manifest.webmanifest', ManifestController::class)
+    ->withoutMiddleware('web')
+    ->middleware('cache.headers:public;max_age=86400;etag')
+    ->name('manifest');
 
 // There is no dashboard: a teacher lands on the classes (Fortify's `home`).
 // Old bookmarks of the starter kit's /dashboard follow.

@@ -48,6 +48,33 @@
 
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
+        {{-- Elifba as an installable app (docs/architecture.md §10 "Installing Elifba") --}}
+        <link rel="manifest" href="{{ route('manifest', absolute: false) }}">
+        <link rel="apple-touch-icon" href="{{ \App\Support\WebApp::APPLE_TOUCH_ICON }}">
+        <meta name="theme-color" content="{{ \App\Support\WebApp::THEME_COLOR }}">
+        <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Elifba') }}">
+
+        {{--
+            Chrome's offer to install Elifba, caught before React mounts so it is
+            never missed. Chrome's own install bar is held back on every page (the
+            board, the remote); the install banner offers it only where
+            docs/frontend.md rule 11 allows (resources/js/hooks/use-install-offer.ts).
+        --}}
+        <script>
+            window.elifbaInstall = { prompt: null, installed: false };
+
+            window.addEventListener('beforeinstallprompt', function (event) {
+                event.preventDefault();
+                window.elifbaInstall = { prompt: event, installed: false };
+                window.dispatchEvent(new Event('elifba:install'));
+            });
+
+            window.addEventListener('appinstalled', function () {
+                window.elifbaInstall = { prompt: null, installed: true };
+                window.dispatchEvent(new Event('elifba:install'));
+            });
+        </script>
+
         @fonts
 
         @viteReactRefresh

@@ -1,4 +1,5 @@
 import { Form, Head, setLayoutProps } from '@inertiajs/react';
+import AuthDivider from '@/components/auth-divider';
 import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -7,11 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { confirm as confirmWithGoogle } from '@/routes/google';
 import { store } from '@/routes/password/confirm';
-import {
-    index as confirmOptions,
-    store as confirmStore,
-} from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
-import PasskeyVerify from '@/components/passkey-verify';
 import { useTranslation } from '@/hooks/use-translation';
 
 type Props = {
@@ -52,57 +48,53 @@ export default function ConfirmPassword({
                 )}
             />
 
-            <PasskeyVerify
-                routes={{
-                    options: confirmOptions(),
-                    submit: confirmStore(),
-                }}
-                label={t('auth.confirm.with_passkey')}
-                loadingLabel={t('auth.confirm.confirming')}
-                separator={hasPassword ? t('auth.confirm.or_password') : false}
-            />
+            <div className="grid gap-6">
+                {canConfirmWithGoogle && (
+                    <>
+                        <GoogleSignIn
+                            href={confirmWithGoogle.url()}
+                            label={t('auth.google.confirm')}
+                        />
+                        {hasPassword && (
+                            <AuthDivider label={t('auth.google.or')} />
+                        )}
+                    </>
+                )}
 
-            {hasPassword && (
-                <Form {...store.form()} resetOnSuccess={['password']}>
-                    {({ processing, errors }) => (
-                        <div className="space-y-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">
-                                    {t('common.password')}
-                                </Label>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    placeholder={t('common.password')}
-                                    autoComplete="current-password"
-                                    autoFocus
-                                />
+                {hasPassword && (
+                    <Form {...store.form()} resetOnSuccess={['password']}>
+                        {({ processing, errors }) => (
+                            <div className="space-y-6">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="password">
+                                        {t('common.password')}
+                                    </Label>
+                                    <PasswordInput
+                                        id="password"
+                                        name="password"
+                                        placeholder={t('common.password')}
+                                        autoComplete="current-password"
+                                        autoFocus
+                                    />
 
-                                <InputError message={errors.password} />
+                                    <InputError message={errors.password} />
+                                </div>
+
+                                <div className="flex items-center">
+                                    <Button
+                                        className="h-11 w-full"
+                                        disabled={processing}
+                                        data-test="confirm-password-button"
+                                    >
+                                        {processing && <Spinner />}
+                                        {t('auth.confirm.submit')}
+                                    </Button>
+                                </div>
                             </div>
-
-                            <div className="flex items-center">
-                                <Button
-                                    className="w-full"
-                                    disabled={processing}
-                                    data-test="confirm-password-button"
-                                >
-                                    {processing && <Spinner />}
-                                    {t('auth.confirm.submit')}
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </Form>
-            )}
-
-            {canConfirmWithGoogle && (
-                <GoogleSignIn
-                    href={confirmWithGoogle.url()}
-                    label={t('auth.google.confirm')}
-                    separator={hasPassword ? t('auth.google.or') : undefined}
-                />
-            )}
+                        )}
+                    </Form>
+                )}
+            </div>
         </>
     );
 }

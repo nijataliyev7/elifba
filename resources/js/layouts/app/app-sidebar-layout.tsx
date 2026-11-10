@@ -5,6 +5,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AreaPills } from '@/components/area-pills';
 import { BottomNav } from '@/components/bottom-nav';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { InstallBanner } from '@/components/install-banner';
 import type { AppLayoutProps } from '@/types';
 
 /**
@@ -31,6 +32,7 @@ export default function AppSidebarLayout({
                     {children}
                 </div>
                 <BottomNav />
+                <InstallBanner aboveTabBar />
             </AppContent>
         </AppShell>
     );

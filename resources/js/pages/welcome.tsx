@@ -7,6 +7,7 @@ import remoteImage from '../../images/welcome/remote.webp';
 import setupImage from '../../images/welcome/setup.webp';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { GitHubLink } from '@/components/github-link';
+import { InstallBanner } from '@/components/install-banner';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { SampleWall } from '@/components/welcome/sample-wall';
@@ -434,6 +435,8 @@ export default function Welcome({
                     </div>
                 </footer>
             </div>
+
+            <InstallBanner />
         </>
     );
 }

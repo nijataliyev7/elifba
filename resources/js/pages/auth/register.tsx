@@ -1,5 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { LinkedText } from '@/components/app/linked-text';
+import AuthDivider from '@/components/auth-divider';
 import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -20,41 +21,53 @@ type Props = {
     googleSignIn: boolean;
 };
 
+/**
+ * Google first, when the instance offers it, then the e-mail form
+ * (frontend.md rule 1 "Auth pages"). Tab order is the DOM order.
+ */
 export default function Register({ passwordRules, googleSignIn }: Props) {
     const { t } = useTranslation();
 
     return (
         <>
             <Head title={t('auth.register.head')} />
-            <Form
-                {...store.form()}
-                resetOnSuccess={['password', 'password_confirmation']}
-                disableWhileProcessing
-                className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
+
+            <div className="flex flex-col gap-6">
+                {googleSignIn && (
                     <>
-                        <div className="grid gap-6">
+                        <GoogleSignIn
+                            href={google.url()}
+                            label={t('auth.google.sign_up')}
+                        />
+                        <AuthDivider label={t('auth.google.or_email')} />
+                    </>
+                )}
+
+                <Form
+                    {...store.form()}
+                    resetOnSuccess={['password', 'password_confirmation']}
+                    disableWhileProcessing
+                    className="grid gap-5"
+                >
+                    {({ processing, errors }) => (
+                        <>
                             <div className="grid gap-2">
                                 <Label htmlFor="name">
                                     {t('auth.fields.name')}
                                 </Label>
                                 <Input
                                     id="name"
+                                    className="h-10"
                                     type="text"
                                     required
-                                    autoFocus
-                                    tabIndex={1}
+                                    autoFocus={!googleSignIn}
                                     autoComplete="name"
                                     name="name"
                                     placeholder={t(
                                         'auth.fields.name_placeholder',
                                     )}
                                 />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
+                                <InputError message={errors.name} />
                             </div>
 
                             <div className="grid gap-2">
@@ -63,9 +76,9 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                 </Label>
                                 <Input
                                     id="email"
+                                    className="h-10"
                                     type="email"
                                     required
-                                    tabIndex={2}
                                     autoComplete="email"
                                     name="email"
                                     placeholder="email@example.com"
@@ -79,8 +92,8 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                 </Label>
                                 <PasswordInput
                                     id="password"
+                                    className="h-10"
                                     required
-                                    tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
                                     placeholder={t('common.password')}
@@ -95,8 +108,8 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
+                                    className="h-10"
                                     required
-                                    tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
                                     placeholder={t(
@@ -116,7 +129,6 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                         name="terms"
                                         value="1"
                                         required
-                                        tabIndex={5}
                                         className="mt-0.5"
                                         aria-invalid={
                                             errors.terms ? true : undefined
@@ -132,7 +144,6 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                                 href={privacy().url}
                                                 target="_blank"
                                                 rel="noopener"
-                                                tabIndex={6}
                                             />
                                         </span>
                                     </Label>
@@ -142,33 +153,23 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
 
                             <Button
                                 type="submit"
-                                className="mt-2 w-full"
-                                tabIndex={7}
+                                className="mt-1 h-11 w-full"
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
                                 {t('auth.register.submit')}
                             </Button>
-                        </div>
+                        </>
+                    )}
+                </Form>
 
-                        {googleSignIn && (
-                            <GoogleSignIn
-                                href={google.url()}
-                                label={t('auth.google.sign_up')}
-                                separator={t('auth.google.or')}
-                                tabIndex={7}
-                            />
-                        )}
-
-                        <div className="text-center text-sm text-muted-foreground">
-                            {t('auth.register.have_account')}{' '}
-                            <TextLink href={login()} tabIndex={8}>
-                                {t('auth.register.log_in')}
-                            </TextLink>
-                        </div>
-                    </>
-                )}
-            </Form>
+                <p className="text-center text-sm text-muted-foreground">
+                    {t('auth.register.have_account')}{' '}
+                    <TextLink href={login()}>
+                        {t('auth.register.log_in')}
+                    </TextLink>
+                </p>
+            </div>
         </>
     );
 }

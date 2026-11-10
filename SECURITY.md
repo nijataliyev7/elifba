@@ -6,7 +6,7 @@ Elifba is a web application that teachers use over the internet, in classrooms f
 
 What Elifba relies on, now and as the steps land:
 
-- **Teacher accounts only.** Children never log in. Authentication is the Laravel starter kit's (Fortify): hashed passwords, rate-limited login, optional two-factor authentication and passkeys, CSRF protection on every state-changing request.
+- **Teacher accounts only.** Children never log in. Authentication is the Laravel starter kit's (Fortify): hashed passwords, rate-limited login, optional two-factor authentication, sign-in with Google (optional, [ADR 008](docs/decisions/008-google-sign-in.md)), CSRF protection on every state-changing request.
 - **Teacher isolation.** Classes, students and games are resolved only for the teacher who owns them; another teacher's id is a 404 before any controller runs, and a test enumerates every such route (step A3).
 - **Pairing codes never authorize.** The 6-digit code on the board only says which board; the phone acts as the logged-in teacher. A guest board on a shared computer holds a secret that reaches only the game it shows (step A7).
 - **Minimum data about children:** a display name and an avatar. No surnames, photos, birth dates or contacts. Names never appear in URLs, logs, exceptions or broadcasts.

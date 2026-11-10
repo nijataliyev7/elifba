@@ -29,10 +29,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/play', [PlaySettingsController::class, 'edit'])->name('play-settings.edit');
     Route::put('settings/play', [PlaySettingsController::class, 'update'])->name('play-settings.update');
 });
-
-Route::get('.well-known/passkey-endpoints', function () {
-    return response()->json([
-        'enroll' => route('security.edit'),
-        'manage' => route('security.edit'),
-    ]);
-})->name('well-known.passkeys');
