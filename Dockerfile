@@ -14,7 +14,7 @@ FROM node:22.23.4-bookworm-slim AS node
 
 # PHP 8.4 with intl (composer.json needs ext-intl; pdo_pgsql and pcntl are
 # already in the image).
-FROM serversideup/php:8.4-fpm-nginx-bookworm-v5.1.1 AS base
+FROM serversideup/php:8.5-fpm-nginx-bookworm-v5.1.1 AS base
 
 USER root
 RUN install-php-extensions intl
