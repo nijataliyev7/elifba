@@ -56,7 +56,7 @@ describe('the setup page', function (): void {
                 ->has('levels', count($content->levels()))
                 ->where('levels.0.key', 'letters')
                 ->where('levels.0.unit', 'letter')
-                ->where('levels.0.mechanics', ['find'])
+                ->where('levels.0.mechanics', ['find', 'pop'])
                 ->where('rounds', ['min' => 5, 'max' => 30, 'default' => 10])
                 ->where('letterCases', ['upper', 'lower'])
                 ->has('letters', 32)
@@ -69,13 +69,18 @@ describe('the setup page', function (): void {
                         ->and(setupOption($options, 'find', 'symbols', 'letters'))->toBe(['mechanic' => 'find', 'pack' => 'symbols', 'level' => 'letters', 'drawable' => true, 'startable' => true, 'reason' => null])
                         ->and(setupOption($options, 'build_word', 'balloons', 'words-short'))->toBe(['mechanic' => 'build_word', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null])
                         ->and(setupOption($options, 'build_sentence', 'train', 'sentences')['startable'] ?? null)->toBeTrue()
-                        ->and(setupOption($options, 'find', 'balloons', 'sentences'))->toBeNull();
+                        ->and(setupOption($options, 'find', 'balloons', 'sentences'))->toBeNull()
+                        ->and(setupOption($options, 'pop', 'balloons', 'words-short'))->toBe(['mechanic' => 'pop', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null])
+                        ->and(setupOption($options, 'pop', 'balloons', 'sentences'))->toBeNull();
 
-                    // With every letter learned, every option starts: 10
-                    // mechanic × level pairs in each of the 6 packs (A8.3).
-                    expect($options)->toHaveCount(60)
+                    // With every letter learned, every option starts: 15
+                    // mechanic × level pairs in each of the 6 packs (A8.3,
+                    // then pop at the five letter, syllable and word levels).
+                    expect($options)->toHaveCount(90)
                         ->and(array_unique(array_column($options, 'pack')))->toHaveCount(6)
-                        ->and(array_count_values(array_column($options, 'mechanic')))->toBe(['find' => 30, 'build_syllable' => 12, 'build_word' => 12, 'build_sentence' => 6]);
+                        ->and(array_count_values(array_column($options, 'mechanic')))->toBe(['find' => 30, 'pop' => 30, 'build_syllable' => 12, 'build_word' => 12, 'build_sentence' => 6])
+                        // find leads, so it stays the default chip.
+                        ->and(array_values(array_unique(array_column($options, 'mechanic'))))->toBe(['find', 'pop', 'build_syllable', 'build_word', 'build_sentence']);
 
                     foreach ($options as $option) {
                         expect([$option['drawable'], $option['startable'], $option['reason']])->toBe([true, true, null], "{$option['mechanic']} × {$option['pack']} × {$option['level']}");
@@ -174,6 +179,43 @@ describe('starting a game', function (): void {
 
         expect($game->pack)->toBe($pack)
             ->and($effects)->toBe([$effect]);
+    })->with([
+        'balloons' => ['balloons', 'burst'],
+        'train' => ['train', 'burst'],
+        'animals' => ['animals', 'burst'],
+        'fruit' => ['fruit', 'burst'],
+        'cities' => ['cities', 'sparkle'],
+        'symbols' => ['symbols', 'sparkle'],
+    ]);
+
+    it('starts pop in every pack at every level that has it, every item an answer', function (string $pack, string $effect): void {
+        $levels = ['letters' => 'letter', 'syllables-open' => 'syllable', 'syllables-closed' => 'syllable', 'words-short' => 'word', 'words-long' => 'word'];
+
+        foreach ($levels as $level => $unit) {
+            $this->post(route('classes.games.store', $this->class), ['mechanic' => 'pop', 'pack' => $pack, 'level' => $level])
+                ->assertSessionHasNoErrors()
+                ->assertRedirect();
+
+            $game = GameSession::query()->where('level', $level)->sole();
+            $rounds = GameRound::query()->where('game_session_id', $game->id)->get()
+                ->map(fn (GameRound $round) => $round->snapshot(10));
+
+            expect($game->mechanic)->toBe(Mechanic::Pop)
+                ->and($game->pack)->toBe($pack)
+                ->and($game->status)->toBe(GameSessionStatus::Live)
+                ->and($rounds)->toHaveCount(10);
+
+            foreach ($rounds as $round) {
+                expect($round->mechanic)->toBe(Mechanic::Pop)
+                    ->and($round->unit->value)->toBe($unit)
+                    ->and($round->items)->toHaveCount(4)
+                    ->and($round->solution->order->value)->toBe('any')
+                    ->and($round->solution->item_ids)->toBe($round->itemIds())
+                    ->and($round->slots)->toBe(0)
+                    ->and($round->prompt->show)->toBeNull()
+                    ->and($round->effect->value)->toBe($effect);
+            }
+        }
     })->with([
         'balloons' => ['balloons', 'burst'],
         'train' => ['train', 'burst'],

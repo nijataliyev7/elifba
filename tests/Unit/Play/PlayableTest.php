@@ -12,6 +12,7 @@ use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildWordRoundBuilder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
+use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use App\Domain\Play\Support\Playable;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
@@ -28,7 +29,7 @@ use Random\Randomizer;
 const PLAYABLE_FIXTURE = __DIR__.'/../../Fixtures/playable.json';
 
 it('lists what the board draws and a builder for every mechanic', function (): void {
-    expect(Playable::mechanics())->toBe([Mechanic::Find, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence])
+    expect(Playable::mechanics())->toBe([Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence])
         ->and(Playable::mechanics())->toBe(Mechanic::cases())
         ->and(Playable::itemStyles())->toBe(ItemStyle::cases())
         ->and(Playable::slotStyles())->toBe([SlotStyle::Wagon, SlotStyle::Frame])
@@ -36,6 +37,7 @@ it('lists what the board draws and a builder for every mechanic', function (): v
         ->and(Playable::effects())->toBe([Effect::Burst, Effect::Sparkle])
         ->and(Playable::effects())->toBe(Effect::cases())
         ->and(Playable::builder(Mechanic::Find))->toBeInstanceOf(FindRoundBuilder::class)
+        ->and(Playable::builder(Mechanic::Pop))->toBeInstanceOf(PopRoundBuilder::class)
         ->and(Playable::builder(Mechanic::BuildSyllable))->toBeInstanceOf(BuildSyllableRoundBuilder::class)
         ->and(Playable::builder(Mechanic::BuildWord))->toBeInstanceOf(BuildWordRoundBuilder::class)
         ->and(Playable::builder(Mechanic::BuildSentence))->toBeInstanceOf(BuildSentenceRoundBuilder::class);
@@ -68,7 +70,8 @@ it('plays a pack only when the board draws its look, its effect and, for a build
     foreach (app(ContentRepository::class)->packs() as $pack) {
         $look = in_array($pack->style->item, Playable::itemStyles(), true) && in_array($pack->style->effect, Playable::effects(), true);
 
-        expect(Playable::draws(Mechanic::Find, $pack))->toBe($look, $pack->key);
+        expect(Playable::draws(Mechanic::Find, $pack))->toBe($look, $pack->key)
+            ->and(Playable::draws(Mechanic::Pop, $pack))->toBe($look, $pack->key);
 
         foreach ([Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence] as $mechanic) {
             expect(Playable::draws($mechanic, $pack))
@@ -98,16 +101,18 @@ it('never bursts the national symbols or the cities', function (): void {
     expect(array_map(static fn ($pack): string => $pack->key, $sparkling))->toBe(['cities', 'symbols']);
 
     foreach ($sparkling as $pack) {
-        foreach ($content->levels() as $level) {
-            if (! $level->allows(Mechanic::Find)) {
-                continue;
-            }
+        foreach ([Mechanic::Find, Mechanic::Pop] as $mechanic) {
+            foreach ($content->levels() as $level) {
+                if (! $level->allows($mechanic)) {
+                    continue;
+                }
 
-            $setup = new GameSetupData(Mechanic::Find, $pack->key, $level->key, 10, LetterCase::Upper);
+                $setup = new GameSetupData($mechanic, $pack->key, $level->key, 10, LetterCase::Upper);
 
-            foreach (Playable::builder(Mechanic::Find)->build($setup, $pack, Alphabet::letters(), new Randomizer(new Mt19937(7))) as $round) {
-                expect($round->effect)->toBe(Effect::Sparkle, "{$pack->key} × {$level->key}")
-                    ->and($round->effect)->not->toBe(Effect::Burst);
+                foreach (Playable::builder($mechanic)->build($setup, $pack, Alphabet::letters(), new Randomizer(new Mt19937(7))) as $round) {
+                    expect($round->effect)->toBe(Effect::Sparkle, "{$mechanic->value} × {$pack->key} × {$level->key}")
+                        ->and($round->effect)->not->toBe(Effect::Burst);
+                }
             }
         }
     }

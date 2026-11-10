@@ -1,4 +1,5 @@
 import { Check, Star } from 'lucide-react';
+import { answerItemIds } from '@/game/answers';
 import type { Round } from '@/game/contract';
 import type { Tap } from '@/game/live';
 import { useTranslation } from '@/hooks/use-translation';
@@ -15,9 +16,10 @@ type Props = {
 
 /**
  * The round's items as big buttons on the phone (docs/architecture.md §4):
- * the answer is marked for the teacher, an item the board already burst is
- * done, and a tap shows its state until the board's ack — pending, then
- * correct, miss or not delivered. Item text is content, in `font-board`.
+ * the answer is marked for the teacher (`answerItemIds`: none in `pop`,
+ * where every item is one), an item the board already burst is done, and
+ * a tap shows its state until the board's ack — pending, then correct,
+ * miss or not delivered. Item text is content, in `font-board`.
  */
 export function RemoteItems({
     round,
@@ -28,11 +30,7 @@ export function RemoteItems({
 }: Props) {
     const { t } = useTranslation();
     const sequence = round.solution.order === 'sequence';
-    const answers = new Set(
-        sequence
-            ? [round.solution.item_ids[hitItemIds.length]].filter(Boolean)
-            : round.solution.item_ids.filter((id) => !hitItemIds.includes(id)),
-    );
+    const answers = answerItemIds(round, hitItemIds);
     const lastTap = new Map<string, Tap>();
 
     for (const tap of taps) {

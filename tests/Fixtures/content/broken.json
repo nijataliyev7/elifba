@@ -52,7 +52,7 @@
     "levels: an unknown mechanic": {
         "file": "levels.json",
         "set": { "levels.0.mechanics": ["tap"] },
-        "problem": "levels.json: levels[0] \"letters\".mechanics[0] must be one of find, build_syllable, build_word, build_sentence"
+        "problem": "levels.json: levels[0] \"letters\".mechanics[0] must be one of find, pop, build_syllable, build_word, build_sentence"
     },
     "levels: a mechanic that cannot play the unit": {
         "file": "levels.json",
@@ -82,7 +82,18 @@
     "levels: find without an item count": {
         "file": "levels.json",
         "unset": ["levels.0.items"],
-        "problem": "levels.json: levels[0] \"letters\".items must be a whole number from 2 to 8 for levels with find"
+        "problem": "levels.json: levels[0] \"letters\".items must be a whole number from 2 to 8 for levels with find or pop"
+    },
+    "levels: pop without an item count": {
+        "file": "levels.json",
+        "set": { "levels.0.mechanics": ["pop"] },
+        "unset": ["levels.0.items"],
+        "problem": "levels.json: levels[0] \"letters\".items must be a whole number from 2 to 8 for levels with find or pop"
+    },
+    "levels: an item count on a level that only builds": {
+        "file": "levels.json",
+        "set": { "levels.5.items": 4 },
+        "problem": "levels.json: levels[5] \"sentences\": `items` belongs to levels with find or pop only"
     },
     "levels: decoys on a level without a build mechanic": {
         "file": "levels.json",

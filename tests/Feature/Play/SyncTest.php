@@ -10,6 +10,8 @@ use App\Domain\Play\Events\RoundSolved;
 use App\Domain\Play\Models\GameAnswer;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
+use App\Domain\Play\Support\SchoolCalendar;
+use App\Domain\Rankings\Support\ClassRanking;
 use App\Http\Middleware\ThrottleBoardEvents;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -135,6 +137,45 @@ describe('hits', function (): void {
         'two misses' => [2, 1],
         'four misses, the same decoy twice' => [4, 1],
     ]);
+
+    it('solves a pop round when its four items are hit in any order, with no miss and 3 points that count in the ranking', function (): void {
+        Event::fake([RoundSolved::class]);
+        $game = Games::start($this->class, ['mechanic' => 'pop', 'level' => 'words-short']);
+        $round = Games::round($game);
+        [$a, $b, $c, $d] = array_column($round->payload['items'], 'id');
+        $order = [$c, $a, $d, $b];
+        $events = array_map(fn (string $id): array => Games::hit($round, $id, $this->aysel->id, source: 'remote'), $order);
+
+        $results = results(sync($game, $events));
+
+        expect($round->payload['solution'])->toBe(['order' => 'any', 'item_ids' => [$a, $b, $c, $d]])
+            ->and(array_map(static fn (array $result): array => [$result['status'], $result['round_solved'], $result['points']], $results))->toBe([
+                ['correct', false, null],
+                ['correct', false, null],
+                ['correct', false, null],
+                ['correct', true, 3],
+            ]);
+
+        $round->refresh();
+
+        expect($round->progress)->toBe($order)
+            ->and($round->misses)->toBe(0)
+            ->and($round->points)->toBe(3)
+            ->and($round->student_id)->toBe($this->aysel->id)
+            ->and($round->solved_at)->not->toBeNull()
+            ->and(GameAnswer::query()->where('correct', true)->count())->toBe(4)
+            ->and(GameAnswer::query()->where('correct', false)->count())->toBe(0)
+            ->and(Games::round($game, 1)->solved_at)->toBeNull();
+
+        Event::assertDispatchedTimes(RoundSolved::class, 1);
+        Event::assertDispatched(RoundSolved::class, fn (RoundSolved $event): bool => $event->roundId === $round->id
+            && $event->studentId === $this->aysel->id
+            && $event->points === 3);
+
+        $ranked = ClassRanking::day($this->class, SchoolCalendar::today());
+
+        expect([$ranked[0]->student->id, $ranked[0]->points, $ranked[0]->place])->toBe([$this->aysel->id, 3, 1]);
+    });
 
     it('stores the points of a whole-class round but credits no one', function (): void {
         $round = Games::round($this->game);

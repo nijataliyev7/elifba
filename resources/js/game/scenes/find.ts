@@ -1,6 +1,6 @@
 /**
- * The `find` scene (docs/architecture.md §2): a round's items wait on the
- * board in the pack's item style; a touch on one goes out through the
+ * The `find` scene, which draws `pop` too (docs/architecture.md §2): a
+ * round's items wait on the board in the pack's item style; a touch on one goes out through the
  * bridge, and the judge's verdict comes back in the same call stack: the
  * right item plays the round's effect (burst or sparkle) and is gone, a
  * wrong one wobbles and stays. When a round is solved the rest leave and

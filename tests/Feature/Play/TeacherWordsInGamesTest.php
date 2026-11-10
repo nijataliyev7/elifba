@@ -19,8 +19,8 @@ use Tests\Support\Games;
 
 /*
  * Teacher words in games (docs/architecture.md §2, §3 "Teacher words",
- * ADR 007): a teacher's own words play in that teacher's find and syllable
- * games and never in build_word; a hidden built-in word leaves only that
+ * ADR 007): a teacher's own words play in that teacher's find, pop and
+ * syllable games and never in build_word; a hidden built-in word leaves only that
  * teacher's games; the setup options, GameSetupData::rules() and StartGame
  * see the same words, so hiding too much gives the usual shortage reason.
  */
@@ -128,6 +128,20 @@ it('plays a teacher word in that teacher\'s find-word games only', function (): 
         ->and(boardKeys($theirs))->not->toContain('word:pomidor');
 });
 
+it('plays a teacher word in that teacher\'s pop games only, as one more item to read', function (): void {
+    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    $setup = ['mechanic' => 'pop', 'pack' => 'fruit', 'level' => 'words-long', 'rounds' => 30];
+
+    $mine = Games::start($this->class, $setup, seed: 11);
+    $round = collect(Games::rounds($mine))->first(fn (GameRound $round): bool => in_array('word:pomidor', array_column($round->payload['items'], 'content_key'), true));
+    $item = collect($round?->payload['items'])->firstWhere('content_key', 'word:pomidor');
+
+    expect($item)->toBeArray()
+        ->and($item['image'])->toBeNull()
+        ->and($round?->payload['solution']['item_ids'])->toContain($item['id'])
+        ->and(boardKeys(Games::start($this->otherClass, $setup, seed: 11)))->not->toContain('word:pomidor');
+});
+
 it('gives a teacher word\'s syllables to that teacher\'s syllable games only', function (): void {
     addTeacherWord($this->teacher, 'fruit', 'pomidor');
     // Few letters keep the pools under 30, so every target comes up.
@@ -226,9 +240,10 @@ it('answers with reasons, never an error, when a teacher hides every word of a p
     $fruit = array_values(array_filter(GameSetupOptions::forClass($this->class)['options'], static fn (array $option): bool => $option['pack'] === 'fruit'));
     $startable = array_values(array_filter($fruit, static fn (array $option): bool => $option['startable']));
 
-    expect($fruit)->toHaveCount(10)
-        ->and(array_column($startable, 'level'))->toBe(['letters', 'sentences'])
+    expect($fruit)->toHaveCount(15)
+        ->and(array_map(static fn (array $option): string => "{$option['mechanic']} × {$option['level']}", $startable))->toBe(['find × letters', 'pop × letters', 'build_sentence × sentences'])
         ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 4, 'found' => 0]))
+        ->and(optionFor($this->class, 'pop', 'fruit', 'words-short')['reason'])->toBe(Playable::message('too_few_words', ['count' => 4, 'found' => 0]))
         ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 2, 'found' => 0]))
         ->and(optionFor($this->class, 'build_word', 'fruit', 'words-short')['reason'])->toBe(Playable::message('too_few_words', ['count' => 2, 'found' => 0]))
         ->and(setupErrors($this->class, ['mechanic' => 'build_word', 'pack' => 'fruit', 'level' => 'words-long']))->toHaveKey('level')

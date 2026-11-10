@@ -185,6 +185,7 @@
     "games.mechanics.build_syllable": "Build a syllable",
     "games.mechanics.build_word": "Build the word",
     "games.mechanics.find": "Find it!",
+    "games.mechanics.pop": "Read and tap",
     "games.remote.answer": "Answer",
     "games.remote.banner.board_lost": "The board is not connected. Check that the board's page is open.",
     "games.remote.banner.board_waiting": "Connecting to the board…",

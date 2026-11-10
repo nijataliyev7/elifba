@@ -22,11 +22,16 @@ import { BuildSentenceScene } from './scenes/build-sentence';
 import { BuildSyllableScene } from './scenes/build-syllable';
 import { BuildWordScene } from './scenes/build-word';
 import { FindScene } from './scenes/find';
+import { builds } from './scenes/layouts';
 import { itemStyle, slotStyle } from './styles/registry';
 
-/** One Phaser scene per mechanic (architecture §4). */
+/**
+ * One Phaser scene per mechanic (architecture §4). A `pop` round is a find
+ * round whose solution is every item, so the find scene draws it as is.
+ */
 const SCENES: Record<Mechanic, new (options: SceneOptions) => BoardScene> = {
     find: FindScene,
+    pop: FindScene,
     build_syllable: BuildSyllableScene,
     build_word: BuildWordScene,
     build_sentence: BuildSentenceScene,
@@ -85,7 +90,7 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
         throw new Error(`The board cannot draw ${options.itemStyle} items.`);
     }
 
-    if (options.mechanic !== 'find' && slots === null) {
+    if (builds(options.mechanic) && slots === null) {
         throw new Error(`The board cannot draw ${options.slotStyle} slots.`);
     }
 

@@ -11,7 +11,13 @@ import type { Band } from '../styles/types';
 
 export type BuildLayout = { slots: Band; tiles: Band };
 
-export type BuildMechanic = Exclude<Mechanic, 'find'>;
+/**
+ * The mechanics whose level's items are hit in any order (`Mechanic::builds()`
+ * is false): no slots, drawn by the find scene.
+ */
+export type HitMechanic = Extract<Mechanic, 'find' | 'pop'>;
+
+export type BuildMechanic = Exclude<Mechanic, HitMechanic>;
 
 export const BUILD_LAYOUTS: Record<BuildMechanic, BuildLayout> = {
     build_syllable: {
@@ -27,6 +33,11 @@ export const BUILD_LAYOUTS: Record<BuildMechanic, BuildLayout> = {
         tiles: { top: 600, bottom: 1066 },
     },
 };
+
+/** Whether a round of this mechanic fills slots (`Mechanic::builds()`). */
+export function builds(mechanic: Mechanic): mechanic is BuildMechanic {
+    return Object.hasOwn(BUILD_LAYOUTS, mechanic);
+}
 
 /** build_word's picture frame, at the top of the board above its slots. */
 export const PICTURE_FRAME = { x: 960, y: 192, width: 400, height: 364 };

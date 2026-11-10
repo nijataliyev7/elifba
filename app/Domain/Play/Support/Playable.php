@@ -15,6 +15,7 @@ use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildWordRoundBuilder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
+use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use App\Domain\Play\Support\Mechanics\RoundBuilder;
 use App\Models\User;
 
@@ -26,7 +27,8 @@ use App\Models\User;
  * code). `GameSetupData` and the setup page use it, so a game the board
  * cannot draw never starts. A8.1 lists the build mechanics with their
  * builders, A8.2 draws every item style and `sparkle`, and A8.3 the slot
- * styles `wagon` and `frame`: every mechanic plays in every pack.
+ * styles `wagon` and `frame`: every mechanic plays in every pack. `pop`
+ * reuses the find scene and has no slots.
  *
  * A pack is playable with a mechanic only when the board draws its item
  * style and its effect (and its slot style, for a build mechanic). Rounds
@@ -40,7 +42,7 @@ final class Playable
      */
     public static function mechanics(): array
     {
-        return [Mechanic::Find, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence];
+        return [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence];
     }
 
     /**
@@ -88,6 +90,7 @@ final class Playable
     {
         return match ($mechanic) {
             Mechanic::Find => app(FindRoundBuilder::class),
+            Mechanic::Pop => app(PopRoundBuilder::class),
             Mechanic::BuildSyllable => app(BuildSyllableRoundBuilder::class),
             Mechanic::BuildWord => app(BuildWordRoundBuilder::class),
             Mechanic::BuildSentence => app(BuildSentenceRoundBuilder::class),

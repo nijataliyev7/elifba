@@ -319,9 +319,9 @@ final class ContentValidator
                 }
             }
 
-            $finds = in_array(Mechanic::Find, $mechanics, true);
+            $hits = array_filter($mechanics, static fn (Mechanic $mechanic): bool => ! $mechanic->builds()) !== [];
             $builds = array_filter($mechanics, static fn (Mechanic $mechanic): bool => $mechanic->builds()) !== [];
-            $this->wholeNumber($level, 'items', $finds, 2, 8, $file, $where, 'levels with find');
+            $this->wholeNumber($level, 'items', $hits, 2, 8, $file, $where, 'levels with find or pop');
             $this->wholeNumber($level, 'decoys', $builds, 0, 4, $file, $where, 'levels with a build mechanic');
 
             foreach (['shapes' => Unit::Syllable, 'syllables' => Unit::Word, 'words' => Unit::Sentence] as $filter => $filterUnit) {

@@ -4,7 +4,7 @@
             "key": "letters",
             "title": { "az": "Hərflər", "en": "Letters" },
             "unit": "letter",
-            "mechanics": ["find"],
+            "mechanics": ["find", "pop"],
             "items": 4
         },
         {
@@ -12,7 +12,7 @@
             "title": { "az": "Qısa hecalar", "en": "Short syllables" },
             "unit": "syllable",
             "shapes": ["V", "CV", "VC"],
-            "mechanics": ["find", "build_syllable"],
+            "mechanics": ["find", "pop", "build_syllable"],
             "items": 4,
             "decoys": 1
         },
@@ -21,7 +21,7 @@
             "title": { "az": "Uzun hecalar", "en": "Long syllables" },
             "unit": "syllable",
             "shapes": ["CVC", "VCC", "CVCC"],
-            "mechanics": ["find", "build_syllable"],
+            "mechanics": ["find", "pop", "build_syllable"],
             "items": 4,
             "decoys": 1
         },
@@ -30,7 +30,7 @@
             "title": { "az": "Qısa sözlər", "en": "Short words" },
             "unit": "word",
             "syllables": { "min": 1, "max": 2 },
-            "mechanics": ["find", "build_word"],
+            "mechanics": ["find", "pop", "build_word"],
             "items": 4,
             "decoys": 1
         },
@@ -39,7 +39,7 @@
             "title": { "az": "Uzun sözlər", "en": "Long words" },
             "unit": "word",
             "syllables": { "min": 3, "max": 4 },
-            "mechanics": ["find", "build_word"],
+            "mechanics": ["find", "pop", "build_word"],
             "items": 4,
             "decoys": 1
         },

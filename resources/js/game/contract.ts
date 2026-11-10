@@ -22,6 +22,7 @@ const eventId = z.ulid();
 
 export const Mechanic = z.enum([
     'find',
+    'pop',
     'build_syllable',
     'build_word',
     'build_sentence',

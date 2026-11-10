@@ -128,6 +128,48 @@
             ]
         },
         {
+            "name": "pop: every item is right in any order; the last one solves the round with no miss",
+            "items": ["a", "b", "c", "d"],
+            "solution": { "order": "any", "item_ids": ["a", "b", "c", "d"] },
+            "hits": [
+                {
+                    "item_id": "c",
+                    "status": "correct",
+                    "progress": ["c"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "correct",
+                    "progress": ["c", "a"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "stale",
+                    "progress": ["c", "a"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "d",
+                    "status": "correct",
+                    "progress": ["c", "a", "d"],
+                    "misses": 0,
+                    "solved": false
+                },
+                {
+                    "item_id": "b",
+                    "status": "correct",
+                    "progress": ["c", "a", "d", "b"],
+                    "misses": 0,
+                    "solved": true
+                }
+            ]
+        },
+        {
             "name": "any: a burst item hit again is stale; the round needs every target",
             "items": ["a", "b", "c", "d"],
             "solution": {

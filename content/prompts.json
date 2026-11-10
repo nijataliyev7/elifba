@@ -8,6 +8,17 @@
         },
         { "mechanic": "find", "unit": "word", "text": "«{x}» sözünü tap!" },
         {
+            "mechanic": "pop",
+            "unit": "letter",
+            "text": "Hər hərfi oxu və vur!"
+        },
+        {
+            "mechanic": "pop",
+            "unit": "syllable",
+            "text": "Hər hecanı oxu və vur!"
+        },
+        { "mechanic": "pop", "unit": "word", "text": "Hər sözü oxu və vur!" },
+        {
             "mechanic": "build_syllable",
             "unit": "syllable",
             "text": "«{x}» hecasını qur!"

@@ -1,0 +1,48 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T0P",
+    "index": 0,
+    "total": 10,
+    "mechanic": "pop",
+    "unit": "word",
+    "pack": "balloons",
+    "level": "words-short",
+    "prompt": {
+        "text": "Hər sözü oxu və vur!",
+        "show": null,
+        "image": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "kubik",
+            "image": null,
+            "content_key": "word:kubik"
+        },
+        {
+            "id": "b",
+            "text": "top",
+            "image": null,
+            "content_key": "word:top"
+        },
+        {
+            "id": "c",
+            "text": "şar",
+            "image": null,
+            "content_key": "word:şar"
+        },
+        {
+            "id": "d",
+            "text": "kukla",
+            "image": null,
+            "content_key": "word:kukla"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["a", "b", "c", "d"]
+    },
+    "effect": "burst"
+}

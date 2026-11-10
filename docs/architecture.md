@@ -29,7 +29,7 @@ Elifba is an open-source (MIT) web platform for primary-school teachers in Azerb
 ```
 
 1. A **teacher** registers, creates a **class** and adds **students** by pasting a list of names. Students have no accounts.
-2. The teacher opens a **game** on the laptop connected to the projector — or, on a shared school computer, sends it there from the phone: the **board**. A game is one **mechanic** (find, build a syllable, build a word, build a sentence) dressed in one **theme pack** (train, balloons, animals, fruit, our cities, national symbols) at one **level**.
+2. The teacher opens a **game** on the laptop connected to the projector — or, on a shared school computer, sends it there from the phone: the **board**. A game is one **mechanic** (find, read and tap, build a syllable, build a word, build a sentence) dressed in one **theme pack** (train, balloons, animals, fruit, our cities, national symbols) at one **level**.
 3. A child goes to the wall and touches an item. At the same moment the teacher taps the same item on the phone (the **remote**). The board bursts the item and moves on — to the class it looks as if the wall reacted to the child. On a touch screen or with a mouse the board also works without a phone.
 4. Every solved round gives the student at the board points. Each class has a **daily** and a **weekly** ranking; places 1–3 get a **podium** page that the teacher saves as a 1080×1920 image and posts to WhatsApp status.
 
@@ -257,7 +257,7 @@ Scheduled (one `scheduler` process, §10; the commands are in `routes/console.ph
 
 The server generates all rounds of a game when it starts, stores each as a snapshot (`game_rounds.payload`) and sends the same snapshots to the board and the phone. Neither client invents a round.
 
-**Why.** Six themes × four mechanics × six levels give dozens of valid games; written as separate games that is unmaintainable, written as data it is one engine. Snapshots keep old games, answers and rankings valid after a pack changes, make the board and phone agree by construction, and let a reloaded board resume exactly where it was.
+**Why.** Six themes × five mechanics × six levels give dozens of valid games; written as separate games that is unmaintainable, written as data it is one engine. Snapshots keep old games, answers and rankings valid after a pack changes, make the board and phone agree by construction, and let a reloaded board resume exactly where it was.
 
 **Rejected.** A theme as code (one Phaser game per theme): every new theme would need a developer, and the owner wants teachers to contribute content by pull request. Generating rounds on the board: the server could not judge answers or resume a game, and the phone would need the same generator.
 
@@ -268,6 +268,7 @@ The server generates all rounds of a game when it starts, stores each as a snaps
 | Key              | UI name (az)                                          | Units                  | Round                                                                                                       | Solution                  |
 | ---------------- | ----------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------- |
 | `find`           | Tap! («find!»; "Şarı partlat" with the balloons pack) | letter, syllable, word | A prompt names a target; 3–6 items float on the board, one is the target                                    | `any`, one item           |
+| `pop`            | Oxu və vur («read and tap»; for beginners)            | letter, syllable, word | No target: the level's items float on the board, the child reads any one aloud and hits it; all are right   | `any`, every item         |
 | `build_syllable` | Heca qur                                              | syllable               | Build the shown syllable from letters into slots (train wagons in the train pack)                           | `sequence`, its letters   |
 | `build_word`     | Sözü yığ                                              | word                   | A picture; assemble the word (2+ syllables) from its syllables (+1 decoy)                                   | `sequence`, its syllables |
 | `build_sentence` | Cümlə qur                                             | sentence               | Put 2–4 words (the level decides) in order, +1 decoy; the final punctuation stays fixed after the last slot | `sequence`, its words     |
@@ -275,7 +276,7 @@ The server generates all rounds of a game when it starts, stores each as a snaps
 Rules shared by all mechanics:
 
 - Item texts are unique within a round, so a tap on the phone names exactly one item on the board.
-- In a `sequence` round an item is a reusable **tile**: it stays on the board and a copy flies into the slot, so a solution may name the same item more than once: with the tile `nə` as item `a`, the word `nənə` is `["a", "a"]`; the syllable `nən` uses the `n` tile twice. Common first words (`ba-ba`, `nə-nə`, `də-də`) need this. The judge expects `solution.item_ids[progress.length]`. In an `any` round (`find`) an item hit correctly bursts and is gone, and a wrong item wobbles and stays. Each wrong hit counts as a miss.
+- In a `sequence` round an item is a reusable **tile**: it stays on the board and a copy flies into the slot, so a solution may name the same item more than once: with the tile `nə` as item `a`, the word `nənə` is `["a", "a"]`; the syllable `nən` uses the `n` tile twice. Common first words (`ba-ba`, `nə-nə`, `də-də`) need this. The judge expects `solution.item_ids[progress.length]`. In an `any` round (`find`, `pop`) an item hit correctly bursts and is gone, and a wrong item wobbles and stays. Each wrong hit counts as a miss. A `pop` round has no wrong item: every item is in its solution, so it is never missed and is solved when every item is gone.
 - Decoys for letters come first from the letter's confusables in `content/alphabet.json` (e/ə, i/ı, o/ö, u/ü, s/ş, c/ç, g/ğ…); for syllables and words, from the same pack and level; for a sentence's words, from the level's other sentences in the same pack ("The build builders" below).
 - Only content whose letters are all in the class's `learned_letters` is used; a game whose level has too little such content cannot start (`GameSetupData::rules()` says why).
 - The same target never appears twice in a row.
@@ -284,7 +285,7 @@ Rules shared by all mechanics:
 
 A pack picks its look from closed lists implemented in `resources/js/game/styles/`: item style `balloon` | `wagon` | `card` | `bubble`; slot style `wagon` | `frame`; effect `burst` | `sparkle`. A new style is code; a new theme that reuses the styles is data only.
 
-The code (A6, A8.2, A8.3): one registry, `styles/registry.ts`, maps each key to its implementation — `ITEM_STYLES` (`balloon.ts`, `wagon.ts`, `card.ts`, `bubble.ts`), `SLOT_STYLES` (`slot-wagon.ts`, `slot-frame.ts`) and `EFFECTS` (`burst.ts`, `sparkle.ts`); a scene takes the item style from `pack.style.item`, the slot style from `pack.style.slot` (both through `stage.ts`) and the effect from `round.effect`, and asks the registry, never a style module directly. An item style (`styles/types.ts`) is `layout(count, band?)` (where the items rest and how big: across the 1920×1080 board for `find`, or inside a band — a build round's tiles under its slots — sized to fit it), `stagger` (ms between items entering; 0 for wagons, which move as one train), an optional `scenery(band?)` drawn once (the train's rails), `draw(scene, text, look)` — a still picture of one item, which the build scenes fly into a slot — and `create()`, the living `ItemView` built on that picture (`styles/item.ts`, `BoardItem`): it enters, idles, wobbles on a miss, `pop()`s for `burst` or `lift()`s for `sparkle`, and leaves when its round is over. All drawing is Phaser Graphics and Andika text in the pack palette; no asset files.
+The code (A6, A8.2, A8.3): one registry, `styles/registry.ts`, maps each key to its implementation — `ITEM_STYLES` (`balloon.ts`, `wagon.ts`, `card.ts`, `bubble.ts`), `SLOT_STYLES` (`slot-wagon.ts`, `slot-frame.ts`) and `EFFECTS` (`burst.ts`, `sparkle.ts`); a scene takes the item style from `pack.style.item`, the slot style from `pack.style.slot` (both through `stage.ts`) and the effect from `round.effect`, and asks the registry, never a style module directly. An item style (`styles/types.ts`) is `layout(count, band?)` (where the items rest and how big: across the 1920×1080 board for `find` and `pop`, or inside a band — a build round's tiles under its slots — sized to fit it), `stagger` (ms between items entering; 0 for wagons, which move as one train), an optional `scenery(band?)` drawn once (the train's rails), `draw(scene, text, look)` — a still picture of one item, which the build scenes fly into a slot — and `create()`, the living `ItemView` built on that picture (`styles/item.ts`, `BoardItem`): it enters, idles, wobbles on a miss, `pop()`s for `burst` or `lift()`s for `sparkle`, and leaves when its round is over. All drawing is Phaser Graphics and Andika text in the pack palette; no asset files.
 
 | Key       | Enters                                                     | Waits               | Miss                   | Leaves                           |
 | --------- | ---------------------------------------------------------- | ------------------- | ---------------------- | -------------------------------- |
@@ -310,7 +311,7 @@ The closed lists that data names are enums in `Content\Enums`: `Unit`, `Mechanic
 
 ### What the board can draw
 
-**Decision.** `Play\Support\Playable` is the one server-side list of what the board can draw: the mechanics with a round builder and a scene (`mechanics()`, `builder()`), and the item styles, slot styles and effects implemented in `resources/js/game/styles/` (`itemStyles()`, `slotStyles()`, `effects()`). A6 draws `find` in the `balloon` style with the `burst` effect, so "Şarı partlat" (find × balloons) is the only game that can start; A8 extends the lists: A8.1 lists the three build mechanics with their builders (below), which stay `not_playable` while `slotStyles()` is empty; A8.2 adds the item styles and `sparkle` (every key of `ItemStyle` and `Effect`, so `find` plays in all six packs), A8.3 the slot styles `wagon` and `frame` (every key of `SlotStyle`). Since A8.3 every mechanic plays in every pack: with all 32 letters learned, all 60 options of the setup page (10 mechanic × level pairs × 6 packs) start, and `POST /classes/{class}/games` starts each build mechanic in each pack (`GameSetupTest`). No pack reaches `not_playable` today; it stays the answer for a key added to a closed list before the board draws it. `tests/Fixtures/playable.json` pins the three lists (`PlayableTest`), and Vitest (`styles/registry.test.ts`) checks every key in it has its code in `styles/registry.ts`, and nothing more. A pack is playable with a mechanic only when the board draws its item style and its effect (and its slot style for a build mechanic). `Playable::reason()` says why a mechanic × pack × level cannot start for a class's learned letters (the level lacks the mechanic → letters chosen for a non-letter level → the board cannot draw it → the builder's content shortage), as a translated message; `GameSetupData::rules()` (through the `StartableGame` rule on `level`) and the setup page's `options` (`Playable::options($teacher, $learned)`) ask exactly that question, both about the pack as the class's teacher plays it (`TeacherPacks`, §3 "Teacher words"), which `StartGame` then builds from. Rounds carry the pack's own effect, so the `symbols` and `cities` packs (`sparkle`) are never burst (§8).
+**Decision.** `Play\Support\Playable` is the one server-side list of what the board can draw: the mechanics with a round builder and a scene (`mechanics()`, `builder()`), and the item styles, slot styles and effects implemented in `resources/js/game/styles/` (`itemStyles()`, `slotStyles()`, `effects()`). A6 draws `find` in the `balloon` style with the `burst` effect, so "Şarı partlat" (find × balloons) is the only game that can start; A8 extends the lists: A8.1 lists the three build mechanics with their builders (below), which stay `not_playable` while `slotStyles()` is empty; A8.2 adds the item styles and `sparkle` (every key of `ItemStyle` and `Effect`, so `find` plays in all six packs), A8.3 the slot styles `wagon` and `frame` (every key of `SlotStyle`). Since A8.3 every mechanic plays in every pack: with all 32 letters learned, all 90 options of the setup page (15 mechanic × level pairs × 6 packs; 60 before `pop` joined the five letter, syllable and word levels) start, and `POST /classes/{class}/games` starts each build mechanic in each pack (`GameSetupTest`). No pack reaches `not_playable` today; it stays the answer for a key added to a closed list before the board draws it. `tests/Fixtures/playable.json` pins the three lists (`PlayableTest`), and Vitest (`styles/registry.test.ts`) checks every key in it has its code in `styles/registry.ts`, and nothing more. A pack is playable with a mechanic only when the board draws its item style and its effect (and its slot style for a build mechanic; `find` and `pop` have no slots, `! Mechanic::builds()`). `pop` needs no scene of its own: `stage.ts` gives it the `find` scene, which already bursts each correct item and keeps the rest. `Playable::reason()` says why a mechanic × pack × level cannot start for a class's learned letters (the level lacks the mechanic → letters chosen for a non-letter level → the board cannot draw it → the builder's content shortage), as a translated message; `GameSetupData::rules()` (through the `StartableGame` rule on `level`) and the setup page's `options` (`Playable::options($teacher, $learned)`) ask exactly that question, both about the pack as the class's teacher plays it (`TeacherPacks`, §3 "Teacher words"), which `StartGame` then builds from. Rounds carry the pack's own effect, so the `symbols` and `cities` packs (`sparkle`) are never burst (§8).
 
 **Why.** A game the board cannot draw must not start, and the setup page must grey out exactly what the rules refuse; one list read by both cannot drift. Keeping the list in Play, not in the content, means a pack contributor never has to know which styles exist yet.
 
@@ -320,14 +321,16 @@ The closed lists that data names are enums in `Content\Enums`: `Unit`, `Mechanic
 
 `content/levels.json` — the A4 starting set:
 
-| Key                | Unit     | Content filter                         | Mechanics            | Items           |
-| ------------------ | -------- | -------------------------------------- | -------------------- | --------------- |
-| `letters`          | letter   | the chosen or learned letters          | find                 | 4               |
-| `syllables-open`   | syllable | shapes V, CV, VC from the pack's words | find, build_syllable | 4               |
-| `syllables-closed` | syllable | shapes CVC, VCC, CVCC                  | find, build_syllable | 4               |
-| `words-short`      | word     | 1–2 syllables                          | find, build_word     | 4               |
-| `words-long`       | word     | 3–4 syllables                          | find, build_word     | 4               |
-| `sentences`        | sentence | 2–4 words                              | build_sentence       | words + 1 decoy |
+| Key                | Unit     | Content filter                         | Mechanics                 | Items           |
+| ------------------ | -------- | -------------------------------------- | ------------------------- | --------------- |
+| `letters`          | letter   | the chosen or learned letters          | find, pop                 | 4               |
+| `syllables-open`   | syllable | shapes V, CV, VC from the pack's words | find, pop, build_syllable | 4               |
+| `syllables-closed` | syllable | shapes CVC, VCC, CVCC                  | find, pop, build_syllable | 4               |
+| `words-short`      | word     | 1–2 syllables                          | find, pop, build_word     | 4               |
+| `words-long`       | word     | 3–4 syllables                          | find, pop, build_word     | 4               |
+| `sentences`        | sentence | 2–4 words                              | build_sentence            | words + 1 decoy |
+
+`find` comes first in each list, so it stays the setup page's default; `pop` follows it.
 
 Syllables are not listed by hand: they come from the pack's words through the syllabifier (§3), so every pack has syllable levels for free. The titles shown to teachers are "Qısa hecalar" / "Uzun hecalar" (short / long syllables: V, CV, VC have one or two letters, the closed shapes three or four), "Qısa sözlər" / "Uzun sözlər", "Hərflər", "Cümlələr".
 
@@ -339,14 +342,14 @@ A level entry (`Content\Data\LevelData`):
     "title": { "az": "Qısa sözlər", "en": "Short words" },
     "unit": "word",
     "syllables": { "min": 1, "max": 2 },
-    "mechanics": ["find", "build_word"],
+    "mechanics": ["find", "pop", "build_word"],
     "items": 4,
     "decoys": 1
 }
 ```
 
 - Each unit has exactly one filter: `shapes` (syllable shapes as `Syllabifier::shape()` names them) for syllable levels, `syllables` (`min`/`max` per word) for word levels, `words` (`min`/`max` per sentence, within 2–4) for sentence levels, none for letter levels.
-- `mechanics` must suit the unit (`Mechanic::supports()`); `items` (2–8, the items a `find` round shows) is present exactly when the level has `find`; `decoys` (0–4, the decoy tiles a build round adds) exactly when it has a build mechanic.
+- `mechanics` must suit the unit (`Mechanic::supports()`); `items` (2–8, the items a `find` or `pop` round shows) is present exactly when the level has a mechanic that does not build (`find`, `pop`: `! Mechanic::builds()`); `decoys` (0–4, the decoy tiles a build round adds) exactly when it has a build mechanic.
 - `LevelData::keysFrom($pack, $letters)` lists the distinct items of a pack that fit the level and the learned letters, as content keys; the round builders (A6, A8) start from it.
 
 ### Game setup
@@ -359,12 +362,22 @@ A level entry (`Content\Data\LevelData`):
 
 ### The `find` builder
 
-`Play\Support\Mechanics\FindRoundBuilder` (behind the `RoundBuilder` interface that the build builders implement too):
+`Play\Support\Mechanics\FindRoundBuilder` (behind the `RoundBuilder` interface that the build builders implement too). Everything below but the solution and the prompt lives in `AnyRoundBuilder`, which the `pop` builder shares (next section):
 
 - **Content.** A letter level takes the class's learned letters (targets: the teacher's `letters` among them when given); syllable and word levels take `LevelData::keysFrom($pack, $learned)` of the teacher's pack. The pool must hold at least the level's `items` (4) and two targets; otherwise the game cannot start.
 - **Targets** go round in shuffled decks of every target; a new deck never starts with the target that ended the last one. Every target comes up equally often (±1) and none twice in a row. The deck, the item ids and the content as written live in `RoundParts` (`deck()`, `itemId()`, `value()`, `written()`), which the build builders share.
 - **Decoys** for a letter are its confusables first (`Alphabet::confusables()`, most confusable first) among the learned letters, then other learned letters at random; for syllables and words, other items of the same pack and level at random. Item ids are `a`, `b`, `c`… in display order; the target's position is random.
 - **No pictures.** `find` items carry `image: null`, and so does the prompt: a picture next to the target text, or on the items, would let a child match pictures instead of reading. The prompt shows the target as text (`show`, filled into `prompts.json`'s template with `PromptTemplateData::fill()`). Pictures belong to `build_word` (A8), where the picture is the question.
+
+### The `pop` builder
+
+`Play\Support\Mechanics\PopRoundBuilder` — «Oxu və vur», for beginners (five-year-olds) who cannot yet find a named item: **a `pop` round is a `find` round whose solution is every item.** Both builders extend `AnyRoundBuilder`, which picks a round's items — the same pool, the same target deck (`RoundParts::deck()`), the same decoys (confusables first for a letter), item ids, casing and `shortage()` (so the same `too_few_*` reasons) — and leaves each builder only its solution and its prompt. The same setup and seed give a `pop` game exactly the items of the `find` game it mirrors.
+
+- **Items.** The level's `items` (4): the deck's item and `items` − 1 others. The deck still spreads the pool evenly over the rounds and never leads two rounds in a row with the same item; for a letter level the teacher's chosen `letters` lead the rounds, with their confusables beside them.
+- **Solution.** `any` with every item id in display order; `slots` 0. Whatever the child hits is right: it bursts (or sparkles), the rest stay, and the round is solved when the last one goes; then the next set comes in. `RoundJudge` and `engine.ts` need nothing new: an `any` round already takes its solution's items in any order (`judge.json`).
+- **Points.** There is no wrong item, so a solved `pop` round always has 0 misses and gives 3 points, credited to the student at the board and counted in the rankings like any other round (§5; `PointsRule` is unchanged).
+- **Prompt.** The template takes no text: «Hər hərfi oxu və vur!», «Hər hecanı oxu və vur!», «Hər sözü oxu və vur!» — the child reads each item aloud before hitting it (the board does not listen, §3 "Voice"). So `show` is null and the prompt text is the template as written. No pictures, for the reason `find` has none.
+- **Board and phone.** The board draws it with the `find` scene. The phone marks no item as the answer when every item is one (`remote-items.tsx`); a hit item shows as done.
 
 ### The build builders
 
@@ -418,7 +431,7 @@ final readonly class RoundData {
         public PromptData $prompt,
         /** @var list<RoundItemData> */
         public array $items,            // display order
-        public int $slots,              // 0 for find; the solution length for build mechanics
+        public int $slots,              // 0 for find and pop; the solution length for build mechanics
         public SolutionData $solution,
         public Effect $effect,          // burst | sparkle
     ) {}
@@ -493,6 +506,7 @@ const nullableText = z.string().nullable();
 
 export const Mechanic = z.enum([
     'find',
+    'pop',
     'build_syllable',
     'build_word',
     'build_sentence',
@@ -760,6 +774,17 @@ Asset paths are relative to `content/assets`; a path must exist with exactly tha
         },
         { "mechanic": "find", "unit": "word", "text": "«{x}» sözünü tap!" },
         {
+            "mechanic": "pop",
+            "unit": "letter",
+            "text": "Hər hərfi oxu və vur!"
+        },
+        {
+            "mechanic": "pop",
+            "unit": "syllable",
+            "text": "Hər hecanı oxu və vur!"
+        },
+        { "mechanic": "pop", "unit": "word", "text": "Hər sözü oxu və vur!" },
+        {
             "mechanic": "build_syllable",
             "unit": "syllable",
             "text": "«{x}» hecasını qur!"
@@ -806,7 +831,7 @@ Asset paths are relative to `content/assets`; a path must exist with exactly tha
 
 - **One merge.** `Content\Support\TeacherPacks::pack($teacher, $key)` — and `packs($teacher)`, every pack in key order, in two queries — gives a pack as that teacher plays it: the built-in words in file order without the hidden ones, then the teacher's words in the order they were added (`created_at`, then `id`), as `WordData` with `image: null` and their override or the Syllabifier's split. A teacher word whose `Az::lower` equals a built-in word of the pack, hidden or not, is dropped, so when a later pack version adds a word a teacher already has, the built-in one wins with its picture. Sentences, look, title and version are the built-in pack's. `TeacherPacks::merge()` is the pure function behind it; `ContentRepository` stays the reader of the files only.
 - **Who reads it.** Every Play reader that builds or checks rounds: `Playable::options($teacher, $learned)` (the setup page), `StartableGame` in `GameSetupData::rules()`, and `StartGame`, which passes the pack to the builder (`RoundBuilder::build($setup, $pack, $learned, $random)`). The teacher is the class's teacher, who owns the game. `BoardProps` and `GameSetupOptions::shared()` read the built-in pack: they need only its look and title.
-- **Where a teacher word plays.** Syllables come from a pack's words (§2), so a teacher word gives its syllables to the syllable levels by itself: it plays in `find` at word and syllable levels and in `build_syllable`. It has no picture, so `build_word` never takes it, as a target or as a source of decoys. A hidden built-in word is gone from every level of that teacher's games, and so are the syllables no other word of the pack gives; sentences are not affected.
+- **Where a teacher word plays.** Syllables come from a pack's words (§2), so a teacher word gives its syllables to the syllable levels by itself: it plays in `find` and `pop` at word and syllable levels and in `build_syllable`. It has no picture, so `build_word` never takes it, as a target or as a source of decoys. A hidden built-in word is gone from every level of that teacher's games, and so are the syllables no other word of the pack gives; sentences are not affected.
 - **Rules for a teacher word** (`Content\Data\CustomWordData`). The input is normalized first (`Az::normalize`, each override part too: phone keyboards type Cyrillic ә), then:
     - the rules every pack word follows, from the one checker `ContentValidator` also uses (`Content\Support\WordRules`, problems as `Content\Enums\WordProblem`): one word of alphabet letters with no space, hyphen or sign; lowercase, or capitalised as a proper noun; a vowel; an override that joins back to the word exactly with one vowel in each part. An override equal to the Syllabifier's split is dropped (stored as null) rather than refused: a pack file refuses it to keep diffs minimal, while a teacher's form may send the split back unchanged;
     - at most `elifba.custom_words.max_length` (20) characters;
@@ -1023,7 +1048,7 @@ Both pages hold a Screen Wake Lock while a game is live, so neither the projecto
 
 ### Board in the browser
 
-`resources/js/game/`: `contract.ts` (§2), `engine.ts` (pure state machine: rounds, judge, progress — no Phaser, tested with Vitest), `live.ts` (channel wrapper: whisper, acks, pings, epochs), `outbox.ts`, `scenes/` (one Phaser scene per mechanic), `styles/` (item and slot styles, effects). React owns everything around the canvas (pairing card, pause, the student at the board, "not saved"); Phaser owns the canvas at a logical 1920×1080 with `Scale.FIT`. They talk through one typed bridge (`showRound`, `applyHit` in; `itemTouched` out). Phaser is imported dynamically so no other page downloads it.
+`resources/js/game/`: `contract.ts` (§2), `engine.ts` (pure state machine: rounds, judge, progress — no Phaser, tested with Vitest), `live.ts` (channel wrapper: whisper, acks, pings, epochs), `outbox.ts`, `scenes/` (one Phaser scene per mechanic; `pop` reuses `find`'s), `styles/` (item and slot styles, effects). React owns everything around the canvas (pairing card, pause, the student at the board, "not saved"); Phaser owns the canvas at a logical 1920×1080 with `Scale.FIT`. They talk through one typed bridge (`showRound`, `applyHit` in; `itemTouched` out). Phaser is imported dynamically so no other page downloads it.
 
 As built in A6:
 
@@ -1095,7 +1120,7 @@ Checked in Chrome on `https://elifba.test` (A8.3; Vite and `reverb:start`; the p
 
 **Decision.**
 
-- **Points belong to a solved round**, credited to the student at the board when the round was solved: **3** with no wrong hit, **2** with one, **1** with more. Never negative; nothing for a skipped round. A round solved with nobody at the board (whole class) stores its points but credits no one. The rule lives only in `Play\Support\PointsRule`.
+- **Points belong to a solved round**, credited to the student at the board when the round was solved: **3** with no wrong hit, **2** with one, **1** with more (a `pop` round has no wrong item, so it always gives 3). Never negative; nothing for a skipped round. A round solved with nobody at the board (whole class) stores its points but credits no one. The rule lives only in `Play\Support\PointsRule`.
 - **Windows.** `config('elifba.timezone')` = `Asia/Baku` (UTC+4, no daylight saving). When a round is solved the server stores `played_on` = the Baku date of `solved_at` and `week_start` = the Monday of that date (ISO week). Rankings filter on these two columns only — no time-zone arithmetic in SQL.
 - **Daily ranking** of a class for a date: the sum of `points` per active student over rounds with that `played_on`. **Weekly**: the same over `week_start`. `Rankings\Support\ClassRanking` computes it; nothing is stored.
 - **Ties share a place, dense** (10, 10, 8, 7 → 1, 1, 2, 3; `Rankings\Support\DenseRank`). Within a place, names are listed in Azerbaijani alphabetical order (display only). No tie-breaker by time.

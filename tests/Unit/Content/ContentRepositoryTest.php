@@ -97,6 +97,14 @@ it('lists the six levels of §2 in order', function (): void {
         ->and(array_map(static fn (LevelData $level): Unit => $level->unit, array_values($levels)))
         ->toBe([Unit::Letter, Unit::Syllable, Unit::Syllable, Unit::Word, Unit::Word, Unit::Sentence])
         ->and($levels['letters']->allows(Mechanic::Find))->toBeTrue()
+        ->and(array_map(static fn (LevelData $level): array => $level->mechanics, $levels))->toBe([
+            'letters' => [Mechanic::Find, Mechanic::Pop],
+            'syllables-open' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable],
+            'syllables-closed' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable],
+            'words-short' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildWord],
+            'words-long' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildWord],
+            'sentences' => [Mechanic::BuildSentence],
+        ])
         ->and($levels['letters']->allows(Mechanic::BuildSyllable))->toBeFalse()
         ->and($levels['syllables-open']->shapes)->toBe(['V', 'CV', 'VC'])
         ->and($levels['syllables-closed']->shapes)->toBe(['CVC', 'VCC', 'CVCC'])
@@ -124,7 +132,8 @@ it('fills a prompt template without touching the inserted text', function (): vo
 
     expect($content->prompt(Mechanic::Find, Unit::Letter)->fill('Ə'))->toBe('«Ə» hərfini tap!')
         ->and($content->prompt(Mechanic::Find, Unit::Syllable)->fill('BA'))->toBe('«BA» hecasını tap!')
-        ->and($content->prompt(Mechanic::BuildWord, Unit::Word)->takesText())->toBeFalse();
+        ->and($content->prompt(Mechanic::BuildWord, Unit::Word)->takesText())->toBeFalse()
+        ->and($content->prompt(Mechanic::Pop, Unit::Word)->takesText())->toBeFalse();
 });
 
 it('credits the Inter font files', function (): void {
@@ -161,9 +170,13 @@ it('reads the files once per instance, so an edit shows on the next request', fu
 
 it('pairs every mechanic with the units of §2', function (): void {
     expect(Mechanic::Find->units())->toBe([Unit::Letter, Unit::Syllable, Unit::Word])
+        ->and(Mechanic::Pop->units())->toBe([Unit::Letter, Unit::Syllable, Unit::Word])
         ->and(Mechanic::BuildSyllable->units())->toBe([Unit::Syllable])
         ->and(Mechanic::BuildWord->units())->toBe([Unit::Word])
         ->and(Mechanic::BuildSentence->units())->toBe([Unit::Sentence])
         ->and(Mechanic::Find->builds())->toBeFalse()
-        ->and(Mechanic::BuildWord->builds())->toBeTrue();
+        ->and(Mechanic::Pop->builds())->toBeFalse()
+        ->and(Mechanic::BuildSyllable->builds())->toBeTrue()
+        ->and(Mechanic::BuildWord->builds())->toBeTrue()
+        ->and(Mechanic::BuildSentence->builds())->toBeTrue();
 });

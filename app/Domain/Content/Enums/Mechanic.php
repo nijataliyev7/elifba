@@ -13,6 +13,12 @@ enum Mechanic: string
     /** A prompt names a target; one hit on it solves the round. */
     case Find = 'find';
 
+    /**
+     * «Oxu və vur», for beginners: no target; the level's items float on the
+     * board, every one is right, and the round is solved when all are hit.
+     */
+    case Pop = 'pop';
+
     /** Build the shown syllable from letters. */
     case BuildSyllable = 'build_syllable';
 
@@ -30,7 +36,7 @@ enum Mechanic: string
     public function units(): array
     {
         return match ($this) {
-            self::Find => [Unit::Letter, Unit::Syllable, Unit::Word],
+            self::Find, self::Pop => [Unit::Letter, Unit::Syllable, Unit::Word],
             self::BuildSyllable => [Unit::Syllable],
             self::BuildWord => [Unit::Word],
             self::BuildSentence => [Unit::Sentence],
@@ -44,10 +50,14 @@ enum Mechanic: string
 
     /**
      * Whether a round is solved by putting tiles into slots in order (and so
-     * adds decoy tiles) rather than by one hit.
+     * adds the level's `decoys`), rather than by hitting the level's `items`
+     * in any order (`find`, `pop`), which have no slots.
      */
     public function builds(): bool
     {
-        return $this !== self::Find;
+        return match ($this) {
+            self::Find, self::Pop => false,
+            self::BuildSyllable, self::BuildWord, self::BuildSentence => true,
+        };
     }
 }
