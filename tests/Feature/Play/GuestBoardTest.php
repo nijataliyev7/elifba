@@ -2,6 +2,8 @@
 
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
+use App\Domain\Content\Support\ContentAssets;
+use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Play\Actions\CloseGuestBoard;
 use App\Domain\Play\Actions\PruneGuestBoards;
 use App\Domain\Play\Enums\GameSessionStatus;
@@ -128,6 +130,27 @@ it('goes through open → claim → show → next game → close, never answerin
     foreach ($responses as $content) {
         expect((string) $content)->not->toContain($secret);
     }
+});
+
+it('sends the board the pictures and figures of the game\'s pack, as the teacher board gets them', function (): void {
+    $game = Games::start($this->class, ['pack' => 'animals']);
+    $board = GuestBoards::showing($game);
+    $pack = app(ContentRepository::class)->pack('animals');
+    $cow = array_search('openmoji/1F404.svg', $pack->style->figures, true);
+
+    $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
+
+    expect($poll->json('props.pack.style.item'))->toBe('animal')
+        ->and($poll->json('props.pack.style.figures'))->toHaveCount(count($pack->style->figures))
+        ->and($poll->json("props.pack.style.figures.{$cow}"))->toBe(['url' => ContentAssets::url('openmoji/1F404.svg', $pack->version), 'words' => ['word:inək']])
+        ->and($poll->json('props.pack.style.figures.0.words'))->toBe([])
+        ->and($poll->json('props.pack.pictures')['word:dəvəquşu'])->toBe([ContentAssets::url('animals/devequsu.svg', $pack->version)])
+        ->and($poll->json('props.pack.pictures')['letter:p'])->toBe(array_map(
+            static fn (string $path): string => ContentAssets::url($path, $pack->version),
+            ['openmoji/1F408.svg', 'openmoji/1F405.svg', 'openmoji/1F427.svg'],
+        ))
+        ->and($poll->json('props.pack.pictures')['syllable:pi'])->toBe([ContentAssets::url('openmoji/1F408.svg', $pack->version)])
+        ->and($poll->json('props.pack.pictures'))->not->toHaveKey('letter:ə');
 });
 
 it('lets the teacher who claimed it close it from the phone', function (): void {

@@ -59,6 +59,29 @@ final readonly class LevelData
         return in_array($mechanic, $this->mechanics, true);
     }
 
+    /**
+     * The most items a round of this level can show: `items` for `find` and
+     * `pop`; for a build mechanic its tiles, at most the longest answer (the
+     * letters of the longest shape, or the most syllables or words) plus the
+     * decoys. The builders show fewer when a part repeats (`nə-nə`).
+     */
+    public function mostItems(): int
+    {
+        $longest = match ($this->unit) {
+            Unit::Letter => 1,
+            Unit::Syllable => max([0, ...array_map(strlen(...), $this->shapes)]),
+            Unit::Word => $this->syllables->max ?? 0,
+            Unit::Sentence => $this->words->max ?? 0,
+        };
+        $most = 0;
+
+        foreach ($this->mechanics as $mechanic) {
+            $most = max($most, $mechanic->builds() ? $longest + ($this->decoys ?? 0) : ($this->items ?? 0));
+        }
+
+        return $most;
+    }
+
     public function fitsSyllable(string $syllable): bool
     {
         return $this->unit === Unit::Syllable && in_array(Syllabifier::shape($syllable), $this->shapes, true);

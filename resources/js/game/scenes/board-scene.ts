@@ -11,6 +11,9 @@
 import Phaser from 'phaser';
 import type { BoardBridge, BridgeScene, HitEffect } from '../bridge';
 import type { Round, RoundProgress } from '../contract';
+import type { Figure, Pictures } from '../figures';
+import { chooseFigures, figureKey } from '../figures';
+import { FIGURE_RASTER } from '../styles/figure';
 import type { ItemStyle, SlotStyle } from '../styles/types';
 
 export const BOARD_WIDTH = 1920;
@@ -32,6 +35,10 @@ export type SceneOptions = {
     palette: number[];
     sounds: BoardSounds;
     backdrop: string | null;
+    /** The pack's figures (`pack.style.figures`), for `animal` and `fruit` items; empty for the rest. */
+    figures: Figure[];
+    /** The pictures that show a content key (`pack.pictures`), for the same items. */
+    pictures: Pictures;
     /** The scene is ready and connected to the bridge. */
     onReady: () => void;
 };
@@ -63,6 +70,21 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             this.load.svg('backdrop', this.options.backdrop, {
                 width: BOARD_WIDTH,
                 height: BOARD_HEIGHT,
+            });
+        }
+
+        // Pictures behind items are SVGs too (OpenMoji or own art, 72×72):
+        // rasterised at the largest size an item draws them, so the build
+        // copies reuse them.
+        const urls = new Set([
+            ...this.options.figures.map((figure) => figure.url),
+            ...Object.values(this.options.pictures).flat(),
+        ]);
+
+        for (const url of urls) {
+            this.load.svg(figureKey(url), url, {
+                width: FIGURE_RASTER,
+                height: FIGURE_RASTER,
             });
         }
     }
@@ -110,6 +132,26 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
     /** Things drawn once behind every round. */
     protected abstract scenery(): void;
+
+    /**
+     * The texture of the picture behind each of a round's items, by item id
+     * (`figures.ts`): a word's own, or a figure; null for an item that stands
+     * alone, and for every item of a pack without figures.
+     */
+    protected figuresOf(round: Round): Map<string, string | null> {
+        const chosen = chooseFigures(
+            round,
+            this.options.figures,
+            this.options.pictures,
+        );
+
+        return new Map(
+            [...chosen].map(([itemId, url]) => [
+                itemId,
+                url === null ? null : figureKey(url),
+            ]),
+        );
+    }
 
     /** The pack palette, never empty. */
     protected get palette(): number[] {

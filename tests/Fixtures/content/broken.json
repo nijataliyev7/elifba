@@ -317,7 +317,134 @@
     "packs: an unknown item style": {
         "file": "packs/sample.json",
         "set": { "style.item": "kite" },
-        "problem": "packs/sample.json: style.item must be one of balloon, wagon, card, bubble"
+        "problem": "packs/sample.json: style.item must be one of balloon, wagon, card, bubble, animal, fruit"
+    },
+    "packs: an animal look without figures": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "animal"
+        },
+        "problem": "packs/sample.json: style.figures is needed: \"animal\" items stand in front of figures"
+    },
+    "packs: figures for a style that draws none": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg",
+                "sample/words/ulduz.svg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures is only for item styles that draw figures; \"card\" draws none"
+    },
+    "packs: figures that are not a list": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "fruit",
+            "style.figures": "sample/alma.svg"
+        },
+        "problem": "packs/sample.json: `style.figures` must be a list"
+    },
+    "packs: a figure that does not exist": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "animal",
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg",
+                "sample/words/dinozavr.svg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures[9]: content/assets/sample/words/dinozavr.svg does not exist"
+    },
+    "packs: a figure that is not a picture": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "fruit",
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg",
+                "sounds/pop.ogg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures[9] \"sounds/pop.ogg\" must end in .svg, .png, .webp"
+    },
+    "packs: a figure twice": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "animal",
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg",
+                "sample/alma.svg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures[9] \"sample/alma.svg\" repeats style.figures[0]"
+    },
+    "packs: an avatar as a figure": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "animal",
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg",
+                "avatars/owl.svg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures[9] \"avatars/owl.svg\" is an avatar; avatars mark students and are never figures"
+    },
+    "packs: too few figures for the fullest round": {
+        "file": "packs/sample.json",
+        "set": {
+            "style.item": "animal",
+            "style.figures": [
+                "sample/alma.svg",
+                "sample/words/ata.svg",
+                "sample/words/ana.svg",
+                "sample/words/nene.svg",
+                "sample/words/baba.svg",
+                "sample/words/dede.svg",
+                "sample/words/baci.svg",
+                "sample/words/kitab.svg",
+                "sample/words/qelem.svg"
+            ]
+        },
+        "problem": "packs/sample.json: style.figures has 9 figures; it needs at least 10, 2 for each of the 5 items a round can show"
     },
     "packs: an unknown effect": {
         "file": "packs/sample.json",

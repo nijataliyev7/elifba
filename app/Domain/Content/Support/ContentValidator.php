@@ -70,6 +70,19 @@ final class ContentValidator
     public const int MAX_SENTENCE_WORDS = 4;
 
     /**
+     * Figures a pack of an `animal` or `fruit` look needs per item of the
+     * fullest round any level shows (§2 "Figures"): the round's own words
+     * and picture are left out, and the rest must still give every item a
+     * figure of its own.
+     */
+    public const int FIGURES_PER_ITEM = 2;
+
+    /**
+     * Avatars mark students (§7); no item ever stands in front of one.
+     */
+    public const string AVATAR_FOLDER = 'avatars/';
+
+    /**
      * Folders outside the content root whose every file needs a credits
      * entry, from the repository root.
      */
@@ -613,7 +626,7 @@ final class ContentValidator
         }
 
         $this->title($pack['title'], $file, 'title');
-        $this->style($pack['style'], $file);
+        $this->style($pack['style'], $file, $levels);
         $words = $this->words($pack['words'], $file);
         $sentences = $this->sentences($pack['sentences'], $file);
 
@@ -629,19 +642,22 @@ final class ContentValidator
             return;
         }
 
-        /** @var array{key: string, version: int, title: array{az: string, en: string}, style: array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences: list<array{id: string, text: string}>} $pack */
+        /** @var array{key: string, version: int, title: array{az: string, en: string}, style: array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences: list<array{id: string, text: string}>} $pack */
         $this->fitsLevels(PackData::fromArray($pack), $levels, $file);
     }
 
-    private function style(mixed $style, string $file): void
+    /**
+     * @param  list<LevelData>|null  $levels
+     */
+    private function style(mixed $style, string $file, ?array $levels): void
     {
-        $style = $this->object($style, $file, 'style', ['item', 'slot', 'effect', 'palette'], ['backdrop', 'sounds']);
+        $style = $this->object($style, $file, 'style', ['item', 'slot', 'effect', 'palette'], ['backdrop', 'sounds', 'figures']);
 
         if ($style === null) {
             return;
         }
 
-        $this->enum(ItemStyle::class, $style['item'], $file, 'style.item');
+        $item = $this->enum(ItemStyle::class, $style['item'], $file, 'style.item');
         $this->enum(SlotStyle::class, $style['slot'], $file, 'style.slot');
         $this->enum(Effect::class, $style['effect'], $file, 'style.effect');
 
@@ -667,6 +683,73 @@ final class ContentValidator
             foreach ($sounds ?? [] as $name => $path) {
                 $this->asset($path, self::AUDIO_EXTENSIONS, $file, "style.sounds.{$name}");
             }
+        }
+
+        if ($item instanceof ItemStyle) {
+            $this->figures($style, $item, $file, $levels);
+        }
+    }
+
+    /**
+     * `style.figures` (§2 "Figures", §3): required for an item style that
+     * draws figures and refused for any other; image paths under `assets/`,
+     * each once, never an avatar, and at least FIGURES_PER_ITEM × the most
+     * items a round of any level shows. Their credits are checked with every
+     * other asset file.
+     *
+     * @param  array<string, mixed>  $style
+     * @param  list<LevelData>|null  $levels
+     */
+    private function figures(array $style, ItemStyle $item, string $file, ?array $levels): void
+    {
+        if (! $item->hasFigures()) {
+            if (array_key_exists('figures', $style)) {
+                $this->problem($file, "style.figures is only for item styles that draw figures; \"{$item->value}\" draws none");
+            }
+
+            return;
+        }
+
+        if (! array_key_exists('figures', $style)) {
+            $this->problem($file, "style.figures is needed: \"{$item->value}\" items stand in front of figures");
+
+            return;
+        }
+
+        $figures = $this->list($style['figures'], $file, 'style.figures');
+
+        if ($figures === null) {
+            return;
+        }
+
+        $used = [];
+
+        foreach ($figures as $index => $figure) {
+            $where = "style.figures[{$index}]";
+            $path = $this->asset($figure, self::IMAGE_EXTENSIONS, $file, $where);
+
+            if ($path === null) {
+                continue;
+            }
+
+            if (str_starts_with($path, self::AVATAR_FOLDER)) {
+                $this->problem($file, "{$where} \"{$path}\" is an avatar; avatars mark students and are never figures");
+            }
+
+            if (isset($used[$path])) {
+                $this->problem($file, "{$where} \"{$path}\" repeats {$used[$path]}");
+
+                continue;
+            }
+
+            $used[$path] = $where;
+        }
+
+        $most = max([0, ...array_map(static fn (LevelData $level): int => $level->mostItems(), $levels ?? [])]);
+        $needed = self::FIGURES_PER_ITEM * $most;
+
+        if (count($figures) < $needed) {
+            $this->problem($file, 'style.figures has '.self::counted(count($figures), 'figure')."; it needs at least {$needed}, ".self::FIGURES_PER_ITEM." for each of the {$most} items a round can show");
         }
     }
 

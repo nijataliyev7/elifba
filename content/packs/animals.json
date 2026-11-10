@@ -1,14 +1,35 @@
 {
     "key": "animals",
-    "version": 3,
+    "version": 4,
     "title": { "az": "Heyvanlar", "en": "Animals" },
     "style": {
-        "item": "card",
+        "item": "animal",
         "slot": "frame",
-        "effect": "burst",
+        "effect": "sparkle",
         "palette": ["#8D6E4C", "#5DB075", "#F6C445"],
+        "figures": [
+            "openmoji/1F995.svg",
+            "openmoji/1F996.svg",
+            "openmoji/1F43B.svg",
+            "openmoji/1F404.svg",
+            "openmoji/1F418.svg",
+            "openmoji/1F992.svg",
+            "openmoji/1F412.svg",
+            "openmoji/1F405.svg",
+            "openmoji/1F981.svg",
+            "openmoji/1F993.svg",
+            "openmoji/1F427.svg",
+            "openmoji/1F422.svg",
+            "openmoji/1F407.svg",
+            "openmoji/1F42A.svg",
+            "openmoji/1F99B.svg",
+            "openmoji/1F998.svg",
+            "openmoji/1F40A.svg",
+            "openmoji/1F9A9.svg",
+            "openmoji/1F99C.svg"
+        ],
         "sounds": {
-            "hit": "sounds/pop.mp3",
+            "hit": "sounds/chime.mp3",
             "miss": "sounds/bong.mp3",
             "solved": "sounds/success.mp3"
         }

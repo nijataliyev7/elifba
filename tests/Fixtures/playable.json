@@ -1,5 +1,5 @@
 {
-    "item_styles": ["balloon", "wagon", "card", "bubble"],
+    "item_styles": ["balloon", "wagon", "card", "bubble", "animal", "fruit"],
     "slot_styles": ["wagon", "frame"],
     "effects": ["burst", "sparkle"]
 }

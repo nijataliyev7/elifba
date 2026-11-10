@@ -25,7 +25,7 @@ final readonly class PackData
     ) {}
 
     /**
-     * @param  array{key: string, version: int, title: array{az: string, en: string}, style: array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences: list<array{id: string, text: string}>}  $data
+     * @param  array{key: string, version: int, title: array{az: string, en: string}, style: array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences: list<array{id: string, text: string}>}  $data
      */
     public static function fromArray(array $data): self
     {

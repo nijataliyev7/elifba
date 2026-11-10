@@ -95,7 +95,9 @@ function props(game: string): BoardProps {
                 palette: ['#ff0000'],
                 backdrop: null,
                 sounds: { hit: null, miss: null, solved: null },
+                figures: [],
             },
+            pictures: {},
         },
         students: [],
     };

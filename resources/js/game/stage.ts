@@ -21,6 +21,7 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from './scenes/board-scene';
 import { BuildSentenceScene } from './scenes/build-sentence';
 import { BuildSyllableScene } from './scenes/build-syllable';
 import { BuildWordScene } from './scenes/build-word';
+import type { Figure, Pictures } from './figures';
 import { FindScene } from './scenes/find';
 import { builds } from './scenes/layouts';
 import { itemStyle, slotStyle } from './styles/registry';
@@ -51,6 +52,10 @@ export type StageOptions = {
     background: string;
     sounds: BoardSounds;
     backdrop: string | null;
+    /** The pack's figures (`pack.style.figures`), drawn by `animal` and `fruit` items. */
+    figures: Figure[];
+    /** The pictures that show a content key (`pack.pictures`), for the same items. */
+    pictures: Pictures;
 };
 
 export type Stage = {
@@ -127,6 +132,8 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
                 palette,
                 sounds: options.sounds,
                 backdrop: options.backdrop,
+                figures: options.figures,
+                pictures: options.pictures,
                 onReady: () =>
                     resolve({
                         unlockAudio: () => {

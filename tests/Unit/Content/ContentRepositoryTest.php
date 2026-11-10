@@ -33,7 +33,7 @@ it('reads the fruit pack with its look, words and sentences', function (): void 
         ->and($fruit->version)->toBeGreaterThanOrEqual(1)
         ->and($fruit->title->in('az'))->toBe('Meyvələr')
         ->and($fruit->title->in('en'))->toBe('Fruit')
-        ->and($fruit->style->item)->toBe(ItemStyle::Bubble)
+        ->and($fruit->style->item)->toBe(ItemStyle::Fruit)
         ->and($fruit->style->slot)->toBe(SlotStyle::Frame)
         ->and($fruit->style->effect)->toBe(Effect::Burst)
         ->and(count($fruit->words))->toBeGreaterThanOrEqual(20)
@@ -60,7 +60,8 @@ it('gives each pack the default look of the glossary', function (string $key, It
 })->with([
     'train' => ['train', ItemStyle::Wagon, SlotStyle::Wagon],
     'balloons' => ['balloons', ItemStyle::Balloon, SlotStyle::Frame],
-    'animals' => ['animals', ItemStyle::Card, SlotStyle::Frame],
+    'animals' => ['animals', ItemStyle::Animal, SlotStyle::Frame],
+    'fruit' => ['fruit', ItemStyle::Fruit, SlotStyle::Frame],
     'cities' => ['cities', ItemStyle::Card, SlotStyle::Frame],
     'symbols' => ['symbols', ItemStyle::Card, SlotStyle::Frame],
 ]);

@@ -9,6 +9,7 @@ import {
     itemStyle,
     slotStyle,
 } from './registry';
+import { FIGURE_TEXT } from './figure';
 import { frameGeometry } from './slot-frame';
 import { trainGeometry } from './slot-wagon';
 
@@ -143,10 +144,11 @@ describe('the styles registry', () => {
     it.each(Object.entries(ITEM_STYLES))(
         'frames for %s items stay on the board, in their band, side by side',
         (_, style) => {
-            const sample = style.layout(1);
-            const aspect = sample.height / sample.width;
+            for (const [mechanic, { slots: band, tiles }] of builds) {
+                // The tiles' shape in their band, as the build scene measures it.
+                const sample = style.layout(1, tiles);
+                const aspect = sample.height / sample.width;
 
-            for (const [mechanic, { slots: band }] of builds) {
                 for (const count of [2, 3, 4]) {
                     for (const tail of [null, '.']) {
                         const g = frameGeometry({
@@ -185,6 +187,32 @@ describe('the styles registry', () => {
             }
         },
     );
+
+    it('draws figure items’ text at least as large as card’s and bubble’s in the same layout', () => {
+        // `card.ts` and `bubble.ts` size their labels at these shares of the item's width.
+        const CARD_TEXT = 0.46;
+        const BUBBLE_TEXT = 0.42;
+        const bands = [undefined, ...builds.map(([, { tiles }]) => tiles)];
+
+        for (const band of bands) {
+            for (const count of [1, 2, 3, 4, 5, 6]) {
+                const label = `${count} in ${band === undefined ? 'the board' : `${band.top}–${band.bottom}`}`;
+
+                expect(
+                    ITEM_STYLES.animal.layout(count, band).width * FIGURE_TEXT,
+                    label,
+                ).toBeGreaterThanOrEqual(
+                    ITEM_STYLES.card.layout(count, band).width * CARD_TEXT,
+                );
+                expect(
+                    ITEM_STYLES.fruit.layout(count, band).width * FIGURE_TEXT,
+                    label,
+                ).toBeGreaterThanOrEqual(
+                    ITEM_STYLES.bubble.layout(count, band).width * BUBBLE_TEXT,
+                );
+            }
+        }
+    });
 
     it('fits the slot train, a wagon per slot behind the locomotive, on the board', () => {
         for (const [mechanic, { slots: band }] of builds) {

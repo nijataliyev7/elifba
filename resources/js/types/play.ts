@@ -78,7 +78,20 @@ export type BoardProps = {
                 miss: string | null;
                 solved: string | null;
             };
+            /**
+             * The pictures `animal` and `fruit` items that are no word of the
+             * pack stand in front of, with the content keys of the pack's
+             * words drawn with each; empty for other styles.
+             */
+            figures: { url: string; words: string[] }[];
         };
+        /**
+         * The pictures an `animal` or `fruit` item stands in front of, by
+         * content key: a built-in word's own, and for each letter those of
+         * the words that begin with it (`[]` when none does); empty for
+         * other styles.
+         */
+        pictures: Record<string, string[]>;
     };
     /** Active students in the class's order. */
     students: BoardStudent[];

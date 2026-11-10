@@ -182,7 +182,7 @@ describe('starting a game', function (): void {
     })->with([
         'balloons' => ['balloons', 'burst'],
         'train' => ['train', 'burst'],
-        'animals' => ['animals', 'burst'],
+        'animals' => ['animals', 'sparkle'],
         'fruit' => ['fruit', 'burst'],
         'cities' => ['cities', 'sparkle'],
         'symbols' => ['symbols', 'sparkle'],
@@ -219,7 +219,7 @@ describe('starting a game', function (): void {
     })->with([
         'balloons' => ['balloons', 'burst'],
         'train' => ['train', 'burst'],
-        'animals' => ['animals', 'burst'],
+        'animals' => ['animals', 'sparkle'],
         'fruit' => ['fruit', 'burst'],
         'cities' => ['cities', 'sparkle'],
         'symbols' => ['symbols', 'sparkle'],
@@ -248,7 +248,7 @@ describe('starting a game', function (): void {
                 ->and($round->prompt->image !== null)->toBe($mechanic === 'build_word');
         }
     })->with(function (): array {
-        $packs = ['balloons' => 'burst', 'train' => 'burst', 'animals' => 'burst', 'fruit' => 'burst', 'cities' => 'sparkle', 'symbols' => 'sparkle'];
+        $packs = ['balloons' => 'burst', 'train' => 'burst', 'animals' => 'sparkle', 'fruit' => 'burst', 'cities' => 'sparkle', 'symbols' => 'sparkle'];
         $games = ['build_syllable' => 'syllables-closed', 'build_word' => 'words-long', 'build_sentence' => 'sentences'];
         $cases = [];
 

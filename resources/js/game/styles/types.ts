@@ -22,6 +22,10 @@ export type ItemViewOptions = {
     width: number;
     /** A pack palette colour. */
     colour: number;
+    /** The item's height from its layout (`ItemLayout.height`), for a style that fills its box. */
+    height?: number;
+    /** The texture of the figure behind the item (`animal`, `fruit`); other styles ignore it. */
+    figure?: string | null;
 };
 
 /** How a style draws one item, without motion. */
@@ -30,6 +34,19 @@ export type ItemLook = {
     width: number;
     /** A pack palette colour. */
     colour: number;
+    /**
+     * The height of the box the item fills: `ItemLayout.height` for a
+     * tile, a slot's height for its copy. `animal` and `fruit` items fill
+     * it (taller on the free board, compact in a build band); other styles
+     * pick their height from the width.
+     */
+    height?: number;
+    /**
+     * The texture of the figure the item stands in front of (§2 "Figures":
+     * `animal`, `fruit`), loaded by the scene; null or missing draws the
+     * plate alone. Other styles ignore it.
+     */
+    figure?: string | null;
 };
 
 /** A still picture of an item, centred on (0, 0) of `root`. */
@@ -67,7 +84,7 @@ export type Band = { top: number; bottom: number };
 /** Where `count` items rest on the 1920×1080 board, and how big each is. */
 export type ItemLayout = {
     width: number;
-    /** The height of one item drawn at `width` (its body, as `draw()` gives it). */
+    /** The height of one item drawn at `width` (its body, as `draw()` gives it when given this height). */
     height: number;
     spots: { x: number; y: number }[];
 };

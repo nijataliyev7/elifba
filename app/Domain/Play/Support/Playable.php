@@ -50,7 +50,7 @@ final class Playable
      */
     public static function itemStyles(): array
     {
-        return [ItemStyle::Balloon, ItemStyle::Wagon, ItemStyle::Card, ItemStyle::Bubble];
+        return [ItemStyle::Balloon, ItemStyle::Wagon, ItemStyle::Card, ItemStyle::Bubble, ItemStyle::Animal, ItemStyle::Fruit];
     }
 
     /**

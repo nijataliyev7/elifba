@@ -8,10 +8,12 @@
  * `registry.test.ts` checks every key the server lists has its code here.
  */
 import type { Effect as EffectKey } from '../contract';
+import { animal } from './animal';
 import { balloon } from './balloon';
 import { bubble } from './bubble';
 import { burst } from './burst';
 import { card } from './card';
+import { fruit } from './fruit';
 import { frame } from './slot-frame';
 import { wagonSlots } from './slot-wagon';
 import { sparkle } from './sparkle';
@@ -23,6 +25,8 @@ export const ITEM_STYLES = {
     wagon,
     card,
     bubble,
+    animal,
+    fruit,
 } as const satisfies Record<string, ItemStyle>;
 
 export type ItemStyleKey = keyof typeof ITEM_STYLES;

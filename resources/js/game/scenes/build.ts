@@ -97,6 +97,8 @@ type Row = {
     slots: SlotView;
     tiles: Map<string, ItemView>;
     colours: Map<string, number>;
+    /** The figure behind each tile, which its copies show too. */
+    figures: Map<string, string | null>;
     /** Copies that landed, by slot; the scene keeps each on its slot. */
     copies: (Copy | undefined)[];
     /** Correct hits so far, landed or still flying. */
@@ -150,7 +152,8 @@ export abstract class BuildScene extends BoardScene {
         const { style } = this.options;
         const palette = this.palette;
         const tiles = style.layout(round.items.length, this.layout.tiles);
-        const sample = style.layout(1);
+        // The tiles' shape, as the band draws them, so a slot hugs its copy.
+        const sample = style.layout(1, this.layout.tiles);
         const slots = this.slotStyle.create(this, {
             count: round.slots,
             band: this.layout.slots,
@@ -163,6 +166,7 @@ export abstract class BuildScene extends BoardScene {
             slots,
             tiles: new Map(),
             colours: new Map(),
+            figures: this.figuresOf(round),
             copies: [],
             filled: 0,
             flying: 0,
@@ -179,7 +183,9 @@ export abstract class BuildScene extends BoardScene {
             const view = style.create(this, item, {
                 ...tiles.spots[index],
                 width: tiles.width,
+                height: tiles.height,
                 colour,
+                figure: row.figures.get(item.id) ?? null,
             });
 
             view.onTouch(() => {
@@ -277,7 +283,9 @@ export abstract class BuildScene extends BoardScene {
         const colour = row.colours.get(itemId) ?? this.palette[0];
         const drawing = this.options.style.draw(this, item.text, {
             width: spot.width,
+            height: spot.height,
             colour,
+            figure: row.figures.get(itemId) ?? null,
         });
         const fit = Math.min(
             1,

@@ -1,12 +1,30 @@
 {
     "key": "fruit",
-    "version": 3,
+    "version": 4,
     "title": { "az": "Meyvələr", "en": "Fruit" },
     "style": {
-        "item": "bubble",
+        "item": "fruit",
         "slot": "frame",
         "effect": "burst",
         "palette": ["#F6C445", "#E85D4A", "#5DB075"],
+        "figures": [
+            "openmoji/1F34E.svg",
+            "openmoji/1F350.svg",
+            "openmoji/1F347.svg",
+            "openmoji/E0C4.svg",
+            "openmoji/1F352.svg",
+            "openmoji/1F34B.svg",
+            "openmoji/1F34A.svg",
+            "openmoji/1F349.svg",
+            "openmoji/1F351.svg",
+            "openmoji/1F353.svg",
+            "openmoji/1F34C.svg",
+            "openmoji/1F34D.svg",
+            "openmoji/1F95D.svg",
+            "fruit/erik.svg",
+            "fruit/gavali.svg",
+            "fruit/xurma.svg"
+        ],
         "sounds": {
             "hit": "sounds/pop.mp3",
             "miss": "sounds/bong.mp3",

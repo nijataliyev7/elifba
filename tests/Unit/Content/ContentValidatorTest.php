@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Content\Enums\Effect;
+use App\Domain\Content\Enums\ItemStyle;
 use App\Domain\Content\Enums\Sound;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\ContentValidator;
@@ -53,4 +54,54 @@ it('credits every font and asset file the repository ships', function (): void {
     $problems = (new ContentValidator(base_path('content')))->validate();
 
     expect(array_filter($problems, static fn (string $problem): bool => str_starts_with($problem, 'credits.json')))->toBe([]);
+});
+
+/** Ten figures of the fixture pack: its word pictures and the backdrop, a picture of no word. */
+const SAMPLE_FIGURES = [
+    'sample/alma.svg', 'sample/words/ata.svg', 'sample/words/ana.svg', 'sample/words/nene.svg', 'sample/words/baba.svg',
+    'sample/words/dede.svg', 'sample/words/baci.svg', 'sample/words/kitab.svg', 'sample/words/qelem.svg', 'sample/backdrop.svg',
+];
+
+it('accepts an animal or fruit look with enough figures, word pictures or others', function (string $item): void {
+    $root = ContentFixture::make(['file' => 'packs/sample.json', 'set' => ['style.item' => $item, 'style.figures' => SAMPLE_FIGURES]]);
+
+    expect((new ContentValidator($root))->validate())->toBe([]);
+})->with(['animal', 'fruit']);
+
+it('needs a credits entry for a figure, as for every asset', function (): void {
+    $root = ContentFixture::make([
+        'file' => 'packs/sample.json',
+        'set' => ['style.item' => 'animal', 'style.figures' => [...array_slice(SAMPLE_FIGURES, 0, 9), 'sample/dinozavr.svg']],
+        'write' => ['assets/sample/dinozavr.svg' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"/>'],
+    ]);
+
+    expect((new ContentValidator($root))->validate())->toBe(['credits.json: content/assets/sample/dinozavr.svg has no entry']);
+});
+
+it('asks for twice as many figures as the fullest round of any level shows', function (): void {
+    $content = new ContentRepository(base_path('content'));
+    $most = [];
+
+    foreach ($content->levels() as $level) {
+        $most[$level->key] = $level->mostItems();
+    }
+
+    // find and pop show 4; a build round its longest answer and one decoy.
+    expect($most)->toBe([
+        'letters' => 4,
+        'syllables-open' => 4,
+        'syllables-closed' => 5,
+        'words-short' => 4,
+        'words-long' => 5,
+        'sentences' => 5,
+    ])->and(ContentValidator::FIGURES_PER_ITEM * max($most))->toBe(10);
+
+    expect(array_map(static fn (ItemStyle $style): bool => $style->hasFigures(), ItemStyle::cases()))
+        ->toBe([false, false, false, false, true, true]);
+
+    foreach ($content->packs() as $pack) {
+        $figures = count($pack->style->figures);
+
+        expect($pack->style->item->hasFigures() ? $figures >= 10 : $figures === 0)->toBeTrue($pack->key);
+    }
 });

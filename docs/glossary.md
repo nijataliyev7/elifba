@@ -55,8 +55,8 @@ Azerbaijani terms used by teachers and in the interface, the English words used 
 | ------------- | ---------------- | ---------- | ----------------------------- |
 | qatar         | train            | `train`    | `wagon` items and slots       |
 | şar(lar)      | balloons         | `balloons` | `balloon`                     |
-| heyvanlar     | animals          | `animals`  | `card`                        |
-| meyvələr      | fruit            | `fruit`    | `bubble`                      |
+| heyvanlar     | animals          | `animals`  | `animal`, `sparkle` effect    |
+| meyvələr      | fruit            | `fruit`    | `fruit`                       |
 | şəhərlərimiz  | our cities       | `cities`   | `card`                        |
 | milli rəmzlər | national symbols | `symbols`  | `card`, `sparkle` effect only |
 

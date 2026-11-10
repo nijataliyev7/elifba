@@ -64,13 +64,63 @@ describe('the board page', function (): void {
                             'miss' => ContentAssets::url((string) $pack->style->sounds['miss'], $pack->version),
                             'solved' => ContentAssets::url((string) $pack->style->sounds['solved'], $pack->version),
                         ],
+                        'figures' => [],
                     ],
+                    'pictures' => [],
                 ])
                 ->where('students', [
                     ['id' => $first->id, 'display_name' => 'Aysel', 'avatar' => ['key' => 'no-such-avatar', 'url' => null]],
                     ['id' => $second->id, 'display_name' => 'Əli', 'avatar' => ['key' => $avatar, 'url' => ContentAssets::url(Avatars::images()[$avatar])]],
                 ]));
     });
+
+    it('sends an animal or fruit look the pictures of each word, letter and syllable, and its figures with the words they show', function (string $key, string $item, array $pictures, array $alone, array $figures): void {
+        $game = Games::start($this->class, ['pack' => $key]);
+        $pack = app(ContentRepository::class)->pack($key);
+
+        $this->get(route('games.board', $game))->assertInertia(function (Assert $page) use ($pack, $item, $pictures, $alone, $figures): void {
+            $page->where('pack.style.item', $item)
+                ->has('pack.style.figures', count($pack->style->figures));
+
+            foreach ($pictures as $key => $paths) {
+                $page->where("pack.pictures.{$key}", array_map(static fn (string $path): string => ContentAssets::url($path, $pack->version), $paths));
+            }
+
+            foreach ($alone as $key) {
+                $page->missing("pack.pictures.{$key}");
+            }
+
+            foreach ($figures as $path => $words) {
+                $index = array_search($path, $pack->style->figures, true);
+
+                expect($index)->toBeInt();
+                $page->where("pack.style.figures.{$index}", ['url' => ContentAssets::url($path, $pack->version), 'words' => $words]);
+            }
+        });
+    })->with([
+        // «dəvəquşu» stands in front of the ostrich, «A» in front of the
+        // horse, the bear or the bee, «də» in front of the squirrel, the
+        // camel or the ostrich, «ruz», which begins no word, in front of the
+        // rooster (xo-ruz), and «Ə» and «ma» alone; the dinosaurs are no
+        // word's picture, the bear and the cow are «ayı» and «inək».
+        'animals' => ['animals', 'animal', [
+            'word:dəvəquşu' => ['animals/devequsu.svg'],
+            'letter:a' => ['openmoji/1F40E.svg', 'openmoji/1F43B.svg', 'openmoji/1F41D.svg'],
+            'letter:i' => ['openmoji/1F415.svg', 'openmoji/1F404.svg'],
+            'syllable:də' => ['openmoji/1F43F.svg', 'openmoji/1F42A.svg', 'animals/devequsu.svg'],
+            'syllable:ruz' => ['openmoji/1F413.svg'],
+        ], ['letter:ə', 'syllable:ma'], ['openmoji/1F995.svg' => [], 'openmoji/1F43B.svg' => ['word:ayı'], 'openmoji/1F404.svg' => ['word:inək']]],
+        // «al» begins «alma», «albalı» and «alça», not «ananas» (a-na-nas);
+        // «ma» begins none, so it takes the words it ends (al-ma, xur-ma).
+        'fruit' => ['fruit', 'fruit', [
+            'word:qreypfrut' => ['fruit/qreypfrut.svg'],
+            'letter:ş' => ['openmoji/1F351.svg'],
+            'letter:ə' => ['fruit/erik.svg', 'fruit/encir.svg', 'fruit/ezgil.svg'],
+            'syllable:al' => ['openmoji/1F34E.svg', 'fruit/albali.svg', 'fruit/alca.svg'],
+            'syllable:a' => ['openmoji/1F34D.svg', 'openmoji/1F951.svg'],
+            'syllable:ma' => ['openmoji/1F34E.svg', 'fruit/xurma.svg'],
+        ], ['letter:o', 'syllable:ruz'], ['openmoji/1F34E.svg' => ['word:alma'], 'openmoji/1F349.svg' => ['word:qarpız'], 'fruit/erik.svg' => ['word:ərik']]],
+    ]);
 
     it('serves sounds from the app\'s own host, versioned', function (): void {
         $game = Games::start($this->class);

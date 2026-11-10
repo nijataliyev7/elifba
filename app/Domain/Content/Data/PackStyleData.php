@@ -16,6 +16,7 @@ final readonly class PackStyleData
     /**
      * @param  list<string>  $palette  `#RRGGBB` colours
      * @param  array<value-of<Sound>, string>  $sounds  sound key → path
+     * @param  list<string>  $figures  the pictures `animal` and `fruit` items stand in front of (§2 "Figures"); empty for other styles
      */
     public function __construct(
         public ItemStyle $item,
@@ -24,10 +25,11 @@ final readonly class PackStyleData
         public ?string $backdrop,
         public array $palette,
         public array $sounds,
+        public array $figures = [],
     ) {}
 
     /**
-     * @param  array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<value-of<Sound>, string>}  $data
+     * @param  array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<value-of<Sound>, string>, figures?: list<string>}  $data
      */
     public static function fromArray(array $data): self
     {
@@ -38,6 +40,7 @@ final readonly class PackStyleData
             backdrop: $data['backdrop'] ?? null,
             palette: $data['palette'],
             sounds: $data['sounds'] ?? [],
+            figures: $data['figures'] ?? [],
         );
     }
 

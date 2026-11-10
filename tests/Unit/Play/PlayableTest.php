@@ -94,11 +94,11 @@ it('draws every mechanic in every pack, the train with wagons and the rest with 
     }
 });
 
-it('never bursts the national symbols or the cities', function (): void {
+it('never bursts the national symbols, the cities or the animals', function (): void {
     $content = app(ContentRepository::class);
     $sparkling = array_values(array_filter($content->packs(), static fn ($pack): bool => $pack->style->effect === Effect::Sparkle));
 
-    expect(array_map(static fn ($pack): string => $pack->key, $sparkling))->toBe(['cities', 'symbols']);
+    expect(array_map(static fn ($pack): string => $pack->key, $sparkling))->toBe(['animals', 'cities', 'symbols']);
 
     foreach ($sparkling as $pack) {
         foreach ([Mechanic::Find, Mechanic::Pop] as $mechanic) {

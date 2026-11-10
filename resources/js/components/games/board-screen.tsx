@@ -162,7 +162,9 @@ export function BoardScreen({
         palette,
         sounds,
         backdrop,
+        figures,
     } = pack.style;
+    const { pictures } = pack;
     const background = colours.background;
 
     useEffect(() => {
@@ -190,6 +192,8 @@ export function BoardScreen({
                         background,
                         sounds,
                         backdrop,
+                        figures,
+                        pictures,
                     }),
                 )
                 .then((ready) => {
@@ -225,6 +229,8 @@ export function BoardScreen({
         background,
         sounds,
         backdrop,
+        figures,
+        pictures,
     ]);
 
     // The link to the phone: Echo loads on this page only. A game that

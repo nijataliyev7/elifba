@@ -36,14 +36,18 @@ export class FindScene extends BoardScene {
             (item) => !progress.hit_item_ids.includes(item.id),
         );
         const { style } = this.options;
-        const { width, spots } = style.layout(shown.length);
+        const { width, height, spots } = style.layout(shown.length);
         const palette = this.palette;
+        // Chosen over every item, so a reload mid-round shows the same.
+        const figures = this.figuresOf(round);
 
         shown.forEach((item, index) => {
             const view = style.create(this, item, {
                 ...spots[index],
                 width,
+                height,
                 colour: palette[(index + round.index) % palette.length],
+                figure: figures.get(item.id) ?? null,
             });
 
             view.onTouch(() => {
