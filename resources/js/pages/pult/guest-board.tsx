@@ -167,6 +167,7 @@ export default function PultGuestBoard({
                             levels={setup.levels}
                             letterCases={setup.letterCases}
                             rounds={setup.rounds}
+                            wordMaxLength={setup.wordMaxLength}
                             options={chosen.options}
                             letters={chosen.letters}
                             form={target}

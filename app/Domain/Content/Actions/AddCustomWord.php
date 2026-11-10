@@ -12,16 +12,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Adds a teacher's own word to a theme pack (docs/architecture.md §3
- * "Teacher words", ADR 007). `$data` has passed `CustomWordData::rules()`;
- * under the teacher's lock this checks what needs the teacher: the word is
- * not already one of theirs in that pack, and they keep at most
- * `elifba.custom_words.max_per_teacher` words.
+ * Adds a teacher's own word, which plays in every theme pack
+ * (docs/architecture.md §3 "Teacher words", ADR 007, ADR 009). `$data` has
+ * passed `CustomWordData::rules()`; under the teacher's lock this checks
+ * what needs the teacher: the word is not already one of theirs, and they
+ * keep at most `elifba.custom_words.max_per_teacher` words.
  */
 final readonly class AddCustomWord
 {
     /**
-     * @throws ValidationException on `text` when the teacher has the word in the pack or has too many words
+     * @throws ValidationException on `text` when the teacher has the word or has too many words
      */
     public function handle(User $teacher, CustomWordData $data): CustomWord
     {
@@ -34,7 +34,7 @@ final readonly class AddCustomWord
                 throw ValidationException::withMessages(['text' => WordRules::message('too_many', ['max' => $max])]);
             }
 
-            if (CustomWord::isTaken($teacher->id, $data->pack, $data->text)) {
+            if (CustomWord::isTaken($teacher->id, $data->text)) {
                 throw ValidationException::withMessages(['text' => WordRules::message('taken')]);
             }
 

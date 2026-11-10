@@ -13,7 +13,16 @@ export type BuiltInWord = {
     hidden: boolean;
 };
 
-/** One of the teacher's own words in the pack shown. */
+/** What one word gives a level: the word itself, or its syllables that fit. */
+export type WordLevel = {
+    /** The level's title in the interface language. */
+    title: string;
+    unit: 'word' | 'syllable';
+    /** The word itself at a word level; its fitting syllables, lowercase, at a syllable level. */
+    items: string[];
+};
+
+/** One of the teacher's own words; it plays in every theme pack. */
 export type CustomWord = {
     id: string;
     text: string;
@@ -21,13 +30,21 @@ export type CustomWord = {
     syllables: string;
     /** The teacher's override as typed back into the field, or null when the server splits it. */
     override: string | null;
-    /** False when the pack now has this word built in, which plays instead. */
-    played: boolean;
+    /** The word and syllable levels it gives something, in content order. */
+    levels: WordLevel[];
+    /** Titles of the packs that have this word built in and play theirs, with its picture. */
+    built_in_in: string[];
+};
+
+/** How many distinct items all of the teacher's words give one level. */
+export type LevelTotal = {
+    title: string;
+    count: number;
 };
 
 export type WordLimits = {
     max_length: number;
     max_per_teacher: number;
-    /** The teacher's words over all packs. */
+    /** The teacher's words. */
     count: number;
 };

@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * A made-up three-syllable word (consonant + vowel, three times) in the
- * fruit pack, which fits the long word level and is in no pack. A test that
+ * A made-up three-syllable word (consonant + vowel, three times), which
+ * fits the long word level and is in no pack. A test that
  * depends on the word sets it itself.
  *
  * @extends Factory<CustomWord>
@@ -30,7 +30,6 @@ class CustomWordFactory extends Factory
 
         return [
             'user_id' => User::factory(),
-            'pack' => 'fruit',
             'text' => $syllable().$syllable().$syllable(),
             'syllables' => null,
         ];

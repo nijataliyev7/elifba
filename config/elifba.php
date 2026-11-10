@@ -36,9 +36,9 @@ return [
         'default' => 10,
     ],
 
-    // Teachers' own words in the theme packs (§3 "Teacher words", ADR 007):
-    // the longest word, in characters (at most 32, the column), and how many
-    // words one teacher may keep over all packs.
+    // Teachers' own words, played in every theme pack (§3 "Teacher words",
+    // ADR 007, ADR 009): the longest word, in characters (at most 32, the
+    // column), and how many words one teacher may keep.
     'custom_words' => [
         'max_length' => 20,
         'max_per_teacher' => 200,

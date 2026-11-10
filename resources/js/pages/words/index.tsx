@@ -10,30 +10,40 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { destroy, index, store } from '@/routes/words';
-import type { BuiltInWord, CustomWord, WordLimits, WordPack } from '@/types';
+import type {
+    BuiltInWord,
+    CustomWord,
+    LevelTotal,
+    WordLimits,
+    WordPack,
+} from '@/types';
 
 type Props = {
+    /** The teacher's words, in the order they were added; they play in every pack. */
+    customWords: CustomWord[];
+    /** How many distinct items the teacher's words give each word and syllable level. */
+    levelTotals: LevelTotal[];
     /** Every theme pack, in the server's order. */
     packs: WordPack[];
-    /** The key of the pack shown. */
+    /** The key of the pack whose built-in words are shown. */
     pack: string;
     builtInWords: BuiltInWord[];
-    /** The teacher's words in this pack, in the order they were added. */
-    customWords: CustomWord[];
     limits: WordLimits;
 };
 
 /**
- * The teacher's words, one theme pack at a time (docs/architecture.md §3
- * "Teacher words"): their own words with add, edit and delete, and the
- * built-in words with hide / show. Words and syllables are shown exactly
- * as the server sends them.
+ * The teacher's words (docs/architecture.md §3 "Teacher words", ADR 009):
+ * their own words, which play in every theme, with add, edit and delete and
+ * what each gives the word and syllable levels; then the built-in words of
+ * one theme at a time with hide / show. Words, syllables and level titles
+ * are shown exactly as the server sends them.
  */
 export default function WordsIndex({
+    customWords,
+    levelTotals,
     packs,
     pack,
     builtInWords,
-    customWords,
     limits,
 }: Props) {
     const { t } = useTranslation();
@@ -54,30 +64,6 @@ export default function WordsIndex({
                     </p>
                 </div>
 
-                <nav
-                    aria-label={t('words.pack')}
-                    className="flex flex-wrap gap-2"
-                >
-                    {packs.map((item) => (
-                        <Link
-                            key={item.key}
-                            href={index({ query: { pack: item.key } })}
-                            preserveScroll
-                            aria-current={
-                                item.key === pack ? 'page' : undefined
-                            }
-                            className={cn(
-                                'inline-flex h-9 max-w-full items-center truncate rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                                item.key === pack
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                            )}
-                        >
-                            {item.title}
-                        </Link>
-                    ))}
-                </nav>
-
                 <section className="space-y-4">
                     <Heading
                         variant="small"
@@ -95,7 +81,6 @@ export default function WordsIndex({
                     </p>
 
                     <Form
-                        key={pack}
                         {...store.form()}
                         options={{ preserveScroll: true }}
                         resetOnSuccess
@@ -106,7 +91,6 @@ export default function WordsIndex({
                                 <h3 className="font-medium">
                                     {t('words.add.title')}
                                 </h3>
-                                <input type="hidden" name="pack" value={pack} />
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <WordFields
                                         id="new-word"
@@ -129,14 +113,34 @@ export default function WordsIndex({
                                         {t('words.add.button')}
                                     </Button>
                                 </div>
-                                {errors.pack && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.pack}
-                                    </p>
-                                )}
                             </>
                         )}
                     </Form>
+
+                    {customWords.length > 0 && (
+                        <div className="grid gap-2">
+                            <p className="text-sm text-muted-foreground">
+                                {t('words.custom.totals')}
+                            </p>
+                            <ul className="flex flex-wrap gap-2">
+                                {levelTotals.map((level) => (
+                                    <li
+                                        key={level.title}
+                                        className={cn(
+                                            'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm',
+                                            level.count === 0 &&
+                                                'text-muted-foreground',
+                                        )}
+                                    >
+                                        {level.title}
+                                        <span className="font-semibold tabular-nums">
+                                            {level.count}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     {customWords.length === 0 ? (
                         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -150,28 +154,52 @@ export default function WordsIndex({
                                     className="flex items-center gap-3 p-3"
                                 >
                                     <div className="min-w-0 flex-1">
-                                        <p
-                                            className={cn(
-                                                'truncate font-board text-lg',
-                                                !word.played &&
-                                                    'text-muted-foreground',
-                                            )}
-                                        >
+                                        <p className="truncate font-board text-lg">
                                             {word.text}
                                         </p>
                                         <p className="font-board text-sm text-muted-foreground">
                                             {word.syllables}
                                         </p>
-                                        {!word.played && (
-                                            <p className="text-sm text-muted-foreground">
-                                                {t('words.custom.not_played')}
+                                        <ul
+                                            aria-label={t(
+                                                'words.custom.levels',
+                                            )}
+                                            className="mt-2 flex flex-wrap gap-1.5"
+                                        >
+                                            {word.levels.map((level) => (
+                                                <li
+                                                    key={level.title}
+                                                    className="inline-flex max-w-full items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-xs"
+                                                >
+                                                    <span className="text-muted-foreground">
+                                                        {level.title}
+                                                    </span>
+                                                    {level.unit ===
+                                                        'syllable' && (
+                                                        <span
+                                                            lang="az"
+                                                            className="truncate font-board font-medium"
+                                                        >
+                                                            {level.items.join(
+                                                                ' · ',
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        {word.built_in_in.length > 0 && (
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                {t('words.custom.built_in_in', {
+                                                    packs: word.built_in_in.join(
+                                                        ', ',
+                                                    ),
+                                                })}
                                             </p>
                                         )}
                                     </div>
                                     <EditWordDialog
                                         word={word}
-                                        pack={pack}
-                                        packs={packs}
                                         maxLength={limits.max_length}
                                     />
                                     <ConfirmDialog
@@ -181,7 +209,9 @@ export default function WordsIndex({
                                                 size="icon"
                                                 aria-label={t(
                                                     'words.delete.button',
-                                                    { word: word.text },
+                                                    {
+                                                        word: word.text,
+                                                    },
                                                 )}
                                             >
                                                 <Trash2 />
@@ -190,7 +220,9 @@ export default function WordsIndex({
                                         title={t('words.delete.title')}
                                         description={t(
                                             'words.delete.description',
-                                            { word: word.text },
+                                            {
+                                                word: word.text,
+                                            },
                                         )}
                                         confirmLabel={t('common.delete')}
                                         form={destroy.form(word.id)}
@@ -208,6 +240,29 @@ export default function WordsIndex({
                         title={t('words.built_in.title')}
                         description={t('words.built_in.description')}
                     />
+                    <nav
+                        aria-label={t('words.pack')}
+                        className="flex flex-wrap gap-2"
+                    >
+                        {packs.map((item) => (
+                            <Link
+                                key={item.key}
+                                href={index({ query: { pack: item.key } })}
+                                preserveScroll
+                                aria-current={
+                                    item.key === pack ? 'page' : undefined
+                                }
+                                className={cn(
+                                    'inline-flex h-9 max-w-full items-center truncate rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
+                                    item.key === pack
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                                )}
+                            >
+                                {item.title}
+                            </Link>
+                        ))}
+                    </nav>
                     {hiddenCount > 0 && (
                         <p className="text-sm text-muted-foreground">
                             {t('words.built_in.hidden_count', {

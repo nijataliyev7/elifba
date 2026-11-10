@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Toggle } from '@/components/ui/toggle';
+import { AddWordDialog } from '@/components/words/add-word-dialog';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type { GameSetupProps, SetupOption } from '@/types';
@@ -22,8 +23,12 @@ export type GameSetupFormProps = Omit<GameSetupProps, 'schoolClass'> & {
 
 /**
  * The game setup form (docs/architecture.md §2, "Game setup"): a theme
- * pack, a level, the number of rounds, the letter case and, for the letter
- * level, which letters to ask for. What can start comes from the server's
+ * pack, a level, the number of rounds, the letter case, for the letter
+ * level, which letters to ask for and, where the server offers it
+ * (`option.own`), whether to play only the teacher's own words: on by
+ * default when they can start the game, with a dialog to add words when
+ * they are too few. Mechanics come in the content's order (`levels.json`:
+ * «Oxu və vur» first). What can start comes from the server's
  * `options` (`GameSetupOptions`) — the same check `GameSetupData::rules()`
  * makes — so a pack the board cannot draw yet is shown as coming soon and a
  * level the class lacks content for shows the server's reason. Errors come
@@ -37,6 +42,7 @@ export function GameSetupForm({
     letters,
     letterCases,
     rounds,
+    wordMaxLength,
     form,
     hidden = {},
     submitLabel,
@@ -94,6 +100,13 @@ export function GameSetupForm({
         levelOptions.find((entry) => entry.option.startable)?.level ??
         null;
     const letterLevel = level?.unit === 'letter';
+    const own =
+        levelOptions.find((entry) => entry.level.key === level?.key)?.option
+            .own ?? null;
+    // «Yalnız mənim sözlərim» leads wherever the teacher's words can start
+    // the game; otherwise the form falls back to every word.
+    const [chosenOwnWords, setOwnWords] = useState(true);
+    const ownWords = chosenOwnWords && own?.startable === true;
 
     // The server's default (capitals for letters, as written otherwise)
     // until the teacher picks one.
@@ -149,6 +162,9 @@ export function GameSetupForm({
                             name="letter_case"
                             value={letterCase}
                         />
+                        {ownWords && (
+                            <input type="hidden" name="own_words" value="1" />
+                        )}
                         {letterLevel &&
                             letters
                                 .filter((letter) => asked.has(letter.lower))
@@ -347,6 +363,47 @@ export function GameSetupForm({
                                         )?.[1]
                                     }
                                 />
+                            </fieldset>
+                        )}
+
+                        {own !== null && (
+                            <fieldset className="grid gap-3">
+                                <legend className="mb-1 text-sm font-medium">
+                                    {t('games.setup.words')}
+                                </legend>
+                                <div className="flex flex-wrap gap-2">
+                                    {[false, true].map((item) => (
+                                        <Button
+                                            key={String(item)}
+                                            type="button"
+                                            variant={
+                                                item === ownWords
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
+                                            aria-pressed={item === ownWords}
+                                            disabled={item && !own.startable}
+                                            onClick={() => setOwnWords(item)}
+                                        >
+                                            {t(
+                                                item
+                                                    ? 'games.setup.words_own'
+                                                    : 'games.setup.words_all',
+                                            )}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    {own.reason ?? t('games.setup.words_hint')}
+                                </p>
+                                {!own.startable && (
+                                    <div>
+                                        <AddWordDialog
+                                            maxLength={wordMaxLength}
+                                        />
+                                    </div>
+                                )}
+                                <InputError message={errors.own_words} />
                             </fieldset>
                         )}
 

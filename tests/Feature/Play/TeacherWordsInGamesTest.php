@@ -8,6 +8,8 @@ use App\Domain\Content\Data\CustomWordData;
 use App\Domain\Content\Data\HiddenWordData;
 use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Language\Support\Az;
+use App\Domain\Language\Support\Syllabifier;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
@@ -19,10 +21,13 @@ use Tests\Support\Games;
 
 /*
  * Teacher words in games (docs/architecture.md §2, §3 "Teacher words",
- * ADR 007): a teacher's own words play in that teacher's find, pop and
+ * ADR 007, ADR 009): a teacher's own words play in every pack of that
+ * teacher's find, pop and
  * syllable games and never in build_word; a hidden built-in word leaves only that
  * teacher's games; the setup options, GameSetupData::rules() and StartGame
  * see the same words, so hiding too much gives the usual shortage reason.
+ * «Only my words» (`own_words`) plays a pack's teacher words and nothing
+ * built in, where teacher words play.
  */
 
 beforeEach(function (): void {
@@ -70,9 +75,9 @@ function payloadsOf(GameSession $game): array
     return array_map(static fn (GameRound $round): array => $round->payload, Games::rounds($game));
 }
 
-function addTeacherWord(User $teacher, string $pack, string $text): void
+function addTeacherWord(User $teacher, string $text): void
 {
-    app(AddCustomWord::class)->handle($teacher, CustomWordData::validate(['pack' => $pack, 'text' => $text]));
+    app(AddCustomWord::class)->handle($teacher, CustomWordData::validate(['text' => $text]));
 }
 
 function hideBuiltIn(User $teacher, string $pack, string $word): void
@@ -81,7 +86,7 @@ function hideBuiltIn(User $teacher, string $pack, string $word): void
 }
 
 /**
- * @return array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null}
+ * @return array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null, own: array{startable: bool, reason: string|null}|null}
  */
 function optionFor(SchoolClass $class, string $mechanic, string $pack, string $level): array
 {
@@ -115,7 +120,7 @@ function setupErrors(SchoolClass $class, array $setup): array
 }
 
 it('plays a teacher word in that teacher\'s find-word games only', function (): void {
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    addTeacherWord($this->teacher, 'pomidor');
     $setup = ['mechanic' => 'find', 'pack' => 'fruit', 'level' => 'words-long', 'rounds' => 30];
 
     $mine = Games::start($this->class, $setup, seed: 11);
@@ -129,7 +134,7 @@ it('plays a teacher word in that teacher\'s find-word games only', function (): 
 });
 
 it('plays a teacher word in that teacher\'s pop games only, as one more item to read', function (): void {
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    addTeacherWord($this->teacher, 'pomidor');
     $setup = ['mechanic' => 'pop', 'pack' => 'fruit', 'level' => 'words-long', 'rounds' => 30];
 
     $mine = Games::start($this->class, $setup, seed: 11);
@@ -143,7 +148,7 @@ it('plays a teacher word in that teacher\'s pop games only, as one more item to 
 });
 
 it('gives a teacher word\'s syllables to that teacher\'s syllable games only', function (): void {
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    addTeacherWord($this->teacher, 'pomidor');
     // Few letters keep the pools under 30, so every target comes up.
     $learned = ['a', 'd', 'i', 'l', 'm', 'n', 'o', 'p', 'r', 't', 'u'];
     $this->class->update(['learned_letters' => $learned]);
@@ -169,8 +174,8 @@ it('gives a teacher word\'s syllables to that teacher\'s syllable games only', f
 });
 
 it('never plays a teacher word in build_word, as a target or as decoys', function (string $level): void {
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
-    addTeacherWord($this->teacher, 'fruit', 'kələm');
+    addTeacherWord($this->teacher, 'pomidor');
+    addTeacherWord($this->teacher, 'kələm');
     $setup = ['mechanic' => 'build_word', 'pack' => 'fruit', 'level' => $level, 'rounds' => 30];
 
     $mine = Games::start($this->class, $setup, seed: 5);
@@ -225,7 +230,7 @@ it('gives the shortage reason, on the setup page and in the rules, when hiding l
         ->and(optionFor($this->class, 'find', 'animals', 'words-long')['startable'])->toBeTrue();
 
     // A teacher word brings the level back.
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    addTeacherWord($this->teacher, 'pomidor');
 
     expect(optionFor($this->class, 'find', 'fruit', 'words-long')['startable'])->toBeTrue()
         ->and(setupErrors($this->class, $setup))->toBe([])
@@ -241,7 +246,7 @@ it('answers with reasons, never an error, when a teacher hides every word of a p
     $startable = array_values(array_filter($fruit, static fn (array $option): bool => $option['startable']));
 
     expect($fruit)->toHaveCount(15)
-        ->and(array_map(static fn (array $option): string => "{$option['mechanic']} × {$option['level']}", $startable))->toBe(['find × letters', 'pop × letters', 'build_sentence × sentences'])
+        ->and(array_map(static fn (array $option): string => "{$option['mechanic']} × {$option['level']}", $startable))->toBe(['pop × letters', 'find × letters', 'build_sentence × sentences'])
         ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 4, 'found' => 0]))
         ->and(optionFor($this->class, 'pop', 'fruit', 'words-short')['reason'])->toBe(Playable::message('too_few_words', ['count' => 4, 'found' => 0]))
         ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 2, 'found' => 0]))
@@ -251,7 +256,7 @@ it('answers with reasons, never an error, when a teacher hides every word of a p
 });
 
 it('offers every mechanic of every level in every pack of the teacher', function (): void {
-    addTeacherWord($this->teacher, 'fruit', 'pomidor');
+    addTeacherWord($this->teacher, 'pomidor');
     hideBuiltIn($this->teacher, 'fruit', 'alma');
     $content = app(ContentRepository::class);
     $expected = 0;
@@ -262,4 +267,59 @@ it('offers every mechanic of every level in every pack of the teacher', function
 
     expect(Playable::options($this->teacher, GameSetupData::learned($this->class)))->toHaveCount($expected)
         ->and(array_filter(GameSetupOptions::forClass($this->class)['options'], static fn (array $option): bool => ! $option['startable']))->toBe([]);
+});
+
+describe('only my words', function (): void {
+    beforeEach(function (): void {
+        $this->own = ['Aysel', 'Orxan', 'Nərmin', 'Elvin'];
+
+        foreach ($this->own as $word) {
+            addTeacherWord($this->teacher, $word);
+        }
+    });
+
+    it('plays the teacher\'s own words of the pack and no built-in word', function (string $mechanic): void {
+        $game = Games::start($this->class, ['mechanic' => $mechanic, 'pack' => 'fruit', 'level' => 'words-short', 'rounds' => 20, 'own_words' => true], seed: 4);
+
+        expect(boardKeys($game))->toEqualCanonicalizing(['word:aysel', 'word:orxan', 'word:nərmin', 'word:elvin'])
+            ->and(boardKeys(Games::start($this->class, ['mechanic' => $mechanic, 'pack' => 'fruit', 'level' => 'words-short', 'rounds' => 20], seed: 4)))->toContain('word:alma');
+    })->with(['find', 'pop']);
+
+    it('takes syllables only from the teacher\'s own words', function (): void {
+        $syllables = array_merge(...array_map(
+            static fn (string $word): array => array_map(static fn (string $part): string => 'syllable:'.Az::lower($part), Syllabifier::split($word)),
+            $this->own,
+        ));
+        $find = Games::start($this->class, ['mechanic' => 'find', 'pack' => 'fruit', 'level' => 'syllables-closed', 'rounds' => 20, 'own_words' => '1'], seed: 6);
+        $build = Games::start($this->class, ['mechanic' => 'build_syllable', 'pack' => 'fruit', 'level' => 'syllables-closed', 'rounds' => 20, 'own_words' => true], seed: 6);
+        $shown = array_map(static fn (GameRound $round): string => 'syllable:'.Az::lower((string) $round->payload['prompt']['show']), Games::rounds($build));
+
+        expect(array_diff(boardKeys($find), $syllables))->toBe([])
+            ->and(array_diff($shown, $syllables))->toBe([]);
+    });
+
+    it('offers the choice only where teacher words play, with the reason it cannot start', function (): void {
+        expect(optionFor($this->class, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null])
+            ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['own'])->toBe(['startable' => true, 'reason' => null])
+            // Ay, Or, El: three open syllables, find shows four.
+            ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['own'])->toBe(['startable' => false, 'reason' => Playable::message('too_few_syllables', ['count' => 4, 'found' => 3])])
+            // The teacher's words play in every pack.
+            ->and(optionFor($this->class, 'find', 'animals', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null])
+            ->and(optionFor($this->class, 'find', 'fruit', 'letters')['own'])->toBeNull()
+            ->and(optionFor($this->class, 'build_word', 'fruit', 'words-short')['own'])->toBeNull()
+            ->and(optionFor($this->class, 'build_sentence', 'fruit', 'sentences')['own'])->toBeNull()
+            ->and(optionFor($this->otherClass, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => false, 'reason' => Playable::message('no_own_words')]);
+    });
+
+    it('refuses own words where they do not play, or are missing or too few', function (): void {
+        $own = static fn (string $mechanic, string $pack, string $level): array => ['mechanic' => $mechanic, 'pack' => $pack, 'level' => $level, 'own_words' => true];
+
+        expect(setupErrors($this->class, $own('find', 'fruit', 'letters')))->toBe(['level' => [Playable::message('own_words_level')]])
+            ->and(setupErrors($this->class, $own('build_word', 'fruit', 'words-short')))->toBe(['level' => [Playable::message('own_words_level')]])
+            ->and(setupErrors($this->class, $own('build_sentence', 'fruit', 'sentences')))->toBe(['level' => [Playable::message('own_words_level')]])
+            ->and(setupErrors($this->otherClass, $own('find', 'animals', 'words-short')))->toBe(['level' => [Playable::message('no_own_words')]])
+            ->and(setupErrors($this->class, $own('find', 'fruit', 'words-long')))->toBe(['level' => [Playable::message('too_few_words', ['count' => 4, 'found' => 0])]])
+            ->and(setupErrors($this->class, [...$own('find', 'fruit', 'words-short'), 'own_words' => 'maybe']))->toHaveKey('own_words')
+            ->and(setupErrors($this->class, [...$own('find', 'fruit', 'letters'), 'own_words' => false]))->toBe([]);
+    });
 });

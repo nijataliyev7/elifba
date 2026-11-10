@@ -19,16 +19,18 @@ use Illuminate\Support\Facades\Config;
  * (`/pult/{code}`, `/guest-boards/{board}/game`, §4). The packs, levels,
  * letter cases and round limits are the same for every class; the options
  * (with the reason a game cannot start — the check `GameSetupData::rules()`
- * makes) and the learned letters belong to one class.
+ * makes, also for a game of the teacher's own words only) and the learned
+ * letters belong to one class.
  *
  * @phpstan-type SetupArray array{
  *     packs: list<array{key: string, title: string, style: array{item: string, effect: string, palette: list<string>}}>,
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>}>,
  *     letterCases: list<string>,
  *     rounds: array{min: int, max: int, default: int},
+ *     wordMaxLength: int,
  * }
  * @phpstan-type ClassSetupArray array{
- *     options: list<array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null}>,
+ *     options: list<array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null, own: array{startable: bool, reason: string|null}|null}>,
  *     letters: list<array{lower: string, upper: string}>,
  * }
  */
@@ -66,6 +68,8 @@ final class GameSetupOptions
                 'max' => Config::integer('elifba.rounds.max'),
                 'default' => Config::integer('elifba.rounds.default'),
             ],
+            // For adding a teacher word from the form (§3 "Teacher words").
+            'wordMaxLength' => Config::integer('elifba.custom_words.max_length'),
         ];
     }
 
@@ -87,6 +91,10 @@ final class GameSetupOptions
                 'drawable' => Playable::draws($option['mechanic'], $option['pack']),
                 'startable' => $option['reason'] === null,
                 'reason' => $option['reason'],
+                'own' => $option['own'] === null ? null : [
+                    'startable' => $option['own']['reason'] === null,
+                    'reason' => $option['own']['reason'],
+                ],
             ], Playable::options($class->teacher, $learned)),
             'letters' => array_map(
                 static fn (string $letter): array => ['lower' => $letter, 'upper' => Az::upper($letter)],

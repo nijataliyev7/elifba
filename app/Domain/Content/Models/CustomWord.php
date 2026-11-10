@@ -21,18 +21,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A teacher's own word in a theme pack (docs/architecture.md §1, §3
- * "Teacher words", ADR 007). It plays in all of the teacher's classes, in
- * `find` and the syllable games; it has no picture, so never in
- * `build_word`. Setting `text` sets `word_key` (`word:{lower}`), which the
- * unique index on `(user_id, pack, word_key)` compares. The text may be a
+ * A teacher's own word (docs/architecture.md §1, §3 "Teacher words", ADR
+ * 007, ADR 009). It plays in every theme pack and all of the teacher's
+ * classes, in `find`, `pop` and the syllable games; it has no picture, so
+ * never in `build_word`. Setting `text` sets `word_key` (`word:{lower}`),
+ * which the unique index on `(user_id, word_key)` compares. The text may be a
  * child's name: never log it or put it in a URL; routes use the ULID.
  * `{word}` binds only the current teacher's words (`BelongsToTeacher`) and
  * passes `CustomWordPolicy`.
  *
  * @property string $id
  * @property int $user_id
- * @property string $pack
  * @property string $text normalized, as written
  * @property string $word_key `word:{lower}`
  * @property list<string>|null $syllables the teacher's override; null = the Syllabifier's split
@@ -42,7 +41,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[UseFactory(CustomWordFactory::class)]
 #[UsePolicy(CustomWordPolicy::class)]
-#[Fillable(['pack', 'text', 'syllables'])]
+#[Fillable(['text', 'syllables'])]
 class CustomWord extends Model
 {
     /** @use HasFactory<CustomWordFactory> */
@@ -71,15 +70,13 @@ class CustomWord extends Model
     }
 
     /**
-     * Whether the teacher already has this word in the pack, compared with
-     * Azerbaijani casing, optionally without one of their words (the one
-     * being edited).
+     * Whether the teacher already has this word, compared with Azerbaijani
+     * casing, optionally without one of their words (the one being edited).
      */
-    public static function isTaken(int $teacherId, string $pack, string $text, ?string $exceptId = null): bool
+    public static function isTaken(int $teacherId, string $text, ?string $exceptId = null): bool
     {
         return self::query()
             ->where('user_id', $teacherId)
-            ->where('pack', $pack)
             ->where('word_key', self::keyOf($text))
             ->when($exceptId !== null, fn (Builder $query) => $query->whereKeyNot($exceptId))
             ->exists();

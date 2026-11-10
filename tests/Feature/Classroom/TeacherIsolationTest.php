@@ -59,8 +59,8 @@ function isolationWorld(): array
         'studentB' => Student::factory()->for($classB)->create(['display_name' => 'Nigar']),
         'gameB' => Games::start($classB, seed: 2),
         // A teacher word may be a child's name, like a display name.
-        'wordA' => CustomWord::factory()->for($a, 'teacher')->create(['pack' => 'fruit', 'text' => 'Aysel']),
-        'wordB' => CustomWord::factory()->for($b, 'teacher')->create(['pack' => 'fruit', 'text' => 'pomidor']),
+        'wordA' => CustomWord::factory()->for($a, 'teacher')->create(['text' => 'Aysel']),
+        'wordB' => CustomWord::factory()->for($b, 'teacher')->create(['text' => 'pomidor']),
     ];
 }
 
@@ -104,7 +104,7 @@ function isolationCases(): array
         'GET games/{game}/remote' => ['games.remote', $gameA, $none],
         'GET classes/{class}/rankings' => ['classes.rankings', $classA, $none],
         'GET classes/{class}/podium' => ['classes.podium', $classA, $none],
-        'PATCH words/{word}' => ['words.update', $wordA, static fn (array $w): array => ['pack' => 'fruit', 'text' => 'kələm', 'syllables' => 'kə-ləm']],
+        'PATCH words/{word}' => ['words.update', $wordA, static fn (array $w): array => ['text' => 'kələm', 'syllables' => 'kə-ləm']],
         'DELETE words/{word}' => ['words.destroy', $wordA, $none],
     ];
 }

@@ -98,21 +98,34 @@ final class Playable
     }
 
     /**
+     * Whether a game of this mechanic and level can be played with only the
+     * teacher's own words (§3 "Teacher words"): syllable and word levels,
+     * except `build_word`, whose question is a picture a teacher word lacks.
+     */
+    public static function takesOwnWords(Mechanic $mechanic, LevelData $level): bool
+    {
+        return in_array($level->unit, [Unit::Syllable, Unit::Word], true) && $mechanic !== Mechanic::BuildWord;
+    }
+
+    /**
      * Why this game cannot start for a class with these learned letters, as
      * a message for the teacher; null when it can. `$pack` is the pack as the
      * class's teacher plays it (`TeacherPacks`), so words the teacher hid can
-     * leave a level short (`too_few_*`). The setup page and
-     * `GameSetupData::rules()` ask the same question.
+     * leave a level short (`too_few_*`); with `$own` it is the pack with only
+     * the teacher's own words (`TeacherPacks::pack(…, own: true)`). The setup
+     * page and `GameSetupData::rules()` ask the same question.
      *
      * @param  list<string>  $learned
      * @param  list<string>|null  $letters  the teacher's choice for a letter level
      */
-    public static function reason(Mechanic $mechanic, PackData $pack, LevelData $level, array $learned, ?array $letters = null): ?string
+    public static function reason(Mechanic $mechanic, PackData $pack, LevelData $level, array $learned, ?array $letters = null, bool $own = false): ?string
     {
         return match (true) {
             ! $level->allows($mechanic) => self::message('level_mechanic'),
             $letters !== null && $level->unit !== Unit::Letter => self::message('letters_level'),
+            $own && ! self::takesOwnWords($mechanic, $level) => self::message('own_words_level'),
             ! self::draws($mechanic, $pack) => self::message('not_playable'),
+            $own && $pack->words === [] => self::message('no_own_words'),
             default => self::builder($mechanic)->shortage($pack, $level, $learned, $letters),
         };
     }
@@ -120,25 +133,31 @@ final class Playable
     /**
      * Every game the class could set up — each mechanic its level allows,
      * in every pack as the class's teacher plays it — with the reason it
-     * cannot start, or null: what the setup page offers.
+     * cannot start, or null: what the setup page offers. `own` is the same
+     * answer for a game of the teacher's own words only, or null where such
+     * a game is not offered (`takesOwnWords()`).
      *
      * @param  list<string>  $learned
-     * @return list<array{mechanic: Mechanic, pack: PackData, level: LevelData, reason: string|null}>
+     * @return list<array{mechanic: Mechanic, pack: PackData, level: LevelData, reason: string|null, own: array{reason: string|null}|null}>
      */
     public static function options(User $teacher, array $learned): array
     {
         $content = app(ContentRepository::class);
         $packs = app(TeacherPacks::class)->packs($teacher);
+        $ownPacks = app(TeacherPacks::class)->packs($teacher, own: true);
         $options = [];
 
         foreach ($content->levels() as $level) {
             foreach ($level->mechanics as $mechanic) {
-                foreach ($packs as $pack) {
+                foreach ($packs as $key => $pack) {
                     $options[] = [
                         'mechanic' => $mechanic,
                         'pack' => $pack,
                         'level' => $level,
                         'reason' => self::reason($mechanic, $pack, $level, $learned),
+                        'own' => self::takesOwnWords($mechanic, $level)
+                            ? ['reason' => self::reason($mechanic, $ownPacks[$key], $level, $learned, own: true)]
+                            : null,
                     ];
                 }
             }

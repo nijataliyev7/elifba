@@ -24,8 +24,8 @@ beforeEach(function (): void {
 });
 
 /**
- * @param  list<array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null}>  $options
- * @return array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null}|null
+ * @param  list<array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null, own: array{startable: bool, reason: string|null}|null}>  $options
+ * @return array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null, own: array{startable: bool, reason: string|null}|null}|null
  */
 function setupOption(array $options, string $mechanic, string $pack, string $level): ?array
 {
@@ -56,21 +56,24 @@ describe('the setup page', function (): void {
                 ->has('levels', count($content->levels()))
                 ->where('levels.0.key', 'letters')
                 ->where('levels.0.unit', 'letter')
-                ->where('levels.0.mechanics', ['find', 'pop'])
+                ->where('levels.0.mechanics', ['pop', 'find'])
                 ->where('rounds', ['min' => 5, 'max' => 30, 'default' => 10])
+                ->where('wordMaxLength', 20)
                 ->where('letterCases', ['upper', 'lower'])
                 ->has('letters', 32)
                 ->where('letters.13', ['lower' => 'i', 'upper' => 'İ'])
                 ->where('options', function ($options): bool {
                     $options = $options->all();
 
-                    expect(setupOption($options, 'find', 'balloons', 'letters'))->toBe(['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'drawable' => true, 'startable' => true, 'reason' => null])
+                    // Own words (`own`) are offered at syllable and word levels
+                    // but build_word; this teacher has none yet.
+                    expect(setupOption($options, 'find', 'balloons', 'letters'))->toBe(['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'drawable' => true, 'startable' => true, 'reason' => null, 'own' => null])
                         ->and(setupOption($options, 'find', 'balloons', 'words-short')['startable'] ?? null)->toBeTrue()
-                        ->and(setupOption($options, 'find', 'symbols', 'letters'))->toBe(['mechanic' => 'find', 'pack' => 'symbols', 'level' => 'letters', 'drawable' => true, 'startable' => true, 'reason' => null])
-                        ->and(setupOption($options, 'build_word', 'balloons', 'words-short'))->toBe(['mechanic' => 'build_word', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null])
+                        ->and(setupOption($options, 'find', 'symbols', 'letters'))->toBe(['mechanic' => 'find', 'pack' => 'symbols', 'level' => 'letters', 'drawable' => true, 'startable' => true, 'reason' => null, 'own' => null])
+                        ->and(setupOption($options, 'build_word', 'balloons', 'words-short'))->toBe(['mechanic' => 'build_word', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null, 'own' => null])
                         ->and(setupOption($options, 'build_sentence', 'train', 'sentences')['startable'] ?? null)->toBeTrue()
                         ->and(setupOption($options, 'find', 'balloons', 'sentences'))->toBeNull()
-                        ->and(setupOption($options, 'pop', 'balloons', 'words-short'))->toBe(['mechanic' => 'pop', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null])
+                        ->and(setupOption($options, 'pop', 'balloons', 'words-short'))->toBe(['mechanic' => 'pop', 'pack' => 'balloons', 'level' => 'words-short', 'drawable' => true, 'startable' => true, 'reason' => null, 'own' => ['startable' => false, 'reason' => __('games.setup.errors.no_own_words')]])
                         ->and(setupOption($options, 'pop', 'balloons', 'sentences'))->toBeNull();
 
                     // With every letter learned, every option starts: 15
@@ -78,9 +81,9 @@ describe('the setup page', function (): void {
                     // then pop at the five letter, syllable and word levels).
                     expect($options)->toHaveCount(90)
                         ->and(array_unique(array_column($options, 'pack')))->toHaveCount(6)
-                        ->and(array_count_values(array_column($options, 'mechanic')))->toBe(['find' => 30, 'pop' => 30, 'build_syllable' => 12, 'build_word' => 12, 'build_sentence' => 6])
-                        // find leads, so it stays the default chip.
-                        ->and(array_values(array_unique(array_column($options, 'mechanic'))))->toBe(['find', 'pop', 'build_syllable', 'build_word', 'build_sentence']);
+                        ->and(array_count_values(array_column($options, 'mechanic')))->toBe(['pop' => 30, 'find' => 30, 'build_syllable' => 12, 'build_word' => 12, 'build_sentence' => 6])
+                        // pop («Oxu və vur») leads, so it is the default chip.
+                        ->and(array_values(array_unique(array_column($options, 'mechanic'))))->toBe(['pop', 'find', 'build_syllable', 'build_word', 'build_sentence']);
 
                     foreach ($options as $option) {
                         expect([$option['drawable'], $option['startable'], $option['reason']])->toBe([true, true, null], "{$option['mechanic']} × {$option['pack']} × {$option['level']}");
@@ -116,6 +119,7 @@ describe('the setup page', function (): void {
                     'drawable' => true,
                     'startable' => false,
                     'reason' => __('games.setup.errors.too_few_letters', ['count' => 4]),
+                    'own' => null,
                 ]));
     });
 

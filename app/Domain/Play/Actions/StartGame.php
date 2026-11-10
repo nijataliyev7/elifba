@@ -16,7 +16,8 @@ use Random\Randomizer;
 /**
  * Starts a game for a class (docs/architecture.md §2): builds every round
  * from the pack as the class's teacher plays it (`TeacherPacks`: the
- * built-in words they have not hidden, then their own words) with a seeded
+ * built-in words they have not hidden, then their own words; only their own
+ * words when `$setup->own_words`) with a seeded
  * generator (`Random\Randomizer` on `Mt19937($seed)`, so a seed always gives
  * the same rounds) and stores the game, `live`, with its round snapshots in
  * one transaction. The game belongs to the class's teacher. `$setup` has
@@ -35,7 +36,7 @@ final readonly class StartGame
     public function handle(SchoolClass $class, GameSetupData $setup, ?int $seed = null): GameSession
     {
         $seed ??= random_int(1, self::MAX_SEED);
-        $pack = $this->packs->pack($class->teacher, $setup->pack);
+        $pack = $this->packs->pack($class->teacher, $setup->pack, $setup->own_words);
         $rounds = Playable::builder($setup->mechanic)
             ->build($setup, $pack, GameSetupData::learned($class), new Randomizer(new Mt19937($seed)));
 

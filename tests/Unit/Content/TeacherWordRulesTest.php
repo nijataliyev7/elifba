@@ -58,22 +58,21 @@ it('checks a word as pack files are checked', function (string $text, ?array $sy
 ]);
 
 it('accepts a teacher word and normalizes what a phone keyboard types', function (): void {
-    $data = CustomWordData::validate(['pack' => 'fruit', 'text' => "  k\u{04D9}l\u{04D9}m\u{200B} "]);
+    $data = CustomWordData::validate(['text' => "  k\u{04D9}l\u{04D9}m\u{200B} "]);
 
     expect($data->text)->toBe("k\u{0259}l\u{0259}m")
-        ->and($data->pack)->toBe('fruit')
         ->and($data->syllables)->toBeNull();
 });
 
 it('keeps an override that differs from the rule, and drops one that does not', function (): void {
-    expect(CustomWordData::validate(['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => ['pom', 'i', 'dor']])->syllables)->toBe(['pom', 'i', 'dor'])
-        ->and(CustomWordData::validate(['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => ['po', 'mi', 'dor']])->syllables)->toBeNull()
-        ->and(CustomWordData::validate(['pack' => 'fruit', 'text' => "k\u{04D9}l\u{04D9}m", 'syllables' => ["k\u{04D9}", "l\u{04D9}m"]])->syllables)->toBeNull()
-        ->and(CustomWordData::validate(['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => []])->syllables)->toBeNull();
+    expect(CustomWordData::validate(['text' => 'pomidor', 'syllables' => ['pom', 'i', 'dor']])->syllables)->toBe(['pom', 'i', 'dor'])
+        ->and(CustomWordData::validate(['text' => 'pomidor', 'syllables' => ['po', 'mi', 'dor']])->syllables)->toBeNull()
+        ->and(CustomWordData::validate(['text' => "k\u{04D9}l\u{04D9}m", 'syllables' => ["k\u{04D9}", "l\u{04D9}m"]])->syllables)->toBeNull()
+        ->and(CustomWordData::validate(['text' => 'pomidor', 'syllables' => []])->syllables)->toBeNull();
 });
 
 it('refuses a word that breaks a pack-word rule, on the text', function (string $text, WordProblem $problem): void {
-    expect(customWordErrors(['pack' => 'fruit', 'text' => $text]))->toBe(['text' => [WordRules::message($problem->value)]]);
+    expect(customWordErrors(['text' => $text]))->toBe(['text' => [WordRules::message($problem->value)]]);
 })->with([
     'two words' => ['iki söz', WordProblem::Letters],
     'a sign' => ['alma!', WordProblem::Letters],
@@ -82,7 +81,7 @@ it('refuses a word that breaks a pack-word rule, on the text', function (string 
 ]);
 
 it('refuses a broken override on the syllables', function (array $syllables): void {
-    expect(customWordErrors(['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => $syllables]))
+    expect(customWordErrors(['text' => 'pomidor', 'syllables' => $syllables]))
         ->toBe(['syllables' => [WordRules::message(WordProblem::Split->value)]]);
 })->with([
     'does not join back' => [['po', 'mi', 'do']],
@@ -90,34 +89,26 @@ it('refuses a broken override on the syllables', function (array $syllables): vo
     'other letters' => [['ba', 'na', 'na']],
 ]);
 
-it('refuses a built-in word of the pack, whatever its case, without naming it', function (string $text): void {
-    $errors = customWordErrors(['pack' => 'fruit', 'text' => $text]);
-
-    expect($errors)->toBe(['text' => [WordRules::message('built_in')]])
-        ->and(implode(' ', $errors['text']))->not->toContain('alma');
+it('accepts a built-in word of a pack: it plays as the teacher\'s word in the other packs (ADR 009)', function (string $text): void {
+    expect(customWordErrors(['text' => $text]))->toBe([])
+        ->and(app(ContentRepository::class)->pack('fruit')->word('alma'))->not->toBeNull();
 })->with(['alma', 'Alma']);
-
-it('accepts a word that is built in only in another pack', function (): void {
-    expect(customWordErrors(['pack' => 'train', 'text' => 'alma']))->toBe([])
-        ->and(app(ContentRepository::class)->pack('train')->word('alma'))->toBeNull();
-});
 
 it('refuses a word that fits no word level, counting the override', function (): void {
     // ki-tab-xa-na-çı: five syllables; the word levels take one to four.
-    expect(customWordErrors(['pack' => 'train', 'text' => 'kitabxanaçı']))->toBe(['text' => [WordRules::message('no_level', ['count' => 5])]])
-        ->and(customWordErrors(['pack' => 'train', 'text' => 'kitabxanaçı', 'syllables' => ['ki', 'tab', 'xa', 'na', 'çı']]))->toBe(['text' => [WordRules::message('no_level', ['count' => 5])]])
-        ->and(customWordErrors(['pack' => 'train', 'text' => 'televizor']))->toBe([]);
+    expect(customWordErrors(['text' => 'kitabxanaçı']))->toBe(['text' => [WordRules::message('no_level', ['count' => 5])]])
+        ->and(customWordErrors(['text' => 'kitabxanaçı', 'syllables' => ['ki', 'tab', 'xa', 'na', 'çı']]))->toBe(['text' => [WordRules::message('no_level', ['count' => 5])]])
+        ->and(customWordErrors(['text' => 'televizor']))->toBe([]);
 });
 
-it('caps the length and needs a known pack', function (): void {
+it('caps the length and needs a word, but no pack', function (): void {
     config(['elifba.custom_words.max_length' => 8]);
 
-    expect(customWordErrors(['pack' => 'fruit', 'text' => 'pomidorlar']))->toHaveKey('text')
-        ->and(customWordErrors(['pack' => 'fruit', 'text' => 'pomidor']))->toBe([])
-        ->and(customWordErrors(['pack' => 'vegetables', 'text' => 'pomidor']))->toHaveKeys(['pack'])
-        ->and(customWordErrors(['pack' => 'vegetables', 'text' => 'pomidor']))->not->toHaveKey('text')
-        ->and(customWordErrors(['text' => 'pomidor']))->toHaveKey('pack')
-        ->and(customWordErrors(['pack' => 'fruit']))->toHaveKey('text');
+    expect(customWordErrors(['text' => 'pomidorlar']))->toHaveKey('text')
+        ->and(customWordErrors(['text' => 'pomidor']))->toBe([])
+        // A pack sent by an old form is ignored.
+        ->and(customWordErrors(['pack' => 'no-such-pack', 'text' => 'pomidor']))->toBe([])
+        ->and(customWordErrors([]))->toHaveKey('text');
 });
 
 it('hides only a built-in word of the pack, named in any case and normalized', function (): void {

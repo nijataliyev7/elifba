@@ -92,6 +92,26 @@ final readonly class LevelData
         return $this->unit === Unit::Word && $this->syllables?->contains(count($word->syllables)) === true;
     }
 
+    /**
+     * What one word gives this level, as the level plays it: the word itself
+     * at a word level it fits, its distinct syllables (lowercase) that fit a
+     * syllable level, nothing at a letter or sentence level. The words page
+     * shows it for a teacher's word (§3 "Teacher words", ADR 009).
+     *
+     * @return list<string>
+     */
+    public function itemsFrom(WordData $word): array
+    {
+        return match ($this->unit) {
+            Unit::Word => $this->fitsWord($word) ? [$word->text] : [],
+            Unit::Syllable => array_values(array_unique(array_map(
+                Az::lower(...),
+                array_filter($word->syllables, $this->fitsSyllable(...)),
+            ))),
+            default => [],
+        };
+    }
+
     public function fitsSentence(SentenceData $sentence): bool
     {
         return $this->unit === Unit::Sentence && $this->words?->contains(count($sentence->words())) === true;

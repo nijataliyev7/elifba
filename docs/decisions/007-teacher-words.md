@@ -1,6 +1,6 @@
 # 007 — Teacher words: own words per theme pack, built-in words hidden per teacher
 
-- **Status:** Accepted, 2026-11-10
+- **Status:** Accepted, 2026-11-10; amended by [009 teacher words in every theme](009-teacher-words-in-every-theme.md): a teacher word belongs to the teacher and plays in every pack, not in one
 - **Sections:** architecture.md §1, §2, §3
 - **Builds on:** [004 content as versioned files](004-content-as-versioned-files.md), which foresaw "a new `custom_words` table merged by `ContentRepository` (additive)".
 - **Why it is hard to reverse:** teacher words are rows that teachers type and keep for a school year; once they exist, moving them to another shape (per class, into files, with pictures) means a data migration, and a teacher who loses words they typed loses trust in the app.

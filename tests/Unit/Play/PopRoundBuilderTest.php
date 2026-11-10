@@ -127,18 +127,19 @@ it('shows exactly the items find shows for the same seed', function (string $lev
     'words' => ['words-short', null],
 ]);
 
-it('uses only the learned letters, and leads each round with a chosen letter beside its confusables', function (): void {
+it('uses only the learned letters, shows every chosen letter in each round, and leads it with a chosen letter beside its confusables', function (): void {
     $learned = ['a', 'b', 'd', 'e', 'ə', 'i', 'ı', 'k', 'l', 'm', 'n', 'r', 's', 't', 'u', 'y', 'z'];
     $asKeys = static fn (array $letters): array => array_map(static fn (string $letter): string => "letter:{$letter}", $letters);
 
     foreach ([1, 2, 3] as $seed) {
         foreach (popRounds('letters', $learned, $seed, rounds: 20, letters: ['ə', 'i']) as $index => $round) {
             $keys = array_map(static fn (RoundItemData $item): string => $item->content_key, $round->items);
-            // The deck dealt ə or i; the other one may be among the decoys.
+            // The deck dealt ə or i; the other one comes first among the decoys.
             $leads = array_filter(['ə', 'i'], static fn (string $lead): bool => in_array("letter:{$lead}", $keys, true)
                 && array_diff($asKeys(array_values(array_intersect(Alphabet::confusables($lead), $learned))), $keys) === []);
 
             expect(array_diff($keys, $asKeys($learned)))->toBe([])
+                ->and(array_diff($asKeys(['ə', 'i']), $keys))->toBe([], "seed {$seed}, round {$index}")
                 ->and($leads)->not->toBeEmpty("seed {$seed}, round {$index}");
         }
     }

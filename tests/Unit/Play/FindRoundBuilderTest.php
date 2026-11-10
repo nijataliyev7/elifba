@@ -10,14 +10,15 @@ use App\Domain\Play\Data\RoundData;
 use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Enums\SolutionOrder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
+use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 
 /*
  * `find` rounds from the real content (docs/architecture.md §2): seeded,
  * made of learned letters only, never the same target twice in a row,
- * decoys for a letter from its confusables first, cased on the server, no
- * pictures.
+ * decoys for a letter from the teacher's chosen letters first, then its
+ * confusables, cased on the server, no pictures.
  */
 
 /**
@@ -139,21 +140,39 @@ it('uses only content made of the learned letters', function (string $level): vo
     }
 })->with(['letters', 'syllables-open', 'syllables-closed', 'words-short']);
 
-it('asks only for the chosen letters, with decoys from the other learned letters', function (): void {
-    $rounds = findRounds('letters', letters: ['ə', 'i'], rounds: 10);
+it('asks only for the chosen letters, and shows them all beside the target\'s learned confusables when few are chosen', function (): void {
+    foreach ([1, 7, 2026] as $seed) {
+        $rounds = findRounds('letters', seed: $seed, letters: ['ə', 'i'], rounds: 10);
 
-    expect(array_values(array_unique(targetKeys($rounds))))->toEqualCanonicalizing(['letter:ə', 'letter:i']);
+        expect(array_values(array_unique(targetKeys($rounds))))->toEqualCanonicalizing(['letter:ə', 'letter:i']);
 
-    foreach ($rounds as $round) {
-        $target = $round->item($round->solution->item_ids[0]);
-        $keys = array_map(static fn ($item): string => $item->content_key, $round->items);
+        foreach ($rounds as $index => $round) {
+            $target = $round->item($round->solution->item_ids[0]);
+            $keys = array_map(static fn ($item): string => $item->content_key, $round->items);
 
-        // The confusables come first among the decoys: ə → e, a; i → ı.
-        $confusables = array_map(static fn (string $letter): string => "letter:{$letter}", Alphabet::confusables(explode(':', (string) $target?->content_key)[1]));
+            // Both chosen letters first, then the target's confusables: ə → e, a; i → ı.
+            $confusables = array_map(static fn (string $letter): string => "letter:{$letter}", Alphabet::confusables(explode(':', (string) $target?->content_key)[1]));
 
-        expect(array_diff($confusables, $keys))->toBe([]);
+            expect(array_diff(['letter:ə', 'letter:i'], $keys))->toBe([], "seed {$seed}, round {$index}")
+                ->and(array_diff($confusables, $keys))->toBe([], "seed {$seed}, round {$index}");
+        }
     }
 });
+
+it('shows only the chosen letters when at least a round\'s worth are chosen', function (Mechanic $mechanic): void {
+    $chosen = ['letter:a', 'letter:ə', 'letter:o', 'letter:ö'];
+
+    foreach ([1, 2, 3, 99, 2026] as $seed) {
+        $setup = new GameSetupData(mechanic: $mechanic, pack: 'balloons', level: 'letters', rounds: 20, letter_case: LetterCase::Upper, letters: ['a', 'ə', 'o', 'ö']);
+        $builder = $mechanic === Mechanic::Pop ? app(PopRoundBuilder::class) : app(FindRoundBuilder::class);
+
+        foreach ($builder->build($setup, app(ContentRepository::class)->pack('balloons'), Alphabet::letters(), new Randomizer(new Mt19937($seed))) as $index => $round) {
+            $keys = array_map(static fn ($item): string => $item->content_key, $round->items);
+
+            expect($keys)->toEqualCanonicalizing($chosen, "seed {$seed}, round {$index}");
+        }
+    }
+})->with([Mechanic::Find, Mechanic::Pop]);
 
 it('takes confusable decoys only when the class has learned them', function (): void {
     $learned = ['a', 'b', 'd', 'k', 'l', 'm'];

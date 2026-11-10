@@ -11,9 +11,11 @@ use InvalidArgumentException;
 
 /**
  * The theme packs as one teacher plays them (docs/architecture.md §3
- * "Teacher words", ADR 007): the built-in words in file order without the
- * ones the teacher hid, then the teacher's own words in the order they were
- * added. Every Play reader that builds or checks rounds reads packs here,
+ * "Teacher words", ADR 007, ADR 009): the built-in words in file order
+ * without the ones the teacher hid, then all of the teacher's own words (the
+ * same in every pack) in the order they were added — or, for a game of the
+ * teacher's own words only, just those.
+ * Every Play reader that builds or checks rounds reads packs here,
  * so the setup page, `GameSetupData::rules()` and `StartGame` see the same
  * words. `ContentRepository` stays the reader of the files.
  *
@@ -25,27 +27,30 @@ final readonly class TeacherPacks
     public function __construct(private ContentRepository $content) {}
 
     /**
+     * @param  bool  $own  only the teacher's own words (`GameSetupData::$own_words`)
+     *
      * @throws InvalidArgumentException when there is no such pack
      */
-    public function pack(User $teacher, string $key): PackData
+    public function pack(User $teacher, string $key, bool $own = false): PackData
     {
         $pack = $this->content->pack($key);
 
-        return self::merge($pack, $this->customWords($teacher, $key)[$key] ?? [], $this->hiddenKeys($teacher, $key)[$key] ?? []);
+        return self::merge($pack, $this->customWords($teacher), $this->hiddenKeys($teacher, $key)[$key] ?? [], $own);
     }
 
     /**
-     * Every pack by key, in key order, as the teacher plays it.
+     * Every pack by key, in key order, as the teacher plays it (with only
+     * the teacher's own words when `$own`), in two queries.
      *
      * @return array<string, PackData>
      */
-    public function packs(User $teacher): array
+    public function packs(User $teacher, bool $own = false): array
     {
         $custom = $this->customWords($teacher);
         $hidden = $this->hiddenKeys($teacher);
 
         return array_map(
-            static fn (PackData $pack): PackData => self::merge($pack, $custom[$pack->key] ?? [], $hidden[$pack->key] ?? []),
+            static fn (PackData $pack): PackData => self::merge($pack, $custom, $hidden[$pack->key] ?? [], $own),
             $this->content->packs(),
         );
     }
@@ -75,14 +80,16 @@ final readonly class TeacherPacks
     /**
      * A pack with the teacher's changes: its words without the hidden ones,
      * then the teacher's words that the pack does not have. A teacher word
-     * whose lowercase equals a built-in word — hidden or not — is dropped,
-     * so the built-in one, with its picture, wins when a later pack version
-     * adds it. Sentences, look, title and version stay the pack's.
+     * whose lowercase equals a built-in word of this pack — hidden or not —
+     * is dropped here, so the built-in one plays with its picture; it still
+     * plays in the other packs. Sentences, look, title and version stay the pack's. With
+     * `$own` no built-in word is kept: the pack's words are the teacher's
+     * words that play (the same ones as without it).
      *
-     * @param  list<WordData>  $custom  the teacher's words in this pack, in order
+     * @param  list<WordData>  $custom  the teacher's words, in order
      * @param  list<string>  $hidden  content keys of the built-in words to leave out
      */
-    public static function merge(PackData $pack, array $custom, array $hidden): PackData
+    public static function merge(PackData $pack, array $custom, array $hidden, bool $own = false): PackData
     {
         $hidden = array_flip($hidden);
         $seen = [];
@@ -91,7 +98,7 @@ final readonly class TeacherPacks
         foreach ($pack->words as $word) {
             $seen[$word->key()] = true;
 
-            if (! isset($hidden[$word->key()])) {
+            if (! $own && ! isset($hidden[$word->key()])) {
                 $words[] = $word;
             }
         }
@@ -107,25 +114,20 @@ final readonly class TeacherPacks
     }
 
     /**
-     * The teacher's words as pack words, by pack, in the order they were
-     * added; only the one pack when given.
+     * The teacher's words as pack words, in the order they were added.
      *
-     * @return array<string, list<WordData>>
+     * @return list<WordData>
      */
-    private function customWords(User $teacher, ?string $pack = null): array
+    private function customWords(User $teacher): array
     {
-        $words = [];
-        $rows = CustomWord::query()
-            ->where('user_id', $teacher->id)
-            ->when($pack !== null, fn ($query) => $query->where('pack', $pack))
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->get();
-
-        foreach ($rows as $row) {
-            $words[$row->pack][] = $row->toWordData();
-        }
-
-        return $words;
+        return array_values(array_map(
+            static fn (CustomWord $row): WordData => $row->toWordData(),
+            CustomWord::query()
+                ->where('user_id', $teacher->id)
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get()
+                ->all(),
+        ));
     }
 }

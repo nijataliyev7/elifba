@@ -17,8 +17,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * A game as the teacher sets it up (docs/architecture.md §2): mechanic ×
- * pack × level, the number of rounds, the letter case and, for a letter
- * level, the letters to ask for. Every entry point (the setup page, A7's
+ * pack × level, the number of rounds, the letter case, for a letter
+ * level, the letters to ask for and, for a syllable or word level, whether
+ * to play only the teacher's own words (`own_words`, §3 "Teacher words"). Every entry point (the setup page, A7's
  * phone and guest board) validates through `rules()`, which also refuses a
  * game the board cannot draw (`Playable`) or that the class's learned
  * letters, or the words its teacher hid, leave too little content for, with
@@ -28,6 +29,7 @@ final readonly class GameSetupData
 {
     /**
      * @param  list<string>|null  $letters  lowercase, alphabet order; null = every learned letter
+     * @param  bool  $own_words  only the teacher's own words in the pack (`TeacherPacks::pack(…, own: true)`)
      */
     public function __construct(
         public Mechanic $mechanic,
@@ -36,6 +38,7 @@ final readonly class GameSetupData
         public int $rounds,
         public LetterCase $letter_case,
         public ?array $letters = null,
+        public bool $own_words = false,
     ) {}
 
     /**
@@ -54,6 +57,7 @@ final readonly class GameSetupData
             'letter_case' => ['sometimes', 'nullable', 'string', Rule::enum(LetterCase::class)],
             'letters' => ['sometimes', 'nullable', 'array', 'list', 'max:'.Alphabet::count()],
             'letters.*' => ['required', 'string', 'distinct', Rule::in($learned)],
+            'own_words' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -97,6 +101,7 @@ final readonly class GameSetupData
             rounds: is_numeric($rounds) ? (int) $rounds : Config::integer('elifba.rounds.default'),
             letter_case: $case ?? ($level->unit === Unit::Letter ? LetterCase::Upper : LetterCase::Lower),
             letters: $letters === [] ? null : Alphabet::sort($letters),
+            own_words: filter_var($validated['own_words'] ?? false, FILTER_VALIDATE_BOOLEAN),
         );
     }
 
@@ -112,7 +117,7 @@ final readonly class GameSetupData
     }
 
     /**
-     * @return array{mechanic: string, pack: string, level: string, rounds: int, letter_case: string, letters: list<string>|null}
+     * @return array{mechanic: string, pack: string, level: string, rounds: int, letter_case: string, letters: list<string>|null, own_words: bool}
      */
     public function toArray(): array
     {
@@ -123,6 +128,7 @@ final readonly class GameSetupData
             'rounds' => $this->rounds,
             'letter_case' => $this->letter_case->value,
             'letters' => $this->letters,
+            'own_words' => $this->own_words,
         ];
     }
 

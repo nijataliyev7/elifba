@@ -33,9 +33,13 @@ use Random\Randomizer;
  *   so a teacher's own words and their syllables play too.
  * - Targets go round in shuffled decks (`RoundParts::deck()`), so every
  *   target comes up equally often and never twice in a row.
- * - Decoys for a letter are its confusables first (`Alphabet::confusables`,
- *   most confusable first), then other learned letters; for syllables and
- *   words, other items of the same pack and level.
+ * - Decoys for a letter: when the teacher chose letters, the chosen ones
+ *   first — the target's confusables among them (`Alphabet::confusables`,
+ *   most confusable first), then the other chosen letters — so a round shows
+ *   only chosen letters whenever enough were chosen; then (and always,
+ *   without a choice) its confusables among the learned letters, then other
+ *   learned letters. For syllables and words, other items of the same pack
+ *   and level.
  * - Items carry no picture: a picture would let a child match pictures
  *   instead of reading.
  * - Text is cased here (`LetterCase`), never on the board.
@@ -93,10 +97,12 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
         $pool = $this->pool($pack, $level, $learned);
         $template = $this->content->prompt($this->mechanic(), $level->unit);
         $decoys = ($level->items ?? 0) - 1;
+        $targets = $this->targets($pool, $level, $setup->letters);
+        $chosen = $level->unit === Unit::Letter && $setup->letters !== null ? $targets : null;
         $rounds = [];
 
-        foreach (RoundParts::deck($this->targets($pool, $level, $setup->letters), $setup->rounds, $random) as $index => $target) {
-            $keys = $random->shuffleArray([$target, ...$this->decoys($target, $pool, $decoys, $level->unit, $random)]);
+        foreach (RoundParts::deck($targets, $setup->rounds, $random) as $index => $target) {
+            $keys = $random->shuffleArray([$target, ...$this->decoys($target, $pool, $chosen, $decoys, $level->unit, $random)]);
             /** @var array<string, RoundItemData> $items content key → item, in display order */
             $items = [];
 
@@ -158,23 +164,31 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
     }
 
     /**
+     * The items beside the target, best first: the teacher's chosen letters
+     * (the target's confusables among them, then the rest at random), then
+     * the target's confusables among the pool, then the rest of the pool at
+     * random. Without chosen letters only the last two steps run.
+     *
      * @param  list<string>  $pool
+     * @param  list<string>|null  $chosen  the teacher's letters among the pool, as content keys
      * @return list<string>
      */
-    private function decoys(string $target, array $pool, int $count, Unit $unit, Randomizer $random): array
+    private function decoys(string $target, array $pool, ?array $chosen, int $count, Unit $unit, Randomizer $random): array
     {
-        $near = [];
+        $confusables = $unit === Unit::Letter
+            ? array_map(static fn (string $letter): string => "letter:{$letter}", Alphabet::confusables(RoundParts::value($target)))
+            : [];
+        $first = [];
 
-        if ($unit === Unit::Letter) {
-            $confusables = array_map(
-                static fn (string $letter): string => "letter:{$letter}",
-                Alphabet::confusables(RoundParts::value($target)),
-            );
-            $near = array_values(array_intersect($confusables, $pool));
+        if ($chosen !== null) {
+            $others = array_values(array_diff($chosen, [$target]));
+            $near = array_values(array_intersect($confusables, $others));
+            $first = [...$near, ...$random->shuffleArray(array_values(array_diff($others, $near)))];
         }
 
-        $rest = $random->shuffleArray(array_values(array_diff($pool, [$target], $near)));
+        $near = array_values(array_diff(array_intersect($confusables, $pool), $first));
+        $rest = $random->shuffleArray(array_values(array_diff($pool, [$target], $first, $near)));
 
-        return array_slice([...$near, ...$rest], 0, $count);
+        return array_slice([...$first, ...$near, ...$rest], 0, $count);
     }
 }

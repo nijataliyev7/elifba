@@ -16,8 +16,9 @@ use Illuminate\Contracts\Validation\ValidationRule;
  * have normalized:
  *
  * - `text()` on a teacher word's `text`: the pack-word rules of `WordRules`
- *   (letters, casing, a vowel), not a built-in word of the pack (hidden or
- *   not), and it fits a word level (with the override when there is one);
+ *   (letters, casing, a vowel), and it fits a word level (with the override
+ *   when there is one). A built-in word of some pack is allowed: it plays as
+ *   the teacher's word in the other packs (ADR 009);
  * - `syllables()` on its `syllables`: the override joins back to the word
  *   exactly, with one vowel in each part;
  * - `builtIn()` on a hidden word's `word`: a built-in word of the pack.
@@ -94,16 +95,6 @@ final class TeacherWordRule implements DataAwareRule, ValidationRule
             if (in_array($problem, $problems, true)) {
                 return [$problem->value];
             }
-        }
-
-        $pack = $this->pack();
-
-        if ($pack === null) {
-            return null;
-        }
-
-        if ($pack->word($text) !== null) {
-            return ['built_in'];
         }
 
         // A broken override is the `syllables` rule's to report.

@@ -2,24 +2,21 @@
 
 namespace App\Domain\Content\Data;
 
-use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\TeacherWordRule;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\Syllabifier;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
  * A teacher's own word as the teacher adds or edits it
- * (docs/architecture.md §3 "Teacher words", ADR 007): the pack, the word as
- * written and an optional syllable override. `prepare()` reads an override
+ * (docs/architecture.md §3 "Teacher words", ADR 007, ADR 009): the word as
+ * written and an optional syllable override; it plays in every pack. `prepare()` reads an override
  * typed as one string with hyphens (`pom-i-dor`, the page's field) as its
  * parts, normalizes the input (phone keyboards type Cyrillic ә) and drops an
  * override equal to the Syllabifier's split; `rules()` holds the pack-word rules
- * (`WordRules`), the length cap, no collision with the pack's built-in
- * words and a word level that fits. The teacher's own duplicates and the
+ * (`WordRules`), the length cap and a word level that fits. The teacher's own duplicates and the
  * count cap need the teacher: `AddCustomWord` and `UpdateCustomWord` check
  * them.
  */
@@ -29,7 +26,6 @@ final readonly class CustomWordData
      * @param  list<string>|null  $syllables  the override; null = the Syllabifier's split
      */
     public function __construct(
-        public string $pack,
         public string $text,
         public ?array $syllables = null,
     ) {}
@@ -42,7 +38,6 @@ final readonly class CustomWordData
         $max = Config::integer('elifba.custom_words.max_length');
 
         return [
-            'pack' => ['required', 'string', Rule::in(array_keys(app(ContentRepository::class)->packs()))],
             'text' => ['required', 'string', 'max:'.$max, TeacherWordRule::text()],
             'syllables' => ['sometimes', 'nullable', 'array', 'list', 'max:'.$max, TeacherWordRule::syllables()],
             'syllables.*' => ['required', 'string', 'max:'.$max],
@@ -57,7 +52,6 @@ final readonly class CustomWordData
     public static function attributes(): array
     {
         return [
-            'pack' => self::attribute('pack'),
             'text' => self::attribute('text'),
             'syllables' => self::attribute('syllables'),
             'syllables.*' => self::attribute('syllables'),
@@ -118,7 +112,6 @@ final readonly class CustomWordData
             : null;
 
         return new self(
-            pack: is_string($validated['pack'] ?? null) ? $validated['pack'] : '',
             text: $text,
             syllables: $syllables === [] || self::byRule($text, $syllables ?? []) ? null : $syllables,
         );
@@ -137,12 +130,11 @@ final readonly class CustomWordData
     /**
      * The model's attributes.
      *
-     * @return array{pack: string, text: string, syllables: list<string>|null}
+     * @return array{text: string, syllables: list<string>|null}
      */
     public function toArray(): array
     {
         return [
-            'pack' => $this->pack,
             'text' => $this->text,
             'syllables' => $this->syllables,
         ];

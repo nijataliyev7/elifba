@@ -99,11 +99,11 @@ it('lists the six levels of §2 in order', function (): void {
         ->toBe([Unit::Letter, Unit::Syllable, Unit::Syllable, Unit::Word, Unit::Word, Unit::Sentence])
         ->and($levels['letters']->allows(Mechanic::Find))->toBeTrue()
         ->and(array_map(static fn (LevelData $level): array => $level->mechanics, $levels))->toBe([
-            'letters' => [Mechanic::Find, Mechanic::Pop],
-            'syllables-open' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable],
-            'syllables-closed' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable],
-            'words-short' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildWord],
-            'words-long' => [Mechanic::Find, Mechanic::Pop, Mechanic::BuildWord],
+            'letters' => [Mechanic::Pop, Mechanic::Find],
+            'syllables-open' => [Mechanic::Pop, Mechanic::Find, Mechanic::BuildSyllable],
+            'syllables-closed' => [Mechanic::Pop, Mechanic::Find, Mechanic::BuildSyllable],
+            'words-short' => [Mechanic::Pop, Mechanic::Find, Mechanic::BuildWord],
+            'words-long' => [Mechanic::Pop, Mechanic::Find, Mechanic::BuildWord],
             'sentences' => [Mechanic::BuildSentence],
         ])
         ->and($levels['letters']->allows(Mechanic::BuildSyllable))->toBeFalse()

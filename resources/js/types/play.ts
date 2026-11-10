@@ -31,6 +31,12 @@ export type SetupOption = {
     drawable: boolean;
     startable: boolean;
     reason: string | null;
+    /**
+     * The same answer for a game of the teacher's own words only
+     * (`own_words`); null where such a game is not offered (letter and
+     * sentence levels, `build_word`).
+     */
+    own: { startable: boolean; reason: string | null } | null;
 };
 
 export type GameSetupProps = {
@@ -42,6 +48,8 @@ export type GameSetupProps = {
     letters: Letter[];
     letterCases: ('upper' | 'lower')[];
     rounds: { min: number; max: number; default: number };
+    /** The longest teacher word, for adding one from the form. */
+    wordMaxLength: number;
 };
 
 /** A student for "who is at the board"; the avatar URL is null when the key has no picture. */

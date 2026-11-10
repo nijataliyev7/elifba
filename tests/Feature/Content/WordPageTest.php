@@ -9,7 +9,9 @@ use Inertia\Testing\AssertableInertia;
 
 /*
  * The teacher's words page and its routes (routes/words.php,
- * docs/architecture.md §3 "Teacher words"): the page, adding, editing and
+ * docs/architecture.md §3 "Teacher words", ADR 009): the page (all of the
+ * teacher's words with what they give each level, one pack's built-in
+ * words), adding, editing and
  * deleting a teacher word, hiding and showing a built-in word. Another
  * teacher's `{word}` is in tests/Feature/Classroom/TeacherIsolationTest.php
  * too; the rules themselves are in TeacherWordsTest and TeacherWordRulesTest.
@@ -25,7 +27,7 @@ beforeEach(function (): void {
  */
 function teacherWord(User $teacher, array $attributes = []): CustomWord
 {
-    return CustomWord::factory()->for($teacher, 'teacher')->create($attributes + ['pack' => 'fruit', 'text' => 'pomidor']);
+    return CustomWord::factory()->for($teacher, 'teacher')->create($attributes + ['text' => 'pomidor']);
 }
 
 it('sends a guest to the login page', function (string $method, string $uri): void {
@@ -57,13 +59,22 @@ it('shows the first pack with its built-in words, syllables joined by the server
             ->where('builtInWords.0.syllables', implode('-', $first->words[0]->syllables))
             ->where('builtInWords.0.hidden', false)
             ->where('customWords', [])
+            ->where('levelTotals', [
+                ['title' => 'Qısa hecalar', 'count' => 0],
+                ['title' => 'Uzun hecalar', 'count' => 0],
+                ['title' => 'Qısa sözlər', 'count' => 0],
+                ['title' => 'Uzun sözlər', 'count' => 0],
+            ])
             ->where('limits', ['max_length' => 20, 'max_per_teacher' => 200, 'count' => 0]));
 });
 
-it('shows a pack with the teacher\'s own words and hidden words, and nobody else\'s', function (): void {
+it('shows all of the teacher\'s own words with their levels, one pack\'s hidden words, and nobody else\'s', function (): void {
+    $this->travelTo(now()->subMinutes(3));
     $pomidor = teacherWord($this->teacher, ['text' => 'pomidor', 'syllables' => ['pom', 'i', 'dor']]);
-    teacherWord($this->teacher, ['text' => 'kələm']);
-    teacherWord($this->teacher, ['pack' => 'train', 'text' => 'vaqon']);
+    $this->travelTo(now()->addMinute());
+    $kelem = teacherWord($this->teacher, ['text' => 'kələm']);
+    $this->travelBack();
+    $vaqon = teacherWord($this->teacher, ['text' => 'vaqon']);
     teacherWord($this->other, ['text' => 'badımcan']);
     HiddenWord::query()->forceCreate(['user_id' => $this->teacher->id, 'pack' => 'fruit', 'word_key' => 'word:alma']);
     HiddenWord::query()->forceCreate(['user_id' => $this->other->id, 'pack' => 'fruit', 'word_key' => 'word:armud']);
@@ -73,8 +84,28 @@ it('shows a pack with the teacher\'s own words and hidden words, and nobody else
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('pack', 'fruit')
             ->where('customWords', [
-                ['id' => $pomidor->id, 'text' => 'pomidor', 'syllables' => 'pom-i-dor', 'override' => 'pom-i-dor', 'played' => true],
-                ['id' => CustomWord::query()->where('text', 'kələm')->value('id'), 'text' => 'kələm', 'syllables' => 'kə-ləm', 'override' => null, 'played' => true],
+                ['id' => $pomidor->id, 'text' => 'pomidor', 'syllables' => 'pom-i-dor', 'override' => 'pom-i-dor', 'levels' => [
+                    ['title' => 'Qısa hecalar', 'unit' => 'syllable', 'items' => ['i']],
+                    ['title' => 'Uzun hecalar', 'unit' => 'syllable', 'items' => ['pom', 'dor']],
+                    ['title' => 'Uzun sözlər', 'unit' => 'word', 'items' => ['pomidor']],
+                ], 'built_in_in' => []],
+                ['id' => $kelem->id, 'text' => 'kələm', 'syllables' => 'kə-ləm', 'override' => null, 'levels' => [
+                    ['title' => 'Qısa hecalar', 'unit' => 'syllable', 'items' => ['kə']],
+                    ['title' => 'Uzun hecalar', 'unit' => 'syllable', 'items' => ['ləm']],
+                    ['title' => 'Qısa sözlər', 'unit' => 'word', 'items' => ['kələm']],
+                ], 'built_in_in' => []],
+                // The train pack has vaqon built in: there it plays with its picture.
+                ['id' => $vaqon->id, 'text' => 'vaqon', 'syllables' => 'va-qon', 'override' => null, 'levels' => [
+                    ['title' => 'Qısa hecalar', 'unit' => 'syllable', 'items' => ['va']],
+                    ['title' => 'Uzun hecalar', 'unit' => 'syllable', 'items' => ['qon']],
+                    ['title' => 'Qısa sözlər', 'unit' => 'word', 'items' => ['vaqon']],
+                ], 'built_in_in' => ['Qatar']],
+            ])
+            ->where('levelTotals', [
+                ['title' => 'Qısa hecalar', 'count' => 3],
+                ['title' => 'Uzun hecalar', 'count' => 4],
+                ['title' => 'Qısa sözlər', 'count' => 2],
+                ['title' => 'Uzun sözlər', 'count' => 1],
             ])
             ->where('builtInWords.0', ['text' => 'alma', 'syllables' => 'al-ma', 'hidden' => true])
             ->where('builtInWords.1', ['text' => 'armud', 'syllables' => 'ar-mud', 'hidden' => false])
@@ -92,30 +123,38 @@ it('names the packs in the interface language and falls back to the first pack',
             ->where('packs.0.title', $packs[array_key_first($packs)]->title->en));
 });
 
-it('marks a teacher word a later pack version made built-in as not played', function (): void {
+it('names the packs that have a teacher word built in, in the interface language', function (): void {
     teacherWord($this->teacher, ['text' => 'Alma']);
+    $this->teacher->forceFill(['locale' => 'en'])->save();
+    $titles = array_values(array_map(
+        static fn ($pack): string => $pack->title->en,
+        array_filter(app(ContentRepository::class)->packs(), static fn ($pack): bool => $pack->word('alma') !== null),
+    ));
 
-    $this->actingAs($this->teacher)->get(route('words.index', ['pack' => 'fruit']))
-        ->assertInertia(fn (AssertableInertia $page) => $page->where('customWords.0.played', false));
+    $this->actingAs($this->teacher)->get(route('words.index', ['pack' => 'train']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('customWords.0.built_in_in', $titles)
+            ->where('customWords.0.levels.0.title', 'Short syllables'));
+
+    expect($titles)->toContain('Fruit');
 });
 
-it('adds a word with a typed syllable split and returns to its pack', function (): void {
-    $this->actingAs($this->teacher)->from(route('words.index', ['pack' => 'fruit']))
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => ' Pomidor ', 'syllables' => 'Pom – i-dor'])
-        ->assertRedirect(route('words.index', ['pack' => 'fruit']))
+it('adds a word with a typed syllable split and returns to the same theme tab', function (): void {
+    $this->actingAs($this->teacher)->from(route('words.index', ['pack' => 'train']))
+        ->post(route('words.store'), ['text' => ' Pomidor ', 'syllables' => 'Pom – i-dor'])
+        ->assertRedirect(route('words.index', ['pack' => 'train']))
         ->assertSessionHasNoErrors()
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('words.flash.added')]);
 
     expect(CustomWord::query()->sole())
         ->user_id->toBe($this->teacher->id)
-        ->pack->toBe('fruit')
         ->text->toBe('Pomidor')
         ->syllables->toBe(['Pom', 'i', 'dor']);
 });
 
 it('adds a word without a split, or with the server\'s own split, as no override', function (string $typed): void {
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => 'kələm', 'syllables' => $typed])
+        ->post(route('words.store'), ['text' => 'kələm', 'syllables' => $typed])
         ->assertSessionHasNoErrors();
 
     expect(CustomWord::query()->sole()->syllables)->toBeNull();
@@ -136,7 +175,6 @@ it('refuses an invalid word with the server\'s messages and stores nothing', fun
     'two words' => [['text' => 'qırmızı alma'], 'text', 'letters'],
     'a digit' => [['text' => 'alma2'], 'text', 'letters'],
     'casing' => [['text' => 'pOmidor'], 'text', 'casing'],
-    'a built-in word' => [['text' => 'Alma'], 'text', 'built_in'],
     'a split that does not join back' => [['text' => 'pomidor', 'syllables' => 'po-mi-dorr'], 'syllables', 'split'],
     'a split with a vowelless part' => [['text' => 'pomidor', 'syllables' => 'p-omi-dor'], 'syllables', 'split'],
 ]);
@@ -145,26 +183,26 @@ it('refuses an invalid word with a translated message in each language', functio
     $this->teacher->forceFill(['locale' => $locale])->save();
 
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => 'qırmızı alma'])
+        ->post(route('words.store'), ['text' => 'qırmızı alma'])
         ->assertSessionHasErrors(['text' => trans('words.errors.letters', [], $locale)]);
 
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => ''])
+        ->post(route('words.store'), ['text' => ''])
         ->assertSessionHasErrors(['text' => trans('validation.required', ['attribute' => trans('words.attributes.text', [], $locale)], $locale)]);
 })->with(['az', 'en']);
 
-it('refuses a word the teacher already has, and an unknown pack', function (): void {
+it('refuses a word the teacher already has, and takes a built-in word', function (): void {
     teacherWord($this->teacher, ['text' => 'pomidor']);
 
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => 'Pomidor'])
+        ->post(route('words.store'), ['text' => 'Pomidor'])
         ->assertSessionHasErrors(['text' => WordRules::message('taken')]);
 
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'no-such-pack', 'text' => 'kələm'])
-        ->assertSessionHasErrors('pack');
+        ->post(route('words.store'), ['text' => 'alma'])
+        ->assertSessionHasNoErrors();
 
-    expect(CustomWord::query()->count())->toBe(1);
+    expect(CustomWord::query()->count())->toBe(2);
 });
 
 it('refuses a word over the teacher\'s cap', function (): void {
@@ -172,29 +210,28 @@ it('refuses a word over the teacher\'s cap', function (): void {
     teacherWord($this->teacher);
 
     $this->actingAs($this->teacher)
-        ->post(route('words.store'), ['pack' => 'fruit', 'text' => 'kələm'])
+        ->post(route('words.store'), ['text' => 'kələm'])
         ->assertSessionHasErrors(['text' => WordRules::message('too_many', ['max' => 1])]);
 
     expect(CustomWord::query()->count())->toBe(1);
 });
 
-it('edits a word, its split and its pack', function (): void {
+it('edits a word and its split', function (): void {
     $word = teacherWord($this->teacher, ['text' => 'pomidor']);
 
     $this->actingAs($this->teacher)->from(route('words.index', ['pack' => 'fruit']))
-        ->patch(route('words.update', $word), ['pack' => 'train', 'text' => 'Pomidor', 'syllables' => 'Pom-i-dor'])
-        ->assertRedirect(route('words.index', ['pack' => 'train']))
+        ->patch(route('words.update', $word), ['text' => 'Pomidor', 'syllables' => 'Pom-i-dor'])
+        ->assertRedirect(route('words.index', ['pack' => 'fruit']))
         ->assertSessionHasNoErrors()
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('words.flash.updated')]);
 
     expect($word->fresh())
-        ->pack->toBe('train')
         ->text->toBe('Pomidor')
         ->syllables->toBe(['Pom', 'i', 'dor']);
 
     // An empty split field drops the override.
     $this->actingAs($this->teacher)
-        ->patch(route('words.update', $word), ['pack' => 'train', 'text' => 'Pomidor', 'syllables' => ''])
+        ->patch(route('words.update', $word), ['text' => 'Pomidor', 'syllables' => ''])
         ->assertSessionHasNoErrors();
 
     expect($word->fresh()->syllables)->toBeNull();
@@ -206,21 +243,21 @@ it('refuses an invalid edit and keeps the word', function (): void {
     $before = $word->fresh()?->toArray();
 
     $this->actingAs($this->teacher)->from(route('words.index', ['pack' => 'fruit']))
-        ->patch(route('words.update', $word), ['pack' => 'fruit', 'text' => 'Kələm'])
+        ->patch(route('words.update', $word), ['text' => 'Kələm'])
         ->assertRedirect(route('words.index', ['pack' => 'fruit']))
         ->assertSessionHasErrors(['text' => WordRules::message('taken')]);
 
     $this->actingAs($this->teacher)
-        ->patch(route('words.update', $word), ['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => 'pom-id-or-x'])
+        ->patch(route('words.update', $word), ['text' => 'pomidor', 'syllables' => 'pom-id-or-x'])
         ->assertSessionHasErrors(['syllables' => WordRules::message('split')]);
 
     expect($word->fresh()?->toArray())->toBe($before);
 });
 
-it('deletes a word and returns to its pack', function (): void {
-    $word = teacherWord($this->teacher, ['pack' => 'train']);
+it('deletes a word and returns to the same theme tab', function (): void {
+    $word = teacherWord($this->teacher);
 
-    $this->actingAs($this->teacher)
+    $this->actingAs($this->teacher)->from(route('words.index', ['pack' => 'train']))
         ->delete(route('words.destroy', $word))
         ->assertRedirect(route('words.index', ['pack' => 'train']))
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('words.flash.deleted')]);
@@ -233,7 +270,7 @@ it('refuses another teacher\'s word: 404, nothing changes, the word never shows'
     $before = $word->fresh()?->toArray();
 
     $update = $this->actingAs($this->teacher)
-        ->patch(route('words.update', $word), ['pack' => 'fruit', 'text' => 'kələm']);
+        ->patch(route('words.update', $word), ['text' => 'kələm']);
     $delete = $this->actingAs($this->teacher)->delete(route('words.destroy', $word));
 
     $update->assertNotFound();

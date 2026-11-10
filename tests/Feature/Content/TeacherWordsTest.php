@@ -18,8 +18,9 @@ use Illuminate\Validation\ValidationException;
 
 /*
  * The teacher-word actions and TeacherPacks over the database
- * (docs/architecture.md §3 "Teacher words", ADR 007): a teacher's own words
- * and hidden words reach only that teacher's packs. The rules without the
+ * (docs/architecture.md §3 "Teacher words", ADR 007, ADR 009): a teacher's
+ * own words reach every pack of that teacher and no other teacher's; hidden
+ * words reach only that teacher's pack. The rules without the
  * database are in tests/Unit/Content/TeacherWordRulesTest.php.
  */
 
@@ -74,11 +75,10 @@ function packTexts(User $teacher, string $pack): array
 }
 
 it('stores a teacher word normalized, with its key and no override', function (): void {
-    $word = addWord($this->teacher, ['pack' => 'fruit', 'text' => " k\u{04D9}l\u{04D9}m "]);
+    $word = addWord($this->teacher, ['text' => " k\u{04D9}l\u{04D9}m "]);
 
     expect($word->fresh())
         ->user_id->toBe($this->teacher->id)
-        ->pack->toBe('fruit')
         ->text->toBe("k\u{0259}l\u{0259}m")
         ->word_key->toBe("word:k\u{0259}l\u{0259}m")
         ->syllables->toBeNull()
@@ -86,7 +86,7 @@ it('stores a teacher word normalized, with its key and no override', function ()
 });
 
 it('stores an override and plays the word with it', function (): void {
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor', 'syllables' => ['pom', 'i', 'dor']]);
+    addWord($this->teacher, ['text' => 'pomidor', 'syllables' => ['pom', 'i', 'dor']]);
 
     $word = app(TeacherPacks::class)->pack($this->teacher, 'fruit')->word('pomidor');
 
@@ -95,75 +95,76 @@ it('stores an override and plays the word with it', function (): void {
         ->and($word?->image)->toBeNull();
 });
 
-it('adds a word only to that teacher\'s pack', function (): void {
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
+it('adds a word to every pack of that teacher only', function (): void {
+    addWord($this->teacher, ['text' => 'pomidor']);
 
-    expect(packTexts($this->teacher, 'fruit'))->toContain('pomidor')
-        ->and(packTexts($this->other, 'fruit'))->not->toContain('pomidor')
-        ->and(packTexts($this->teacher, 'train'))->not->toContain('pomidor')
+    foreach (array_keys(app(ContentRepository::class)->packs()) as $pack) {
+        expect(in_array('pomidor', packTexts($this->teacher, $pack), true))->toBeTrue($pack)
+            ->and(packTexts($this->other, $pack))->not->toContain('pomidor');
+    }
+
+    expect(app(TeacherPacks::class)->pack($this->teacher, 'train', own: true)->words)->toHaveCount(1)
         ->and(app(ContentRepository::class)->pack('fruit')->word('pomidor'))->toBeNull()
         ->and(app(TeacherPacks::class)->packs($this->teacher)['fruit']->word('pomidor'))->not->toBeNull()
         ->and(array_keys(app(TeacherPacks::class)->packs($this->teacher)))->toBe(array_keys(app(ContentRepository::class)->packs()));
 });
 
-it('refuses a word the teacher already has in that pack, in any case', function (): void {
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'kələm']);
+it('refuses a word the teacher already has, in any case', function (): void {
+    addWord($this->teacher, ['text' => 'kələm']);
 
-    $errors = actionErrors(fn () => addWord($this->teacher, ['pack' => 'fruit', 'text' => 'Kələm']));
+    $errors = actionErrors(fn () => addWord($this->teacher, ['text' => 'Kələm']));
 
     expect($errors)->toBe(['text' => [WordRules::message('taken')]])
         ->and(implode(' ', $errors['text']))->not->toContain('ələm')
         ->and(CustomWord::query()->count())->toBe(1);
 
-    // The same word in another pack, or for another teacher, is a new word.
-    addWord($this->teacher, ['pack' => 'train', 'text' => 'kələm']);
-    addWord($this->other, ['pack' => 'fruit', 'text' => 'kələm']);
+    // For another teacher it is a new word.
+    addWord($this->other, ['text' => 'kələm']);
 
-    expect(CustomWord::query()->count())->toBe(3);
+    expect(CustomWord::query()->count())->toBe(2);
 });
 
-it('keeps one word per teacher, pack and key in the database too', function (): void {
-    CustomWord::factory()->for($this->teacher, 'teacher')->create(['pack' => 'fruit', 'text' => 'kələm']);
+it('keeps one word per teacher and key in the database too', function (): void {
+    CustomWord::factory()->for($this->teacher, 'teacher')->create(['text' => 'kələm']);
 
-    expect(fn () => CustomWord::factory()->for($this->teacher, 'teacher')->create(['pack' => 'fruit', 'text' => 'Kələm']))
+    expect(fn () => CustomWord::factory()->for($this->teacher, 'teacher')->create(['text' => 'Kələm']))
         ->toThrow(UniqueConstraintViolationException::class);
 });
 
-it('caps the words a teacher keeps over all packs', function (): void {
+it('caps the words a teacher keeps', function (): void {
     config(['elifba.custom_words.max_per_teacher' => 2]);
 
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
-    addWord($this->teacher, ['pack' => 'train', 'text' => 'kələm']);
+    addWord($this->teacher, ['text' => 'pomidor']);
+    addWord($this->teacher, ['text' => 'kələm']);
 
-    expect(actionErrors(fn () => addWord($this->teacher, ['pack' => 'animals', 'text' => 'kələm'])))->toBe(['text' => [WordRules::message('too_many', ['max' => 2])]])
-        ->and(actionErrors(fn () => addWord($this->other, ['pack' => 'animals', 'text' => 'kələm'])))->toBe([]);
+    expect(actionErrors(fn () => addWord($this->teacher, ['text' => 'qarpız'])))->toBe(['text' => [WordRules::message('too_many', ['max' => 2])]])
+        ->and(actionErrors(fn () => addWord($this->other, ['text' => 'kələm'])))->toBe([]);
 });
 
-it('edits a word: text, override and pack, unique among the teacher\'s other words', function (): void {
-    $pomidor = addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'kələm']);
+it('edits a word: text and override, unique among the teacher\'s other words', function (): void {
+    $pomidor = addWord($this->teacher, ['text' => 'pomidor']);
+    addWord($this->teacher, ['text' => 'kələm']);
     $update = static fn (CustomWord $word, array $input): CustomWord => app(UpdateCustomWord::class)->handle($word, CustomWordData::validate($input));
 
-    expect(actionErrors(fn () => $update($pomidor, ['pack' => 'fruit', 'text' => 'Kələm'])))->toBe(['text' => [WordRules::message('taken')]]);
+    expect(actionErrors(fn () => $update($pomidor, ['text' => 'Kələm'])))->toBe(['text' => [WordRules::message('taken')]]);
 
-    $update($pomidor, ['pack' => 'fruit', 'text' => 'Pomidor', 'syllables' => ['Pom', 'i', 'dor']]);
+    $update($pomidor, ['text' => 'Pomidor', 'syllables' => ['Pom', 'i', 'dor']]);
 
     expect($pomidor->fresh())
         ->text->toBe('Pomidor')
         ->word_key->toBe('word:pomidor')
         ->syllables->toBe(['Pom', 'i', 'dor']);
 
-    $update($pomidor, ['pack' => 'train', 'text' => 'pomidor']);
+    $update($pomidor, ['text' => 'pomidor']);
 
     expect($pomidor->fresh())
-        ->pack->toBe('train')
         ->syllables->toBeNull()
-        ->and(packTexts($this->teacher, 'fruit'))->not->toContain('pomidor')
+        ->and(packTexts($this->teacher, 'fruit'))->toContain('pomidor')
         ->and(packTexts($this->teacher, 'train'))->toContain('pomidor');
 });
 
 it('deletes a word', function (): void {
-    $word = addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
+    $word = addWord($this->teacher, ['text' => 'pomidor']);
 
     app(DeleteCustomWord::class)->handle($word);
 
@@ -194,15 +195,28 @@ it('hides a built-in word only for that teacher and shows it again', function ()
         ->and(packTexts($this->teacher, 'fruit'))->toBe(packTexts($this->other, 'fruit'));
 });
 
-it('refuses a hidden built-in word as a teacher word', function (): void {
+it('takes a built-in word of one pack as a teacher word, played in the other packs', function (): void {
+    addWord($this->teacher, ['text' => 'alma']);
+    $almas = static fn (string $pack): array => array_values(array_filter(
+        app(TeacherPacks::class)->pack(test()->teacher, $pack)->words,
+        static fn ($word): bool => $word->key() === 'word:alma',
+    ));
+
+    // In fruit the built-in alma plays, with its picture; elsewhere the teacher's.
+    expect($almas('fruit'))->toHaveCount(1)
+        ->and($almas('fruit')[0]->image)->not->toBeNull()
+        ->and($almas('train'))->toHaveCount(1)
+        ->and($almas('train')[0]->image)->toBeNull()
+        ->and(app(TeacherPacks::class)->pack($this->teacher, 'fruit', own: true)->words)->toBe([]);
+
+    // Hiding the built-in alma does not bring the teacher's back in fruit.
     hideWord($this->teacher, 'fruit', 'alma');
 
-    expect(fn () => addWord($this->teacher, ['pack' => 'fruit', 'text' => 'alma']))->toThrow(ValidationException::class);
+    expect($almas('fruit'))->toBe([]);
 });
 
 it('plays the built-in word when a later pack version adds a word the teacher has', function (): void {
-    // Stored before the pack had it: the rules refuse it now.
-    CustomWord::factory()->for($this->teacher, 'teacher')->create(['pack' => 'fruit', 'text' => 'Alma']);
+    CustomWord::factory()->for($this->teacher, 'teacher')->create(['text' => 'Alma']);
     $pack = app(TeacherPacks::class)->pack($this->teacher, 'fruit');
     $almas = array_filter($pack->words, static fn ($word): bool => $word->key() === 'word:alma');
 
@@ -214,17 +228,17 @@ it('plays the built-in word when a later pack version adds a word the teacher ha
 
 it('lists the teacher\'s words in the order they were added', function (): void {
     $this->travelTo(now()->subMinutes(2));
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
+    addWord($this->teacher, ['text' => 'pomidor']);
     $this->travelBack();
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'kələm']);
+    addWord($this->teacher, ['text' => 'kələm']);
 
     expect(array_slice(packTexts($this->teacher, 'fruit'), -2))->toBe(['pomidor', 'kələm']);
 });
 
 it('deletes a teacher\'s words and hidden words with the teacher', function (): void {
-    addWord($this->teacher, ['pack' => 'fruit', 'text' => 'pomidor']);
+    addWord($this->teacher, ['text' => 'pomidor']);
     hideWord($this->teacher, 'fruit', 'alma');
-    addWord($this->other, ['pack' => 'fruit', 'text' => 'pomidor']);
+    addWord($this->other, ['text' => 'pomidor']);
 
     $this->teacher->delete();
 
