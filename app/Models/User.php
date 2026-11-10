@@ -26,6 +26,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $remember_token
  * @property string|null $locale interface language (az | en); null = not chosen yet
  * @property Carbon|null $terms_accepted_at when the teacher accepted the privacy note at registration (§7)
+ * @property bool $phone_remote whether the teacher board offers the phone remote (§4 "Pairing"); on by default
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -35,6 +36,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * The column defaults, so a teacher not yet read back from the database
+     * has them too.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'phone_remote' => true,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -48,6 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
+            'phone_remote' => 'boolean',
         ];
     }
 }

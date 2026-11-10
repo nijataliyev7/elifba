@@ -21,6 +21,8 @@ type Props = {
  * QR of `{APP_URL}/pult/{code}` and the code in large type, for the
  * teacher's phone — which is logged in as the teacher; the code only says
  * which board. A hello from the phone hides it; «Pultu qoş» brings it back.
+ * Below `lg` it is smaller (a 144px QR, still read by a camera) and below
+ * `sm` it stacks (docs/frontend.md §6).
  */
 export function PairingCard({
     pairing,
@@ -33,7 +35,7 @@ export function PairingCard({
     return (
         <section
             className={cn(
-                'relative flex items-center gap-6 rounded-3xl border-2 border-neutral-200 bg-white text-neutral-900 shadow-lg',
+                'relative flex items-center gap-6 rounded-3xl border-2 border-neutral-200 bg-white text-neutral-900 shadow-lg max-lg:gap-4 max-lg:p-4 max-sm:flex-col max-sm:pt-12 max-sm:text-center',
                 compact ? 'p-4' : 'p-6',
             )}
             aria-labelledby="pairing-title"
@@ -43,7 +45,7 @@ export function PairingCard({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2"
+                    className="absolute top-2 right-2 max-lg:size-11"
                     onClick={onClose}
                     aria-label={t('common.close')}
                 >
@@ -55,6 +57,7 @@ export function PairingCard({
                 className={cn(
                     'flex shrink-0 items-center justify-center rounded-xl bg-white',
                     compact ? 'size-40' : 'size-56',
+                    'max-lg:size-36',
                 )}
             >
                 {pairing === null ? (
@@ -63,6 +66,7 @@ export function PairingCard({
                     <QRCodeSVG
                         value={pairing.url}
                         size={compact ? 160 : 224}
+                        className="size-full"
                         level="M"
                         marginSize={0}
                         title={t('games.board.pairing.qr_label')}
@@ -70,12 +74,13 @@ export function PairingCard({
                 )}
             </div>
 
-            <div className="flex max-w-sm min-w-0 flex-col gap-2 pr-8">
+            <div className="flex max-w-sm min-w-0 flex-col gap-2 pr-8 max-lg:max-w-60 max-lg:pr-10 max-sm:max-w-none max-sm:pr-0">
                 <h2
                     id="pairing-title"
                     className={cn(
                         'font-bold',
                         compact ? 'text-xl' : 'text-3xl',
+                        'max-lg:text-xl',
                     )}
                 >
                     {t('games.board.pairing.title')}
@@ -92,6 +97,7 @@ export function PairingCard({
                             className={cn(
                                 'text-neutral-600',
                                 compact ? 'text-base' : 'text-lg',
+                                'max-lg:text-sm',
                             )}
                         >
                             {t('games.board.pairing.scan', {
@@ -100,8 +106,9 @@ export function PairingCard({
                         </p>
                         <p
                             className={cn(
-                                'font-bold tracking-widest tabular-nums',
+                                'font-bold tracking-widest whitespace-nowrap tabular-nums',
                                 compact ? 'text-4xl' : 'text-6xl',
+                                'max-lg:text-4xl',
                             )}
                             aria-label={pairing.code.split('').join(' ')}
                         >

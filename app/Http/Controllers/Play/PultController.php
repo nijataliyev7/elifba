@@ -23,7 +23,9 @@ use Inertia\Response;
  * All three routes share one limit, 10 a minute per teacher.
  *
  * - `GET /pult`: the teacher's live games; with exactly one it opens its
- *   remote at once (`?list=1` keeps the list, to type a code instead).
+ *   remote at once (`?list=1` keeps the list, to type a code instead) —
+ *   unless the teacher turned the phone remote off (Settings → Oyun): their
+ *   teacher boards join no channel, so the list always stays.
  *   `?code=` (typed) goes to `/pult/{code}`.
  * - `GET /pult/{code}`: the teacher's own live game with that join code →
  *   its remote; else the open guest board with that code → what to show on
@@ -48,7 +50,7 @@ final class PultController extends Controller
 
         $games = PultChoices::liveGames($teacher);
 
-        if (count($games) === 1 && ! $request->boolean('list')) {
+        if (count($games) === 1 && $teacher->phone_remote && ! $request->boolean('list')) {
             return to_route('games.remote', ['game' => $games[0]['id']]);
         }
 

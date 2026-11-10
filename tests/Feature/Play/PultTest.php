@@ -134,6 +134,29 @@ describe('GET /pult', function (): void {
                 ->where('games.0.schoolClass.name', '1A'));
     });
 
+    it('keeps the list for a teacher who turned the phone remote off, whose board waits for no phone', function (): void {
+        $this->teacher->forceFill(['phone_remote' => false])->save();
+
+        $this->actingAs($this->teacher)->get(route('pult'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('pult/index')
+                ->has('games', 1)
+                ->where('games.0.id', $this->game->id));
+    });
+
+    it('still opens a guest board\'s code for a teacher who turned the phone remote off', function (): void {
+        $this->teacher->forceFill(['phone_remote' => false])->save();
+        $board = GuestBoards::open();
+
+        $this->actingAs($this->teacher)->get(route('pult.code', (string) $board['board']->code))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('pult/guest-board'));
+
+        $this->post(route('pult.claim', (string) $board['board']->code), ['game' => $this->game->id])
+            ->assertRedirect(route('games.remote', $this->game));
+    });
+
     it('lists the teacher\'s live and paused games, newest first, and nothing else', function (): void {
         $this->travel(1)->minutes();
         $paused = Games::start($this->class, seed: 2);

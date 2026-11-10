@@ -4,6 +4,7 @@ import {
     Maximize,
     Pause,
     Play,
+    RotateCcw,
     SkipForward,
     Smartphone,
     Square,
@@ -43,10 +44,12 @@ import { boardColours } from '@/game/palette';
 import { connectEcho, gameChannel } from '@/game/socket';
 import type { Stage } from '@/game/stage';
 import { forceLightTheme } from '@/hooks/use-appearance';
-import { useFullscreen } from '@/hooks/use-fullscreen';
+import { lockLandscape, useFullscreen } from '@/hooks/use-fullscreen';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from '@/hooks/use-translation';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { show } from '@/routes/classes';
+import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
 import type { BoardProps } from '@/types';
 
@@ -65,6 +68,12 @@ type Props = BoardProps & {
     /** The teacher's session (teacher board) or the guest board's bearer; one object per board. */
     auth: BoardAuth;
     guest?: GuestBoardChrome;
+    /**
+     * The teacher's choice in Settings → Oyun (teacher board only; a guest
+     * board always has it). Off: no channel, no pairing card, no «Pultu
+     * qoş» — the board is played on its own screen.
+     */
+    phoneRemote?: boolean;
 };
 
 /**
@@ -82,10 +91,16 @@ type Props = BoardProps & {
  * teacher board the pairing card shows the code until a phone says hello,
  * «Pultu qoş» shows it again; a guest board was paired when the phone
  * claimed it, so it has no pairing card. The footer says when the phone
- * has gone quiet.
+ * has gone quiet. A teacher who turned the phone remote off gets a board
+ * with no channel at all, like one without Reverb.
  *
  * Two board modes, one board: a teacher board (`games/board`) and a guest
  * board (`lovhe`) differ only in `auth` and in `guest`'s parts.
+ *
+ * From `lg` up this is the projector's layout; below it the same parts
+ * shrink around the 16:9 canvas for a phone or a tablet (docs/frontend.md
+ * §6): icon buttons, the pairing card in a dialog during play, and a hint
+ * to turn a phone held upright.
  */
 export function BoardScreen({
     game,
@@ -94,6 +109,7 @@ export function BoardScreen({
     students,
     auth,
     guest,
+    phoneRemote = true,
 }: Props) {
     const { t } = useTranslation();
     const colours = boardColours(pack.style.palette);
@@ -105,7 +121,8 @@ export function BoardScreen({
     const [stageState, setStageState] = useState<
         'loading' | 'ready' | 'failed'
     >('loading');
-    const { isFullscreen, enter } = useFullscreen();
+    const fullscreen = useFullscreen();
+    const small = useIsMobile();
 
     useEffect(() => forceLightTheme(), []);
 
@@ -234,13 +251,14 @@ export function BoardScreen({
     ]);
 
     // The link to the phone: Echo loads on this page only. A game that
-    // was already over when the page opened has no channel to join.
+    // was already over when the page opened has no channel to join, and a
+    // teacher who turned the phone remote off wants none.
     const [link, setLink] = useState<LiveBoard | null>(null);
     const liveView = useLiveView(link);
     const open = game.status === 'live' || game.status === 'paused';
 
     useEffect(() => {
-        if (controller === null || !open) {
+        if (controller === null || !open || !phoneRemote) {
             return;
         }
 
@@ -264,7 +282,7 @@ export function BoardScreen({
             created.dispose();
             echo.disconnect();
         };
-    }, [controller, auth, game.id, open]);
+    }, [controller, auth, game.id, open, phoneRemote]);
 
     const pairingShown =
         guest === undefined &&
@@ -306,7 +324,7 @@ export function BoardScreen({
     }, [unsaved]);
 
     const begin = () => {
-        enter();
+        void fullscreen.enter().then(lockLandscape);
         stage.current?.unlockAudio();
         controller?.start();
     };
@@ -321,22 +339,22 @@ export function BoardScreen({
                 className="fixed inset-0 flex touch-manipulation flex-col overflow-hidden select-none"
                 style={{ backgroundColor: background, color: colours.text }}
             >
-                <header className="flex items-center gap-6 px-6 pt-5 pb-2 xl:px-10 xl:pt-8">
+                <header className="flex items-center gap-6 px-6 pt-5 pb-2 max-lg:gap-3 max-lg:px-3 max-lg:pt-2 max-lg:pb-1 max-sm:flex-col max-sm:items-stretch max-sm:gap-2 xl:px-10 xl:pt-8">
                     <BoardPrompt
                         round={playing ? view.round : null}
                         accent={colours.accent}
                     />
 
-                    <div className="flex shrink-0 flex-col items-end gap-3">
+                    <div className="flex shrink-0 flex-col items-end gap-3 max-lg:flex-row max-lg:items-center max-lg:gap-2 max-sm:justify-end">
                         {playing && view.round !== null && (
-                            <p className="text-lg font-semibold tabular-nums">
+                            <p className="text-lg font-semibold tabular-nums max-lg:mr-auto max-lg:text-sm max-lg:whitespace-nowrap">
                                 {t('games.board.round', {
                                     index: view.round.index + 1,
                                     total: view.round.total,
                                 })}
                             </p>
                         )}
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2 max-lg:flex-nowrap max-lg:gap-1">
                             {guest === undefined &&
                                 link !== null &&
                                 playing &&
@@ -345,53 +363,67 @@ export function BoardScreen({
                                         type="button"
                                         variant="outline"
                                         size="lg"
+                                        className={ICON_BELOW_LG}
                                         onClick={() => link.showPairing()}
                                     >
                                         <Smartphone />
-                                        {t('games.board.pairing.open')}
+                                        <Label>
+                                            {t('games.board.pairing.open')}
+                                        </Label>
                                     </Button>
                                 )}
-                            {!isFullscreen && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="lg"
-                                    onClick={enter}
-                                >
-                                    <Maximize />
-                                    {t('games.board.fullscreen')}
-                                </Button>
-                            )}
+                            {fullscreen.isSupported &&
+                                !fullscreen.isFullscreen && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="lg"
+                                        className={ICON_BELOW_LG}
+                                        onClick={() =>
+                                            void fullscreen
+                                                .enter()
+                                                .then(lockLandscape)
+                                        }
+                                    >
+                                        <Maximize />
+                                        <Label>
+                                            {t('games.board.fullscreen')}
+                                        </Label>
+                                    </Button>
+                                )}
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="lg"
+                                className={ICON_BELOW_LG}
                                 disabled={!live}
                                 onClick={() => controller?.skip()}
                             >
                                 <SkipForward />
-                                {t('games.board.skip')}
+                                <Label>{t('games.board.skip')}</Label>
                             </Button>
                             {paused ? (
                                 <Button
                                     type="button"
                                     size="lg"
+                                    className={ICON_BELOW_LG}
                                     disabled={view.busy}
                                     onClick={() => void controller?.resume()}
                                 >
                                     <Play />
-                                    {t('games.board.resume')}
+                                    <Label>{t('games.board.resume')}</Label>
                                 </Button>
                             ) : (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="lg"
+                                    className={ICON_BELOW_LG}
                                     disabled={!live || view.busy}
                                     onClick={() => void controller?.pause()}
                                 >
                                     <Pause />
-                                    {t('games.board.pause')}
+                                    <Label>{t('games.board.pause')}</Label>
                                 </Button>
                             )}
                             <EndGame
@@ -405,7 +437,7 @@ export function BoardScreen({
                 <div className="relative min-h-0 flex-1">
                     <div ref={host} className="absolute inset-0" />
 
-                    {playing && pairingShown && (
+                    {playing && pairingShown && !small && (
                         <div className="absolute right-6 bottom-4 z-30 xl:right-10">
                             <PairingCard
                                 compact
@@ -416,15 +448,19 @@ export function BoardScreen({
                         </div>
                     )}
 
+                    {playing && (
+                        <RotateHint className="absolute inset-x-0 bottom-2 justify-center" />
+                    )}
+
                     {paused && (
                         <Curtain>
-                            <p className="text-6xl font-bold">
+                            <p className="text-6xl font-bold max-lg:text-4xl">
                                 {t('games.board.paused')}
                             </p>
                             <Button
                                 type="button"
                                 size="lg"
-                                className="h-16 px-10 text-2xl"
+                                className="h-16 px-10 text-2xl max-lg:h-14 max-lg:px-8 max-lg:text-xl"
                                 disabled={view.busy}
                                 onClick={() => void controller?.resume()}
                             >
@@ -435,7 +471,33 @@ export function BoardScreen({
                     )}
                 </div>
 
-                <footer className="flex items-center justify-between gap-4 px-6 pt-2 pb-5 xl:px-10 xl:pb-8">
+                {small && (
+                    <Dialog
+                        open={playing && pairingShown}
+                        onOpenChange={(opened) => {
+                            if (!opened) {
+                                link?.hidePairing();
+                            }
+                        }}
+                    >
+                        <DialogContent
+                            showCloseButton={false}
+                            aria-describedby={undefined}
+                            className="border-0 bg-transparent p-0 shadow-none sm:w-auto sm:max-w-[calc(100%-2rem)]"
+                        >
+                            <DialogTitle className="sr-only">
+                                {t('games.board.pairing.title')}
+                            </DialogTitle>
+                            <PairingCard
+                                pairing={pairing.pairing}
+                                failed={pairing.failed}
+                                onClose={() => link?.hidePairing()}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                )}
+
+                <footer className="flex items-center justify-between gap-4 px-6 pt-2 pb-5 max-lg:gap-2 max-lg:px-3 max-lg:pt-1 max-lg:pb-2 max-sm:flex-wrap xl:px-10 xl:pb-8">
                     <BoardStudents
                         students={students}
                         studentId={view.studentId}
@@ -451,17 +513,20 @@ export function BoardScreen({
 
                     {view.pending > 0 && view.retrying && (
                         <p
-                            className="flex items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-2 text-amber-900"
+                            className="flex min-w-0 items-center gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-2 text-amber-900 max-lg:gap-2 max-lg:px-2 max-lg:py-1"
                             role="status"
                         >
-                            <CloudOff className="size-7 shrink-0" aria-hidden />
-                            <span>
-                                <span className="block text-xl font-bold tabular-nums">
+                            <CloudOff
+                                className="size-7 shrink-0 max-lg:size-5"
+                                aria-hidden
+                            />
+                            <span className="min-w-0">
+                                <span className="block text-xl font-bold tabular-nums max-lg:text-base">
                                     {t('games.board.unsaved', {
                                         count: view.pending,
                                     })}
                                 </span>
-                                <span className="block text-sm">
+                                <span className="block text-sm max-lg:text-xs">
                                     {t('games.board.unsaved_hint')}
                                 </span>
                             </span>
@@ -470,48 +535,54 @@ export function BoardScreen({
                 </footer>
 
                 {(view.phase === 'loading' || view.phase === 'ready') && (
-                    <Curtain solid>
-                        <div className="flex flex-col items-center gap-2 text-center">
-                            <h1 className="text-5xl font-bold">{pack.title}</h1>
-                            <p className="text-2xl">
-                                {t('games.board.class', {
-                                    name: schoolClass.name,
-                                })}
-                                {' · '}
-                                {t('games.board.rounds', {
-                                    count: game.rounds,
-                                })}
-                            </p>
+                    <Curtain solid className="max-lg:landscape:flex-row">
+                        <div className="flex min-w-0 flex-col items-center gap-10 max-lg:gap-5">
+                            <div className="flex flex-col items-center gap-2 text-center">
+                                <h1 className="text-5xl font-bold max-lg:text-3xl">
+                                    {pack.title}
+                                </h1>
+                                <p className="text-2xl max-lg:text-lg">
+                                    {t('games.board.class', {
+                                        name: schoolClass.name,
+                                    })}
+                                    {' · '}
+                                    {t('games.board.rounds', {
+                                        count: game.rounds,
+                                    })}
+                                </p>
+                            </div>
+                            {stageState === 'failed' ? (
+                                <p className="text-xl text-red-700 max-lg:text-base">
+                                    {t('games.board.stage_failed')}
+                                </p>
+                            ) : view.phase === 'ready' &&
+                              stageState === 'ready' ? (
+                                <Button
+                                    type="button"
+                                    size="lg"
+                                    className="h-20 rounded-2xl px-14 text-3xl max-lg:h-14 max-lg:px-8 max-lg:text-xl"
+                                    style={{ backgroundColor: colours.accent }}
+                                    onClick={begin}
+                                    autoFocus
+                                >
+                                    <Play className="size-8 max-lg:size-6" />
+                                    {view.resumed
+                                        ? t('games.board.continue')
+                                        : t('games.board.start')}
+                                </Button>
+                            ) : (
+                                <p
+                                    className="flex items-center gap-3 text-xl max-lg:text-base"
+                                    role="status"
+                                >
+                                    <Spinner className="size-6" />
+                                    {view.notice === 'load_failed'
+                                        ? t('games.board.notices.load_failed')
+                                        : t('games.board.loading')}
+                                </p>
+                            )}
+                            <RotateHint />
                         </div>
-                        {stageState === 'failed' ? (
-                            <p className="text-xl text-red-700">
-                                {t('games.board.stage_failed')}
-                            </p>
-                        ) : view.phase === 'ready' && stageState === 'ready' ? (
-                            <Button
-                                type="button"
-                                size="lg"
-                                className="h-20 rounded-2xl px-14 text-3xl"
-                                style={{ backgroundColor: colours.accent }}
-                                onClick={begin}
-                                autoFocus
-                            >
-                                <Play className="size-8" />
-                                {view.resumed
-                                    ? t('games.board.continue')
-                                    : t('games.board.start')}
-                            </Button>
-                        ) : (
-                            <p
-                                className="flex items-center gap-3 text-xl"
-                                role="status"
-                            >
-                                <Spinner className="size-6" />
-                                {view.notice === 'load_failed'
-                                    ? t('games.board.notices.load_failed')
-                                    : t('games.board.loading')}
-                            </p>
-                        )}
                         {view.phase === 'ready' && pairingShown && (
                             <PairingCard
                                 pairing={pairing.pairing}
@@ -535,9 +606,9 @@ export function BoardScreen({
                             accent={colours.accent}
                             actions={
                                 guest === undefined ? undefined : (
-                                    <div className="flex flex-col items-center gap-6">
+                                    <div className="flex flex-col items-center gap-6 max-lg:gap-3">
                                         <p
-                                            className="flex items-center gap-3 text-xl text-neutral-600"
+                                            className="flex items-center gap-3 text-xl text-neutral-600 max-lg:text-base"
                                             role="status"
                                         >
                                             <Spinner className="size-5" />
@@ -554,21 +625,30 @@ export function BoardScreen({
                 {view.phase === 'replaced' && (
                     <Curtain solid>
                         <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
-                            <h1 className="text-4xl font-bold">
+                            <h1 className="text-4xl font-bold max-lg:text-2xl">
                                 {t('games.board.replaced.title')}
                             </h1>
-                            <p className="text-xl text-neutral-600">
+                            <p className="text-xl text-neutral-600 max-lg:text-base">
                                 {t('games.board.replaced.description')}
                             </p>
                         </div>
                         {guest === undefined ? (
                             <div className="flex flex-wrap justify-center gap-3">
-                                <Button asChild size="lg" variant="outline">
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    variant="outline"
+                                    className="max-lg:h-11"
+                                >
                                     <Link href={show(schoolClass.id)}>
                                         {t('games.board.back_to_class')}
                                     </Link>
                                 </Button>
-                                <Button asChild size="lg">
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    className="max-lg:h-11"
+                                >
                                     {/* A full load: claiming the board again needs a fresh page. */}
                                     <a href={boardRoute.url(game.id)}>
                                         {t('games.board.replaced.open_here')}
@@ -579,6 +659,7 @@ export function BoardScreen({
                             <Button
                                 type="button"
                                 size="lg"
+                                className="max-lg:h-11"
                                 onClick={guest.onReopen}
                             >
                                 {t('games.board.replaced.open_here')}
@@ -592,13 +673,14 @@ export function BoardScreen({
                         className="absolute top-4 left-1/2 z-30 flex w-[min(40rem,calc(100%-2rem))] -translate-x-1/2 items-start gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 text-amber-900 shadow-lg"
                         role="alert"
                     >
-                        <p className="flex-1 text-lg">
+                        <p className="flex-1 text-lg max-lg:text-base">
                             {t(`games.board.notices.${view.notice}`)}
                         </p>
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon"
+                            className="max-lg:size-11"
                             onClick={() => controller?.dismissNotice()}
                             aria-label={t('common.close')}
                         >
@@ -627,13 +709,14 @@ function EndGame({
                     type="button"
                     variant="outline"
                     size="lg"
+                    className={ICON_BELOW_LG}
                     disabled={disabled}
                 >
                     <Square />
-                    {t('games.board.end')}
+                    <Label>{t('games.board.end')}</Label>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle>
                         {t('games.board.end_confirm.title')}
@@ -644,7 +727,11 @@ function EndGame({
                 </DialogHeader>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button" variant="outline">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="max-lg:h-11"
+                        >
                             {t('common.cancel')}
                         </Button>
                     </DialogClose>
@@ -652,6 +739,7 @@ function EndGame({
                         <Button
                             type="button"
                             variant="destructive"
+                            className="max-lg:h-11"
                             onClick={onEnd}
                         >
                             {t('games.board.end_confirm.confirm')}
@@ -669,41 +757,80 @@ function RemoteStatus({ remote }: { remote: 'connected' | 'lost' }) {
 
     return remote === 'lost' ? (
         <p
-            className="flex items-center gap-2 rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-2 text-lg font-semibold text-amber-900"
+            className="flex min-w-0 items-center gap-2 rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-2 text-lg font-semibold text-amber-900 max-lg:px-2 max-lg:py-1 max-lg:text-sm"
             role="status"
         >
-            <Smartphone className="size-6 shrink-0" aria-hidden />
+            <Smartphone className="size-6 shrink-0 max-lg:size-5" aria-hidden />
             {t('games.board.remote.lost')}
         </p>
     ) : (
         <p
-            className="flex items-center gap-2 text-base text-neutral-600"
+            className="flex min-w-0 items-center gap-2 text-base text-neutral-600 max-lg:text-sm"
             role="status"
         >
             <Smartphone className="size-5 shrink-0" aria-hidden />
-            {t('games.board.remote.connected')}
+            <span className="max-sm:sr-only">
+                {t('games.board.remote.connected')}
+            </span>
         </p>
     );
 }
 
-/** A layer over the board: the start, the pause, the result. */
+/**
+ * A layer over the board: the start, the pause, the result. One too tall
+ * for a small screen scrolls inside itself, never the page, and keeps its
+ * top reachable (`safe` centring).
+ */
 function Curtain({
     solid = false,
+    className,
     children,
 }: {
     solid?: boolean;
+    className?: string;
     children: ReactNode;
 }) {
     return (
         <div
-            className={
+            className={cn(
                 solid
-                    ? 'absolute inset-0 z-20 flex flex-col items-center justify-center gap-10 bg-white/90 p-6 backdrop-blur-sm'
-                    : 'absolute inset-0 z-10 flex flex-col items-center justify-center gap-8 bg-white/80 p-6 backdrop-blur-sm'
-            }
+                    ? 'absolute inset-0 z-20 flex flex-col items-center justify-center-safe gap-10 overflow-y-auto bg-white/90 p-6 backdrop-blur-sm'
+                    : 'absolute inset-0 z-10 flex flex-col items-center justify-center-safe gap-8 overflow-y-auto bg-white/80 p-6 backdrop-blur-sm',
+                'max-lg:gap-5 max-lg:p-3 [&>*]:shrink-0',
+                className,
+            )}
         >
             {children}
         </div>
+    );
+}
+
+/**
+ * Below `lg` the header's buttons are 44px icons; the label stays for
+ * screen readers (docs/frontend.md §6). From `lg` nothing changes.
+ */
+const ICON_BELOW_LG =
+    'max-lg:size-11 max-lg:has-[>svg]:px-0 max-lg:[&_svg:not([class*=size-])]:size-5';
+
+function Label({ children }: { children: ReactNode }) {
+    return <span className="max-lg:sr-only">{children}</span>;
+}
+
+/** A phone held upright: the 16:9 board is bigger sideways. */
+function RotateHint({ className }: { className?: string }) {
+    const { t } = useTranslation();
+
+    return (
+        <p
+            className={cn(
+                'pointer-events-none hidden items-center gap-2 text-center text-sm text-neutral-600 max-lg:portrait:flex',
+                className,
+            )}
+            role="note"
+        >
+            <RotateCcw className="size-4 shrink-0" aria-hidden />
+            {t('games.board.rotate_hint')}
+        </p>
     );
 }
 

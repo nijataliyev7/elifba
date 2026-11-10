@@ -9,6 +9,7 @@ use App\Domain\Play\Actions\PruneGuestBoards;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Models\GameSession;
 use App\Domain\Play\Models\GuestBoard;
+use App\Domain\Play\Support\BoardProps;
 use App\Models\User;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\DB;
@@ -131,6 +132,17 @@ it('goes through open → claim → show → next game → close, never answerin
         expect((string) $content)->not->toContain($secret);
     }
 });
+
+it('sends the board exactly the board props, whatever the teacher chose for the phone remote', function (bool $phoneRemote): void {
+    $this->teacher->forceFill(['phone_remote' => $phoneRemote])->save();
+    $game = Games::start($this->class);
+    $board = GuestBoards::showing($game);
+
+    $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
+
+    expect(array_keys($poll->json('props')))->toBe(['game', 'schoolClass', 'pack', 'students'])
+        ->and($poll->json('props'))->toEqual(json_decode((string) json_encode(BoardProps::of($game->refresh())), true));
+})->with(['remote on' => [true], 'remote off' => [false]]);
 
 it('sends the board the pictures and figures of the game\'s pack, as the teacher board gets them', function (): void {
     $game = Games::start($this->class, ['pack' => 'animals']);

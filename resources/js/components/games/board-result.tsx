@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import type { Tally } from '@/game/engine';
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 import { show } from '@/routes/classes';
 import { create } from '@/routes/classes/games';
 
@@ -23,6 +24,7 @@ type Props = {
 /**
  * The end of a game: the stars it earned and how the rounds went. Leaving
  * waits until every answer is saved, because nothing else would send them.
+ * Smaller below `lg`, so it fits a phone held sideways (docs/frontend.md §6).
  */
 export function BoardResult({
     classId,
@@ -36,15 +38,15 @@ export function BoardResult({
     const saving = pending > 0;
 
     return (
-        <div className="flex w-full max-w-xl flex-col items-center gap-8 rounded-3xl bg-white p-10 text-center shadow-xl">
-            <h1 className="text-4xl font-bold">
+        <div className="flex w-full max-w-xl flex-col items-center gap-8 rounded-3xl bg-white p-10 text-center shadow-xl max-lg:gap-4 max-lg:p-5">
+            <h1 className="text-4xl font-bold max-lg:text-2xl">
                 {t('games.board.result.title')}
             </h1>
 
-            <p className="flex items-center gap-4 text-6xl font-bold tabular-nums">
+            <p className="flex items-center gap-4 text-6xl font-bold tabular-nums max-lg:gap-3 max-lg:text-4xl">
                 <Star
                     aria-hidden
-                    className="size-20"
+                    className="size-20 max-lg:size-12"
                     style={{ color: accent, fill: accent }}
                 />
                 <span>{t('games.board.result.stars', { count: points })}</span>
@@ -61,12 +63,12 @@ export function BoardResult({
                     ).map(([key, value]) => (
                         <div
                             key={key}
-                            className="rounded-2xl bg-neutral-50 p-3"
+                            className="rounded-2xl bg-neutral-50 p-3 max-lg:p-2"
                         >
                             <dt className="text-sm text-neutral-500">
                                 {t(`games.board.result.${key}`)}
                             </dt>
-                            <dd className="text-3xl font-bold tabular-nums">
+                            <dd className="text-3xl font-bold tabular-nums max-lg:text-2xl">
                                 {value}
                             </dd>
                         </div>
@@ -90,9 +92,10 @@ export function BoardResult({
                         asChild
                         size="lg"
                         variant="outline"
-                        className={
-                            saving ? 'pointer-events-none opacity-50' : ''
-                        }
+                        className={cn(
+                            'max-lg:h-11',
+                            saving && 'pointer-events-none opacity-50',
+                        )}
                     >
                         <Link href={show(classId)} aria-disabled={saving}>
                             {t('games.board.back_to_class')}
@@ -101,9 +104,10 @@ export function BoardResult({
                     <Button
                         asChild
                         size="lg"
-                        className={
-                            saving ? 'pointer-events-none opacity-50' : ''
-                        }
+                        className={cn(
+                            'max-lg:h-11',
+                            saving && 'pointer-events-none opacity-50',
+                        )}
                     >
                         <Link href={create(classId)} aria-disabled={saving}>
                             {t('games.board.new_game')}

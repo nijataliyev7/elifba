@@ -42,7 +42,7 @@ describe('the teacher shell areas', () => {
             'words',
             'settings',
         ]);
-        expect(navAreas.map((area) => area.pages.length)).toEqual([1, 1, 3]);
+        expect(navAreas.map((area) => area.pages.length)).toEqual([1, 1, 4]);
     });
 
     it('opens every area on its first page, inside the area', () => {
@@ -76,6 +76,7 @@ describe('the teacher shell areas', () => {
         expect(pageTitle('https://elifba.test/settings/appearance')).toBe(
             'settings.nav.appearance',
         );
+        expect(pageTitle('/settings/play')).toBe('settings.nav.play');
         expect(areaKey('/settings')).toBe('settings');
         expect(pageTitle('/settings')).toBeUndefined();
     });

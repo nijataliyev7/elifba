@@ -129,6 +129,20 @@ describe('the board page', function (): void {
             ->where('pack.style.sounds.hit', fn (string $url): bool => str_starts_with($url, url('/content/')) && str_ends_with($url, '?v='.app(ContentRepository::class)->pack('balloons')->version)));
     });
 
+    it('offers the phone remote by default, and not once the teacher turned it off', function (): void {
+        $game = Games::start($this->class);
+
+        $this->get(route('games.board', $game))->assertInertia(fn (Assert $page) => $page
+            ->component('games/board')
+            ->where('phoneRemote', true));
+
+        $this->put(route('play-settings.update'), ['phone_remote' => false])->assertSessionHasNoErrors();
+
+        $this->get(route('games.board', $game))->assertInertia(fn (Assert $page) => $page
+            ->where('phoneRemote', false)
+            ->where('game.id', $game->id));
+    });
+
     it('carries the points of the rounds solved so far, for the result screen', function (): void {
         $game = Games::start($this->class, ['rounds' => 5]);
         $first = Games::round($game, 0);

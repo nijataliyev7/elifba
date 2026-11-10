@@ -1,5 +1,6 @@
 import {
     BookOpenText,
+    Gamepad2,
     Palette,
     School,
     Settings,
@@ -9,6 +10,7 @@ import {
 import type { NavArea } from '@/lib/nav-active';
 import { edit as editAppearance } from '@/routes/appearance';
 import { index as classes } from '@/routes/classes';
+import { edit as editPlaySettings } from '@/routes/play-settings';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { index as words } from '@/routes/words';
@@ -52,6 +54,11 @@ export const navAreas: NavArea[] = [
                 title: 'settings.nav.appearance',
                 href: editAppearance(),
                 icon: Palette,
+            },
+            {
+                title: 'settings.nav.play',
+                href: editPlaySettings(),
+                icon: Gamepad2,
             },
         ],
     },

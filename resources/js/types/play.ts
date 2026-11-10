@@ -97,6 +97,11 @@ export type BoardProps = {
     students: BoardStudent[];
 };
 
+/** `/games/{game}/board`: the board's props and the teacher's own choice (Settings → Oyun). */
+export type TeacherBoardProps = BoardProps & {
+    phoneRemote: boolean;
+};
+
 /** `/games/{game}/remote`: the board's props and the guest board showing the game, if any. */
 export type RemoteProps = BoardProps & {
     guestBoard: { id: string } | null;

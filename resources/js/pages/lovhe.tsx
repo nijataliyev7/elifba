@@ -128,15 +128,15 @@ function Waiting({
 
     if (view.phase === 'closed') {
         return (
-            <div className="flex max-w-xl flex-col items-center gap-6 text-center">
+            <div className="flex max-w-xl flex-col items-center gap-6 text-center max-lg:gap-4">
                 <CheckCircle2
-                    className="size-16 text-emerald-600"
+                    className="size-16 text-emerald-600 max-lg:size-12"
                     aria-hidden
                 />
-                <h1 className="text-4xl font-bold">
+                <h1 className="text-4xl font-bold max-lg:text-2xl">
                     {t('lovhe.closed.title')}
                 </h1>
-                <p className="text-xl text-neutral-600">
+                <p className="text-xl text-neutral-600 max-lg:text-base">
                     {t('lovhe.closed.description')}
                 </p>
                 <Button
@@ -154,10 +154,12 @@ function Waiting({
 
     if (view.phase === 'waiting' && view.board?.pairing) {
         return (
-            <div className="flex flex-col items-center gap-8 text-center">
-                <h1 className="text-5xl font-bold">{t('lovhe.title')}</h1>
+            <div className="flex flex-col items-center gap-8 text-center max-lg:gap-4">
+                <h1 className="text-5xl font-bold max-lg:text-3xl">
+                    {t('lovhe.title')}
+                </h1>
                 <PairingCard pairing={view.board.pairing} failed={false} />
-                <p className="max-w-2xl text-xl text-neutral-600">
+                <p className="max-w-2xl text-xl text-neutral-600 max-lg:text-base">
                     {t('lovhe.waiting.hint')}
                 </p>
             </div>
@@ -166,9 +168,9 @@ function Waiting({
 
     if (view.phase === 'claimed' && chrome !== null) {
         return (
-            <div className="flex flex-col items-center gap-8 text-center">
+            <div className="flex flex-col items-center gap-8 text-center max-lg:gap-4">
                 <p
-                    className="flex items-center gap-3 text-2xl text-neutral-700"
+                    className="flex items-center gap-3 text-2xl text-neutral-700 max-lg:text-lg"
                     role="status"
                 >
                     <Spinner className="size-6" />
@@ -189,9 +191,10 @@ function Waiting({
     );
 }
 
+/** The page never scrolls; content too tall for a phone held sideways scrolls inside (docs/frontend.md §6). */
 function Screen({ children }: { children: ReactNode }) {
     return (
-        <main className="flex min-h-svh flex-col items-center justify-center gap-8 bg-white p-6 text-neutral-900">
+        <main className="fixed inset-0 flex flex-col items-center justify-center-safe gap-8 overflow-y-auto bg-white p-6 text-neutral-900 max-lg:p-3 [&>*]:shrink-0">
             {children}
         </main>
     );

@@ -42,7 +42,7 @@ export function GuestBoardActions({
     return (
         <div className="flex flex-col items-center gap-3 text-center">
             {teacherName !== null && (
-                <p className="text-xl text-neutral-700">
+                <p className="text-xl text-neutral-700 max-lg:text-base">
                     {t('lovhe.claimed_by', { name: teacherName })}
                 </p>
             )}
@@ -51,6 +51,7 @@ export function GuestBoardActions({
                     type="button"
                     variant="outline"
                     size="lg"
+                    className="max-lg:h-11"
                     disabled={busy}
                     onClick={onNotMine}
                 >
@@ -79,13 +80,14 @@ function CloseBoard({ busy, onClose }: { busy: boolean; onClose: () => void }) {
                     type="button"
                     variant="outline"
                     size="lg"
+                    className="max-lg:h-11"
                     disabled={busy}
                 >
                     {busy ? <Spinner /> : <MonitorX />}
                     {t('lovhe.close')}
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle>{t('lovhe.close_confirm.title')}</DialogTitle>
                     <DialogDescription>
@@ -94,13 +96,18 @@ function CloseBoard({ busy, onClose }: { busy: boolean; onClose: () => void }) {
                 </DialogHeader>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button" variant="outline">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="max-lg:h-11"
+                        >
                             {t('common.cancel')}
                         </Button>
                     </DialogClose>
                     <Button
                         type="button"
                         variant="destructive"
+                        className="max-lg:h-11"
                         onClick={() => {
                             setOpen(false);
                             onClose();
