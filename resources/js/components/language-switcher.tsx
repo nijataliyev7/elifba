@@ -5,12 +5,16 @@ import { cn } from '@/lib/utils';
 import { update } from '@/routes/locale';
 
 /**
- * The az/en switch. The server keeps the choice in the session and, for a
+ * The current locale, the ones on offer and the switch between them
+ * (`PUT /locale`). The server keeps the choice in the session and, for a
  * logged-in teacher, on the account (`users.locale`).
  */
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function useLocaleChoice(): {
+    locale: string;
+    locales: Record<string, string>;
+    choose: (code: string) => void;
+} {
     const { locale, locales } = usePage().props;
-    const { t } = useTranslation();
 
     const choose = (code: string): void => {
         if (code === locale) {
@@ -19,6 +23,14 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
         router.put(update.url(), { locale: code }, { preserveScroll: true });
     };
+
+    return { locale, locales, choose };
+}
+
+/** The az/en switch for the auth pages, the welcome page and Settings. */
+export function LanguageSwitcher({ className }: { className?: string }) {
+    const { locale, locales, choose } = useLocaleChoice();
+    const { t } = useTranslation();
 
     return (
         <div

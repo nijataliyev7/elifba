@@ -51,7 +51,7 @@ it('saves the choice on the teacher account, which wins over the session', funct
     expect($user->fresh()?->locale)->toBe('en');
 
     $this->withSession(['locale' => 'az'])
-        ->get(route('dashboard'))
+        ->get(route('classes.index'))
         ->assertInertia(fn (Assert $page) => $page->where('locale', 'en'));
 });
 

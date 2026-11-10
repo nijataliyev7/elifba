@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 
 /** @return TestResponse<Response> */
-function getDashboardThroughProxy(string $remoteAddress): TestResponse
+function getClassesThroughProxy(string $remoteAddress): TestResponse
 {
     return test()
         ->withServerVariables(['REMOTE_ADDR' => $remoteAddress])
@@ -20,7 +20,7 @@ function getDashboardThroughProxy(string $remoteAddress): TestResponse
             'X-Forwarded-Proto' => 'https',
             'X-Forwarded-Host' => 'elifba.example.az',
         ])
-        ->get('http://app:8080/dashboard');
+        ->get('http://app:8080/classes');
 }
 
 /** @param  TestResponse<Response>  $response */
@@ -36,7 +36,7 @@ function cookiesAreSecure(TestResponse $response): bool
 it('gives https URLs and secure cookies behind a trusted proxy', function (): void {
     config()->set('trustedproxy.proxies', '10.0.0.0/8,172.16.0.0/12,192.168.0.0/16');
 
-    $response = getDashboardThroughProxy('172.18.0.5')
+    $response = getClassesThroughProxy('172.18.0.5')
         ->assertRedirect('https://elifba.example.az/login');
 
     expect(cookiesAreSecure($response))->toBeTrue();
@@ -45,7 +45,7 @@ it('gives https URLs and secure cookies behind a trusted proxy', function (): vo
 it('ignores forwarded headers from an address it does not trust', function (): void {
     config()->set('trustedproxy.proxies', '10.0.0.0/8,172.16.0.0/12,192.168.0.0/16');
 
-    $response = getDashboardThroughProxy('203.0.113.9')
+    $response = getClassesThroughProxy('203.0.113.9')
         ->assertRedirect('http://app:8080/login');
 
     expect(cookiesAreSecure($response))->toBeFalse();
@@ -54,6 +54,6 @@ it('ignores forwarded headers from an address it does not trust', function (): v
 it('trusts no proxy by default, as in development', function (): void {
     expect(config('trustedproxy.proxies'))->toBeNull();
 
-    getDashboardThroughProxy('127.0.0.1')
+    getClassesThroughProxy('127.0.0.1')
         ->assertRedirect('http://app:8080/login');
 });

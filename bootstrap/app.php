@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // A signed-in teacher opening a guest page (login, register) lands
+        // where login does, on the classes: there is no dashboard.
+        $middleware->redirectUsersTo(fn (): string => route('classes.index'));
+
         $middleware->web(append: [
             SetLocale::class,
             HandleAppearance::class,

@@ -3,7 +3,8 @@ import AppLogoIcon from '@/components/app-logo-icon';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
-import { credits, dashboard, login, privacy, register } from '@/routes';
+import { credits, login, privacy, register } from '@/routes';
+import { index as classes } from '@/routes/classes';
 
 export default function Welcome() {
     const { auth, name } = usePage().props;
@@ -20,9 +21,7 @@ export default function Welcome() {
                     <nav className="flex items-center gap-2">
                         {auth.user ? (
                             <Button asChild variant="outline">
-                                <Link href={dashboard()}>
-                                    {t('nav.dashboard')}
-                                </Link>
+                                <Link href={classes()}>{t('nav.classes')}</Link>
                             </Button>
                         ) : (
                             <>

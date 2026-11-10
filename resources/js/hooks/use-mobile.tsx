@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
-const MOBILE_BREAKPOINT = 768;
+// The teacher shell's `lg` (docs/frontend.md §1, §6): below it there is no
+// sidebar, so its off-canvas drawer must not open either.
+const MOBILE_BREAKPOINT = 1024;
 
 const mql =
     typeof window === 'undefined'

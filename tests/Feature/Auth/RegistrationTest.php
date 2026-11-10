@@ -42,7 +42,7 @@ it('registers a teacher who ticked the privacy checkbox and records when', funct
     $response = $this->post(route('register.store'), registration());
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('classes.index', absolute: false));
 
     expect(User::query()->sole()->terms_accepted_at?->toDateTimeString())->toBe('2026-11-09 08:30:00');
 });

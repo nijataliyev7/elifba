@@ -18,9 +18,9 @@ Route::get('privacy', PrivacyController::class)->name('privacy');
 // Who made the pictures, sounds and fonts, and their licenses, public (§8).
 Route::get('credits', CreditsController::class)->name('credits');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
-});
+// There is no dashboard: a teacher lands on the classes (Fortify's `home`).
+// Old bookmarks of the starter kit's /dashboard follow.
+Route::redirect('dashboard', '/classes');
 
 require __DIR__.'/classroom.php';
 require __DIR__.'/play.php';

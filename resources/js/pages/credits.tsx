@@ -3,7 +3,8 @@ import AppLogoIcon from '@/components/app-logo-icon';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
-import { dashboard, home, login } from '@/routes';
+import { home, login } from '@/routes';
+import { index as classes } from '@/routes/classes';
 
 /** One entry of `content/credits.json` (`CreditData::toArray()`). */
 type Credit = {
@@ -56,10 +57,8 @@ export default function Credits({ credits, openmoji }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                         <LanguageSwitcher />
                         <Button asChild variant="outline" size="sm">
-                            <Link href={auth.user ? dashboard() : login()}>
-                                {auth.user
-                                    ? t('nav.dashboard')
-                                    : t('nav.log_in')}
+                            <Link href={auth.user ? classes() : login()}>
+                                {auth.user ? t('nav.classes') : t('nav.log_in')}
                             </Link>
                         </Button>
                     </div>

@@ -6,7 +6,8 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { useTranslation } from '@/hooks/use-translation';
-import { dashboard, home, login } from '@/routes';
+import { home, login } from '@/routes';
+import { index as classes } from '@/routes/classes';
 
 type Props = {
     retentionDays: number;
@@ -46,10 +47,8 @@ export default function Privacy({ retentionDays, operator }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                         <LanguageSwitcher />
                         <Button asChild variant="outline" size="sm">
-                            <Link href={auth.user ? dashboard() : login()}>
-                                {auth.user
-                                    ? t('nav.dashboard')
-                                    : t('nav.log_in')}
+                            <Link href={auth.user ? classes() : login()}>
+                                {auth.user ? t('nav.classes') : t('nav.log_in')}
                             </Link>
                         </Button>
                     </div>
