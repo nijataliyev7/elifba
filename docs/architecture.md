@@ -374,6 +374,7 @@ A level entry (`Content\Data\LevelData`):
 - **Targets** go round in shuffled decks of every target; a new deck never starts with the target that ended the last one. Every target comes up equally often (±1) and none twice in a row. The deck, the item ids and the content as written live in `RoundParts` (`deck()`, `itemId()`, `value()`, `written()`), which the build builders share.
 - **Decoys** for a letter are its confusables first (`Alphabet::confusables()`, most confusable first) among the learned letters, then other learned letters at random; for syllables and words, other items of the same pack and level at random. Item ids are `a`, `b`, `c`… in display order; the target's position is random.
 - **No pictures.** `find` items carry `image: null`, and so does the prompt: a picture next to the target text, or on the items, would let a child match pictures instead of reading. The prompt shows the target as text (`show`, filled into `prompts.json`'s template with `PromptTemplateData::fill()`). Pictures belong to `build_word` (A8), where the picture is the question.
+- **Sample rounds.** The welcome page's wall (frontend.md rule 10) plays rounds from this builder: `Play\Support\SampleRounds` sets up `find` at the first letter level with `elifba.rounds.min` rounds, upper case and every letter learned, in one built-in pack, with a seed from the Baku date. The pack and the letters change once a day. There is no teacher, so the pack comes from `ContentRepository` and not `TeacherPacks`; a letter level takes only the pack's look anyway. Nothing is stored.
 
 ### The `pop` builder
 
@@ -1307,6 +1308,7 @@ Kenney's art is used for avatars only, and item styles are drawn in code (§2) �
 - **What share-alike means here.** CC BY-SA 4.0 applies to the OpenMoji files and to any change we make to them: an edited OpenMoji SVG must stay CC BY-SA 4.0 and say what was changed. It does not reach the MIT code that displays them or our other assets — showing an image is not adapting it. The attribution OpenMoji asks for ("All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0") appears on `/credits` and in `CREDITS.md`, with a list of the files we changed. `LICENSE` stays plain MIT. The READMEs and `CREDITS.md` say that MIT covers the code and Elifba's own art, while `content/assets/openmoji/` (CC BY-SA 4.0) and the fonts (OFL 1.1) keep their own licenses and Kenney's avatars and sounds are CC0. Because a composed image that contains an OpenMoji would need the attribution on the image itself, the share card uses only CC0 and own art.
 - **National symbols.** Only cultural symbols and the State Flag are used — never the State Emblem or the anthem. The flag is drawn to the official proportions and colours (three equal horizontal bands blue, red, green; white crescent and eight-pointed star in the red band; 1:2) and is never burst, distorted, cut or shown upside down. `symbols/bayraq.svg` follows the flag's construction sheet for the law of 5 February 1991 (as published on Wikimedia Commons; with h the flag height: the crescent's outer circle 3/10 h across, its inner circle 1/4 h across and 1/30 h to the right, the star 1/6 h across with an inner circle of 1/12 h, crescent and star spanning 2/5 h, centred) and the colours of the 2013 Rules for the Use of the State Flag (item 9.2: Pantone 306 C `#00B5E2`, Red 032 C `#EF3340`, 362 C `#509E2F`, also the `symbols` palette); its black frame lies outside the field and the crescent and star are not outlined, so nothing changes their proportions. The file's comment names these sources. The `symbols` pack therefore uses the gentle `sparkle` effect for every item, and its hit sound is the chime, not the pop.
 - **Brand marks.** The «G» on the Google sign-in button (§7 "Google sign-in") is Google's own brand mark, drawn unchanged in Google's colours as an inline SVG in `resources/js/components/google-sign-in.tsx`, only to label that button, as Google's sign-in branding guidelines ask. It is not an asset: not under `content/`, not in `content/credits.json`, never on the board or the share card, and loaded from no Google server.
+- **The GitHub mark** on the welcome page's link to the source code (frontend.md rule 10) is GitHub's own mark, drawn unchanged in one colour as an inline SVG in `resources/js/components/github-link.tsx`. It only labels that link, which goes to `elifba.source_url`. Like the «G», it is not an asset, never appears on the board or the share card, and nothing on the page loads from GitHub: no `buttons.js`, badge, iframe or star count.
 - Nothing licensed NC (non-commercial), ND (no derivatives) or with an unknown license enters the repository. Downloads are unpacked outside the repository and only the files used are copied in.
 
 **Why.** CC0 assets carry no obligations anywhere, which matters for an image that leaves the app. Keeping BY-SA files in their own folder makes the boundary visible to contributors. One picture style per pack (OpenMoji's) keeps a round readable: a child compares words, not drawing styles. Andika was designed for early literacy (clear a, g, I/l) and covers Ə ə Ğ ğ İ ı.
@@ -1392,16 +1394,16 @@ app/
 ├── Models/User.php    (the teacher, from the starter kit), Models/Concerns/BelongsToTeacher.php (scoped binding, §7)
 ├── Providers/ContentServiceProvider.php  (the repository, the content:* commands, optimize hooks)
 └── Support/Translations.php, GoogleSignIn.php, GoogleProfile.php, PasswordConfirmation.php (§7 "Google sign-in")
-config/elifba.php      (timezone, locales, retention_days, pairing_code_ttl_minutes, guest_board_hours, abandon_after_hours, rounds, custom_words.max_length, custom_words.max_per_teacher, operator.name, operator.email)
+config/elifba.php      (timezone, locales, retention_days, pairing_code_ttl_minutes, guest_board_hours, abandon_after_hours, rounds, custom_words.max_length, custom_words.max_per_teacher, operator.name, operator.email, source_url)
 content/               (§3)
 scripts/city-maps/     generate.php + cities.csv: the cities pack's maps (§8)
 docs/                  architecture.md, frontend.md (A2), glossary.md, decisions/
 lang/                  az.json, en.json, {az,en}/*.php
 resources/js/
-├── pages/             classes, students, games/setup, games/board, games/remote, lovhe, pult/{index,guest-board}, rankings/show, podium, words/index, auth/google-register, credits, privacy
+├── pages/             classes, students, games/setup, games/board, games/remote, lovhe, pult/{index,guest-board}, rankings/show, podium, words/index, auth/google-register, credits, privacy, welcome
 ├── components/ui      (shadcn/ui from the starter kit)
 ├── components/app     (the shared kit, as in the precedent)
-├── components/{classes,students,games,rankings,share,words}
+├── components/{classes,students,games,rankings,share,words,welcome}
 ├── game/              contract.ts (+ .test.ts), engine.ts (+ .test.ts), live.ts, outbox.ts, scenes/, styles/
 └── lib/
 routes/web.php (+ auth.php, classroom.php, play.php, rankings.php, settings.php, words.php), channels.php, console.php
@@ -1427,6 +1429,7 @@ Routes (names in English; `/pult` is the one Azerbaijani path because teachers t
 | `/words` (`?pack={key}`), `POST /words`, `/words/{word}` (PATCH, DELETE), `POST`/`DELETE /words/hidden` (hide / show, word in the body) | the teacher's words per theme pack (§3 "Teacher words")                     |
 | `/settings/play` (GET, PUT)                                                                                                             | the phone remote on or off (`UpdatePlaySettings`, §4 "Pairing")             |
 | `/auth/google/{redirect,confirm,callback}`, `/auth/google/register` (GET, POST, DELETE)                                                 | Google sign-in (§7 "Google sign-in"); 404 unless configured                 |
+| `/`                                                                                                                                     | the welcome page (`WelcomeController`, frontend.md rule 10)                 |
 | `/credits`, `/privacy`                                                                                                                  |                                                                             |
 
 ### The CI gate

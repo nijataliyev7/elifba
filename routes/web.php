@@ -3,9 +3,12 @@
 use App\Http\Controllers\CreditsController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PrivacyController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+// The landing page: what Elifba is, for a teacher who opens a shared link
+// (docs/frontend.md rule 10).
+Route::get('/', WelcomeController::class)->name('home');
 
 // The az/en switch: guests keep it in the session, teachers on their account.
 Route::put('locale', LocaleController::class)

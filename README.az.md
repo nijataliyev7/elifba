@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <a href="https://elifba.io"><strong>elifba.io</strong></a> ünvanında pulsuz istifadə edin, heç nə quraşdırmaq lazım deyil.
+</p>
+
+<p align="center">
   <a href="https://github.com/nijataliyev7/elifba/actions/workflows/ci.yml"><img src="https://github.com/nijataliyev7/elifba/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/lisenziya-MIT-15803d" alt="MIT lisenziyası"></a>
   <img src="https://img.shields.io/badge/PHP-8.4-777bb4" alt="PHP 8.4">

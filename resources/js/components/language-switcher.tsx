@@ -27,8 +27,18 @@ export function useLocaleChoice(): {
     return { locale, locales, choose };
 }
 
-/** The az/en switch for the auth pages, the welcome page and Settings. */
-export function LanguageSwitcher({ className }: { className?: string }) {
+/**
+ * The az/en switch for the auth pages, the welcome page and Settings.
+ * `compact` shows the codes (AZ, EN) where the names do not fit, such as the
+ * welcome page's header on a phone; the names stay for screen readers.
+ */
+export function LanguageSwitcher({
+    className,
+    compact = false,
+}: {
+    className?: string;
+    compact?: boolean;
+}) {
     const { locale, locales, choose } = useLocaleChoice();
     const { t } = useTranslation();
 
@@ -41,10 +51,12 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                 className,
             )}
         >
-            <Languages
-                aria-hidden
-                className="mx-1 size-4 text-muted-foreground"
-            />
+            {!compact && (
+                <Languages
+                    aria-hidden
+                    className="mx-1 size-4 text-muted-foreground"
+                />
+            )}
             {Object.entries(locales).map(([code, name]) => (
                 <button
                     key={code}
@@ -52,6 +64,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                     lang={code}
                     aria-pressed={code === locale}
                     data-test={`locale-${code}`}
+                    aria-label={compact ? name : undefined}
                     onClick={() => choose(code)}
                     className={cn(
                         'cursor-pointer rounded-md px-2.5 py-1 transition-colors',
@@ -60,7 +73,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                             : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
                     )}
                 >
-                    {name}
+                    {compact ? code.toUpperCase() : name}
                 </button>
             ))}
         </div>

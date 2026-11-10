@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  Use it free at <a href="https://elifba.io"><strong>elifba.io</strong></a>, with nothing to install.
+</p>
+
+<p align="center">
   <a href="https://github.com/nijataliyev7/elifba/actions/workflows/ci.yml"><img src="https://github.com/nijataliyev7/elifba/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-15803d" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/PHP-8.4-777bb4" alt="PHP 8.4">

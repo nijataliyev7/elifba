@@ -50,4 +50,8 @@ return [
         'email' => env('ELIFBA_OPERATOR_EMAIL'),
     ],
 
+    // Where the source code lives: the welcome page's GitHub link
+    // (docs/frontend.md rule 10). A fork points it at its own repository.
+    'source_url' => env('ELIFBA_SOURCE_URL') ?: 'https://github.com/nijataliyev7/elifba',
+
 ];

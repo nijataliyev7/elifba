@@ -143,3 +143,81 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * The welcome page's wall (docs/frontend.md rule 10): an item bursts when it
+ * is hit, shakes when it is wrong, and the next round's items come in. Every
+ * use is paired with `motion-reduce:animate-none`.
+ */
+@theme {
+    --animate-welcome-burst: welcome-burst 460ms ease-out forwards;
+    --animate-welcome-ray: welcome-ray 520ms ease-out forwards;
+    --animate-welcome-miss: welcome-miss 380ms ease-in-out;
+    --animate-welcome-press: welcome-press 300ms ease-out;
+    --animate-welcome-in: welcome-in 320ms ease-out backwards;
+
+    @keyframes welcome-burst {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        35% {
+            transform: scale(1.22);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.45);
+            opacity: 0;
+        }
+    }
+
+    @keyframes welcome-ray {
+        0% {
+            transform: rotate(var(--ray-angle)) translateY(-90%) scaleY(0.4);
+            opacity: 0;
+        }
+        30% {
+            opacity: 1;
+        }
+        100% {
+            transform: rotate(var(--ray-angle)) translateY(-230%) scaleY(1);
+            opacity: 0;
+        }
+    }
+
+    @keyframes welcome-miss {
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+        20%,
+        60% {
+            transform: translateX(-7%);
+        }
+        40%,
+        80% {
+            transform: translateX(7%);
+        }
+    }
+
+    @keyframes welcome-press {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        40% {
+            transform: scale(0.92);
+        }
+    }
+
+    @keyframes welcome-in {
+        0% {
+            transform: scale(0.6);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
