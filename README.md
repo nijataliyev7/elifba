@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/board-find.png" width="820" alt="The board on the classroom wall: the prompt «Ö» hərfini tap! above four balloons with the letters O, I, L and Ö, and the student at the board, Aysel, in the corner">
+  <img src="docs/screenshots/demo.gif" width="820" alt="Elifba in a lesson: the board on the classroom wall asks «X» hərfini tap! over four balloons, the teacher picks Aysel as the child at the board and taps the answer on the phone remote, and the X balloon bursts on the wall while Aysel gets points">
 </p>
 
 ## What it does

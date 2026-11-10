@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/board-find.png" width="820" alt="Sinif divarındakı lövhə: «Ö» hərfini tap! tapşırığı, üzərində O, I, L və Ö hərfləri olan dörd şar, küncdə isə lövhəyə çıxan şagird — Aysel">
+  <img src="docs/screenshots/demo.gif" width="820" alt="Elifba dərsdə: sinif divarındakı lövhədə dörd şarın üstündə «X» hərfini tap! tapşırığı; müəllim lövhəyə Ayseli çıxarır, telefon pultunda cavabı basır, divarda X şarı partlayır və Aysel xal alır">
 </p>
 
 ## Nə edir
