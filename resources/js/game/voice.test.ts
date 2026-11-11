@@ -6,7 +6,7 @@ import { SILENT, VoiceCues } from './voice';
 /*
  * What the board says, and when (docs/architecture.md §3 "Voice", ADR
  * 015): the prompt once a round has arrived, never the same clip twice in
- * a row; praise after a solved round; the retry phrase at most once a
+ * a row; praise after a solved round; a retry phrase at most once a
  * round; nothing the owner switched off.
  */
 
@@ -34,7 +34,7 @@ function withAudio(round: Round, id: string, audio: string | null): Round {
 const ON: BoardVoice = {
     prompt: true,
     praise: ['/content/voice/praise-1.mp3', '/content/voice/praise-2.mp3'],
-    retry: ['/content/voice/retry.mp3'],
+    retry: ['/content/voice/retry-1.mp3', '/content/voice/retry-2.mp3'],
 };
 
 const find = fixture('find-word');
@@ -117,12 +117,13 @@ describe('praise and retry', () => {
         expect(cues.solved()).toBe(ON.praise[1]);
     });
 
-    it('says the retry phrase once a round', () => {
-        const cues = new VoiceCues(ON);
+    it('says one of the retry phrases once a round', () => {
+        const picks = [0, 0.99];
+        const cues = new VoiceCues(ON, () => picks.shift() ?? 0);
 
         expect(cues.missed('r1')).toBe(ON.retry[0]);
         expect(cues.missed('r1')).toBeNull();
-        expect(cues.missed('r2')).toBe(ON.retry[0]);
+        expect(cues.missed('r2')).toBe(ON.retry[1]);
     });
 
     it('says neither when praise is off (empty lists)', () => {

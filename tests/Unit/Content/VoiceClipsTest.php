@@ -133,8 +133,8 @@ it('lists every clip built-in content can ask for, once, and no other', function
     expect($groups['find.letter'])->toHaveCount(Alphabet::count())
         ->and($groups['find.number'])->toHaveCount(10)
         ->and($groups['count.number'])->toHaveCount(count(array_unique($counted)))
-        ->and($groups['praise'])->toBe(['Doğru cavab!', 'Afərin!', 'Əla!', 'Çox gözəl!'])
-        ->and($groups['retry'])->toBe(['Bir də cəhd et!']);
+        ->and($groups['praise'])->toBe(['Doğru cavab!', 'Afərin!', 'Əla!', 'Çox gözəl!', 'Möhtəşəm!', 'Mükəmməl!', 'Bravo!', 'Super!', 'Çox yaxşı!', 'Lap düz!', 'Belə davam et!'])
+        ->and($groups['retry'])->toBe(['Bir də cəhd et!', 'Yenidən yoxla!', 'Tələsmə, yaxşı bax!', 'Sən bacararsan!', 'Narahat olma, bir də sına!', 'Yox, bu deyil, bir də bax!']);
 
     foreach (['pop.letter', 'pop.syllable', 'pop.word', 'pop.picture', 'pop.number', 'build_word.word', 'build_sentence.sentence'] as $instruction) {
         expect($groups[$instruction])->toHaveCount(1, $instruction);

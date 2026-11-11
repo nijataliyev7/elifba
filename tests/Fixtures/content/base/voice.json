@@ -83,10 +83,7 @@
             "style": "cheerfully"
         }
     ],
-    "retry": {
-        "text": "Bir də cəhd et!",
-        "style": "warmly"
-    },
+    "retry": [{ "text": "Bir də cəhd et!", "style": "warmly" }],
     "credit": {
         "title": "The board's voice: every prompt, the praise and the retry phrase, in Azerbaijani",
         "author": "Elifba contributors",

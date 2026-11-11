@@ -99,9 +99,12 @@ final readonly class VoiceClips
         return array_map(fn (VoicePhraseData $phrase): VoiceLineData => $this->line(VoiceLineData::PRAISE, $phrase->text, $phrase->style), $this->voice->praise);
     }
 
-    public function retry(): VoiceLineData
+    /**
+     * @return list<VoiceLineData>
+     */
+    public function retry(): array
     {
-        return $this->line(VoiceLineData::RETRY, $this->voice->retry->text, $this->voice->retry->style);
+        return array_map(fn (VoicePhraseData $phrase): VoiceLineData => $this->line(VoiceLineData::RETRY, $phrase->text, $phrase->style), $this->voice->retry);
     }
 
     /**
@@ -175,7 +178,7 @@ final readonly class VoiceClips
             }
         }
 
-        foreach ([...$this->praise(), $this->retry()] as $line) {
+        foreach ([...$this->praise(), ...$this->retry()] as $line) {
             $add($line);
         }
 

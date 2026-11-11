@@ -802,9 +802,9 @@
     "voice: an audio tag in brackets": {
         "file": "voice.json",
         "set": {
-            "retry.style": "[warmly]"
+            "retry.0.style": "[warmly]"
         },
-        "problem": "voice.json: retry.style must be an audio tag in lowercase English words"
+        "problem": "voice.json: retry[0].style must be an audio tag in lowercase English words"
     },
     "voice: a number without a name": {
         "file": "voice.json",

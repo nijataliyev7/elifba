@@ -3,7 +3,10 @@
  * browser"): this device's choice, kept in `localStorage`, never the
  * account's and never sent anywhere. Sound is on unless the device said
  * otherwise; storage that is missing, full or refused (a private window,
- * blocked site data) leaves the board as it is and never throws.
+ * blocked site data) leaves the board as it is and never throws. The page
+ * keeps the choice in memory (`muteStore`), so the toggle works even where
+ * storage refuses to remember it, and every board of the page (a guest
+ * board's next game) shares it.
  */
 import type { StorageLike } from './outbox';
 
@@ -39,3 +42,35 @@ export function deviceStorage(): StorageLike | null {
         return null;
     }
 }
+
+export type MuteStore = {
+    subscribe: (listener: () => void) => () => void;
+    /** The page's choice; read from storage the first time. */
+    get: () => boolean;
+    set: (muted: boolean) => void;
+};
+
+/** The page's silent mode, for `useSyncExternalStore` (the server renders sound on). */
+export function muteStore(storage: () => StorageLike | null): MuteStore {
+    let muted: boolean | null = null;
+    const listeners = new Set<() => void>();
+
+    return {
+        subscribe: (listener) => {
+            listeners.add(listener);
+
+            return () => {
+                listeners.delete(listener);
+            };
+        },
+        get: () => (muted ??= readMuted(storage())),
+        set: (next) => {
+            muted = next;
+            writeMuted(storage(), next);
+            listeners.forEach((listener) => listener());
+        },
+    };
+}
+
+/** The board pages' one store, over this device's `localStorage`. */
+export const boardMute = muteStore(deviceStorage);

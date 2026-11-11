@@ -11,7 +11,8 @@
  *   not every round. A round shown already solved or skipped (a reload) is
  *   not said. The 🔊 button says it again whenever there is one.
  * - Praise, one of the phrases at random, follows a solved round.
- * - The retry phrase follows a wrong tap, at most once a round.
+ * - A retry phrase, one of them at random, follows a wrong tap, at most
+ *   once a round.
  * - With the prompt switched off nothing says a prompt, not even 🔊.
  */
 import type { Round } from './contract';
@@ -22,7 +23,7 @@ export type BoardVoice = {
     prompt: boolean;
     /** Praise clips; empty when the owner turned praise off. */
     praise: string[];
-    /** The retry clip, or none. */
+    /** Retry clips; empty when the owner turned praise off. */
     retry: string[];
 };
 
@@ -63,31 +64,27 @@ export class VoiceCues {
 
     /** Praise after a solved round, or null when there is none. */
     solved(): string | null {
-        const { praise } = this.voice;
-
-        if (praise.length === 0) {
-            return null;
-        }
-
-        const pick = Math.min(
-            praise.length - 1,
-            Math.floor(this.random() * praise.length),
-        );
-
-        return praise[pick];
+        return this.voice.praise.length === 0
+            ? null
+            : this.pick(this.voice.praise);
     }
 
-    /** The retry phrase after a wrong tap, once a round. */
+    /** A retry phrase after a wrong tap, once a round. */
     missed(roundId: string): string | null {
-        const retry = this.voice.retry[0] ?? null;
-
-        if (retry === null || this.retried.has(roundId)) {
+        if (this.voice.retry.length === 0 || this.retried.has(roundId)) {
             return null;
         }
 
         this.retried.add(roundId);
 
-        return retry;
+        return this.pick(this.voice.retry);
+    }
+
+    /** One of `clips` at random; never called with an empty list. */
+    private pick(clips: string[]): string {
+        return clips[
+            Math.min(clips.length - 1, Math.floor(this.random() * clips.length))
+        ];
     }
 
     /** Every clip the board may say besides prompts, to load up front. */

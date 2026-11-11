@@ -64,9 +64,10 @@ export type Stage = {
     /** Resumes audio inside a user gesture («Başla»). */
     unlockAudio: () => void;
     /**
-     * The board's silent mode (§4 "Board in the browser"): Phaser's master
-     * mute, so the pack's effects, prompts and praise go quiet at once and
-     * whatever plays later starts silent.
+     * The board's silent mode (§4 "Board in the browser"): the gain Phaser
+     * mutes with, in front of everything it plays, so the pack's effects,
+     * prompts and praise go quiet at once and whatever plays later starts
+     * silent.
      */
     setMuted: (muted: boolean) => void;
     destroy: () => void;
@@ -163,7 +164,23 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
                             }
                         },
                         setMuted: (muted) => {
-                            game.sound.mute = muted;
+                            const sound = game.sound;
+
+                            if (
+                                sound instanceof
+                                Phaser.Sound.WebAudioSoundManager
+                            ) {
+                                // Phaser's own `mute` schedules the change at
+                                // time 0: Chrome then went silent but kept
+                                // reading the old gain back (and `mute` with
+                                // it). Setting the value is heard and read.
+                                const gain = sound.masterMuteNode.gain;
+
+                                gain.cancelScheduledValues(0);
+                                gain.value = muted ? 0 : 1;
+                            } else {
+                                sound.mute = muted;
+                            }
                         },
                         destroy: () => game.destroy(true),
                     }),

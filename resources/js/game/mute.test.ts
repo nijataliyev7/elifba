@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vite-plus/test';
-import { deviceStorage, MUTE_STORAGE_KEY, readMuted, writeMuted } from './mute';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import {
+    deviceStorage,
+    MUTE_STORAGE_KEY,
+    muteStore,
+    readMuted,
+    writeMuted,
+} from './mute';
 import type { StorageLike } from './outbox';
 
 /*
@@ -68,5 +74,45 @@ describe('silent mode', () => {
 
     it('has no device storage outside a browser', () => {
         expect(deviceStorage()).toBeNull();
+    });
+
+    it("reads the device's choice once and keeps the page's in memory", () => {
+        const storage = memoryStorage();
+        const getItem = vi.spyOn(storage, 'getItem');
+
+        storage.items.set(MUTE_STORAGE_KEY, '1');
+        const store = muteStore(() => storage);
+
+        expect(store.get()).toBe(true);
+        expect(store.get()).toBe(true);
+        expect(getItem).toHaveBeenCalledTimes(1);
+
+        store.set(false);
+
+        expect(store.get()).toBe(false);
+        expect(storage.items.has(MUTE_STORAGE_KEY)).toBe(false);
+    });
+
+    it('tells the board of every change, until it stops listening', () => {
+        const store = muteStore(() => memoryStorage());
+        const listener = vi.fn();
+        const stop = store.subscribe(listener);
+
+        store.set(true);
+        expect(listener).toHaveBeenCalledTimes(1);
+
+        stop();
+        store.set(false);
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('still toggles where storage refuses to remember', () => {
+        const store = muteStore(() => refusing);
+
+        expect(store.get()).toBe(false);
+
+        store.set(true);
+
+        expect(store.get()).toBe(true);
     });
 });

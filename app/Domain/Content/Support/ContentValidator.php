@@ -770,7 +770,16 @@ final class ContentValidator
             $phrases[] = $this->voicePhrase($phrase, $file, "praise[{$index}]");
         }
 
-        $phrases[] = $this->voicePhrase($data['retry'], $file, 'retry');
+        $retry = $this->list($data['retry'], $file, 'retry');
+
+        if ($retry === []) {
+            $this->problem($file, 'retry needs at least one phrase');
+        }
+
+        foreach ($retry ?? [] as $index => $phrase) {
+            $phrases[] = $this->voicePhrase($phrase, $file, "retry[{$index}]");
+        }
+
         $texts = array_filter($phrases, is_string(...));
 
         if (count($texts) !== count(array_unique($texts))) {
@@ -802,7 +811,7 @@ final class ContentValidator
             return;
         }
 
-        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: array{text: string, style: string}, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
+        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: list<array{text: string, style: string}>, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
         $voice = new VoiceClips(VoiceData::fromArray([...$data, 'clips' => $clips]));
         $file = ContentRepository::VOICE_CLIPS;
 
@@ -812,7 +821,7 @@ final class ContentValidator
             }
         }
 
-        foreach ($this->voiceClipsRequired ? [...$voice->praise(), $voice->retry()] : [] as $line) {
+        foreach ($this->voiceClipsRequired ? [...$voice->praise(), ...$voice->retry()] : [] as $line) {
             if ($voice->url($line) === null) {
                 $this->problem($file, "the {$line->group} phrase \"{$line->phrase}\" has no clip (php artisan content:voice)");
             }

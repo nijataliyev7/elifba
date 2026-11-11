@@ -20,7 +20,7 @@ namespace App\Domain\Content\Data;
  *     spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>},
  *     context: array{previous: string, next: string},
  *     praise: list<array{text: string, style: string}>,
- *     retry: array{text: string, style: string},
+ *     retry: list<array{text: string, style: string}>,
  *     credit: CreditArray,
  *     clips: array<string, string>,
  * }
@@ -33,6 +33,7 @@ final readonly class VoiceData
      * @param  array<int, string>  $numbers  a number → its Azerbaijani name
      * @param  array<string, string>  $respell  a phrase → the text the voice is given for it instead
      * @param  list<VoicePhraseData>  $praise
+     * @param  list<VoicePhraseData>  $retry
      * @param  CreditArray  $credit  `changes` holds `{month}`, the month of generation
      * @param  array<string, string>  $clips  hash → the text the clip was made from
      */
@@ -44,7 +45,7 @@ final readonly class VoiceData
         public array $numbers,
         public array $respell,
         public array $praise,
-        public VoicePhraseData $retry,
+        public array $retry,
         public array $credit,
         public array $clips,
     ) {}
@@ -68,7 +69,7 @@ final readonly class VoiceData
             numbers: $numbers,
             respell: $data['spoken']['respell'],
             praise: array_map(VoicePhraseData::fromArray(...), $data['praise']),
-            retry: VoicePhraseData::fromArray($data['retry']),
+            retry: array_map(VoicePhraseData::fromArray(...), $data['retry']),
             credit: $data['credit'],
             clips: $data['clips'],
         );

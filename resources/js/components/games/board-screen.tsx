@@ -38,7 +38,7 @@ import type { BoardView, TabChannel } from '@/game/board';
 import { BoardController } from '@/game/board';
 import { BoardBridge } from '@/game/bridge';
 import { Mechanic } from '@/game/contract';
-import { deviceStorage, readMuted, writeMuted } from '@/game/mute';
+import { boardMute } from '@/game/mute';
 import type { Pairing } from '@/game/contract';
 import type { BoardAuth } from '@/game/http';
 import { boardHttp, issueJoinCode } from '@/game/http';
@@ -149,8 +149,12 @@ export function BoardScreen({
     const pairsOnLoad = pairingOnLoad({ schoolClass, child });
     const asksWho = asksWhoPlays({ schoolClass, child }, students);
     const [asking, setAsking] = useState(false);
-    const [muted, setMuted] = useState(() => readMuted(deviceStorage()));
-    const mutedNow = useRef(muted);
+    // The server renders sound on; the device's choice follows at once.
+    const muted = useSyncExternalStore(
+        boardMute.subscribe,
+        boardMute.get,
+        () => false,
+    );
 
     useEffect(() => forceLightTheme(), []);
 
@@ -249,7 +253,7 @@ export function BoardScreen({
                     mounted = ready;
                     stage.current = ready;
                     // The stage mounts after the page: silent from its start.
-                    ready.setMuted(mutedNow.current);
+                    ready.setMuted(boardMute.get());
                     setStageState('ready');
                 })
                 .catch(() => {
@@ -277,18 +281,12 @@ export function BoardScreen({
         pictures,
     ]);
 
-    // A toggle while the stage is still loading reaches it through the ref.
+    // A toggle while the stage is loading is applied once it is ready.
     useEffect(() => {
-        mutedNow.current = muted;
         stage.current?.setMuted(muted);
     }, [muted, stageState]);
 
-    const toggleMuted = () => {
-        const next = !muted;
-
-        setMuted(next);
-        writeMuted(deviceStorage(), next);
-    };
+    const toggleMuted = () => boardMute.set(!muted);
 
     // The link to the phone: Echo loads on this page only. A game that
     // was already over when the page opened has no channel to join, and a

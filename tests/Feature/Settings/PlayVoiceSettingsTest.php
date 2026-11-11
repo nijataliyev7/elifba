@@ -83,13 +83,14 @@ it('lets a parent choose for the home board, and sends a guest to log in', funct
 it('gives the board the praise and retry clips, and whether it says prompts', function (): void {
     $clips = Voice::made($this->app);
     $praise = array_map($clips->url(...), $clips->praise());
-    $retry = $clips->url($clips->retry());
+    $retry = array_map($clips->url(...), $clips->retry());
 
     $this->actingAs($this->teacher)->get(route('games.board', Games::start($this->class)))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('voice', ['prompt' => true, 'praise' => $praise, 'retry' => [$retry]]));
+            ->where('voice', ['prompt' => true, 'praise' => $praise, 'retry' => $retry]));
 
-    expect($praise)->toHaveCount(4)->each->toStartWith(url('/content/voice/'));
+    expect($praise)->toHaveCount(11)->each->toStartWith(url('/content/voice/'))
+        ->and($retry)->toHaveCount(6)->each->toStartWith(url('/content/voice/'));
 
     $this->teacher->forceFill(['board_voice' => ['prompt' => false, 'praise' => false]])->save();
 
@@ -115,5 +116,5 @@ it('follows the game\'s owner on a guest board too', function (): void {
 
     expect(BoardProps::of($game)['voice'])
         ->toMatchArray(['prompt' => false])
-        ->and(BoardProps::of($game)['voice']['praise'])->toHaveCount(4);
+        ->and(BoardProps::of($game)['voice']['praise'])->toHaveCount(11);
 });

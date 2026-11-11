@@ -35,7 +35,7 @@ final readonly class BoardVoice
         return [
             'prompt' => $choice->prompt,
             'praise' => $choice->praise ? $urls($this->clips->praise()) : [],
-            'retry' => $choice->praise ? $urls([$this->clips->retry()]) : [],
+            'retry' => $choice->praise ? $urls($this->clips->retry()) : [],
         ];
     }
 }
