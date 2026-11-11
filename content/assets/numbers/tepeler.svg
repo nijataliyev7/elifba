@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90">
+  <!-- The numbers pack's backdrop: soft rolling hills under a dawn sky, with nothing on them to count (no cloud, star, flower, tree or bird: a child counts the pictures on the tiles). Elifba own art, MIT. -->
+  <!-- 16:9 and low contrast so tiles stay readable: the colours of ADR 014's guide mixed with white, no outline, light from the top left; the hills stay in the bottom fifth (y 70–90). -->
+  <defs>
+    <linearGradient id="tepeler_fade1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EEFA"/><stop offset="0.55" stop-color="#FFF8F2"/><stop offset="0.85" stop-color="#FFFFFF"/></linearGradient>
+    <radialGradient id="tepeler_glow2" cx="0.06" cy="0" r="0.6"><stop offset="0" stop-color="#FFFDE5" stop-opacity="0.85"/><stop offset="1" stop-color="#FFFDE5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="tepeler_purple3" cx="0.3" cy="0.1" r="1"><stop stop-color="#F0ECF9"/><stop offset="0.5" stop-color="#ECE8F4"/><stop offset="1" stop-color="#E8E2F3"/></radialGradient>
+    <radialGradient id="tepeler_leaf4" cx="0.3" cy="0.0" r="1"><stop stop-color="#F3FFDD"/><stop offset="0.5" stop-color="#E6F2D9"/><stop offset="1" stop-color="#DEE9C9"/></radialGradient>
+    <radialGradient id="tepeler_leaf5" cx="0.3" cy="0.0" r="1"><stop stop-color="#EEFFCD"/><stop offset="0.5" stop-color="#D9EBC6"/><stop offset="1" stop-color="#CDDEAD"/></radialGradient>
+  </defs>
+  <rect width="160" height="90" fill="url(#tepeler_fade1)"/>
+  <rect width="160" height="90" fill="url(#tepeler_glow2)"/>
+  <path d="M0,74 C20,70 40,69.4 60,72 C80,74.6 100,73 120,70 C136,67.8 150,68.6 160,70 L160,90 L0,90 Z" fill="url(#tepeler_purple3)"/>
+  <path d="M0,80 C22,76.4 44,76 70,78.6 C96,81.2 120,77.4 142,76.6 C150,76.4 156,77 160,77.6 L160,90 L0,90 Z" fill="url(#tepeler_leaf4)"/>
+  <path d="M0,85.4 C28,82.6 56,83 84,84.6 C110,86 136,83.4 160,83 L160,90 L0,90 Z" fill="url(#tepeler_leaf5)"/>
+</svg>

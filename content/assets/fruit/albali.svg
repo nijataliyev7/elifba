@@ -1,17 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- albalı: three dark sour cherries on a twig. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M14,14 C26,13 40,13 54,18" fill="none" stroke="#6A462F" stroke-width="3"/>
-    <path d="M14,14 C26,13 40,13 54,18" fill="none"/>
-    <path d="M23,43 C23,30 28,18 30,15" fill="none"/>
-    <path d="M38,48 C38,35 32,18 34,15" fill="none"/>
-    <path d="M52,40 C52,27 38,18 40,15" fill="none"/>
-    <path d="M36,15 Q42.3,26.1 55,27 Q48.7,15.9 36,15 Z" fill="#5C9E31"/><path d="M36,15 L51.2,24.6" fill="none" stroke-width="1.5"/>
-    <circle cx="22" cy="50" r="8" fill="#781E32"/>
-    <path d="M17.5,49 C18,46 20,45 22,44.5" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <circle cx="37" cy="55" r="8" fill="#781E32"/>
-    <path d="M32.5,54 C33,51 35,50 37,49.5" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <circle cx="51" cy="47" r="8" fill="#781E32"/>
-    <path d="M46.5,46 C47,43 49,42 51,41.5" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- albalı: three sour cherries hanging from a twig with a leaf. Elifba own art, MIT. -->
+<path d="M3 6.4C9 4.4 18 4 29 5.6" stroke="url(#albali_fill1)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.5 4.6C20.42 6.62 24.42 5.65 28.6 2.8C23.45 0.21 19.5 1.41 18.5 4.6Z" fill="url(#albali_fill2)"/>
+<path d="M18.5 4.6C20.42 6.62 24.42 5.65 28.6 2.8C23.45 0.21 19.5 1.41 18.5 4.6Z" fill="url(#albali_fill3)"/>
+<path d="M19.11 4.49Q23.43 3.01 27.39 3.02" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M15.2 4.8C11.4 8 8.2 13.6 7.6 18.2" stroke="url(#albali_fill4)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.2 4.8C15.7 8 15.8 16 16.2 20.6" stroke="url(#albali_fill5)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.2 4.8C19.9 8 24.2 12.6 24.6 17.2" stroke="url(#albali_fill6)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="24.6" cy="21.6" r="5.1" fill="url(#albali_fill7)"/>
+<circle cx="24.6" cy="21.6" r="5.1" fill="url(#albali_fill8)"/>
+<g filter="url(#albali_blur041)"><ellipse cx="22.66" cy="19.46" rx="1.63" ry="1.02" fill="#F8CAD2" fill-opacity="0.8" transform="rotate(-35 22.66 19.46)"/></g>
+<circle cx="7.6" cy="22.6" r="5.1" fill="url(#albali_fill9)"/>
+<circle cx="7.6" cy="22.6" r="5.1" fill="url(#albali_fill10)"/>
+<g filter="url(#albali_blur041)"><ellipse cx="5.66" cy="20.46" rx="1.63" ry="1.02" fill="#F8CAD2" fill-opacity="0.8" transform="rotate(-35 5.66 20.46)"/></g>
+<circle cx="16.2" cy="25" r="5.1" fill="url(#albali_fill11)"/>
+<circle cx="16.2" cy="25" r="5.1" fill="url(#albali_fill12)"/>
+<g filter="url(#albali_blur041)"><ellipse cx="14.26" cy="22.86" rx="1.63" ry="1.02" fill="#F8CAD2" fill-opacity="0.8" transform="rotate(-35 14.26 22.86)"/></g>
+<defs>
+<linearGradient id="albali_fill1" x1="3" y1="6" x2="29" y2="5.6" gradientUnits="userSpaceOnUse"><stop stop-color="#6E4B2A"/><stop offset="1" stop-color="#8B6A3E"/></linearGradient>
+<radialGradient id="albali_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="albali_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<linearGradient id="albali_fill4" x1="15" y1="5" x2="7.6" y2="22.6" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#7FA43A"/></linearGradient>
+<linearGradient id="albali_fill5" x1="15" y1="5" x2="16.2" y2="25" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#7FA43A"/></linearGradient>
+<linearGradient id="albali_fill6" x1="15" y1="5" x2="24.6" y2="21.6" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#7FA43A"/></linearGradient>
+<radialGradient id="albali_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E8506A"/><stop offset="0.5" stop-color="#A3173D"/><stop offset="1" stop-color="#5E0F2A"/></radialGradient>
+<radialGradient id="albali_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5E0F2A" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5E0F2A" stop-opacity="0"/></radialGradient>
+<filter id="albali_blur041" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.41"/></filter>
+<radialGradient id="albali_fill9" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E8506A"/><stop offset="0.5" stop-color="#A3173D"/><stop offset="1" stop-color="#5E0F2A"/></radialGradient>
+<radialGradient id="albali_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5E0F2A" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5E0F2A" stop-opacity="0"/></radialGradient>
+<radialGradient id="albali_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E8506A"/><stop offset="0.5" stop-color="#A3173D"/><stop offset="1" stop-color="#5E0F2A"/></radialGradient>
+<radialGradient id="albali_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5E0F2A" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5E0F2A" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

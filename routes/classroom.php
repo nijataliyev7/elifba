@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Http\Controllers\Classroom\ClassArchiveController;
 use App\Http\Controllers\Classroom\ClassController;
 use App\Http\Controllers\Classroom\LearnedLettersController;
@@ -17,8 +18,11 @@ use Illuminate\Support\Facades\Route;
  * (`->can()`). A new route with `{class}`, `{student}` or `{game}` must be
  * added to tests/Feature/Classroom/TeacherIsolationTest.php, which fails
  * otherwise.
+ *
+ * The teacher area (§1 "Accounts and roles", ADR 010): an account without
+ * the teacher role is refused, and a page visit leads to `/start`.
  */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Teacher)])->group(function () {
     Route::get('classes', [ClassController::class, 'index'])->name('classes.index');
     Route::post('classes', [ClassController::class, 'store'])->name('classes.store');
 

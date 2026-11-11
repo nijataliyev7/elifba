@@ -1,0 +1,220 @@
+pack,kind,word_or_figure,current_file,new_source,new_file,fluent_file,session,notes
+animals,word,pişik,openmoji/1F408.svg,fluent:1F408,fluent/1F408.svg,assets/Cat/Color/cat_color.svg,2,
+animals,word,it,openmoji/1F415.svg,fluent:1F415,fluent/1F415.svg,assets/Dog/Color/dog_color.svg,2,
+animals,word,at,openmoji/1F40E.svg,fluent:1F40E,fluent/1F40E.svg,assets/Horse/Color/horse_color.svg,2,
+animals,word+figure,inək,openmoji/1F404.svg,fluent:1F404,fluent/1F404.svg,assets/Cow/Color/cow_color.svg,2,
+animals,word,qoyun,openmoji/1F411.svg,fluent:1F411,fluent/1F411.svg,assets/Ewe/Color/ewe_color.svg,2,
+animals,word,keçi,openmoji/1F410.svg,fluent:1F410,fluent/1F410.svg,assets/Goat/Color/goat_color.svg,2,
+animals,word,toyuq,openmoji/1F414.svg,fluent:1F414,fluent/1F414.svg,assets/Chicken/Color/chicken_color.svg,2,
+animals,word,xoruz,openmoji/1F413.svg,fluent:1F413,fluent/1F413.svg,assets/Rooster/Color/rooster_color.svg,2,
+animals,word,cücə,openmoji/1F424.svg,fluent:1F424,fluent/1F424.svg,assets/Baby chick/Color/baby_chick_color.svg,2,
+animals,word,ördək,openmoji/1F986.svg,fluent:1F986,fluent/1F986.svg,assets/Duck/Color/duck_color.svg,2,
+animals,word,qaz,openmoji/1FABF.svg,fluent:1FABF,fluent/1FABF.svg,assets/Goose/Color/goose_color.svg,2,
+animals,word+figure,dovşan,openmoji/1F407.svg,fluent:1F407,fluent/1F407.svg,assets/Rabbit/Color/rabbit_color.svg,2,
+animals,word,tülkü,openmoji/1F98A.svg,fluent:1F98A,fluent/1F98A.svg,assets/Fox/Color/fox_color.svg,2,"a fox face, as today"
+animals,word+figure,ayı,openmoji/1F43B.svg,fluent:1F43B,fluent/1F43B.svg,assets/Bear/Color/bear_color.svg,2,"a bear face, as today"
+animals,word,dələ,openmoji/1F43F.svg,fluent:1F43F,fluent/1F43F.svg,assets/Chipmunk/Color/chipmunk_color.svg,2,
+animals,word,kirpi,openmoji/1F994.svg,fluent:1F994,fluent/1F994.svg,assets/Hedgehog/Color/hedgehog_color.svg,2,
+animals,word+figure,şir,openmoji/1F981.svg,fluent:1F981,fluent/1F981.svg,assets/Lion/Color/lion_color.svg,2,"a lion face, as today"
+animals,word+figure,pələng,openmoji/1F405.svg,fluent:1F405,fluent/1F405.svg,assets/Tiger/Color/tiger_color.svg,2,
+animals,word+figure,fil,openmoji/1F418.svg,fluent:1F418,fluent/1F418.svg,assets/Elephant/Color/elephant_color.svg,2,
+animals,word+figure,meymun,openmoji/1F412.svg,fluent:1F412,fluent/1F412.svg,assets/Monkey/Color/monkey_color.svg,2,
+animals,word+figure,zürafə,openmoji/1F992.svg,fluent:1F992,fluent/1F992.svg,assets/Giraffe/Color/giraffe_color.svg,2,
+animals,word+figure,zebra,openmoji/1F993.svg,fluent:1F993,fluent/1F993.svg,assets/Zebra/Color/zebra_color.svg,2,
+animals,word,kərgədan,openmoji/1F98F.svg,fluent:1F98F,fluent/1F98F.svg,assets/Rhinoceros/Color/rhinoceros_color.svg,2,
+animals,word+figure,dəvə,openmoji/1F42A.svg,fluent:1F42A,fluent/1F42A.svg,assets/Camel/Color/camel_color.svg,2,
+animals,word,dəvəquşu,animals/devequsu.svg,own,animals/devequsu.svg,,2,no ostrich emoji
+animals,word,ceyran,animals/ceyran.svg,own,animals/ceyran.svg,,2,no gazelle emoji (1F98C deer has antlers)
+animals,word+figure,tısbağa,openmoji/1F422.svg,fluent:1F422,fluent/1F422.svg,assets/Turtle/Color/turtle_color.svg,2,
+animals,word,qurbağa,openmoji/1F438.svg,fluent:1F438,fluent/1F438.svg,assets/Frog/Color/frog_color.svg,2,"a frog face, as today"
+animals,word,balıq,openmoji/1F41F.svg,fluent:1F41F,fluent/1F41F.svg,assets/Fish/Color/fish_color.svg,2,
+animals,word,kəpənək,openmoji/1F98B.svg,fluent:1F98B,fluent/1F98B.svg,assets/Butterfly/Color/butterfly_color.svg,2,
+animals,word,arı,openmoji/1F41D.svg,fluent:1F41D,fluent/1F41D.svg,assets/Honeybee/Color/honeybee_color.svg,2,
+animals,word,quş,openmoji/1F426.svg,fluent:1F426,fluent/1F426.svg,assets/Bird/Color/bird_color.svg,2,
+animals,word,göyərçin,openmoji/E009.svg,own,animals/goyercin.svg,,2,OpenMoji extra E009 today; 1F54A dove carries an olive branch (a peace sign) — draw a grey pigeon
+animals,word+figure,pinqvin,openmoji/1F427.svg,fluent:1F427,fluent/1F427.svg,assets/Penguin/Color/penguin_color.svg,2,
+animals,figure,sauropod,openmoji/1F995.svg,fluent:1F995,fluent/1F995.svg,assets/Sauropod/Color/sauropod_color.svg,2,figure only
+animals,figure,T-rex,openmoji/1F996.svg,fluent:1F996,fluent/1F996.svg,assets/T-rex/Color/t-rex_color.svg,2,figure only
+animals,figure,hippopotamus,openmoji/1F99B.svg,fluent:1F99B,fluent/1F99B.svg,assets/Hippopotamus/Color/hippopotamus_color.svg,2,figure only
+animals,figure,kangaroo,openmoji/1F998.svg,fluent:1F998,fluent/1F998.svg,assets/Kangaroo/Color/kangaroo_color.svg,2,figure only
+animals,figure,crocodile,openmoji/1F40A.svg,fluent:1F40A,fluent/1F40A.svg,assets/Crocodile/Color/crocodile_color.svg,2,figure only
+animals,figure,flamingo,openmoji/1F9A9.svg,fluent:1F9A9,fluent/1F9A9.svg,assets/Flamingo/Color/flamingo_color.svg,2,figure only
+animals,figure,parrot,openmoji/1F99C.svg,fluent:1F99C,fluent/1F99C.svg,assets/Parrot/Color/parrot_color.svg,2,figure only
+animals,backdrop,a meadow by a farm,animals/cemenlik.svg,own,animals/cemenlik.svg,,3,"the board backdrop session 3 drew in Fluent’s manner (no picture before it)"
+fruit,word+figure,alma,openmoji/1F34E.svg,fluent:1F34E,fluent/1F34E.svg,assets/Red apple/Color/red_apple_color.svg,2,
+fruit,word+figure,armud,openmoji/1F350.svg,fluent:1F350,fluent/1F350.svg,assets/Pear/Color/pear_color.svg,2,
+fruit,word+figure,üzüm,openmoji/1F347.svg,fluent:1F347,fluent/1F347.svg,assets/Grapes/Color/grapes_color.svg,2,
+fruit,word+figure,nar,openmoji/E0C4.svg,own,fruit/nar.svg,,2,OpenMoji extra E0C4 today; no pomegranate emoji — may share the drawing of symbols «nar»; also a figure
+fruit,word+figure,ərik,fruit/erik.svg,own,fruit/erik.svg,,2,also a figure
+fruit,word+figure,gilas,openmoji/1F352.svg,fluent:1F352,fluent/1F352.svg,assets/Cherries/Color/cherries_color.svg,2,
+fruit,word,albalı,fruit/albali.svg,own,fruit/albali.svg,,2,no emoji shows it
+fruit,word,heyva,fruit/heyva.svg,own,fruit/heyva.svg,,2,no emoji shows it
+fruit,word,əncir,fruit/encir.svg,own,fruit/encir.svg,,2,no emoji shows it
+fruit,word+figure,limon,openmoji/1F34B.svg,fluent:1F34B,fluent/1F34B.svg,assets/Lemon/Color/lemon_color.svg,2,
+fruit,word,portağal,openmoji/E0C0.svg,own,fruit/portagal.svg,,2,OpenMoji extra E0C0 today; Unicode has only 1F34A tangerine (mandarin)
+fruit,word+figure,mandarin,openmoji/1F34A.svg,fluent:1F34A,fluent/1F34A.svg,assets/Tangerine/Color/tangerine_color.svg,2,
+fruit,word+figure,qarpız,openmoji/1F349.svg,fluent:1F349,fluent/1F349.svg,assets/Watermelon/Color/watermelon_color.svg,2,
+fruit,word,yemiş,openmoji/1F348.svg,fluent:1F348,fluent/1F348.svg,assets/Melon/Color/melon_color.svg,2,
+fruit,word+figure,şaftalı,openmoji/1F351.svg,fluent:1F351,fluent/1F351.svg,assets/Peach/Color/peach_color.svg,2,
+fruit,word+figure,gavalı,fruit/gavali.svg,own,fruit/gavali.svg,,2,also a figure
+fruit,word+figure,çiyələk,openmoji/1F353.svg,fluent:1F353,fluent/1F353.svg,assets/Strawberry/Color/strawberry_color.svg,2,
+fruit,word,moruq,fruit/moruq.svg,own,fruit/moruq.svg,,2,no emoji shows it
+fruit,word,böyürtkən,fruit/boyurtken.svg,own,fruit/boyurtken.svg,,2,no emoji shows it
+fruit,word+figure,banan,openmoji/1F34C.svg,fluent:1F34C,fluent/1F34C.svg,assets/Banana/Color/banana_color.svg,2,
+fruit,word+figure,ananas,openmoji/1F34D.svg,fluent:1F34D,fluent/1F34D.svg,assets/Pineapple/Color/pineapple_color.svg,2,
+fruit,word+figure,kivi,openmoji/1F95D.svg,fluent:1F95D,fluent/1F95D.svg,assets/Kiwi fruit/Color/kiwi_fruit_color.svg,2,
+fruit,word+figure,xurma,fruit/xurma.svg,own,fruit/xurma.svg,,2,also a figure
+fruit,word,zoğal,fruit/zogal.svg,own,fruit/zogal.svg,,2,no emoji shows it
+fruit,word,alça,fruit/alca.svg,own,fruit/alca.svg,,2,no emoji shows it
+fruit,word,əzgil,fruit/ezgil.svg,own,fruit/ezgil.svg,,2,no emoji shows it
+fruit,word,iydə,fruit/iyde.svg,own,fruit/iyde.svg,,2,no emoji shows it
+fruit,word,tut,fruit/tut.svg,own,fruit/tut.svg,,2,no emoji shows it
+fruit,word,qoz,fruit/qoz.svg,own,fruit/qoz.svg,,2,no emoji shows it
+fruit,word,fındıq,fruit/findiq.svg,own,fruit/findiq.svg,,2,no emoji shows it
+fruit,word,qarağat,fruit/qaragat.svg,own,fruit/qaragat.svg,,2,no emoji shows it
+fruit,word,feyxoa,fruit/feyxoa.svg,own,fruit/feyxoa.svg,,2,no emoji shows it
+fruit,word,avokado,openmoji/1F951.svg,fluent:1F951,fluent/1F951.svg,assets/Avocado/Color/avocado_color.svg,2,
+fruit,word,qreypfrut,fruit/qreypfrut.svg,own,fruit/qreypfrut.svg,,2,no emoji shows it
+fruit,backdrop,an orchard,fruit/bag.svg,own,fruit/bag.svg,,3,"the board backdrop session 3 drew in Fluent’s manner (no picture before it)"
+colors,word,qırmızı,colors/qirmizi.svg,own,colors/qirmizi.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,sarı,colors/sari.svg,own,colors/sari.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,yaşıl,colors/yasil.svg,own,colors/yasil.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,göy,colors/goy.svg,own,colors/goy.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,narıncı,colors/narinci.svg,own,colors/narinci.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,bənövşəyi,colors/benovseyi.svg,own,colors/benovseyi.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,çəhrayı,colors/cehrayi.svg,own,colors/cehrayi.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,qəhvəyi,colors/qehveyi.svg,own,colors/qehveyi.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,qara,colors/qara.svg,own,colors/qara.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,ağ,colors/ag.svg,own,colors/ag.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,word,boz,colors/boz.svg,own,colors/boz.svg,,2,"colour swatch (ADR 014 “Colour swatches”): Fluent’s circles shift hue, so own; balloons shares the file"
+colors,backdrop,a sky with clouds,colors/goy-uzu.svg,own,colors/goy-uzu.svg,,3,"the board backdrop session 3 drew in Fluent’s manner (no picture before it)"
+numbers,word,ulduz,numbers/ulduz.svg,fluent:2B50,fluent/2B50.svg,assets/Star/Color/star_color.svg,2,today own art; the set’s star; delete numbers/ulduz.svg once unused
+numbers,word,ürək,numbers/urek.svg,fluent:2764,fluent/2764.svg,assets/Red heart/Color/red_heart_color.svg,2,today own art; the set’s red heart; delete numbers/urek.svg once unused
+numbers,word,top,numbers/top.svg,fluent:26BD,fluent/26BD.svg,assets/Soccer ball/Color/soccer_ball_color.svg,2,"today own art (a beach ball); the set’s ball, as balloons «top»; delete numbers/top.svg once unused"
+numbers,word,gül,numbers/gul.svg,fluent:1F33C,fluent/1F33C.svg,assets/Blossom/Color/blossom_color.svg,2,"today own art; one blossom, easy to count; delete numbers/gul.svg once unused"
+numbers,word,balıq,numbers/baliq.svg,fluent:1F41F,fluent/1F41F.svg,assets/Fish/Color/fish_color.svg,2,"today own art; the set’s fish, as animals «balıq»; delete numbers/baliq.svg once unused"
+numbers,word,kəpənək,numbers/kepenek.svg,fluent:1F98B,fluent/1F98B.svg,assets/Butterfly/Color/butterfly_color.svg,2,"today own art; the set’s butterfly, as animals «kəpənək»; delete numbers/kepenek.svg once unused"
+numbers,word,yarpaq,numbers/yarpaq.svg,own,numbers/yarpaq.svg,,2,"1F343 shows two leaves, wrong for counting — draw one leaf"
+numbers,word,göbələk,numbers/gobelek.svg,fluent:1F344,fluent/1F344.svg,assets/Mushroom/Color/mushroom_color.svg,2,today own art; one mushroom; delete numbers/gobelek.svg once unused
+numbers,word,bulud,numbers/bulud.svg,fluent:2601,fluent/2601.svg,assets/Cloud/Color/cloud_color.svg,2,today own art; one cloud; delete numbers/bulud.svg once unused; a light cloud: check it against the count band and the tile face
+numbers,word,şar,numbers/sar.svg,fluent:1F388,fluent/1F388.svg,assets/Balloon/Color/balloon_color.svg,2,"today own art; one balloon, as balloons «şar»; delete numbers/sar.svg once unused"
+numbers,backdrop,soft hills at dawn,numbers/tepeler.svg,own,numbers/tepeler.svg,,3,"the board backdrop session 3 drew in Fluent’s manner (no picture before it)"
+balloons,word,şar,openmoji/1F388.svg,fluent:1F388,fluent/1F388.svg,assets/Balloon/Color/balloon_color.svg,4,
+balloons,word,qırmızı,openmoji/1F534.svg,own,colors/qirmizi.svg,,4,today 1F534; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,sarı,openmoji/1F7E1.svg,own,colors/sari.svg,,4,today 1F7E1; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,yaşıl,openmoji/1F7E2.svg,own,colors/yasil.svg,,4,today 1F7E2; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,mavi,openmoji/1F535.svg,own,balloons/mavi.svg,,4,"today 1F535; colour swatch, lighter than «göy» (ADR 014 “Colour swatches”); only balloons has «mavi»"
+balloons,word,ağ,openmoji/26AA.svg,own,colors/ag.svg,,4,today 26AA; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,qara,openmoji/26AB.svg,own,colors/qara.svg,,4,today 26AB; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,göy,balloons/goy.svg,own,colors/goy.svg,,4,colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,narıncı,openmoji/1F7E0.svg,own,colors/narinci.svg,,4,today 1F7E0; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,çəhrayı,balloons/cehrayi.svg,own,colors/cehrayi.svg,,4,colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,bənövşəyi,openmoji/1F7E3.svg,own,colors/benovseyi.svg,,4,today 1F7E3; colour swatch shared with the colors pack (ADR 014 “Colour swatches”)
+balloons,word,top,openmoji/26BD.svg,fluent:26BD,fluent/26BD.svg,assets/Soccer ball/Color/soccer_ball_color.svg,4,
+balloons,word,kukla,balloons/kukla.svg,own,balloons/kukla.svg,,4,no doll emoji (1FA86 is nesting dolls)
+balloons,word,oyuncaq,openmoji/1F9F8.svg,fluent:1F9F8,fluent/1F9F8.svg,assets/Teddy bear/Color/teddy_bear_color.svg,4,
+balloons,word,maşın,openmoji/1F697.svg,fluent:1F697,fluent/1F697.svg,assets/Automobile/Color/automobile_color.svg,4,
+balloons,word,kubik,balloons/kubik.svg,own,balloons/kubik.svg,,4,no toy-block emoji
+balloons,word,piramida,balloons/piramida.svg,own,balloons/piramida.svg,,4,no stacking-toy emoji
+balloons,word,baraban,openmoji/1F941.svg,fluent:1F941,fluent/1F941.svg,assets/Drum/Color/drum_color.svg,4,
+balloons,word,uçurtma,openmoji/1FA81.svg,fluent:1FA81,fluent/1FA81.svg,assets/Kite/Color/kite_color.svg,4,
+balloons,word,yelləncək,balloons/yellencek.svg,own,balloons/yellencek.svg,,4,no swing emoji
+balloons,word,bayram,openmoji/1F389.svg,fluent:1F389,fluent/1F389.svg,assets/Party popper/Color/party_popper_color.svg,4,
+balloons,word,tort,openmoji/1F382.svg,fluent:1F382,fluent/1F382.svg,assets/Birthday cake/Color/birthday_cake_color.svg,4,
+balloons,word,şam,openmoji/1F56F.svg,fluent:1F56F,fluent/1F56F.svg,assets/Candle/Color/candle_color.svg,4,
+balloons,word,hədiyyə,openmoji/1F381.svg,fluent:1F381,fluent/1F381.svg,assets/Wrapped gift/Color/wrapped_gift_color.svg,4,
+balloons,word,qutu,openmoji/1F4E6.svg,fluent:1F4E6,fluent/1F4E6.svg,assets/Package/Color/package_color.svg,4,
+balloons,word,lent,openmoji/1F380.svg,fluent:1F380,fluent/1F380.svg,assets/Ribbon/Color/ribbon_color.svg,4,
+balloons,word,konfet,openmoji/1F36C.svg,fluent:1F36C,fluent/1F36C.svg,assets/Candy/Color/candy_color.svg,4,
+balloons,word,papaq,balloons/papaq.svg,own,balloons/papaq.svg,,4,party hat worn on a face; 1F973 adds a horn
+balloons,word,fişəng,openmoji/1F386.svg,fluent:1F386,fluent/1F386.svg,assets/Fireworks/Color/fireworks_color.svg,4,
+train,word,ana,openmoji/1F469-200D-1F467.svg,own,train/ana.svg,,4,today 1F469-200D-1F467; Fluent has no family emoji — draw a woman with a girl
+train,word,ata,openmoji/1F468-200D-1F466.svg,own,train/ata.svg,,4,today 1F468-200D-1F466; Fluent has no family emoji — draw a man with a boy
+train,word,nənə,openmoji/1F475.svg,fluent:1F475,fluent/1F475.svg,assets/Old woman/Default/Color/old_woman_color_default.svg,4,"the Default (yellow) skin variant, as OpenMoji’s default today"
+train,word,baba,openmoji/1F474.svg,fluent:1F474,fluent/1F474.svg,assets/Old man/Default/Color/old_man_color_default.svg,4,"the Default (yellow) skin variant, as OpenMoji’s default today"
+train,word,bacı,train/baci.svg,own,train/baci.svg,,4,no emoji of two sisters
+train,word,qardaş,train/qardas.svg,own,train/qardas.svg,,4,no emoji of two brothers
+train,word,ev,openmoji/1F3E0.svg,fluent:1F3E0,fluent/1F3E0.svg,assets/House/Color/house_color.svg,4,
+train,word,qapı,openmoji/1F6AA.svg,fluent:1F6AA,fluent/1F6AA.svg,assets/Door/Color/door_color.svg,4,
+train,word,masa,train/masa.svg,own,train/masa.svg,,4,no table emoji
+train,word,çarpayı,openmoji/1F6CF.svg,fluent:1F6CF,fluent/1F6CF.svg,assets/Bed/Color/bed_color.svg,4,
+train,word,otaq,train/otaq.svg,own,train/otaq.svg,,4,no room emoji
+train,word,pəncərə,openmoji/1FA9F.svg,fluent:1FA9F,fluent/1FA9F.svg,assets/Window/Color/window_color.svg,4,
+train,word,məktəb,openmoji/1F3EB.svg,fluent:1F3EB,fluent/1F3EB.svg,assets/School/Color/school_color.svg,4,
+train,word,sinif,train/sinif.svg,own,train/sinif.svg,,4,no classroom emoji (1F3EB is «məktəb»)
+train,word,kitab,openmoji/1F4D6.svg,fluent:1F4D6,fluent/1F4D6.svg,assets/Open book/Color/open_book_color.svg,4,
+train,word,dəftər,openmoji/1F4D2.svg,fluent:1F4D2,fluent/1F4D2.svg,assets/Ledger/Color/ledger_color.svg,4,
+train,word,qələm,openmoji/270F.svg,fluent:270F,fluent/270F.svg,assets/Pencil/Color/pencil_color.svg,4,
+train,word,çanta,openmoji/1F392.svg,fluent:1F392,fluent/1F392.svg,assets/Backpack/Color/backpack_color.svg,4,
+train,word,lövhə,train/lovhe.svg,own,train/lovhe.svg,,4,no chalkboard emoji
+train,word,müəllim,openmoji/1F9D1-200D-1F3EB.svg,fluent:1F9D1-200D-1F3EB,fluent/1F9D1-200D-1F3EB.svg,assets/Teacher/Default/Color/teacher_color_default.svg,4,"the Default (yellow) skin variant, as OpenMoji’s default today"
+train,word,qatar,openmoji/1F686.svg,fluent:1F686,fluent/1F686.svg,assets/Train/Color/train_color.svg,4,
+train,word,lokomotiv,openmoji/1F682.svg,fluent:1F682,fluent/1F682.svg,assets/Locomotive/Color/locomotive_color.svg,4,
+train,word,vaqon,openmoji/1F683.svg,fluent:1F683,fluent/1F683.svg,assets/Railway car/Color/railway_car_color.svg,4,
+train,word,rels,openmoji/1F6E4.svg,fluent:1F6E4,fluent/1F6E4.svg,assets/Railway track/Color/railway_track_color.svg,4,
+train,word,yol,openmoji/1F6E3.svg,fluent:1F6E3,fluent/1F6E3.svg,assets/Motorway/Color/motorway_color.svg,4,
+train,word,bilet,openmoji/1F3AB.svg,fluent:1F3AB,fluent/1F3AB.svg,assets/Ticket/Color/ticket_color.svg,4,
+train,word,vağzal,train/vagzal.svg,own,train/vagzal.svg,,4,no station-building emoji (1F689 is «stansiya»)
+train,word,stansiya,openmoji/1F689.svg,fluent:1F689,fluent/1F689.svg,assets/Station/Color/station_color.svg,4,
+train,word,körpü,train/korpu.svg,own,train/korpu.svg,,4,1F309 is a city bridge at night
+train,word,tunel,train/tunel.svg,own,train/tunel.svg,,4,no tunnel emoji
+train,word,sərnişin,train/sernisin.svg,own,train/sernisin.svg,,4,no traveller emoji
+train,word,maşinist,train/masinist.svg,own,train/masinist.svg,,4,no train-driver emoji
+train,word,çamadan,openmoji/1F9F3.svg,fluent:1F9F3,fluent/1F9F3.svg,assets/Luggage/Color/luggage_color.svg,4,
+symbols,word,bayraq,symbols/bayraq.svg,own,symbols/bayraq.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,ulduz,symbols/ulduz.svg,own,symbols/ulduz.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,aypara,symbols/aypara.svg,own,symbols/aypara.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,buta,symbols/buta.svg,own,symbols/buta.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,nar,symbols/nar.svg,own,symbols/nar.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,xalça,symbols/xalca.svg,own,symbols/xalca.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,kəlağayı,symbols/kelagayi.svg,own,symbols/kelagayi.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,xarıbülbül,symbols/xaribulbul.svg,own,symbols/xaribulbul.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,tar,symbols/tar.svg,own,symbols/tar.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,kamança,symbols/kamanca.svg,own,symbols/kamanca.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,saz,symbols/saz.svg,own,symbols/saz.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,balaban,symbols/balaban.svg,own,symbols/balaban.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,qaval,symbols/qaval.svg,own,symbols/qaval.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,Novruz,symbols/novruz.svg,own,symbols/novruz.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,səməni,symbols/semeni.svg,own,symbols/semeni.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,tonqal,symbols/tonqal.svg,own,symbols/tonqal.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,yumurta,symbols/yumurta.svg,own,symbols/yumurta.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,şəkərbura,symbols/sekerbura.svg,own,symbols/sekerbura.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,paxlava,symbols/paxlava.svg,own,symbols/paxlava.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,qoğal,symbols/qogal.svg,own,symbols/qogal.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,sini,symbols/sini.svg,own,symbols/sini.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,samovar,symbols/samovar.svg,own,symbols/samovar.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,armudu,symbols/armudu.svg,own,symbols/armudu.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,çay,symbols/cay.svg,own,symbols/cay.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,papaq,symbols/papaq.svg,own,symbols/papaq.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,çuxa,symbols/cuxa.svg,own,symbols/cuxa.svg,,4,"national or cultural symbol, own art in the new style"
+symbols,word,araxçın,symbols/araxcin.svg,own,symbols/araxcin.svg,,4,"national or cultural symbol, own art in the new style"
+cities,word,Bakı,cities/baki.svg,own,cities/baki.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Gəncə,cities/gence.svg,own,cities/gence.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Sumqayıt,cities/sumqayit.svg,own,cities/sumqayit.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Mingəçevir,cities/mingecevir.svg,own,cities/mingecevir.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Şəki,cities/seki.svg,own,cities/seki.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Şuşa,cities/susa.svg,own,cities/susa.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Lənkəran,cities/lenkeran.svg,own,cities/lenkeran.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Naxçıvan,cities/naxcivan.svg,own,cities/naxcivan.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Quba,cities/quba.svg,own,cities/quba.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Qəbələ,cities/qebele.svg,own,cities/qebele.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Qax,cities/qax.svg,own,cities/qax.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Zaqatala,cities/zaqatala.svg,own,cities/zaqatala.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,İsmayıllı,cities/ismayilli.svg,own,cities/ismayilli.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Şamaxı,cities/samaxi.svg,own,cities/samaxi.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Astara,cities/astara.svg,own,cities/astara.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Masallı,cities/masalli.svg,own,cities/masalli.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Lerik,cities/lerik.svg,own,cities/lerik.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Qusar,cities/qusar.svg,own,cities/qusar.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Xaçmaz,cities/xacmaz.svg,own,cities/xacmaz.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Şirvan,cities/sirvan.svg,own,cities/sirvan.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Göygöl,cities/goygol.svg,own,cities/goygol.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Tovuz,cities/tovuz.svg,own,cities/tovuz.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Qazax,cities/qazax.svg,own,cities/qazax.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Ordubad,cities/ordubad.svg,own,cities/ordubad.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Ağdam,cities/agdam.svg,own,cities/agdam.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Füzuli,cities/fuzuli.svg,own,cities/fuzuli.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Laçın,cities/lacin.svg,own,cities/lacin.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Kəlbəcər,cities/kelbecer.svg,own,cities/kelbecer.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,word,Xızı,cities/xizi.svg,own,cities/xizi.svg,,5,map generated by scripts/city-maps/generate.php; restyle the generator
+cities,backdrop,qiz-qalasi,cities/qiz-qalasi.svg,own,cities/qiz-qalasi.svg,,5,16:9 backdrop (§8 “Backdrops”); redraw in the new style

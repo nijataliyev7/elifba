@@ -23,15 +23,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * §1, §2, §5). The snapshot never changes; `progress`, `misses` and the
  * result columns are written only by `RecordBoardEvents`. A solved round
  * carries its points, the student it was credited to (null for the whole
- * class) and its Baku `played_on` and Monday `week_start`.
+ * class, and always null in a home game, whose child is `child_id`) and its
+ * Baku `played_on` and Monday `week_start`.
  *
- * @phpstan-import-type RoundPayload from RoundData
+ * @phpstan-import-type StoredRoundPayload from RoundData
  *
  * @property string $id
  * @property string $game_session_id
- * @property string $school_class_id copied from the game, for ranking queries
+ * @property string|null $school_class_id copied from the game, for ranking queries; null at home
+ * @property string|null $child_id copied from a home game, for a child's stars (§5)
  * @property int $position 0-based
- * @property RoundPayload $payload RoundData without id, index and total
+ * @property StoredRoundPayload $payload RoundData without id, index and total (`prompt.count` missing before R5)
  * @property list<string> $progress item ids hit correctly so far, in order
  * @property int $misses
  * @property CarbonImmutable|null $solved_at

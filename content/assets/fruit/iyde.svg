@@ -1,40 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- iydə: three oleaster fruits on a twig with silvery leaves. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M10,20 C24,16 44,14 62,18" fill="none" stroke="#6A462F" stroke-width="3"/>
-    <path d="M10,20 C24,16 44,14 62,18" fill="none"/>
-    <path d="M18,18 Q9.2,23.9 6,34 Q14.8,28.1 18,18 Z" fill="#D0CFCE"/><path d="M18,18 L8.4,30.8" fill="none" stroke-width="1.5"/>
-    <path d="M46,16 Q52.9,25.8 64,30 Q57.1,20.2 46,16 Z" fill="#D0CFCE"/><path d="M46,16 L60.4,27.2" fill="none" stroke-width="1.5"/>
-    <path d="M30,16 Q35.7,11.3 36,4 Q30.3,8.7 30,16 Z" fill="#D0CFCE"/><path d="M30,16 L34.8,6.4" fill="none" stroke-width="1.5"/>
-    <path d="M28,17 L24,34" fill="none"/>
-    <ellipse cx="24" cy="44" rx="7" ry="10" fill="#F4AA41"/>
-    <path d="M26,35 C31,38 31,50 25,54" fill="#E27022" stroke="none"/>
-    <ellipse cx="24" cy="44" rx="7" ry="10" fill="none"/>
-    <circle cx="21" cy="40" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="26" cy="42" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="22" cy="46" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="27" cy="48" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="23" cy="51" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="24" cy="37" r="0.8" fill="#FFF" stroke="none"/>
-    <path d="M37,17 L38,40" fill="none"/>
-    <ellipse cx="38" cy="50" rx="7" ry="10" fill="#F4AA41"/>
-    <path d="M40,41 C45,44 45,56 39,60" fill="#E27022" stroke="none"/>
-    <ellipse cx="38" cy="50" rx="7" ry="10" fill="none"/>
-    <circle cx="35" cy="46" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="40" cy="48" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="36" cy="52" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="41" cy="54" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="37" cy="57" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="38" cy="43" r="0.8" fill="#FFF" stroke="none"/>
-    <path d="M46,17 L51,31" fill="none"/>
-    <ellipse cx="51" cy="41" rx="7" ry="10" fill="#F4AA41"/>
-    <path d="M53,32 C58,35 58,47 52,51" fill="#E27022" stroke="none"/>
-    <ellipse cx="51" cy="41" rx="7" ry="10" fill="none"/>
-    <circle cx="48" cy="37" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="53" cy="39" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="49" cy="43" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="54" cy="45" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="50" cy="48" r="0.8" fill="#FFF" stroke="none"/>
-    <circle cx="51" cy="34" r="0.8" fill="#FFF" stroke="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- iydə: oleaster fruits hanging from a twig with silvery leaves. Elifba own art, MIT. -->
+<path d="M2.4 7.2C9 5.6 19 5 29.6 6" stroke="url(#iyde_fill1)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.8 6.4C7.01 4.63 5.05 2.9 1.8 2.2C3.05 5.28 5.09 6.91 6.8 6.4Z" fill="url(#iyde_fill2)"/>
+<path d="M6.8 6.4C7.01 4.63 5.05 2.9 1.8 2.2C3.05 5.28 5.09 6.91 6.8 6.4Z" fill="url(#iyde_fill3)"/>
+<path d="M6.5 6.15Q4.3 4.3 2.4 2.7" stroke="#EDF2E4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M14.6 5.6C15.69 4.54 15.19 2.92 13.2 1.6C12.47 3.88 13.09 5.46 14.6 5.6Z" fill="url(#iyde_fill4)"/>
+<path d="M14.6 5.6C15.69 4.54 15.19 2.92 13.2 1.6C12.47 3.88 13.09 5.46 14.6 5.6Z" fill="url(#iyde_fill5)"/>
+<path d="M14.52 5.36Q13.9 3.6 13.37 2.08" stroke="#EDF2E4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M22 5.6C23.74 6.33 26.41 4.86 28.6 1.8C24.85 2.16 22.24 3.73 22 5.6Z" fill="url(#iyde_fill6)"/>
+<path d="M22 5.6C23.74 6.33 26.41 4.86 28.6 1.8C24.85 2.16 22.24 3.73 22 5.6Z" fill="url(#iyde_fill7)"/>
+<path d="M22.4 5.37Q25.3 3.7 27.81 2.26" stroke="#EDF2E4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M10 6.4Q8.4 9 8.4 13.6" stroke="url(#iyde_fill8)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 6.4Q16 9 16 16.8" stroke="url(#iyde_fill9)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 6.4Q23.6 9 23.6 13.8" stroke="url(#iyde_fill10)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="8.4" cy="19.6" rx="4.3" ry="6.4" transform="rotate(-8 8.4 19.6)" fill="url(#iyde_fill11)"/>
+<ellipse cx="8.4" cy="19.6" rx="4.3" ry="6.4" transform="rotate(-8 8.4 19.6)" fill="url(#iyde_fill12)"/>
+<circle cx="7" cy="18" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="9.6" cy="17" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="8.8" cy="20" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="6.8" cy="21.6" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="10" cy="22" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="8.2" cy="23.8" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<g filter="url(#iyde_blur035)"><ellipse cx="6.8" cy="16.6" rx="0.9" ry="1.6" fill="#FFF3D6" fill-opacity="0.7" transform="rotate(2 6.8 16.6)"/></g>
+<ellipse cx="16" cy="22.8" rx="4.3" ry="6.4" fill="url(#iyde_fill13)"/>
+<ellipse cx="16" cy="22.8" rx="4.3" ry="6.4" fill="url(#iyde_fill14)"/>
+<circle cx="14.6" cy="21.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="17.2" cy="20.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="16.4" cy="23.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="14.4" cy="24.8" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="17.6" cy="25.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="15.8" cy="27" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<g filter="url(#iyde_blur035)"><ellipse cx="14.4" cy="19.8" rx="0.9" ry="1.6" fill="#FFF3D6" fill-opacity="0.7" transform="rotate(10 14.4 19.8)"/></g>
+<ellipse cx="23.6" cy="19.8" rx="4.3" ry="6.4" transform="rotate(8 23.6 19.8)" fill="url(#iyde_fill15)"/>
+<ellipse cx="23.6" cy="19.8" rx="4.3" ry="6.4" transform="rotate(8 23.6 19.8)" fill="url(#iyde_fill16)"/>
+<circle cx="22.2" cy="18.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="24.8" cy="17.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="24" cy="20.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="22" cy="21.8" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="25.2" cy="22.2" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<circle cx="23.4" cy="24" r="0.45" fill="#FFF3D6" fill-opacity="0.85"/>
+<g filter="url(#iyde_blur035)"><ellipse cx="22" cy="16.8" rx="0.9" ry="1.6" fill="#FFF3D6" fill-opacity="0.7" transform="rotate(18 22 16.8)"/></g>
+<defs>
+<linearGradient id="iyde_fill1" x1="2.4" y1="7.2" x2="29.6" y2="6" gradientUnits="userSpaceOnUse"><stop stop-color="#6E5E48"/><stop offset="1" stop-color="#9E8A6E"/></linearGradient>
+<radialGradient id="iyde_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E3EBD5"/><stop offset="0.5" stop-color="#AFC09A"/><stop offset="1" stop-color="#768A6A"/></radialGradient>
+<radialGradient id="iyde_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#768A6A" stop-opacity="0.55"/><stop offset="0.9" stop-color="#768A6A" stop-opacity="0"/></radialGradient>
+<radialGradient id="iyde_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E3EBD5"/><stop offset="0.5" stop-color="#AFC09A"/><stop offset="1" stop-color="#768A6A"/></radialGradient>
+<radialGradient id="iyde_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#768A6A" stop-opacity="0.55"/><stop offset="0.9" stop-color="#768A6A" stop-opacity="0"/></radialGradient>
+<radialGradient id="iyde_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E3EBD5"/><stop offset="0.5" stop-color="#AFC09A"/><stop offset="1" stop-color="#768A6A"/></radialGradient>
+<radialGradient id="iyde_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#768A6A" stop-opacity="0.55"/><stop offset="0.9" stop-color="#768A6A" stop-opacity="0"/></radialGradient>
+<linearGradient id="iyde_fill8" x1="8.4" y1="6.4" x2="8.4" y2="13.6" gradientUnits="userSpaceOnUse"><stop stop-color="#6E5E48"/><stop offset="1" stop-color="#9E8A6E"/></linearGradient>
+<linearGradient id="iyde_fill9" x1="16" y1="6.4" x2="16" y2="16.8" gradientUnits="userSpaceOnUse"><stop stop-color="#6E5E48"/><stop offset="1" stop-color="#9E8A6E"/></linearGradient>
+<linearGradient id="iyde_fill10" x1="23.6" y1="6.4" x2="23.6" y2="13.8" gradientUnits="userSpaceOnUse"><stop stop-color="#6E5E48"/><stop offset="1" stop-color="#9E8A6E"/></linearGradient>
+<radialGradient id="iyde_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFD27E"/><stop offset="0.5" stop-color="#F0A04A"/><stop offset="1" stop-color="#B5642C"/></radialGradient>
+<radialGradient id="iyde_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B5642C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B5642C" stop-opacity="0"/></radialGradient>
+<filter id="iyde_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+<radialGradient id="iyde_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFD27E"/><stop offset="0.5" stop-color="#F0A04A"/><stop offset="1" stop-color="#B5642C"/></radialGradient>
+<radialGradient id="iyde_fill14" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B5642C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B5642C" stop-opacity="0"/></radialGradient>
+<radialGradient id="iyde_fill15" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFD27E"/><stop offset="0.5" stop-color="#F0A04A"/><stop offset="1" stop-color="#B5642C"/></radialGradient>
+<radialGradient id="iyde_fill16" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B5642C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B5642C" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

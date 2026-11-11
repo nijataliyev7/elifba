@@ -26,8 +26,17 @@ export const Mechanic = z.enum([
     'build_syllable',
     'build_word',
     'build_sentence',
+    'count',
 ]);
-export const Unit = z.enum(['letter', 'syllable', 'word', 'sentence']);
+/** What an item is (ADR 012): the four read units, then pictures and numbers (R5). */
+export const Unit = z.enum([
+    'letter',
+    'syllable',
+    'word',
+    'sentence',
+    'picture',
+    'number',
+]);
 export const Effect = z.enum(['burst', 'sparkle']);
 export const SessionStatus = z.enum([
     'live',
@@ -48,6 +57,8 @@ export const Round = z.strictObject({
         text: z.string(),
         show: nullableText,
         image: nullableText,
+        /** How many times the board draws `image`: N in a `count` round, else null (R5). */
+        count: z.int().min(1).max(10).nullable(),
         audio: nullableText,
         tail: nullableText,
     }),

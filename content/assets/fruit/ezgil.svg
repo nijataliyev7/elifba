@@ -1,12 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- əzgil: a brown medlar with its open five-pointed crown. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M46,22 Q57.6,20.8 62,10 Q50.4,11.2 46,22 Z" fill="#5C9E31"/><path d="M46,22 L58.8,12.4" fill="none" stroke-width="1.5"/>
-    <circle cx="36" cy="42" r="22" fill="#A57939"/>
-    <path d="M50.1,25.1 A22,22 0 0 1 39.8,63.7 A57.2,57.2 0 0 0 50.1,25.1 Z" fill="#6A462F" stroke="none"/>
-    <circle cx="36" cy="42" r="22" fill="none"/>
-    <path d="M22,26 L14,19 L27,21 L29,11 L36,20 L43,11 L45,21 L58,19 L50,26 C45,23 41,22 36,22 C31,22 27,23 22,26 Z" fill="#6A462F"/>
-    <ellipse cx="36" cy="26" rx="9" ry="4" fill="#6A462F"/>
-    <path d="M19,44 C19,38 21,34 25,31" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- əzgil: a medlar with its open crown of sepals. Elifba own art, MIT. -->
+<path d="M12.88 9C13.04 7.28 11.21 5.91 8.21 5.7C9.41 8.46 11.32 9.73 12.88 9Z" fill="url(#ezgil_fill1)"/>
+<path d="M14.48 8.51C15.52 7.1 14.67 4.82 12.2 2.86C11.78 5.98 12.75 8.22 14.48 8.51Z" fill="url(#ezgil_fill2)"/>
+<path d="M17.52 8.51C19.25 8.22 20.22 5.98 19.8 2.86C17.33 4.82 16.48 7.1 17.52 8.51Z" fill="url(#ezgil_fill3)"/>
+<path d="M19.12 9C20.68 9.73 22.59 8.46 23.79 5.7C20.79 5.91 18.96 7.28 19.12 9Z" fill="url(#ezgil_fill4)"/>
+<path d="M16 8.4C17.5 7.47 17.56 4.99 16 2.2C14.44 4.99 14.51 7.47 16 8.4Z" fill="url(#ezgil_fill5)"/>
+<path d="M16 7.6C23.2 7.6 29 12.4 29 19.2C29 25.8 23.4 30.4 16 30.4C8.6 30.4 3 25.8 3 19.2C3 12.4 8.8 7.6 16 7.6Z" fill="url(#ezgil_fill6)"/>
+<path d="M16 7.6C23.2 7.6 29 12.4 29 19.2C29 25.8 23.4 30.4 16 30.4C8.6 30.4 3 25.8 3 19.2C3 12.4 8.8 7.6 16 7.6Z" fill="url(#ezgil_fill7)"/>
+<ellipse cx="16" cy="9.9" rx="5.8" ry="2.3" fill="url(#ezgil_fill8)"/>
+<ellipse cx="16" cy="10.4" rx="2.8" ry="0.9" fill="#E8C9A0" opacity="0.6"/>
+<g filter="url(#ezgil_blur06)"><ellipse cx="9.4" cy="16.4" rx="2.8" ry="1.8" fill="#E9D5C4" fill-opacity="0.7" transform="rotate(-35 9.4 16.4)"/></g>
+<defs>
+<radialGradient id="ezgil_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A99A6A"/><stop offset="0.5" stop-color="#76663F"/><stop offset="1" stop-color="#4D3F26"/></radialGradient>
+<radialGradient id="ezgil_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A99A6A"/><stop offset="0.5" stop-color="#76663F"/><stop offset="1" stop-color="#4D3F26"/></radialGradient>
+<radialGradient id="ezgil_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A99A6A"/><stop offset="0.5" stop-color="#76663F"/><stop offset="1" stop-color="#4D3F26"/></radialGradient>
+<radialGradient id="ezgil_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A99A6A"/><stop offset="0.5" stop-color="#76663F"/><stop offset="1" stop-color="#4D3F26"/></radialGradient>
+<radialGradient id="ezgil_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A99A6A"/><stop offset="0.5" stop-color="#76663F"/><stop offset="1" stop-color="#4D3F26"/></radialGradient>
+<radialGradient id="ezgil_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#C9966C"/><stop offset="0.5" stop-color="#9C6640"/><stop offset="1" stop-color="#653626"/></radialGradient>
+<radialGradient id="ezgil_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#653626" stop-opacity="0.7"/><stop offset="0.9" stop-color="#653626" stop-opacity="0"/></radialGradient>
+<radialGradient id="ezgil_fill8" cx="0.5" cy="0.6" r="0.6"><stop stop-color="#4D2A1E"/><stop offset="1" stop-color="#7A4A30"/></radialGradient>
+<filter id="ezgil_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+</defs>
 </svg>

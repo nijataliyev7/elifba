@@ -1,24 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- alça: three green cherry plums. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M37,20 Q49.3,20.3 56,10 Q43.7,9.7 37,20 Z" fill="#5C9E31"/><path d="M37,20 L52.2,12" fill="none" stroke-width="1.5"/>
-    <path d="M22,36 C22,31 24,28 27,26" fill="none"/>
-    <circle cx="22" cy="47" r="11" fill="#B1CC33"/>
-    <path d="M30.4,39.9 A11,11 0 0 1 23.9,57.8 A27.5,27.5 0 0 0 30.4,39.9 Z" fill="#5C9E31" stroke="none"/>
-    <circle cx="22" cy="47" r="11" fill="none"/>
-    <path d="M22,36 C18,43 18,51 21,57" fill="none" stroke-width="1.5"/>
-    <path d="M15,45 C15,42 16,40 18,39" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <path d="M48,35 C48,30 50,27 53,25" fill="none"/>
-    <circle cx="48" cy="46" r="11" fill="#B1CC33"/>
-    <path d="M56.4,38.9 A11,11 0 0 1 49.9,56.8 A27.5,27.5 0 0 0 56.4,38.9 Z" fill="#5C9E31" stroke="none"/>
-    <circle cx="48" cy="46" r="11" fill="none"/>
-    <path d="M48,35 C44,42 44,50 47,56" fill="none" stroke-width="1.5"/>
-    <path d="M41,44 C41,41 42,39 44,38" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <path d="M35,24 C35,19 37,16 40,14" fill="none"/>
-    <circle cx="35" cy="35" r="11" fill="#B1CC33"/>
-    <path d="M43.4,27.9 A11,11 0 0 1 36.9,45.8 A27.5,27.5 0 0 0 43.4,27.9 Z" fill="#5C9E31" stroke="none"/>
-    <circle cx="35" cy="35" r="11" fill="none"/>
-    <path d="M35,24 C31,31 31,39 34,45" fill="none" stroke-width="1.5"/>
-    <path d="M28,33 C28,30 29,28 31,27" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- alça: three green cherry plums with stalks and a leaf. Elifba own art, MIT. -->
+<path d="M16.2 5.6C18.63 7.52 23.08 5.77 27.6 2.2C21.3 -0.21 16.93 1.79 16.2 5.6Z" fill="url(#alca_fill1)"/>
+<path d="M16.2 5.6C18.63 7.52 23.08 5.77 27.6 2.2C21.3 -0.21 16.93 1.79 16.2 5.6Z" fill="url(#alca_fill2)"/>
+<path d="M16.88 5.4Q21.61 2.94 26.23 2.61" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M16 5.4C14.6 7.4 13.2 9.4 12 12.6" stroke="url(#alca_fill3)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 5.4C17.6 7.6 19.4 10 20.6 13.2" stroke="url(#alca_fill4)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 5.4C16.2 6.6 16.4 7.6 16.6 8.8" stroke="url(#alca_fill5)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="16.8" cy="14.2" r="6" fill="url(#alca_fill6)"/>
+<circle cx="16.8" cy="14.2" r="6" fill="url(#alca_fill7)"/>
+<g filter="url(#alca_blur048)"><ellipse cx="14.52" cy="11.68" rx="1.92" ry="1.2" fill="#FAFFDF" fill-opacity="0.8" transform="rotate(-35 14.52 11.68)"/></g>
+<path d="M17 9C14.7 12.4 15 16.6 17.2 19" stroke="#7FA425" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.35"/>
+<circle cx="9.4" cy="21.8" r="7.2" fill="url(#alca_fill8)"/>
+<circle cx="9.4" cy="21.8" r="7.2" fill="url(#alca_fill9)"/>
+<g filter="url(#alca_blur058)"><ellipse cx="6.66" cy="18.78" rx="2.3" ry="1.44" fill="#FAFFDF" fill-opacity="0.8" transform="rotate(-35 6.66 18.78)"/></g>
+<path d="M9.6 15.4C6.88 19.64 7.24 24.68 9.8 27.56" stroke="#7FA425" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.35"/>
+<circle cx="22.4" cy="22.4" r="7.2" fill="url(#alca_fill10)"/>
+<circle cx="22.4" cy="22.4" r="7.2" fill="url(#alca_fill11)"/>
+<g filter="url(#alca_blur058)"><ellipse cx="19.66" cy="19.38" rx="2.3" ry="1.44" fill="#FAFFDF" fill-opacity="0.8" transform="rotate(-35 19.66 19.38)"/></g>
+<path d="M22.6 16C19.88 20.24 20.24 25.28 22.8 28.16" stroke="#7FA425" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.35"/>
+<defs>
+<radialGradient id="alca_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="alca_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<linearGradient id="alca_fill3" x1="16" y1="5.4" x2="12" y2="12.6" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<linearGradient id="alca_fill4" x1="16" y1="5.4" x2="20.6" y2="13.2" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<linearGradient id="alca_fill5" x1="16" y1="5.4" x2="16.6" y2="8.8" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<radialGradient id="alca_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#EEFF94"/><stop offset="0.5" stop-color="#BBDA4C"/><stop offset="1" stop-color="#7FA425"/></radialGradient>
+<radialGradient id="alca_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#7FA425" stop-opacity="0.6"/><stop offset="0.9" stop-color="#7FA425" stop-opacity="0"/></radialGradient>
+<filter id="alca_blur048" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.48"/></filter>
+<radialGradient id="alca_fill8" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#EEFF94"/><stop offset="0.5" stop-color="#BBDA4C"/><stop offset="1" stop-color="#7FA425"/></radialGradient>
+<radialGradient id="alca_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#7FA425" stop-opacity="0.6"/><stop offset="0.9" stop-color="#7FA425" stop-opacity="0"/></radialGradient>
+<filter id="alca_blur058" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.58"/></filter>
+<radialGradient id="alca_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#EEFF94"/><stop offset="0.5" stop-color="#BBDA4C"/><stop offset="1" stop-color="#7FA425"/></radialGradient>
+<radialGradient id="alca_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#7FA425" stop-opacity="0.6"/><stop offset="0.9" stop-color="#7FA425" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

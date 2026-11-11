@@ -1,0 +1,25 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- portağal: a whole orange and a half cut across. Elifba own art, MIT. -->
+<path d="M12.6 2.6C18.6 2.6 23.2 7.2 23.2 13.2C23.2 19.2 18.6 23.8 12.6 23.8C6.6 23.8 2 19.2 2 13.2C2 7.2 6.6 2.6 12.6 2.6Z" fill="url(#portagal_fill1)"/>
+<path d="M12.6 2.6C18.6 2.6 23.2 7.2 23.2 13.2C23.2 19.2 18.6 23.8 12.6 23.8C6.6 23.8 2 19.2 2 13.2C2 7.2 6.6 2.6 12.6 2.6Z" fill="url(#portagal_fill2)"/>
+<ellipse cx="12.6" cy="3.9" rx="1" ry="0.6" fill="#7FA43A"/>
+<g filter="url(#portagal_blur05)"><ellipse cx="7.6" cy="7.8" rx="2.6" ry="1.6" fill="#FFE5C7" fill-opacity="0.8" transform="rotate(-40 7.6 7.8)"/></g>
+<circle cx="20.6" cy="20.6" r="9.4" fill="url(#portagal_fill3)"/>
+<circle cx="20.6" cy="20.6" r="9.4" fill="url(#portagal_fill4)"/>
+<circle cx="20.6" cy="20.6" r="8.46" fill="#FFF8EC"/>
+<circle cx="20.6" cy="20.6" r="7.9" fill="url(#portagal_fill5)"/>
+<circle cx="20.6" cy="20.6" r="7.9" fill="url(#portagal_fill6)"/>
+<path d="M21.71 20.82L27.97 22.09M21.3 21.48L25.29 26.48M20.57 21.73L20.41 28.12M19.85 21.45L15.62 26.24M19.48 20.77L13.16 21.72M19.64 20.01L14.19 16.68M20.24 19.53L18.21 13.47M21.01 19.55L23.35 13.6M21.59 20.06L27.21 17.01" stroke="#FFF8EC" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<circle cx="20.6" cy="20.6" r="1.32" fill="#FFF8EC"/>
+<g filter="url(#portagal_blur04)"><ellipse cx="16.84" cy="16.65" rx="2.07" ry="1.22" fill="#FFFFFF" fill-opacity="0.55" transform="rotate(-40 16.84 16.65)"/></g>
+<defs>
+<radialGradient id="portagal_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFB45F"/><stop offset="0.5" stop-color="#FF8C2E"/><stop offset="1" stop-color="#E0561F"/></radialGradient>
+<radialGradient id="portagal_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E0561F" stop-opacity="0.6"/><stop offset="0.9" stop-color="#E0561F" stop-opacity="0"/></radialGradient>
+<filter id="portagal_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="portagal_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFB45F"/><stop offset="0.5" stop-color="#FF8C2E"/><stop offset="1" stop-color="#E0561F"/></radialGradient>
+<radialGradient id="portagal_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E0561F" stop-opacity="0.6"/><stop offset="0.9" stop-color="#E0561F" stop-opacity="0"/></radialGradient>
+<radialGradient id="portagal_fill5" cx="0.38" cy="0.32" r="0.75"><stop stop-color="#FFD27A"/><stop offset="0.5" stop-color="#FFA43A"/><stop offset="1" stop-color="#F07A22"/></radialGradient>
+<radialGradient id="portagal_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#F07A22" stop-opacity="0.35"/><stop offset="0.9" stop-color="#F07A22" stop-opacity="0"/></radialGradient>
+<filter id="portagal_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+</defs>
+</svg>

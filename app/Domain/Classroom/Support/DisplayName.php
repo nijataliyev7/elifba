@@ -12,6 +12,10 @@ use Illuminate\Contracts\Validation\ValidationRule;
  * letters separated by single spaces or hyphens, optionally ending in a
  * surname initial with a dot ("Aysel M."), at most 40 characters. Checked on
  * the normalized value, so stray spaces and look-alike letters never count.
+ *
+ * A parent's child has a first name only (§7 "Parents and their children",
+ * ADR 013): `new DisplayName(initial: false, …)` refuses the initial, and any
+ * word of one letter, which is an initial without its dot.
  */
 final class DisplayName implements ValidationRule
 {
@@ -19,14 +23,25 @@ final class DisplayName implements ValidationRule
 
     private const SHAPE = '/^\p{L}+(?:-\p{L}+)*(?: \p{L}+(?:-\p{L}+)*)*(?: \p{L}\.)?$/u';
 
+    private const FIRST_NAME_SHAPE = '/^\p{L}{2,}(?:-\p{L}{2,})*(?: \p{L}{2,}(?:-\p{L}{2,})*)*$/u';
+
+    /**
+     * @param  bool  $initial  whether a surname initial may end the name
+     * @param  string  $message  the translation key of the refusal
+     */
+    public function __construct(
+        private readonly bool $initial = true,
+        private readonly string $message = 'students.errors.invalid_name',
+    ) {}
+
     /**
      * Whether an already normalized name is a valid display name.
      */
-    public static function isValid(string $name): bool
+    public static function isValid(string $name, bool $initial = true): bool
     {
         return $name !== ''
             && mb_strlen($name) <= self::MAX_LENGTH
-            && preg_match(self::SHAPE, $name) === 1
+            && preg_match($initial ? self::SHAPE : self::FIRST_NAME_SHAPE, $name) === 1
             && Alphabet::covers($name);
     }
 
@@ -49,8 +64,8 @@ final class DisplayName implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! is_string($value) || ! self::isValid(Az::normalize($value))) {
-            $fail(__('students.errors.invalid_name'));
+        if (! is_string($value) || ! self::isValid(Az::normalize($value), $this->initial)) {
+            $fail(__($this->message));
         }
     }
 }

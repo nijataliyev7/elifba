@@ -6,7 +6,8 @@
  *
  * In (controller → scene): `showRound` draws a round as it stands,
  * `applyHit` plays what the judge decided for one touch, `setPaused`
- * freezes the canvas. Out (scene → controller): `itemTouched`, a pointer
+ * freezes the canvas, `repeatPrompt` says the prompt again (🔊, §3
+ * "Voice"). Out (scene → controller): `itemTouched`, a pointer
  * on an item. The controller judges the touch and calls `applyHit` in the
  * same call stack, so the effect starts in the frame of the touch, before
  * the server has answered.
@@ -34,6 +35,7 @@ export type BridgeScene = {
     showRound: (round: Round, progress: RoundProgress) => void;
     applyHit: (effect: HitEffect) => void;
     setPaused: (paused: boolean) => void;
+    repeatPrompt: () => void;
 };
 
 type Listener<T> = (value: T) => void;
@@ -58,6 +60,10 @@ export class BoardBridge {
     setPaused(paused: boolean): void {
         this.paused = paused;
         this.scene?.setPaused(paused);
+    }
+
+    repeatPrompt(): void {
+        this.scene?.repeatPrompt();
     }
 
     // Out: scene → controller.

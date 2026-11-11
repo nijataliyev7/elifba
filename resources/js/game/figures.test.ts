@@ -7,13 +7,13 @@ const url = (name: string, version = 4) =>
 
 /** An animals pack's word pictures, by content key. */
 const OWN: Record<string, string> = {
-    'word:pişik': url('openmoji/1F408'),
-    'word:it': url('openmoji/1F415'),
-    'word:inək': url('openmoji/1F404'),
-    'word:ayı': url('openmoji/1F43B'),
-    'word:fil': url('openmoji/1F418'),
-    'word:dəvə': url('openmoji/1F42A'),
-    'word:quş': url('openmoji/1F426'),
+    'word:pişik': url('fluent/1F408'),
+    'word:it': url('fluent/1F415'),
+    'word:inək': url('fluent/1F404'),
+    'word:ayı': url('fluent/1F43B'),
+    'word:fil': url('fluent/1F418'),
+    'word:dəvə': url('fluent/1F42A'),
+    'word:quş': url('fluent/1F426'),
     'word:dəvəquşu': url('animals/devequsu'),
 };
 
@@ -42,16 +42,16 @@ const PICTURES: Pictures = {
 
 /** Its figures: pictures of its words, and two dinosaurs of no word. */
 const FIGURES: Figure[] = [
-    { url: url('openmoji/1F995'), words: [] },
-    { url: url('openmoji/1F996'), words: [] },
-    { url: url('openmoji/1F43B'), words: ['word:ayı'] },
-    { url: url('openmoji/1F404'), words: ['word:inək'] },
-    { url: url('openmoji/1F418'), words: ['word:fil'] },
-    { url: url('openmoji/1F42A'), words: ['word:dəvə'] },
-    { url: url('openmoji/1F426'), words: ['word:quş'] },
-    { url: url('openmoji/1F427'), words: ['word:pinqvin'] },
-    { url: url('openmoji/1F422'), words: ['word:tısbağa'] },
-    { url: url('openmoji/1F407'), words: ['word:dovşan'] },
+    { url: url('fluent/1F995'), words: [] },
+    { url: url('fluent/1F996'), words: [] },
+    { url: url('fluent/1F43B'), words: ['word:ayı'] },
+    { url: url('fluent/1F404'), words: ['word:inək'] },
+    { url: url('fluent/1F418'), words: ['word:fil'] },
+    { url: url('fluent/1F42A'), words: ['word:dəvə'] },
+    { url: url('fluent/1F426'), words: ['word:quş'] },
+    { url: url('fluent/1F427'), words: ['word:pinqvin'] },
+    { url: url('fluent/1F422'), words: ['word:tısbağa'] },
+    { url: url('fluent/1F407'), words: ['word:dovşan'] },
 ];
 
 function round(id: string, keys: string[], image: string | null = null) {
@@ -137,7 +137,7 @@ describe('chooseFigures', () => {
     it('never gives a build_word tile the question’s picture, whatever host or version wrote it', () => {
         // Building «inək» (i-nək) with the decoy «pi»: the cow is the
         // question, so «i» stands alone instead of in front of the answer.
-        const cow = 'http://192.168.1.20:8000/content/openmoji/1F404.svg?v=3';
+        const cow = 'http://192.168.1.20:8000/content/fluent/1F404.svg?v=3';
 
         for (const id of ids(100, '01JROUNDWORD')) {
             const chosen = chooseFigures(
@@ -259,9 +259,24 @@ describe('chooseFigures', () => {
         ]).toEqual([null]);
     });
 
+    it('gives a number no picture in the animal and fruit styles (R5): a cat behind «5» would say five cats', () => {
+        for (const [index, id] of ids(12, '01JCOUNT').entries()) {
+            const numbers = [1, 2, 3, 4].map(
+                (k) => `number:${((index + k) % 10) + 1}`,
+            );
+            const chosen = chooseFigures(
+                round(id, numbers, OWN['word:pişik']),
+                FIGURES,
+                PICTURES,
+            );
+
+            expect([...chosen.values()]).toEqual([null, null, null, null]);
+        }
+    });
+
     it('names the texture a picture is loaded under', () => {
-        expect(figureKey(url('openmoji/1F995'))).toBe(
-            `figure:${url('openmoji/1F995')}`,
+        expect(figureKey(url('fluent/1F995'))).toBe(
+            `figure:${url('fluent/1F995')}`,
         );
     });
 });

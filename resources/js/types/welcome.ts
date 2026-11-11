@@ -29,6 +29,8 @@ export type WelcomeProps = {
     mechanics: string[];
     /** Every pack, title in the interface language. */
     packs: { key: string; title: string; palette: string[] }[];
+    /** Keys of the packs a child who cannot read yet plays (picture or number levels). */
+    picturePacks: string[];
     /** The alphabet in its order. */
     letters: Letter[];
     /** The first avatars of `content/avatars.json`. */

@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { navAreas } from '@/components/app/nav-areas';
+import { navAreas, navAreasFor } from '@/components/app/nav-areas';
 import { activeArea, activePage, isWithin, pathOf } from '@/lib/nav-active';
 import type { NavArea } from '@/lib/nav-active';
 
-const areaKey = (url: string): string | undefined =>
-    activeArea(navAreas, url)?.key;
+const teacher = navAreas.teacher;
+const parent = navAreas.parent;
 
-const pageTitle = (url: string): string | undefined => {
-    const area = activeArea(navAreas, url);
+const areaKey = (url: string, areas = teacher): string | undefined =>
+    activeArea(areas, url)?.key;
+
+const pageTitle = (url: string, areas = teacher): string | undefined => {
+    const area = activeArea(areas, url);
 
     return area ? activePage(area, url)?.title : undefined;
 };
@@ -37,18 +40,22 @@ describe('isWithin', () => {
 
 describe('the teacher shell areas', () => {
     it('has one page per area except Settings, in the nav order', () => {
-        expect(navAreas.map((area) => area.key)).toEqual([
+        expect(teacher.map((area) => area.key)).toEqual([
             'classes',
             'words',
             'settings',
         ]);
-        expect(navAreas.map((area) => area.pages.length)).toEqual([1, 1, 4]);
+        expect(teacher.map((area) => area.pages.length)).toEqual([1, 1, 5]);
     });
 
     it('opens every area on its first page, inside the area', () => {
-        for (const area of navAreas) {
-            expect(isWithin(pathOf(area.pages[0].href), area.base)).toBe(true);
-            expect(areaKey(pathOf(area.pages[0].href))).toBe(area.key);
+        for (const areas of [teacher, parent]) {
+            for (const area of areas) {
+                const first = pathOf(area.pages[0].href);
+
+                expect(isWithin(first, area.base)).toBe(true);
+                expect(areaKey(first, areas)).toBe(area.key);
+            }
         }
     });
 
@@ -77,6 +84,7 @@ describe('the teacher shell areas', () => {
             'settings.nav.appearance',
         );
         expect(pageTitle('/settings/play')).toBe('settings.nav.play');
+        expect(pageTitle('/settings/roles')).toBe('settings.nav.roles');
         expect(areaKey('/settings')).toBe('settings');
         expect(pageTitle('/settings')).toBeUndefined();
     });
@@ -93,9 +101,74 @@ describe('the teacher shell areas', () => {
     });
 });
 
+describe('the parent shell areas', () => {
+    it('has the children and Settings, the same Settings as the teacher', () => {
+        expect(parent.map((area) => area.key)).toEqual([
+            'children',
+            'settings',
+        ]);
+        expect(parent[1]).toBe(teacher[2]);
+    });
+
+    it('finds the children and leaves the class pages outside', () => {
+        expect(areaKey('/children', parent)).toBe('children');
+        expect(pageTitle('/children', parent)).toBe('nav.children');
+        expect(pageTitle('/settings/roles', parent)).toBe('settings.nav.roles');
+        expect(areaKey('/classes', parent)).toBeUndefined();
+        expect(areaKey('/words', parent)).toBeUndefined();
+    });
+});
+
+describe('the navigation of each area', () => {
+    it('gives each role its own areas and the same Settings', () => {
+        expect(navAreasFor('teacher').map((area) => area.key)).toEqual([
+            'classes',
+            'words',
+            'settings',
+        ]);
+        expect(navAreasFor('parent').map((area) => area.key)).toEqual([
+            'children',
+            'settings',
+        ]);
+        expect(navAreasFor('parent').at(-1)).toBe(
+            navAreasFor('teacher').at(-1),
+        );
+    });
+
+    it('puts every child page under the children, never under Classes', () => {
+        for (const url of [
+            '/children',
+            '/children/01JCHILD',
+            '/children/01JCHILD/games/create',
+        ]) {
+            expect(areaKey(url, parent)).toBe('children');
+            expect(pageTitle(url, parent)).toBe('nav.children');
+            expect(areaKey(url, teacher)).toBeUndefined();
+        }
+    });
+
+    it('offers no ranking, podium or words in the parent area', () => {
+        const hrefs = parent.flatMap((area) =>
+            area.pages.map((page) => pathOf(page.href)),
+        );
+
+        for (const href of hrefs) {
+            expect(href).not.toMatch(/rankings|podium|words|classes/);
+        }
+    });
+});
+
+describe('navAreasFor', () => {
+    it('gives each area its navigation and none before the role choice', () => {
+        expect(navAreasFor('teacher')).toBe(teacher);
+        expect(navAreasFor('parent')).toBe(parent);
+        expect(navAreasFor(null)).toEqual([]);
+    });
+});
+
 describe('activePage', () => {
     it('prefers the longest page when pages nest', () => {
-        const icon = navAreas[0].icon;
+        const icon = teacher[0].icon;
         const area: NavArea = {
             key: 'nested',
             title: 'nav.classes',

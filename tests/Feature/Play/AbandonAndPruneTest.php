@@ -2,6 +2,7 @@
 
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Actions\AbandonStaleGames;
 use App\Domain\Play\Actions\PruneOldGames;
 use App\Domain\Play\Enums\GameSessionStatus;
@@ -78,6 +79,31 @@ describe('pruning old games', function (): void {
             ->and(GameRound::query()->where('game_session_id', $old->id)->count())->toBe(0)
             ->and(GameRound::query()->where('game_session_id', $kept->id)->count())->toBe(5)
             ->and(GameAnswer::query()->count())->toBe(1);
+    });
+
+    it('prunes old home games', function (): void {
+        $this->travelTo(now()->startOfSecond());
+        $child = Child::factory()->create();
+        $old = Games::start($child, seed: 1);
+        $kept = Games::start($child, seed: 2);
+        $old->forceFill(['started_at' => now()->subDays(400)->subSecond(), 'status' => GameSessionStatus::Finished])->save();
+        $kept->forceFill(['started_at' => now()->subDays(400)->addSecond(), 'status' => GameSessionStatus::Finished])->save();
+        GameAnswer::factory()->for(Games::round($old), 'round')->create();
+        GameAnswer::factory()->for(Games::round($kept), 'round')->create();
+
+        expect(app(PruneOldGames::class)->handle())->toBe(1)
+            ->and(GameSession::query()->pluck('id')->all())->toBe([$kept->id])
+            ->and(GameRound::query()->where('child_id', $child->id)->count())->toBe(5)
+            ->and(GameAnswer::query()->count())->toBe(1)
+            // The child stays: only the games age out.
+            ->and($child->fresh())->not->toBeNull();
+    });
+
+    it('abandons an idle home game like any other', function (): void {
+        $home = GameSession::factory()->forChild()->create(['last_activity_at' => now()->subDay()]);
+
+        expect(app(AbandonStaleGames::class)->handle())->toBe(1)
+            ->and($home->refresh()->status)->toBe(GameSessionStatus::Abandoned);
     });
 
     it('runs daily as play:prune-old-games', function (): void {

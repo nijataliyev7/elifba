@@ -2,6 +2,7 @@
 
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
@@ -47,6 +48,49 @@ it('shows a guest the welcome page with its facts as props', function (): void {
             ->where('sample.pack.key', fn (string $key): bool => isset($packs[$key])));
 });
 
+it('has the section for parents in both languages', function (): void {
+    $picturePacks = array_keys(array_filter(
+        app(ContentRepository::class)->packs(),
+        static fn (PackData $pack): bool => $pack->lists(Unit::Picture) || $pack->lists(Unit::Number),
+    ));
+
+    expect($picturePacks)->toContain('animals', 'fruit', 'colors', 'numbers')
+        ->not->toContain('balloons', 'train');
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page->where('picturePacks', $picturePacks));
+
+    $keys = [
+        'welcome.hero.parents', 'welcome.parents.title', 'welcome.parents.text',
+        'welcome.parents.alt', 'welcome.parents.remote_alt',
+        'welcome.parents.role.title', 'welcome.parents.role.text',
+        'welcome.parents.child.title', 'welcome.parents.child.text',
+        'welcome.parents.play.title', 'welcome.parents.play.text',
+        'welcome.parents.pictures', 'welcome.parents.pictures_text',
+        'welcome.parents.reading', 'welcome.parents.reading_text',
+        'welcome.parents.stars', 'welcome.parents.stars_text',
+    ];
+
+    foreach (['az', 'en'] as $locale) {
+        $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+
+        foreach ($keys as $key) {
+            expect($translations)->toHaveKey($key)
+                ->and($translations[$key])->not->toBe('');
+        }
+    }
+
+    // The page renders the section with its two pictures of a home game.
+    $page = (string) file_get_contents(resource_path('js/pages/welcome.tsx'));
+
+    expect($page)->toContain('id="welcome-parents"', 'href="#welcome-parents"', 'picturePacks')
+        ->and(resource_path('images/welcome/home.webp'))->toBeFile()
+        ->and(resource_path('images/welcome/home-remote.webp'))->toBeFile();
+
+    // No ranking, place or podium is promised to a parent (ADR 011).
+    expect(__('welcome.parents.stars_text', locale: 'en'))->toContain('no ranking');
+});
+
 it('names every mechanic it lists in both languages', function (): void {
     foreach (Playable::mechanics() as $mechanic) {
         foreach (['az', 'en'] as $locale) {
@@ -68,6 +112,19 @@ it('shows a signed-in teacher the same page', function (): void {
             ->component('welcome')
             ->where('auth.user.id', $teacher->id)
             ->has('packs')
+            ->has('sample.rounds'));
+});
+
+it('shows a signed-in parent the same page, with the parent area', function (): void {
+    $parent = User::factory()->parent()->create();
+
+    $this->actingAs($parent)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('welcome')
+            ->where('auth.area', 'parent')
+            ->has('picturePacks')
             ->has('sample.rounds'));
 });
 

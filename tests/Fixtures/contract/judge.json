@@ -208,6 +208,44 @@
             ]
         },
         {
+            "name": "count: a wrong number is a miss and stays; the one that says N solves the round",
+            "items": ["a", "b", "c"],
+            "solution": {
+                "order": "any",
+                "item_ids": ["c"]
+            },
+            "hits": [
+                {
+                    "item_id": "b",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 1,
+                    "solved": false
+                },
+                {
+                    "item_id": "a",
+                    "status": "miss",
+                    "progress": [],
+                    "misses": 2,
+                    "solved": false
+                },
+                {
+                    "item_id": "c",
+                    "status": "correct",
+                    "progress": ["c"],
+                    "misses": 2,
+                    "solved": true
+                },
+                {
+                    "item_id": "b",
+                    "status": "stale",
+                    "progress": ["c"],
+                    "misses": 2,
+                    "solved": true
+                }
+            ]
+        },
+        {
             "name": "sequence: a reused tile (nə-nə)",
             "items": ["a", "b", "c"],
             "solution": {

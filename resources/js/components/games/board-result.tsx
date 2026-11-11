@@ -1,16 +1,22 @@
 import { Link } from '@inertiajs/react';
 import { Star } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { studentAvatars } from '@/components/games/student-grid';
+import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import type { Tally } from '@/game/engine';
 import { useTranslation } from '@/hooks/use-translation';
+import { playersHome, playersNewGame } from '@/lib/game-players';
+import type { GamePlayers } from '@/lib/game-players';
 import { cn } from '@/lib/utils';
-import { show } from '@/routes/classes';
-import { create } from '@/routes/classes/games';
+import type { BoardChild } from '@/types';
 
 type Props = {
-    classId: string;
+    /** The class or the child the game was for: where the links lead. */
+    players: GamePlayers;
+    /** A home game's child, with their stars before this game; null for a class. */
+    child?: BoardChild | null;
     /** What the board offers next; by default the teacher's links (a guest board has its own). */
     actions?: ReactNode;
     /** Stars as the server returned them (`PointsRule`, PHP only). */
@@ -25,9 +31,15 @@ type Props = {
  * The end of a game: the stars it earned and how the rounds went. Leaving
  * waits until every answer is saved, because nothing else would send them.
  * Smaller below `lg`, so it fits a phone held sideways (docs/frontend.md §6).
+ *
+ * At home (architecture §5 "A child's stars") the child's avatar heads it
+ * and the child's own total follows: the stars before this game
+ * (`BoardProps.child.stars`) plus this game's, as `/sync` returned them.
+ * Never a place or anyone else's stars.
  */
 export function BoardResult({
-    classId,
+    players,
+    child = null,
     actions,
     points,
     tally,
@@ -36,9 +48,18 @@ export function BoardResult({
 }: Props) {
     const { t } = useTranslation();
     const saving = pending > 0;
+    const home = playersHome(players);
 
     return (
         <div className="flex w-full max-w-xl flex-col items-center gap-8 rounded-3xl bg-white p-10 text-center shadow-xl max-lg:gap-4 max-lg:p-5">
+            {child !== null && (
+                <StudentAvatar
+                    avatar={child.avatar.key}
+                    avatars={studentAvatars([child])}
+                    initial={child.display_name.slice(0, 1)}
+                    className="-mb-4 size-24 text-3xl max-lg:hidden"
+                />
+            )}
             <h1 className="text-4xl font-bold max-lg:text-2xl">
                 {t('games.board.result.title')}
             </h1>
@@ -51,6 +72,25 @@ export function BoardResult({
                 />
                 <span>{t('games.board.result.stars', { count: points })}</span>
             </p>
+
+            {child !== null && (
+                <p
+                    className="-mt-4 flex items-center justify-center gap-2 text-2xl font-semibold text-neutral-700 max-lg:-mt-2 max-lg:text-lg"
+                    data-test="child-total"
+                >
+                    {/* Below `lg` the avatar stands here, so a phone held sideways keeps the buttons in view. */}
+                    <StudentAvatar
+                        avatar={child.avatar.key}
+                        avatars={studentAvatars([child])}
+                        initial={child.display_name.slice(0, 1)}
+                        className="hidden size-10 text-base max-lg:inline-flex"
+                    />
+                    {t('games.board.result.child_total', {
+                        name: child.display_name,
+                        count: child.stars + points,
+                    })}
+                </p>
+            )}
 
             {tally !== null && (
                 <dl className="grid w-full grid-cols-3 gap-3 text-center">
@@ -97,8 +137,8 @@ export function BoardResult({
                             saving && 'pointer-events-none opacity-50',
                         )}
                     >
-                        <Link href={show(classId)} aria-disabled={saving}>
-                            {t('games.board.back_to_class')}
+                        <Link href={home.href} aria-disabled={saving}>
+                            {t(home.label)}
                         </Link>
                     </Button>
                     <Button
@@ -109,7 +149,10 @@ export function BoardResult({
                             saving && 'pointer-events-none opacity-50',
                         )}
                     >
-                        <Link href={create(classId)} aria-disabled={saving}>
+                        <Link
+                            href={playersNewGame(players)}
+                            aria-disabled={saving}
+                        >
                             {t('games.board.new_game')}
                         </Link>
                     </Button>

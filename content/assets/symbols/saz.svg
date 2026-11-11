@@ -1,22 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- saz: a long-necked lute with a pear-shaped body. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <g transform="rotate(-38 36 36)">
-      <rect x="33" y="3" width="6" height="9" rx="1" fill="#6A462F"/>
-      <line x1="33" y1="5" x2="30" y2="5"/>
-      <line x1="33" y1="8.5" x2="30" y2="8.5"/>
-      <line x1="39" y1="5" x2="42" y2="5"/>
-      <line x1="39" y1="8.5" x2="42" y2="8.5"/>
-      <rect x="34.2" y="11" width="3.6" height="28" fill="#6A462F"/>
-      <line x1="34.2" y1="17" x2="37.8" y2="17" stroke-width="1"/>
-      <line x1="34.2" y1="22" x2="37.8" y2="22" stroke-width="1"/>
-      <line x1="34.2" y1="27" x2="37.8" y2="27" stroke-width="1"/>
-      <line x1="34.2" y1="32" x2="37.8" y2="32" stroke-width="1"/>
-      <path d="M34,37 L38,37 C41,41 50,47 50,56 C50,63 43,67 36,67 C29,67 22,63 22,56 C22,47 31,41 34,37 Z" fill="#F4AA41"/>
-      <circle cx="36" cy="51" r="2.2" fill="#6A462F"/>
-      <rect x="32" y="60" width="8" height="2" fill="#6A462F" stroke-width="1"/>
-      <line x1="35" y1="8" x2="35" y2="61" stroke-width="0.8"/>
-      <line x1="37" y1="8" x2="37" y2="61" stroke-width="0.8"/>
-    </g>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- saz: the long-necked lute, a pear-shaped body and a fretted neck. Elifba own art, MIT. -->
+<path d="M5.25 5.98L4.23 7" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.38 4.85L7.4 3.83" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.23 4.97L3.22 5.98" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.37 3.83L6.38 2.82" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.1 6.49L6.89 5.7Q7.23 5.36 6.88 5.03L4.64 2.97Q4.29 2.65 3.95 2.99L3.39 3.55Q3.05 3.89 3.37 4.24L5.43 6.48Q5.76 6.83 6.1 6.49Z" fill="url(#saz_fill1)"/>
+<path d="M6.1 6.49L6.89 5.7Q7.23 5.36 6.88 5.03L4.64 2.97Q4.29 2.65 3.95 2.99L3.39 3.55Q3.05 3.89 3.37 4.24L5.43 6.48Q5.76 6.83 6.1 6.49Z" fill="url(#saz_fill2)"/>
+<path d="M5.93 6.21L6.61 5.53Q6.84 5.3 7.06 5.53L19.51 17.98Q19.73 18.2 19.51 18.43L18.83 19.11Q18.6 19.33 18.38 19.11L5.93 6.66Q5.7 6.44 5.93 6.21Z" fill="url(#saz_fill3)"/>
+<path d="M5.93 6.21L6.61 5.53Q6.84 5.3 7.06 5.53L19.51 17.98Q19.73 18.2 19.51 18.43L18.83 19.11Q18.6 19.33 18.38 19.11L5.93 6.66Q5.7 6.44 5.93 6.21Z" fill="url(#saz_fill4)"/>
+<path d="M16.57 17.3L17.7 16.17" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M14.98 15.71L16.11 14.58" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M13.4 14.13L14.53 13" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M11.81 12.55L12.95 11.41" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M10.23 10.96L11.36 9.83" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M8.65 9.38L9.78 8.25" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M7.06 7.79L8.19 6.66" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M18.26 17.86C20.19 15.94 24.94 16.84 28.22 20.13C30.71 22.61 30.37 25.67 28.22 27.82C26.07 29.97 23.01 30.31 20.53 27.82C17.24 24.54 16.34 19.79 18.26 17.86Z" fill="url(#saz_fill5)"/>
+<path d="M18.26 17.86C20.19 15.94 24.94 16.84 28.22 20.13C30.71 22.61 30.37 25.67 28.22 27.82C26.07 29.97 23.01 30.31 20.53 27.82C17.24 24.54 16.34 19.79 18.26 17.86Z" fill="url(#saz_fill6)"/>
+<path d="M19.27 18.87C20.89 17.25 24.88 18.02 27.63 20.77C29.72 22.86 29.44 25.43 27.63 27.23C25.83 29.04 23.26 29.32 21.17 27.23C18.42 24.48 17.65 20.49 19.27 18.87Z" fill="url(#saz_fill7)"/>
+<path d="M19.27 18.87C20.89 17.25 24.88 18.02 27.63 20.77C29.72 22.86 29.44 25.43 27.63 27.23C25.83 29.04 23.26 29.32 21.17 27.23C18.42 24.48 17.65 20.49 19.27 18.87Z" fill="url(#saz_fill8)"/>
+<path d="M20.86 22.28C21.05 22.46 21.05 22.77 20.86 22.95C20.68 23.14 20.37 23.14 20.19 22.95C20 22.77 20 22.46 20.19 22.28C20.37 22.09 20.68 22.09 20.86 22.28Z" fill="url(#saz_fill9)"/>
+<path d="M23.35 19.79C23.54 19.97 23.54 20.28 23.35 20.46C23.17 20.65 22.86 20.65 22.68 20.46C22.49 20.28 22.49 19.97 22.68 19.79C22.86 19.6 23.17 19.6 23.35 19.79Z" fill="url(#saz_fill10)"/>
+<path d="M24.88 26.18L26.58 24.48Q26.75 24.31 26.92 24.48L27.14 24.71Q27.31 24.88 27.14 25.05L25.45 26.74Q25.28 26.91 25.11 26.74L24.88 26.52Q24.71 26.35 24.88 26.18Z" fill="url(#saz_fill11)"/>
+<path d="M25.79 25.84L6.16 6.21" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M26.24 25.39L6.61 5.76" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<g filter="url(#saz_blur045)"><ellipse cx="19.96" cy="22.95" rx="1" ry="1.6" fill="#FFFFFF" fill-opacity="0.6"/></g>
+<defs>
+<radialGradient id="saz_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="saz_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="saz_fill3" cx="0.2" cy="0.3" r="1"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="saz_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="saz_fill5" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="saz_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="saz_fill7" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#EFBE85"/><stop offset="0.5" stop-color="#E8AC81"/><stop offset="1" stop-color="#D6753D"/></radialGradient>
+<radialGradient id="saz_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D6753D" stop-opacity="0.45"/><stop offset="0.9" stop-color="#D6753D" stop-opacity="0"/></radialGradient>
+<radialGradient id="saz_fill9" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="saz_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="saz_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<filter id="saz_blur045" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.45"/></filter>
+</defs>
 </svg>

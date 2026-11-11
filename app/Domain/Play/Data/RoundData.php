@@ -18,10 +18,12 @@ use App\Domain\Content\Enums\Unit;
  * (`payload()`), which come from the row and its game.
  *
  * @phpstan-import-type PromptArray from PromptData
+ * @phpstan-import-type StoredPromptArray from PromptData
  * @phpstan-import-type RoundItemArray from RoundItemData
  * @phpstan-import-type SolutionArray from SolutionData
  *
  * @phpstan-type RoundPayload array{mechanic: string, unit: string, pack: string, level: string, prompt: PromptArray, items: list<RoundItemArray>, slots: int, solution: SolutionArray, effect: string}
+ * @phpstan-type StoredRoundPayload array{mechanic: string, unit: string, pack: string, level: string, prompt: StoredPromptArray, items: list<RoundItemArray>, slots: int, solution: SolutionArray, effect: string}
  * @phpstan-type RoundArray array{id: string, index: int, total: int, mechanic: string, unit: string, pack: string, level: string, prompt: PromptArray, items: list<RoundItemArray>, slots: int, solution: SolutionArray, effect: string}
  */
 final readonly class RoundData
@@ -57,9 +59,10 @@ final readonly class RoundData
     }
 
     /**
-     * A stored snapshot with the row's id, position and the game's round count.
+     * A stored snapshot with the row's id, position and the game's round
+     * count. A snapshot stored before R5 has no `prompt.count` (read as null).
      *
-     * @param  RoundPayload  $payload
+     * @param  StoredRoundPayload  $payload
      */
     public static function fromPayload(string $id, int $index, int $total, array $payload): self
     {

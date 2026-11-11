@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "voice": {
+        "provider": "elevenlabs",
+        "model": "eleven_v4",
+        "voice_id": "lnirnpdN1g3vLxtZB70U",
+        "voice_name": "Nigar – Ad Read",
+        "language": "az",
+        "stability": 0.13,
+        "similarity": 0.75
+    },
+    "styles": {
+        "find.letter": "playful",
+        "find.syllable": "playful",
+        "find.word": "playful",
+        "find.picture": "playful",
+        "find.number": "playful",
+        "pop.letter": "playful",
+        "pop.syllable": "playful",
+        "pop.word": "playful",
+        "pop.picture": "playful",
+        "pop.number": "playful",
+        "build_syllable.syllable": "playful",
+        "build_word.word": "playful",
+        "build_sentence.sentence": "playful",
+        "count.number": "curious"
+    },
+    "spoken": {
+        "numbers": {
+            "1": "bir",
+            "2": "iki",
+            "3": "üç",
+            "4": "dörd",
+            "5": "beş",
+            "6": "altı",
+            "7": "yeddi",
+            "8": "səkkiz",
+            "9": "doqquz",
+            "10": "on"
+        },
+        "respell": {}
+    },
+    "context": {
+        "previous": "Salam, uşaqlar! Bu gün birlikdə oynayırıq. Şəkillərə yaxşı baxın və düzgün cavabı tapın.",
+        "next": "Afərin, düz tapdın!"
+    },
+    "praise": [
+        { "text": "Doğru cavab!", "style": "excited" },
+        { "text": "Afərin!", "style": "excited" },
+        { "text": "Əla!", "style": "cheerfully" },
+        { "text": "Çox gözəl!", "style": "cheerfully" }
+    ],
+    "retry": { "text": "Bir də cəhd et!", "style": "warmly" },
+    "credit": {
+        "title": "The board's voice: every prompt, the praise and the retry phrase, in Azerbaijani",
+        "author": "Elifba contributors",
+        "source": "https://elevenlabs.io/docs/overview/capabilities/text-to-speech/eleven-v4",
+        "license": "MIT",
+        "changes": "A synthetic voice, not a person's recording: made with ElevenLabs Eleven v4 (eleven_v4, language az) in the Voice Library voice «Nigar – Ad Read» under a paid plan, in {month}; trimmed and levelled with ffmpeg"
+    }
+}

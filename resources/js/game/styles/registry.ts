@@ -7,13 +7,14 @@
  * `slotStyles()` and `effects()` list the same keys on the server, and
  * `registry.test.ts` checks every key the server lists has its code here.
  */
-import type { Effect as EffectKey } from '../contract';
+import type { Effect as EffectKey, Unit } from '../contract';
 import { animal } from './animal';
 import { balloon } from './balloon';
 import { bubble } from './bubble';
 import { burst } from './burst';
 import { card } from './card';
 import { fruit } from './fruit';
+import { picture } from './picture';
 import { frame } from './slot-frame';
 import { wagonSlots } from './slot-wagon';
 import { sparkle } from './sparkle';
@@ -27,6 +28,7 @@ export const ITEM_STYLES = {
     bubble,
     animal,
     fruit,
+    picture,
 } as const satisfies Record<string, ItemStyle>;
 
 export type ItemStyleKey = keyof typeof ITEM_STYLES;
@@ -57,6 +59,16 @@ export function slotStyle(key: string): SlotStyle | null {
     return Object.hasOwn(SLOT_STYLES, key)
         ? SLOT_STYLES[key as SlotStyleKey]
         : null;
+}
+
+/**
+ * The item style a round of `unit` is drawn in (`stage.ts`): every round of
+ * the picture unit in the `picture` style, whatever the pack names — a
+ * picture on a balloon or behind a wagon would be hidden (ADR 012) — and
+ * every other round in the pack's own style (numbers too, as letters are).
+ */
+export function styleOfUnit(unit: Unit, pack: ItemStyle): ItemStyle {
+    return unit === 'picture' ? ITEM_STYLES.picture : pack;
 }
 
 export function effect(key: EffectKey): Effect {

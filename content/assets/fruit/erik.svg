@@ -1,15 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- ərik: an apricot and a half with its stone. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M25,21 C26,16 28,13 31,11" fill="none"/>
-    <path d="M28,15 Q37.8,16.7 44,9 Q34.2,7.3 28,15 Z" fill="#5C9E31"/><path d="M28,15 L40.8,10.2" fill="none" stroke-width="1.5"/>
-    <circle cx="25" cy="37" r="16" fill="#F4AA41"/>
-    <path d="M33,23.1 A16,16 0 0 1 33,50.9 A48,48 0 0 0 33,23.1 Z" fill="#E27022" stroke="none"/>
-    <circle cx="25" cy="37" r="16" fill="none"/>
-    <path d="M25,21.5 C20,28 20,40 24,52" fill="none" stroke-width="1.5"/>
-    <circle cx="47" cy="49" r="15" fill="#E27022"/>
-    <circle cx="47" cy="49" r="11.5" fill="#F4AA41" stroke="none"/>
-    <ellipse cx="47" cy="49" rx="5" ry="6.5" fill="#A57939"/>
-    <path d="M47,44 L47,54" fill="none" stroke-width="1.2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- ərik: a whole apricot with a leaf and a half that shows the stone. Elifba own art, MIT. -->
+<path d="M13.4 5.6C13.6 4.6 14 3.6 14.8 2.8" stroke="url(#erik_fill1)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.4 3.6C15.69 5.82 19.38 5.67 23.6 4C19.61 0.39 15.91 0.77 14.4 3.6Z" fill="url(#erik_fill2)"/>
+<path d="M14.4 3.6C15.69 5.82 19.38 5.67 23.6 4C19.61 0.39 15.91 0.77 14.4 3.6Z" fill="url(#erik_fill3)"/>
+<path d="M14.95 3.62Q19.03 3 22.5 3.95" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M13 5C19 5 23.6 9.4 23.6 15.4C23.6 21.4 19 25.6 13 25.6C7 25.6 2.4 21.4 2.4 15.4C2.4 9.4 7 5 13 5Z" fill="url(#erik_fill4)"/>
+<path d="M13 5C19 5 23.6 9.4 23.6 15.4C23.6 21.4 19 25.6 13 25.6C7 25.6 2.4 21.4 2.4 15.4C2.4 9.4 7 5 13 5Z" fill="url(#erik_fill5)"/>
+<path d="M13 5C19 5 23.6 9.4 23.6 15.4C23.6 21.4 19 25.6 13 25.6C7 25.6 2.4 21.4 2.4 15.4C2.4 9.4 7 5 13 5Z" fill="url(#erik_fill6)"/>
+<path d="M13 5.8C11.4 9.4 10.6 13.6 11.2 18.2" stroke="#C9562E" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.45"/>
+<g filter="url(#erik_blur05)"><ellipse cx="7.8" cy="10.2" rx="2.8" ry="1.7" fill="#FFF0D0" fill-opacity="0.8" transform="rotate(-38 7.8 10.2)"/></g>
+<circle cx="21.6" cy="21.6" r="8.6" fill="url(#erik_fill7)"/>
+<circle cx="21.6" cy="21.6" r="8.6" fill="url(#erik_fill8)"/>
+<circle cx="21.6" cy="21.6" r="7.5" fill="url(#erik_fill9)"/>
+<circle cx="21.6" cy="21.6" r="7.5" fill="url(#erik_fill10)"/>
+<ellipse cx="21.8" cy="21.8" rx="2.9" ry="3.7" transform="rotate(20 21.8 21.8)" fill="url(#erik_fill11)"/>
+<ellipse cx="21.8" cy="21.8" rx="2.9" ry="3.7" transform="rotate(20 21.8 21.8)" fill="url(#erik_fill12)"/>
+<g filter="url(#erik_blur03)"><ellipse cx="20.9" cy="20.4" rx="0.9" ry="0.6" fill="#FFF3E0" fill-opacity="0.6" transform="rotate(-30 20.9 20.4)"/></g>
+<defs>
+<linearGradient id="erik_fill1" x1="13.4" y1="5.6" x2="14.8" y2="2.8" gradientUnits="userSpaceOnUse"><stop stop-color="#6E4B2A"/><stop offset="1" stop-color="#8B6A3E"/></linearGradient>
+<radialGradient id="erik_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="erik_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<radialGradient id="erik_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFD47A"/><stop offset="0.5" stop-color="#FFA947"/><stop offset="1" stop-color="#E8703C"/></radialGradient>
+<radialGradient id="erik_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E8703C" stop-opacity="0.65"/><stop offset="0.9" stop-color="#E8703C" stop-opacity="0"/></radialGradient>
+<radialGradient id="erik_fill6" cx="0.75" cy="0.6" r="0.45"><stop stop-color="#F2553C" stop-opacity="0.45"/><stop offset="1" stop-color="#F2553C" stop-opacity="0"/></radialGradient>
+<filter id="erik_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="erik_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFD47A"/><stop offset="0.5" stop-color="#FFA947"/><stop offset="1" stop-color="#E8703C"/></radialGradient>
+<radialGradient id="erik_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E8703C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#E8703C" stop-opacity="0"/></radialGradient>
+<radialGradient id="erik_fill9" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FFE6A2"/><stop offset="0.5" stop-color="#FFC266"/><stop offset="1" stop-color="#F09A4A"/></radialGradient>
+<radialGradient id="erik_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#F09A4A" stop-opacity="0.35"/><stop offset="0.9" stop-color="#F09A4A" stop-opacity="0"/></radialGradient>
+<radialGradient id="erik_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="erik_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.5"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<filter id="erik_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+</defs>
 </svg>

@@ -1,21 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- sərnişin: a traveller walking with a rolling suitcase. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M28,44 L24,64 M34,44 L38,64" fill="none" stroke-width="7"/>
-    <path d="M28,44 L24,64 M34,44 L38,64" fill="none" stroke="#1E50A0" stroke-width="3"/>
-    <path d="M20,24 C20,21 24,20 31,20 C38,20 42,21 42,24 L42,46 L20,46 Z" fill="#5C9E31"/>
-    <path d="M41,26 L49,36" fill="none" stroke-width="6"/>
-    <path d="M41,26 L49,36" fill="none" stroke="#5C9E31" stroke-width="2.5"/>
-    <path d="M49,37 L49,24 L54,24 L54,40" fill="none" stroke-width="2"/>
-    <rect x="44" y="40" width="20" height="20" rx="3" fill="#EA5A47"/>
-    <path d="M50,40 L50,60 M58,40 L58,60" fill="none" stroke-width="1.5"/>
-    <circle cx="48" cy="62" r="2.5" fill="#3F3F3F"/>
-    <circle cx="60" cy="62" r="2.5" fill="#3F3F3F"/>
-    <circle cx="49" cy="37" r="2.5" fill="#FCEA2B" stroke-width="1.5"/>
-    <circle cx="31" cy="11" r="8.5" fill="#FCEA2B"/>
-    <circle cx="27.8" cy="11" r="1.4" fill="#000" stroke="none"/>
-    <circle cx="34.2" cy="11" r="1.4" fill="#000" stroke="none"/>
-    <path d="M28.3,14.6 C30,15.9 32,15.9 33.7,14.6" fill="none"/>
-    <path d="M22.5,10 C22,4 27,1.5 31,1.5 C35,1.5 40,4 39.5,10 C36,6 27,6 22.5,10 Z" fill="#6A462F"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- sərnişin: a traveller with a wheeled suitcase. Elifba own art, MIT. -->
+<path d="M20.6 19.4L20.6 13.8" stroke="url(#sernisin_fill1)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.4 19.4L25.4 13.8" stroke="url(#sernisin_fill2)" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="19.6" y="12.8" width="6.8" height="1.6" rx="0.8" fill="url(#sernisin_fill3)"/>
+<rect x="17.8" y="18.6" width="10.4" height="10" rx="1.8" fill="url(#sernisin_fill4)"/>
+<rect x="17.8" y="18.6" width="10.4" height="10" rx="1.8" fill="url(#sernisin_fill5)"/>
+<g filter="url(#sernisin_blur035)"><ellipse cx="20" cy="20.6" rx="0.7" ry="1.6" fill="#FDE3E6" fill-opacity="0.6"/></g>
+<path d="M21.2 20.2L21.2 27M24.8 20.2L24.8 27" stroke="#B22945" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<circle cx="20.2" cy="29.2" r="1" fill="url(#sernisin_fill6)"/>
+<circle cx="25.8" cy="29.2" r="1" fill="url(#sernisin_fill7)"/>
+<path d="M10.4 19L10.2 28.4" stroke="url(#sernisin_fill8)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13.8 19L14 28.4" stroke="url(#sernisin_fill9)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="9.8" cy="29.2" rx="1.8" ry="0.9" fill="url(#sernisin_fill10)"/>
+<ellipse cx="14.4" cy="29.2" rx="1.8" ry="0.9" fill="url(#sernisin_fill11)"/>
+<path d="M8.6 12.2L6.8 18.4" stroke="url(#sernisin_fill12)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="6.6" cy="19.2" r="1.05" fill="url(#sernisin_fill13)"/>
+<circle cx="6.6" cy="19.2" r="1.05" fill="url(#sernisin_fill14)"/>
+<path d="M15.6 12.2L19.4 14.2" stroke="url(#sernisin_fill15)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="20.4" cy="13.8" r="1.05" fill="url(#sernisin_fill16)"/>
+<circle cx="20.4" cy="13.8" r="1.05" fill="url(#sernisin_fill17)"/>
+<path d="M9.6 10.6L14.6 10.6Q16.2 10.6 16.27 12.2L16.57 19.4Q16.6 20 16 20L8.2 20Q7.6 20 7.63 19.4L7.93 12.2Q8 10.6 9.6 10.6Z" fill="url(#sernisin_fill18)"/>
+<path d="M9.6 10.6L14.6 10.6Q16.2 10.6 16.27 12.2L16.57 19.4Q16.6 20 16 20L8.2 20Q7.6 20 7.63 19.4L7.93 12.2Q8 10.6 9.6 10.6Z" fill="url(#sernisin_fill19)"/>
+<g filter="url(#sernisin_blur04)"><ellipse cx="9.6" cy="12.4" rx="0.7" ry="1.4" fill="#FFFFFF" fill-opacity="0.4" transform="rotate(10 9.6 12.4)"/></g>
+<rect x="11.2" y="8" width="1.8" height="3" rx="0.6" fill="url(#sernisin_fill20)"/>
+<rect x="11.2" y="8" width="1.8" height="3" rx="0.6" fill="url(#sernisin_fill21)"/>
+<circle cx="8.9" cy="6" r="0.66" fill="url(#sernisin_fill22)"/>
+<circle cx="8.9" cy="6" r="0.66" fill="url(#sernisin_fill23)"/>
+<circle cx="15.3" cy="6" r="0.66" fill="url(#sernisin_fill24)"/>
+<circle cx="15.3" cy="6" r="0.66" fill="url(#sernisin_fill25)"/>
+<ellipse cx="12.1" cy="5.6" rx="3.23" ry="3.43" fill="url(#sernisin_fill26)"/>
+<ellipse cx="12.1" cy="5.6" rx="3.23" ry="3.43" fill="url(#sernisin_fill27)"/>
+<path d="M8.67 5.93C8.27 3.12 10.05 1.38 12.17 1.38C14.41 1.38 15.93 3.03 15.53 5.93C15.33 4.87 15.07 4.21 14.67 3.88C13.49 4.41 11.77 4.21 10.38 3.42C9.79 4.02 9.06 4.81 8.67 5.93Z" fill="url(#sernisin_fill28)"/>
+<path d="M8.67 5.93C8.27 3.12 10.05 1.38 12.17 1.38C14.41 1.38 15.93 3.03 15.53 5.93C15.33 4.87 15.07 4.21 14.67 3.88C13.49 4.41 11.77 4.21 10.38 3.42C9.79 4.02 9.06 4.81 8.67 5.93Z" fill="url(#sernisin_fill29)"/>
+<g filter="url(#sernisin_blur035)"><ellipse cx="10.71" cy="2.37" rx="1.06" ry="0.4" fill="#FEF5E1" fill-opacity="0.6" transform="rotate(-20 10.71 2.37)"/></g>
+<ellipse cx="10.91" cy="5.93" rx="0.36" ry="0.47" fill="#3A234A"/>
+<circle cx="10.78" cy="5.74" r="0.28" fill="#FFFFFF"/>
+<path d="M10.38 4.94Q10.85 4.61 11.37 4.87" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#sernisin_blur035)"><ellipse cx="10.12" cy="7.08" rx="0.66" ry="0.4" fill="#FF8A80" fill-opacity="0.45"/></g>
+<ellipse cx="13.29" cy="5.93" rx="0.36" ry="0.47" fill="#3A234A"/>
+<circle cx="13.16" cy="5.74" r="0.28" fill="#FFFFFF"/>
+<path d="M13.82 4.94Q13.35 4.61 12.83 4.87" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#sernisin_blur035)"><ellipse cx="14.08" cy="7.08" rx="0.66" ry="0.4" fill="#FF8A80" fill-opacity="0.45"/></g>
+<path d="M10.85 6.85Q11.44 6.39 12.1 6.69Q12.76 6.39 13.35 6.85Q13.22 7.32 12.69 7.25Q12.3 7.18 12.1 6.99Q11.9 7.18 11.51 7.25Q10.98 7.32 10.85 6.85Z" fill="url(#sernisin_fill30)"/>
+<path d="M10.85 6.85Q11.44 6.39 12.1 6.69Q12.76 6.39 13.35 6.85Q13.22 7.32 12.69 7.25Q12.3 7.18 12.1 6.99Q11.9 7.18 11.51 7.25Q10.98 7.32 10.85 6.85Z" fill="url(#sernisin_fill31)"/>
+<path d="M11.37 7.65Q12.1 8.04 12.83 7.65" stroke="#8A004F" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<linearGradient id="sernisin_fill1" x1="20.6" y1="19.4" x2="20.6" y2="13.8" gradientUnits="userSpaceOnUse"><stop stop-color="#988EA1"/><stop offset="1" stop-color="#C2BDC9"/></linearGradient>
+<linearGradient id="sernisin_fill2" x1="25.4" y1="19.4" x2="25.4" y2="13.8" gradientUnits="userSpaceOnUse"><stop stop-color="#988EA1"/><stop offset="1" stop-color="#C2BDC9"/></linearGradient>
+<radialGradient id="sernisin_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="sernisin_fill4" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="sernisin_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="sernisin_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+<radialGradient id="sernisin_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="sernisin_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<linearGradient id="sernisin_fill8" x1="10.2" y1="28.4" x2="10.4" y2="19" gradientUnits="userSpaceOnUse"><stop stop-color="#33293D"/><stop offset="1" stop-color="#554A63"/></linearGradient>
+<linearGradient id="sernisin_fill9" x1="14" y1="28.4" x2="13.8" y2="19" gradientUnits="userSpaceOnUse"><stop stop-color="#33293D"/><stop offset="1" stop-color="#554A63"/></linearGradient>
+<radialGradient id="sernisin_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="sernisin_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<linearGradient id="sernisin_fill12" x1="6.8" y1="18.4" x2="8.6" y2="12.2" gradientUnits="userSpaceOnUse"><stop stop-color="#3557C3"/><stop offset="1" stop-color="#4DA0DA"/></linearGradient>
+<radialGradient id="sernisin_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill14" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.3"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<linearGradient id="sernisin_fill15" x1="19.4" y1="14.2" x2="15.6" y2="12.2" gradientUnits="userSpaceOnUse"><stop stop-color="#3557C3"/><stop offset="1" stop-color="#4DA0DA"/></linearGradient>
+<radialGradient id="sernisin_fill16" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.3"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill18" cx="0.3" cy="0.1" r="0.9"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="sernisin_fill19" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<filter id="sernisin_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="sernisin_fill20" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill21" cx="0.5" cy="0" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.7"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill22" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill23" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill24" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill25" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill26" cx="0.32" cy="0.25" r="0.85"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="sernisin_fill27" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.45"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill28" cx="0.3" cy="0.2" r="0.85"><stop stop-color="#FFE446"/><stop offset="0.5" stop-color="#F7BD38"/><stop offset="1" stop-color="#D77A1C"/></radialGradient>
+<radialGradient id="sernisin_fill29" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D77A1C" stop-opacity="0.5"/><stop offset="0.9" stop-color="#D77A1C" stop-opacity="0"/></radialGradient>
+<radialGradient id="sernisin_fill30" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE446"/><stop offset="0.5" stop-color="#F7BD38"/><stop offset="1" stop-color="#D77A1C"/></radialGradient>
+<radialGradient id="sernisin_fill31" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D77A1C" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D77A1C" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

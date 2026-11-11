@@ -1,0 +1,67 @@
+{
+    "version": 1,
+    "sounds": {
+        "hit": [
+            {
+                "key": "pop",
+                "file": "sounds/pop.mp3",
+                "title": { "az": "Partlama", "en": "Pop" },
+                "effects": ["burst"]
+            },
+            {
+                "key": "chime",
+                "file": "sounds/chime.mp3",
+                "title": { "az": "Zınqırov", "en": "Chime" }
+            }
+        ],
+        "miss": [
+            {
+                "key": "bong",
+                "file": "sounds/bong.mp3",
+                "title": { "az": "Bonq", "en": "Bong" }
+            },
+            {
+                "key": "pluck-down",
+                "file": "sounds/pluck-down.mp3",
+                "title": { "az": "Pizzikato", "en": "Pizzicato" }
+            }
+        ],
+        "solved": [
+            {
+                "key": "success",
+                "file": "sounds/success.mp3",
+                "title": { "az": "Uğur", "en": "Success" }
+            },
+            {
+                "key": "pluck-up",
+                "file": "sounds/pluck-up.mp3",
+                "title": { "az": "Pizzikato", "en": "Pizzicato" }
+            },
+            {
+                "key": "pluck-tada",
+                "file": "sounds/pluck-tada.mp3",
+                "title": { "az": "Pizzikato: ta-da", "en": "Pizzicato: ta-da" }
+            },
+            {
+                "key": "bells",
+                "file": "sounds/bells.mp3",
+                "title": { "az": "Zənglər", "en": "Bells" }
+            },
+            {
+                "key": "marimba",
+                "file": "sounds/marimba.mp3",
+                "title": { "az": "Marimba", "en": "Marimba" }
+            },
+            {
+                "key": "harp",
+                "file": "sounds/harp.mp3",
+                "title": { "az": "Arfa", "en": "Harp" }
+            },
+            {
+                "key": "kalimba",
+                "file": "sounds/kalimba.mp3",
+                "title": { "az": "Kalimba", "en": "Kalimba" }
+            }
+        ]
+    }
+}

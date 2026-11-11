@@ -1,24 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- bayraq: the State Flag of the Republic of Azerbaijan. Elifba own art, MIT. -->
-  <!-- Layout: Constitution of the Republic of Azerbaijan, Article 23: three equal horizontal bands,
-       blue, red, green; a white crescent and eight-pointed star in the middle of the red band;
-       width to length 1:2.
-       Construction, with h the flag height: the flag's construction sheet for the law of 5 February
-       1991 as published on Wikimedia Commons ("Flag of Azerbaijan (construction sheet).svg"; the
-       English Wikipedia article "Flag of Azerbaijan" gives the star's 1/6 h and 1/12 h): the
-       crescent's outer circle is 3/10 h across, its inner circle 1/4 h across with its centre 1/30 h
-       to the right, the star 1/6 h across with an inner circle of 1/12 h, one point straight up, and
-       crescent and star together span 2/5 h, centred on the flag. Only these facts are used.
-       Colours: the Rules for the Use of the State Flag, item 9.2 (Milli Mejlis, 22 October 2013;
-       ratified 2018): Pantone 306 C blue #00B5E2, Pantone Red 032 C #EF3340, Pantone 362 C green
-       #509E2F. The symbols pack palette is the same three values.
-       Here h = 30 grid units: the field is 60 x 30 at (6, 21). The black frame lies outside the
-       field and the crescent and star have no outline, so nothing changes their proportions. -->
-  <rect x="6" y="21" width="60" height="10" fill="#00B5E2"/>
-  <rect x="6" y="31" width="60" height="10" fill="#EF3340"/>
-  <rect x="6" y="41" width="60" height="10" fill="#509E2F"/>
-  <circle cx="34.5" cy="36" r="4.5" fill="#FFF"/>
-  <circle cx="35.5" cy="36" r="3.75" fill="#EF3340"/>
-  <polygon points="39.5,33.5 39.98,34.85 41.27,34.23 40.65,35.52 42,36 40.65,36.48 41.27,37.77 39.98,37.15 39.5,38.5 39.02,37.15 37.73,37.77 38.35,36.48 37,36 38.35,35.52 37.73,34.23 39.02,34.85" fill="#FFF"/>
-  <rect x="5" y="20" width="62" height="32" fill="none" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- bayraq: the State Flag of the Republic of Azerbaijan. Elifba own art, MIT. -->
+<!-- Layout: Constitution of the Republic of Azerbaijan, Article 23: three equal horizontal bands,
+     blue, red, green; a white crescent and eight-pointed star in the middle of the red band;
+     width to length 1:2.
+     Construction, with h the flag height: the flag's construction sheet for the law of 5 February
+     1991 as published on Wikimedia Commons ("Flag of Azerbaijan (construction sheet).svg"; the
+     English Wikipedia article "Flag of Azerbaijan" gives the star's 1/6 h and 1/12 h): the
+     crescent's outer circle is 3/10 h across, its inner circle 1/4 h across with its centre 1/30 h
+     to the right, the star 1/6 h across with an inner circle of 1/12 h, one point straight up, and
+     crescent and star together span 2/5 h, centred on the flag. Only these facts are used.
+     Colours: the Rules for the Use of the State Flag, item 9.2 (Milli Mejlis, 22 October 2013;
+     ratified 2018): Pantone 306 C blue #00B5E2, Pantone Red 032 C #EF3340, Pantone 362 C green
+     #509E2F. The symbols pack palette is the same three values.
+     Here h = 14 grid units: the field is 28 x 14 at (2, 9), every measure scaled from h and
+     rounded to two decimals; flat fills, no gradient, highlight or blur on the field. The frame
+     (#33293D, ADR 014) lies outside the field and the crescent and star have no outline, so
+     nothing changes their proportions. -->
+<rect x="1.1" y="8.1" width="29.8" height="15.8" rx="0.9" fill="#33293D"/>
+<rect x="2" y="9" width="28" height="14" fill="#00B5E2"/>
+<rect x="2" y="13.67" width="28" height="9.33" fill="#EF3340"/>
+<rect x="2" y="18.33" width="28" height="4.67" fill="#509E2F"/>
+<circle cx="15.3" cy="16" r="2.1" fill="#FFFFFF"/>
+<circle cx="15.77" cy="16" r="1.75" fill="#EF3340"/>
+<polygon points="17.63,14.83 17.86,15.46 18.46,15.18 18.17,15.78 18.8,16 18.17,16.22 18.46,16.82 17.86,16.54 17.63,17.17 17.41,16.54 16.81,16.82 17.09,16.22 16.47,16 17.09,15.78 16.81,15.18 17.41,15.46" fill="#FFFFFF"/>
 </svg>

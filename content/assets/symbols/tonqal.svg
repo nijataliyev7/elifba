@@ -1,9 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- tonqal: a bonfire on crossed logs. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M36,6 C40,14 50,18 51,32 C53,28 52,24 54,22 C58,30 60,40 56,48 C52,56 44,58 36,58 C28,58 20,56 16,48 C12,40 14,30 18,22 C20,24 19,28 21,32 C22,20 32,16 36,6 Z" fill="#E27022"/>
-    <path d="M36,24 C38,30 45,34 45,42 C45,50 41,54 36,54 C31,54 27,50 27,42 C27,36 33,32 36,24 Z" fill="#FCEA2B"/>
-    <g transform="rotate(14 36 58)"><rect x="10" y="54" width="52" height="8" rx="4" fill="#A57939"/><ellipse cx="58" cy="58" rx="2.5" ry="4" fill="#F4AA41"/></g>
-    <g transform="rotate(-14 36 58)"><rect x="10" y="54" width="52" height="8" rx="4" fill="#6A462F"/><ellipse cx="14" cy="58" rx="2.5" ry="4" fill="#F4AA41"/></g>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- tonqal: a bonfire, flames rising from crossed logs. Elifba own art, MIT. -->
+<path d="M16 1.6C17.8 6 23.2 8.8 24.2 15C25 20.2 21.2 25.2 16 25.2C10.8 25.2 7 20.6 7.8 15.4C8.3 12.2 10.4 10.6 11.2 7.8C12.4 9.6 13 11 13.4 12.8C14.6 9.2 15.2 6 16 1.6Z" fill="url(#tonqal_fill1)"/>
+<path d="M16 1.6C17.8 6 23.2 8.8 24.2 15C25 20.2 21.2 25.2 16 25.2C10.8 25.2 7 20.6 7.8 15.4C8.3 12.2 10.4 10.6 11.2 7.8C12.4 9.6 13 11 13.4 12.8C14.6 9.2 15.2 6 16 1.6Z" fill="url(#tonqal_fill2)"/>
+<path d="M16.4 9.6C18.4 12.8 21.2 15.6 20.8 19C20.6 21.8 18.6 23.4 16.2 23.4C13.8 23.4 11.8 21.8 11.6 19.2C11.4 16.2 14.4 14 16.4 9.6Z" fill="url(#tonqal_fill3)"/>
+<path d="M16.4 9.6C18.4 12.8 21.2 15.6 20.8 19C20.6 21.8 18.6 23.4 16.2 23.4C13.8 23.4 11.8 21.8 11.6 19.2C11.4 16.2 14.4 14 16.4 9.6Z" fill="url(#tonqal_fill4)"/>
+<g filter="url(#tonqal_blur06)"><ellipse cx="16.2" cy="20.4" rx="2.4" ry="2.8" fill="#FFFBE0" fill-opacity="0.8"/></g>
+<path d="M5.97 20.94L25.4 26.39Q27.09 26.87 26.61 28.55L26.59 28.65Q26.11 30.33 24.43 29.86L5 24.41Q3.31 23.93 3.79 22.25L3.81 22.15Q4.29 20.47 5.97 20.94Z" fill="url(#tonqal_fill5)"/>
+<path d="M5.97 20.94L25.4 26.39Q27.09 26.87 26.61 28.55L26.59 28.65Q26.11 30.33 24.43 29.86L5 24.41Q3.31 23.93 3.79 22.25L3.81 22.15Q4.29 20.47 5.97 20.94Z" fill="url(#tonqal_fill6)"/>
+<path d="M27 24.41L7.57 29.86Q5.89 30.33 5.41 28.65L5.39 28.55Q4.91 26.87 6.6 26.39L26.03 20.94Q27.71 20.47 28.19 22.15L28.21 22.25Q28.69 23.93 27 24.41Z" fill="url(#tonqal_fill7)"/>
+<path d="M27 24.41L7.57 29.86Q5.89 30.33 5.41 28.65L5.39 28.55Q4.91 26.87 6.6 26.39L26.03 20.94Q27.71 20.47 28.19 22.15L28.21 22.25Q28.69 23.93 27 24.41Z" fill="url(#tonqal_fill8)"/>
+<circle cx="4.2" cy="22.4" r="1.8" fill="url(#tonqal_fill9)"/>
+<circle cx="4.2" cy="22.4" r="1.8" fill="url(#tonqal_fill10)"/>
+<circle cx="27.8" cy="22.4" r="1.8" fill="url(#tonqal_fill11)"/>
+<circle cx="27.8" cy="22.4" r="1.8" fill="url(#tonqal_fill12)"/>
+<path d="M5 22.4C5 22.84 4.64 23.2 4.2 23.2C3.76 23.2 3.4 22.84 3.4 22.4C3.4 21.96 3.76 21.6 4.2 21.6C4.64 21.6 5 21.96 5 22.4Z" stroke="#C48462" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28.6 22.4C28.6 22.84 28.24 23.2 27.8 23.2C27.36 23.2 27 22.84 27 22.4C27 21.96 27.36 21.6 27.8 21.6C28.24 21.6 28.6 21.96 28.6 22.4Z" stroke="#C48462" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#tonqal_blur06)"><ellipse cx="16" cy="24.6" rx="6" ry="1.4" fill="#FFB443" fill-opacity="0.55"/></g>
+<defs>
+<radialGradient id="tonqal_fill1" cx="0.4" cy="0.2" r="0.85"><stop stop-color="#FF953D"/><stop offset="0.5" stop-color="#FF5E47"/><stop offset="1" stop-color="#CE5327"/></radialGradient>
+<radialGradient id="tonqal_fill2" cx="0.7" cy="1" r="0.7"><stop stop-color="#CE5327" stop-opacity="0.5"/><stop offset="0.9" stop-color="#CE5327" stop-opacity="0"/></radialGradient>
+<radialGradient id="tonqal_fill3" cx="0.45" cy="0.4" r="0.8"><stop stop-color="#FFF478"/><stop offset="0.5" stop-color="#FFDA2F"/><stop offset="1" stop-color="#FF8E41"/></radialGradient>
+<radialGradient id="tonqal_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#FF8E41" stop-opacity="0.3"/><stop offset="0.9" stop-color="#FF8E41" stop-opacity="0"/></radialGradient>
+<filter id="tonqal_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+<radialGradient id="tonqal_fill5" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="tonqal_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="tonqal_fill7" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="tonqal_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="tonqal_fill9" cx="0.4" cy="0.3" r="0.8"><stop stop-color="#EFBE85"/><stop offset="0.5" stop-color="#E8AC81"/><stop offset="1" stop-color="#D6753D"/></radialGradient>
+<radialGradient id="tonqal_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D6753D" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D6753D" stop-opacity="0"/></radialGradient>
+<radialGradient id="tonqal_fill11" cx="0.4" cy="0.3" r="0.8"><stop stop-color="#EFBE85"/><stop offset="0.5" stop-color="#E8AC81"/><stop offset="1" stop-color="#D6753D"/></radialGradient>
+<radialGradient id="tonqal_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D6753D" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D6753D" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

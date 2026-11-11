@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import { navAreas } from '@/components/app/nav-areas';
+import { useNavAreas } from '@/components/app/nav-areas';
 import AppLogo from '@/components/app-logo';
 import {
     Collapsible,
@@ -34,7 +34,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { activeArea, activePage } from '@/lib/nav-active';
 import type { NavArea } from '@/lib/nav-active';
 import { cn } from '@/lib/utils';
-import { index as classes } from '@/routes/classes';
+import { start } from '@/routes';
 
 /**
  * The teacher shell's sidebar, `lg+` only (docs/frontend.md §1): it collapses
@@ -47,6 +47,7 @@ import { index as classes } from '@/routes/classes';
 export function AppSidebar() {
     const { isMobile } = useSidebar();
     const { url } = usePage();
+    const navAreas = useNavAreas();
     const current = activeArea(navAreas, url);
 
     if (isMobile) {
@@ -59,7 +60,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={classes()} prefetch>
+                            <Link href={start()}>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

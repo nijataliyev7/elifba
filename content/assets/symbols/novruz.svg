@@ -1,16 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- Novruz: a holiday tray (xonça) with candles and painted eggs. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="36" cy="52" rx="31" ry="11" fill="#E27022"/>
-    <ellipse cx="36" cy="50" rx="27" ry="8" fill="#F1B31C"/>
-    <rect x="20" y="28" width="6" height="20" fill="#FFF"/>
-    <rect x="33" y="22" width="6" height="25" fill="#FFF"/>
-    <rect x="46" y="28" width="6" height="20" fill="#FFF"/>
-    <path d="M23,26 C20.5,23 21.5,19.5 23,17 C24.5,19.5 25.5,23 23,26 Z" fill="#F1B31C"/>
-    <path d="M36,20 C33.5,17 34.5,13.5 36,11 C37.5,13.5 38.5,17 36,20 Z" fill="#F1B31C"/>
-    <path d="M49,26 C46.5,23 47.5,19.5 49,17 C50.5,19.5 51.5,23 49,26 Z" fill="#F1B31C"/>
-    <ellipse cx="24" cy="53" rx="4.5" ry="6" fill="#D22F27"/>
-    <ellipse cx="36" cy="55" rx="4.5" ry="6" fill="#61B2E4"/>
-    <ellipse cx="48" cy="53" rx="4.5" ry="6" fill="#B1CC33"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Novruz: a festive tray with three lit candles and painted eggs. Elifba own art, MIT. -->
+<ellipse cx="16" cy="25.4" rx="14.6" ry="4.6" fill="url(#novruz_fill1)"/>
+<ellipse cx="16" cy="25.4" rx="14.6" ry="4.6" fill="url(#novruz_fill2)"/>
+<ellipse cx="16" cy="24.4" rx="13.2" ry="3.6" fill="url(#novruz_fill3)"/>
+<ellipse cx="16" cy="24.4" rx="13.2" ry="3.6" fill="url(#novruz_fill4)"/>
+<g filter="url(#novruz_blur08)"><circle cx="9.4" cy="11" r="2.6" fill="#FFE79A" fill-opacity="0.45"/></g>
+<rect x="8.1" y="13.4" width="2.6" height="10.6" rx="0.78" fill="url(#novruz_fill5)"/>
+<rect x="8.1" y="13.4" width="2.6" height="10.6" rx="0.78" fill="url(#novruz_fill6)"/>
+<path d="M9.4 13.4L9.4 12.6" stroke="#5F4341" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.4 9.2C10 10.6 10.6 11.4 10.6 11.8C10.6 12.6 10 13 9.4 13C8.8 13 8.2 12.6 8.2 11.8C8.2 11.4 8.8 10.6 9.4 9.2Z" fill="url(#novruz_fill7)"/>
+<g filter="url(#novruz_blur08)"><circle cx="22.6" cy="11" r="2.6" fill="#FFE79A" fill-opacity="0.45"/></g>
+<rect x="21.3" y="13.4" width="2.6" height="10.6" rx="0.78" fill="url(#novruz_fill8)"/>
+<rect x="21.3" y="13.4" width="2.6" height="10.6" rx="0.78" fill="url(#novruz_fill9)"/>
+<path d="M22.6 13.4L22.6 12.6" stroke="#5F4341" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.6 9.2C23.2 10.6 23.8 11.4 23.8 11.8C23.8 12.6 23.2 13 22.6 13C22 13 21.4 12.6 21.4 11.8C21.4 11.4 22 10.6 22.6 9.2Z" fill="url(#novruz_fill10)"/>
+<g filter="url(#novruz_blur08)"><circle cx="16" cy="6.8" r="2.6" fill="#FFE79A" fill-opacity="0.45"/></g>
+<rect x="14.5" y="9.2" width="3" height="14.2" rx="0.9" fill="url(#novruz_fill11)"/>
+<rect x="14.5" y="9.2" width="3" height="14.2" rx="0.9" fill="url(#novruz_fill12)"/>
+<path d="M16 9.2L16 8.4" stroke="#5F4341" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 5C16.6 6.4 17.2 7.2 17.2 7.6C17.2 8.4 16.6 8.8 16 8.8C15.4 8.8 14.8 8.4 14.8 7.6C14.8 7.2 15.4 6.4 16 5Z" fill="url(#novruz_fill13)"/>
+<path d="M9.6 22C11.6 22 12.1 24.7 12.1 25.9C12.1 27.25 10.97 28 9.6 28C8.22 28 7.1 27.25 7.1 25.9C7.1 24.7 7.6 22 9.6 22Z" fill="url(#novruz_fill14)"/>
+<path d="M9.6 22C11.6 22 12.1 24.7 12.1 25.9C12.1 27.25 10.97 28 9.6 28C8.22 28 7.1 27.25 7.1 25.9C7.1 24.7 7.6 22 9.6 22Z" fill="url(#novruz_fill15)"/>
+<g filter="url(#novruz_blur03)"><ellipse cx="8.6" cy="23.95" rx="0.62" ry="0.9" fill="#FDE3E6" fill-opacity="0.75" transform="rotate(20 8.6 23.95)"/></g>
+<path d="M22.4 22C24.4 22 24.9 24.7 24.9 25.9C24.9 27.25 23.77 28 22.4 28C21.02 28 19.9 27.25 19.9 25.9C19.9 24.7 20.4 22 22.4 22Z" fill="url(#novruz_fill16)"/>
+<path d="M22.4 22C24.4 22 24.9 24.7 24.9 25.9C24.9 27.25 23.77 28 22.4 28C21.02 28 19.9 27.25 19.9 25.9C19.9 24.7 20.4 22 22.4 22Z" fill="url(#novruz_fill17)"/>
+<g filter="url(#novruz_blur03)"><ellipse cx="21.4" cy="23.95" rx="0.62" ry="0.9" fill="#E4F1F9" fill-opacity="0.75" transform="rotate(20 21.4 23.95)"/></g>
+<path d="M16 23.1C18.08 23.1 18.6 25.89 18.6 27.13C18.6 28.52 17.43 29.3 16 29.3C14.57 29.3 13.4 28.52 13.4 27.13C13.4 25.89 13.92 23.1 16 23.1Z" fill="url(#novruz_fill18)"/>
+<path d="M16 23.1C18.08 23.1 18.6 25.89 18.6 27.13C18.6 28.52 17.43 29.3 16 29.3C14.57 29.3 13.4 28.52 13.4 27.13C13.4 25.89 13.92 23.1 16 23.1Z" fill="url(#novruz_fill19)"/>
+<g filter="url(#novruz_blur03)"><ellipse cx="14.96" cy="25.11" rx="0.65" ry="0.93" fill="#EFF7E7" fill-opacity="0.75" transform="rotate(20 14.96 25.11)"/></g>
+<defs>
+<radialGradient id="novruz_fill1" cx="0.3" cy="0.1" r="0.9"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="novruz_fill2" cx="0.6" cy="1" r="0.7"><stop stop-color="#C79738" stop-opacity="0.7"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="novruz_fill3" cx="0.6" cy="0.9" r="0.9"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="novruz_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.3"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="novruz_blur08" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.8"/></filter>
+<radialGradient id="novruz_fill5" cx="0.3" cy="0.1" r="1"><stop stop-color="#FFEFD1"/><stop offset="0.5" stop-color="#F6E0BB"/><stop offset="1" stop-color="#BA9D88"/></radialGradient>
+<radialGradient id="novruz_fill6" cx="0.9" cy="0.9" r="0.7"><stop stop-color="#BA9D88" stop-opacity="0.6"/><stop offset="0.9" stop-color="#BA9D88" stop-opacity="0"/></radialGradient>
+<radialGradient id="novruz_fill7" cx="0.5" cy="0.7" r="0.8"><stop stop-color="#FFF478"/><stop offset="0.5" stop-color="#FFDA2F"/><stop offset="1" stop-color="#FF8E41"/></radialGradient>
+<radialGradient id="novruz_fill8" cx="0.3" cy="0.1" r="1"><stop stop-color="#FFEFD1"/><stop offset="0.5" stop-color="#F6E0BB"/><stop offset="1" stop-color="#BA9D88"/></radialGradient>
+<radialGradient id="novruz_fill9" cx="0.9" cy="0.9" r="0.7"><stop stop-color="#BA9D88" stop-opacity="0.6"/><stop offset="0.9" stop-color="#BA9D88" stop-opacity="0"/></radialGradient>
+<radialGradient id="novruz_fill10" cx="0.5" cy="0.7" r="0.8"><stop stop-color="#FFF478"/><stop offset="0.5" stop-color="#FFDA2F"/><stop offset="1" stop-color="#FF8E41"/></radialGradient>
+<radialGradient id="novruz_fill11" cx="0.3" cy="0.1" r="1"><stop stop-color="#FFEFD1"/><stop offset="0.5" stop-color="#F6E0BB"/><stop offset="1" stop-color="#BA9D88"/></radialGradient>
+<radialGradient id="novruz_fill12" cx="0.9" cy="0.9" r="0.7"><stop stop-color="#BA9D88" stop-opacity="0.6"/><stop offset="0.9" stop-color="#BA9D88" stop-opacity="0"/></radialGradient>
+<radialGradient id="novruz_fill13" cx="0.5" cy="0.7" r="0.8"><stop stop-color="#FFF478"/><stop offset="0.5" stop-color="#FFDA2F"/><stop offset="1" stop-color="#FF8E41"/></radialGradient>
+<radialGradient id="novruz_fill14" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="novruz_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="novruz_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<radialGradient id="novruz_fill16" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="novruz_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.5"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="novruz_fill18" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="novruz_fill19" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.5"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

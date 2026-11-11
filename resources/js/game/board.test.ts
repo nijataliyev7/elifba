@@ -35,6 +35,7 @@ function round(index: number, target = 'b'): Round {
             text: '«Ə» hərfini tap!',
             show: 'Ə',
             image: null,
+            count: null,
             audio: null,
             tail: null,
         },
@@ -65,7 +66,8 @@ function nene(index: number): Round {
         prompt: {
             text: 'Sözü hecalardan yığ!',
             show: null,
-            image: '/content/openmoji/1F475.svg?v=2',
+            image: '/content/fluent/1F475.svg?v=2',
+            count: null,
             audio: null,
             tail: null,
         },
@@ -246,6 +248,7 @@ function recordingScene() {
         applyHit: (effect: HitEffect) =>
             log.push(`hit:${effect.itemId}:${effect.status}`),
         setPaused: (paused) => log.push(paused ? 'pause' : 'play'),
+        repeatPrompt: () => log.push('repeat'),
     };
 
     return { scene, log };
@@ -597,6 +600,7 @@ describe('a sequence round with a reused tile', () => {
             showRound: (_, progress) => shown.push(progress),
             applyHit: () => {},
             setPaused: () => {},
+            repeatPrompt: () => {},
         });
         await controller.load();
         controller.start();
@@ -641,6 +645,31 @@ describe('who is at the board', () => {
         storage.setItem(boardStorageKey(GAME, 'student'), 'gone');
 
         expect(setup({ storage }).controller.getView().studentId).toBeNull();
+    });
+});
+
+describe('a home board (architecture §4 "At home")', () => {
+    it('queues hits with no student, whatever asks for one', async () => {
+        const { controller, server, bridge } = setup({ studentIds: [] });
+
+        await controller.load();
+        controller.start();
+        // The phone of a class game would send these; a home game has no students.
+        controller.setStudent('s1');
+        controller.nextStudent();
+        expect(controller.getView().studentId).toBeNull();
+
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'a' });
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        await settle();
+
+        const events = server.synced.flatMap((request) => request.events);
+
+        expect(events).toHaveLength(2);
+        expect(events.map((event) => event.type)).toEqual(['hit', 'hit']);
+        for (const event of events) {
+            expect(event).toMatchObject({ student_id: null, source: 'board' });
+        }
     });
 });
 

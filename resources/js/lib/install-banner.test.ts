@@ -57,8 +57,11 @@ describe('bannerAllowedOn', () => {
             'games/setup',
             'rankings/show',
             'words/index',
+            'children/index',
+            'auth/choose-role',
             'settings/profile',
             'settings/play',
+            'settings/roles',
         ]) {
             expect(bannerAllowedOn(page), page).toBe(true);
         }

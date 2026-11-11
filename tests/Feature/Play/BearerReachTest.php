@@ -2,6 +2,7 @@
 
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Actions\TransitionGameSession;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Models\GameSession;
@@ -36,15 +37,17 @@ const BEARER_ROUTES = [
 ];
 
 /**
- * Teacher A with a class, a student, a game on a guest board and a second
- * live game; teacher B with a game of their own.
+ * Account A (a teacher and a parent) with a class, a student, a game on a
+ * guest board, a second live game, a child and the child's home game;
+ * teacher B with a game of their own.
  *
- * @return array{teacher: User, class: SchoolClass, student: Student, shown: GameSession, other: GameSession, foreign: GameSession, board: GuestBoard, token: string}
+ * @return array{teacher: User, class: SchoolClass, student: Student, child: Child, shown: GameSession, other: GameSession, home: GameSession, foreign: GameSession, board: GuestBoard, token: string}
  */
 function bearerWorld(): array
 {
-    $teacher = User::factory()->create();
+    $teacher = User::factory()->teacherAndParent()->create();
     $class = SchoolClass::factory()->for($teacher, 'teacher')->create();
+    $child = Child::factory()->for($teacher, 'parent')->create(['display_name' => 'Firuzə']);
     $student = Student::factory()->for($class)->create(['display_name' => 'Aysel']);
     $shown = Games::start($class, seed: 1);
     $board = GuestBoards::showing($shown);
@@ -53,8 +56,10 @@ function bearerWorld(): array
         'teacher' => $teacher,
         'class' => $class,
         'student' => $student,
+        'child' => $child,
         'shown' => $shown,
         'other' => Games::start($class, seed: 2),
+        'home' => Games::start($child, seed: 4),
         'foreign' => Games::start(SchoolClass::factory()->create(), seed: 3),
         'board' => $board['board'],
         'token' => $board['token'],
@@ -71,6 +76,7 @@ function bearerUri(RoutingRoute $route, array $world, GameSession $game): string
     $values = [
         'class' => $world['class']->id,
         'student' => $world['student']->id,
+        'child' => $world['child']->id,
         'game' => $game->id,
         'board' => $world['board']->id,
         'code' => '123456',
@@ -100,6 +106,7 @@ function bearerSnapshot(): array
         'guest_boards' => $rows('guest_boards'),
         'school_classes' => $rows('school_classes'),
         'students' => $rows('students'),
+        'children' => $rows('children'),
     ];
 }
 
@@ -151,6 +158,7 @@ it('lets the bearer drive the game its board shows, and nothing writes elsewhere
 
     expect($world['other']->refresh()->board_epoch)->toBe(0)
         ->and($world['other']->status)->toBe(GameSessionStatus::Live)
+        ->and($world['home']->refresh()->board_epoch)->toBe(0)
         ->and($world['foreign']->refresh()->board_epoch)->toBe(0);
 });
 
@@ -170,6 +178,7 @@ it('finds no other game for the bearer: claim, state, sync and status answer 404
     expect(bearerSnapshot())->toBe($before);
 })->with([
     'the teacher\'s other game' => 'other',
+    'the account\'s home game' => 'home',
     'another teacher\'s game' => 'foreign',
 ])->with([
     'claim' => ['games.board.claim', 'POST'],

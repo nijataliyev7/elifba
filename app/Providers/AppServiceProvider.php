@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Domain\Play\Events\GameSessionTransitioned;
 use App\Domain\Play\Listeners\BroadcastSessionStatus;
 use App\Domain\Play\Support\GuestBoardGuard;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureRoles();
         $this->configurePlay();
 
         // `composer dev`: no queue worker, because QUEUE_CONNECTION is `sync`
@@ -61,6 +64,15 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Account roles (docs/architecture.md §1 "Accounts and roles", ADR 010):
+     * `model_has_roles.model_type` holds the alias `user`, not a class name.
+     */
+    protected function configureRoles(): void
+    {
+        Relation::morphMap(['user' => User::class]);
     }
 
     /**

@@ -6,6 +6,8 @@ use App\Domain\Content\Data\CreditData;
 use App\Domain\Content\Data\LevelData;
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\PromptTemplateData;
+use App\Domain\Content\Data\SoundChoiceData;
+use App\Domain\Content\Data\VoiceData;
 use App\Domain\Content\Enums\Effect;
 use App\Domain\Content\Enums\ItemStyle;
 use App\Domain\Content\Enums\License;
@@ -25,8 +27,9 @@ use SplFileInfo;
 
 /**
  * Checks a content root (docs/architecture.md §3, §8): `alphabet.json`,
- * `avatars.json`, `levels.json`, `prompts.json`, `credits.json`,
- * `packs/*.json`, `tests/syllables.json` and every file under `assets/`
+ * `avatars.json`, `sounds.json`, `levels.json`, `prompts.json`, `voice.json`
+ * with `voice-clips.json`, `credits.json`, `packs/*.json`,
+ * `tests/syllables.json` and every file under `assets/`
  * and `resources/fonts/` (credits; SVG files are also checked for anything
  * that could run or load). `validate()` lists every problem, one line each;
  * an empty list means the content is valid.
@@ -44,7 +47,7 @@ final class ContentValidator
 {
     /**
      * "Every word has a picture" (§3), on since A5 drew own art for the
-     * words OpenMoji lacks.
+     * words its emoji set lacked.
      */
     public const bool WORD_PICTURES_REQUIRED = true;
 
@@ -70,6 +73,24 @@ final class ContentValidator
     public const int MAX_SENTENCE_WORDS = 4;
 
     /**
+     * Words with a picture a pack that lists `picture` needs (R5, ADR 012).
+     */
+    public const int MIN_PICTURES = 6;
+
+    /**
+     * Words with a picture a pack that lists `number` needs: the things a
+     * `count` round counts.
+     */
+    public const int MIN_COUNTED = 4;
+
+    /**
+     * The numbers a number level may use (R5): 1–10.
+     */
+    public const int MIN_NUMBER = 1;
+
+    public const int MAX_NUMBER = 10;
+
+    /**
      * Figures a pack of an `animal` or `fruit` look needs per item of the
      * fullest round any level shows (§2 "Figures"): the round's own words
      * and picture are left out, and the rest must still give every item a
@@ -89,15 +110,22 @@ final class ContentValidator
     public const array CREDITED_FOLDERS = ['resources/fonts'];
 
     /**
-     * Where share-alike files must stay, inside the content root (§8).
+     * Where share-alike files must stay, inside the content root (§8). None
+     * is left since ADR 014 removed OpenMoji; the folder name stays, so a
+     * share-alike file added later still has one place.
      */
     public const string SHARE_ALIKE_FOLDER = 'assets/openmoji/';
+
+    /**
+     * The one speech provider `php artisan content:voice` calls (ADR 015).
+     */
+    public const string VOICE_PROVIDER = 'elevenlabs';
 
     private const string KEY = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
     /**
-     * Lowercase folders; a file name may hold capitals, for OpenMoji's code
-     * points (`openmoji/1F9D1-200D-1F3EB.svg`).
+     * Lowercase folders; a file name may hold capitals, for Fluent Emoji's
+     * code points (`fluent/1F9D1-200D-1F3EB.svg`).
      */
     private const string ASSET_PATH = '/^(?:[a-z0-9_-]+\/)+[A-Za-z0-9_-]+\.[a-z0-9]+$/';
 
@@ -119,13 +147,39 @@ final class ContentValidator
     private const array FINAL_MARKS = ['.', '!', '?'];
 
     /**
+     * What a title may hold besides letters and SIGNS: digits and a colon,
+     * for «1-dən 5-ə» and «Şəkillər: asan» (R5). Prompts never hold them.
+     */
+    private const array TITLE_SIGNS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':'];
+
+    /**
      * @var list<string>
      */
     private array $problems = [];
 
+    /**
+     * The sounds of `sounds.json` by moment and key, or null when the file
+     * has a problem (then no pack's sound is checked against it).
+     *
+     * @var array<value-of<Sound>, array<string, SoundChoiceData>>|null
+     */
+    private ?array $soundChoices = null;
+
+    /**
+     * The templates of `prompts.json` as `voice.json` keys them
+     * (`find.picture`), or null when the file has a problem.
+     *
+     * @var list<string>|null
+     */
+    private ?array $templates = null;
+
+    /**
+     * @param  bool  $voiceClipsRequired  false for `content:voice`, which makes the praise and retry clips this would require and prunes the clips of another voice
+     */
     public function __construct(
         private readonly string $root,
         private readonly bool $wordPicturesRequired = self::WORD_PICTURES_REQUIRED,
+        private readonly bool $voiceClipsRequired = true,
     ) {}
 
     /**
@@ -137,8 +191,10 @@ final class ContentValidator
 
         $this->alphabet();
         $this->avatars();
+        $this->sounds();
         $levels = $this->levels();
         $this->prompts($levels);
+        $this->voice();
         $credits = $this->credits();
 
         foreach (array_keys(ContentRepository::packFiles($this->root)) as $key) {
@@ -284,6 +340,120 @@ final class ContentValidator
         }
     }
 
+    // ── sounds.json ─────────────────────────────────────────────────────
+
+    /**
+     * The sounds an account may choose (§3 "Sounds"): a `version` and, for
+     * every choosable moment (`Sound::choosable()`, and no other), a
+     * non-empty list of sounds, each with a unique key, an audio file listed
+     * once, a title and, optionally, the effects it suits.
+     */
+    private function sounds(): void
+    {
+        $file = 'sounds.json';
+        $this->soundChoices = null;
+        $before = count($this->problems);
+        $data = $this->object($this->read($file), $file, '', ['version', 'sounds']);
+
+        if ($data === null) {
+            return;
+        }
+
+        if (! is_int($data['version']) || $data['version'] < 1) {
+            $this->problem($file, 'version must be a whole number from 1');
+        }
+
+        $moments = array_map(static fn (Sound $sound): string => $sound->value, Sound::choosable());
+        $lists = $this->object($data['sounds'], $file, 'sounds', $moments);
+
+        if ($lists === null) {
+            return;
+        }
+
+        $choices = [];
+
+        foreach (Sound::choosable() as $sound) {
+            $where = "sounds.{$sound->value}";
+            $list = $this->list($lists[$sound->value], $file, $where);
+            $keys = [];
+            $files = [];
+
+            if ($list === []) {
+                $this->problem($file, "{$where} needs at least one sound");
+            }
+
+            foreach ($list ?? [] as $index => $entry) {
+                $at = "{$where}[{$index}]";
+                $entry = $this->object($entry, $file, $at, ['key', 'file', 'title'], ['effects']);
+
+                if ($entry === null) {
+                    continue;
+                }
+
+                $key = $this->string($entry['key'], $file, "{$at}.key");
+
+                if ($key !== null && (preg_match(SoundChoices::KEY_PATTERN, $key) !== 1 || in_array($key, $keys, true))) {
+                    $this->problem($file, "{$at} \"{$key}\" needs a key unique in {$where} matching ".SoundChoices::KEY_PATTERN);
+                }
+
+                $path = $this->asset($entry['file'], self::AUDIO_EXTENSIONS, $file, "{$at}.file");
+
+                if ($path !== null && in_array($path, $files, true)) {
+                    $this->problem($file, "{$at}.file \"{$path}\" is already a sound of {$where}");
+                }
+
+                $this->title($entry['title'], $file, "{$at}.title");
+
+                if (array_key_exists('effects', $entry)) {
+                    $this->enums(Effect::class, $entry['effects'], $file, "{$at}.effects");
+                }
+
+                $keys[] = $key;
+                $files[] = $path;
+                /** @var array{key: string, file: string, title: array{az: string, en: string}, effects?: list<string>} $entry */
+                $choices[$sound->value][] = $entry;
+            }
+        }
+
+        if (count($this->problems) !== $before) {
+            return;
+        }
+
+        $this->soundChoices = [];
+
+        foreach ($choices as $moment => $entries) {
+            foreach ($entries as $entry) {
+                $this->soundChoices[$moment][$entry['key']] = SoundChoiceData::fromArray($entry);
+            }
+        }
+    }
+
+    /**
+     * A pack's own sound for a choosable moment is one of the sounds of
+     * `sounds.json` for the same moment, so the account's choice (Settings →
+     * Oyun) can always fall back to it, and it suits the pack's effect (no
+     * pop where items sparkle, §8). `arrive` and `leave` are the pack's
+     * alone: any audio file that exists, credited like every asset.
+     */
+    private function packSound(Sound $sound, ?string $path, ?Effect $effect, string $file): void
+    {
+        if (! $sound->isChoosable() || $this->soundChoices === null || $path === null) {
+            return;
+        }
+
+        foreach ($this->soundChoices[$sound->value] ?? [] as $choice) {
+            if ($choice->file === $path) {
+                if ($effect !== null && ! $choice->suits($effect)) {
+                    $this->problem($file, "style.sounds.{$sound->value} \"{$path}\" does not suit the effect `{$effect->value}`");
+                }
+
+                return;
+            }
+        }
+
+        $this->problem($file, "style.sounds.{$sound->value} \"{$path}\" must be a sound of sounds.json under sounds.{$sound->value}");
+    }
+
     // ── levels.json ─────────────────────────────────────────────────────
 
     /**
@@ -304,7 +474,7 @@ final class ContentValidator
 
         foreach ($levels as $index => $level) {
             $where = "levels[{$index}]";
-            $level = $this->object($level, $file, $where, ['key', 'title', 'unit', 'mechanics'], ['items', 'decoys', 'shapes', 'syllables', 'words']);
+            $level = $this->object($level, $file, $where, ['key', 'title', 'unit', 'mechanics'], ['items', 'decoys', 'shapes', 'syllables', 'words', 'numbers']);
 
             if ($level === null) {
                 continue;
@@ -337,7 +507,7 @@ final class ContentValidator
             $this->wholeNumber($level, 'items', $hits, 2, 8, $file, $where, 'levels with find or pop');
             $this->wholeNumber($level, 'decoys', $builds, 0, 4, $file, $where, 'levels with a build mechanic');
 
-            foreach (['shapes' => Unit::Syllable, 'syllables' => Unit::Word, 'words' => Unit::Sentence] as $filter => $filterUnit) {
+            foreach (['shapes' => Unit::Syllable, 'syllables' => Unit::Word, 'words' => Unit::Sentence, 'numbers' => Unit::Number] as $filter => $filterUnit) {
                 if ($unit === $filterUnit && ! array_key_exists($filter, $level)) {
                     $this->problem($file, "{$where} needs `{$filter}`");
                 } elseif ($unit !== null && $unit !== $filterUnit && array_key_exists($filter, $level)) {
@@ -366,13 +536,17 @@ final class ContentValidator
             if (array_key_exists('words', $level)) {
                 $this->range($level['words'], self::MIN_SENTENCE_WORDS, self::MAX_SENTENCE_WORDS, $file, "{$where}.words");
             }
+
+            if (array_key_exists('numbers', $level)) {
+                $this->numbers($level['numbers'], $level['items'] ?? null, $file, "{$where}.numbers");
+            }
         }
 
         if (count($this->problems) !== $before) {
             return null;
         }
 
-        /** @var list<array{key: string, title: array{az: string, en: string}, unit: string, mechanics: list<string>, items?: int, decoys?: int, shapes?: list<string>, syllables?: array{min: int, max: int}, words?: array{min: int, max: int}}> $levels */
+        /** @var list<array{key: string, title: array{az: string, en: string}, unit: string, mechanics: list<string>, items?: int, decoys?: int, shapes?: list<string>, syllables?: array{min: int, max: int}, words?: array{min: int, max: int}, numbers?: array{min: int, max: int}}> $levels */
         return array_map(LevelData::fromArray(...), $levels);
     }
 
@@ -384,6 +558,8 @@ final class ContentValidator
     private function prompts(?array $levels): void
     {
         $file = 'prompts.json';
+        $this->templates = null;
+        $before = count($this->problems);
         $prompts = $this->listIn($file, 'prompts');
 
         if ($prompts === null) {
@@ -422,7 +598,11 @@ final class ContentValidator
             }
         }
 
+        $templates = array_map(static fn (string $pair): string => str_replace(' × ', '.', $pair), array_keys($pairs));
+
         if ($levels === null) {
+            $this->templates = count($this->problems) === $before ? $templates : null;
+
             return;
         }
 
@@ -441,6 +621,8 @@ final class ContentValidator
         foreach (array_diff_key($pairs, $allowed) as $pair => $where) {
             $this->problem($file, "{$where}: no level allows {$pair}");
         }
+
+        $this->templates = count($this->problems) === $before ? $templates : null;
     }
 
     /**
@@ -471,6 +653,254 @@ final class ContentValidator
         }
     }
 
+    // ── voice.json, voice-clips.json ────────────────────────────────────
+
+    /**
+     * The board's voice (§3 "Voice", ADR 015). `voice.json`: the voice and
+     * its settings, an audio tag for every template of `prompts.json` and no
+     * other, a name for every number a level may use, respellings, the
+     * context the provider gets around each phrase, the praise and retry
+     * phrases and the credits entry the clips get.
+     * `voice-clips.json`: every clip is a file of `assets/voice` named by the
+     * hash of its text in this voice, and every file there is a listed clip;
+     * every praise and retry phrase has one. A prompt without a clip is no
+     * problem: its round is silent (`content:validate` counts them).
+     */
+    private function voice(): void
+    {
+        $file = 'voice.json';
+        $before = count($this->problems);
+        $data = $this->object($this->read($file), $file, '', ['version', 'voice', 'styles', 'spoken', 'context', 'praise', 'retry', 'credit']);
+
+        if ($data === null) {
+            return;
+        }
+
+        $this->normalized($data, $file);
+
+        if (! is_int($data['version']) || $data['version'] < 1) {
+            $this->problem($file, 'version must be a whole number from 1');
+        }
+
+        $voice = $this->object($data['voice'], $file, 'voice', ['provider', 'model', 'voice_id', 'voice_name', 'language', 'stability', 'similarity']);
+
+        if ($voice !== null) {
+            if ($voice['provider'] !== self::VOICE_PROVIDER) {
+                $this->problem($file, 'voice.provider must be "'.self::VOICE_PROVIDER.'", the one provider `content:voice` calls');
+            }
+
+            $this->string($voice['model'], $file, 'voice.model');
+            $this->string($voice['voice_name'], $file, 'voice.voice_name');
+
+            if (! is_string($voice['voice_id']) || preg_match('/^[A-Za-z0-9]{8,64}$/', $voice['voice_id']) !== 1) {
+                $this->problem($file, 'voice.voice_id must be the provider\'s voice id, 8–64 letters and digits');
+            }
+
+            if (! is_string($voice['language']) || preg_match('/^[a-z]{2}$/', $voice['language']) !== 1) {
+                $this->problem($file, 'voice.language must be an ISO 639-1 code like "az"');
+            }
+
+            foreach (['stability', 'similarity'] as $setting) {
+                if (! (is_int($voice[$setting]) || is_float($voice[$setting])) || $voice[$setting] < 0 || $voice[$setting] > 1) {
+                    $this->problem($file, "voice.{$setting} must be a number from 0 to 1");
+                }
+            }
+        }
+
+        $styles = $this->object($data['styles'], $file, 'styles', $this->templates ?? [], $this->templates === null ? array_keys(is_array($data['styles']) ? $data['styles'] : []) : []);
+
+        foreach ($styles ?? [] as $group => $style) {
+            $this->voiceStyle($style, $file, "styles.{$group}");
+        }
+
+        $spoken = $this->object($data['spoken'], $file, 'spoken', ['numbers', 'respell']);
+
+        if ($spoken !== null) {
+            // JSON keys "1"…"10" come back as whole numbers.
+            $names = is_array($spoken['numbers']) ? $spoken['numbers'] : [];
+            $numbers = range(self::MIN_NUMBER, self::MAX_NUMBER);
+
+            if (! is_array($spoken['numbers']) || ($names !== [] && array_is_list($names) && ! isset($names[self::MIN_NUMBER]))) {
+                $this->problem($file, 'spoken.numbers must be an object');
+            }
+
+            foreach (array_diff($numbers, array_keys($names)) as $number) {
+                $this->problem($file, "spoken.numbers needs `{$number}`, a number a level may use");
+            }
+
+            foreach ($names as $number => $name) {
+                if (! in_array($number, $numbers, true)) {
+                    $this->problem($file, "spoken.numbers has an unknown key `{$number}`");
+                } elseif (! is_string($name) || preg_match('/^[\p{Ll}]+(?: [\p{Ll}]+)*$/u', $name) !== 1 || ! $this->lettersAndSigns($name)) {
+                    $this->problem($file, "spoken.numbers.{$number} must be the number's name in lowercase letters");
+                }
+            }
+
+            $respell = $this->object($spoken['respell'], $file, 'spoken.respell', [], array_map(strval(...), array_keys(is_array($spoken['respell']) ? $spoken['respell'] : [])));
+
+            foreach ($respell ?? [] as $phrase => $text) {
+                $this->string($text, $file, "spoken.respell \"{$phrase}\"");
+            }
+        }
+
+        $context = $this->object($data['context'], $file, 'context', ['previous', 'next']);
+
+        foreach ($context ?? [] as $side => $text) {
+            if (! is_string($text) || ($text !== '' && (! $this->lettersAndSigns($text) || preg_match('/[«»]/u', $text) === 1))) {
+                $this->problem($file, "context.{$side} must be Azerbaijani text of alphabet letters, spaces and . , ! ? -, or empty");
+            }
+        }
+
+        $phrases = [];
+        $praise = $this->list($data['praise'], $file, 'praise');
+
+        if ($praise === []) {
+            $this->problem($file, 'praise needs at least one phrase');
+        }
+
+        foreach ($praise ?? [] as $index => $phrase) {
+            $phrases[] = $this->voicePhrase($phrase, $file, "praise[{$index}]");
+        }
+
+        $phrases[] = $this->voicePhrase($data['retry'], $file, 'retry');
+        $texts = array_filter($phrases, is_string(...));
+
+        if (count($texts) !== count(array_unique($texts))) {
+            $this->problem($file, 'a praise or retry phrase is listed twice');
+        }
+
+        $credit = $this->object($data['credit'], $file, 'credit', ['title', 'author', 'source', 'license', 'changes']);
+
+        if ($credit !== null) {
+            $this->string($credit['title'], $file, 'credit.title');
+            $this->string($credit['author'], $file, 'credit.author');
+
+            if (! is_string($credit['source']) || ! str_starts_with($credit['source'], 'https://')) {
+                $this->problem($file, 'credit.source must be an https:// URL');
+            }
+
+            if (! is_string($credit['license']) || License::tryFrom($credit['license']) === null) {
+                $this->problem($file, 'credit.license must be one of '.implode(', ', array_map(static fn (License $license): string => $license->value, License::cases())));
+            }
+
+            if (! is_string($credit['changes']) || ! str_contains($credit['changes'], '{month}')) {
+                $this->problem($file, 'credit.changes must say when the clips were made with {month}');
+            }
+        }
+
+        $clips = $this->voiceClips();
+
+        if ($clips === null || count($this->problems) !== $before) {
+            return;
+        }
+
+        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: array{text: string, style: string}, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
+        $voice = new VoiceClips(VoiceData::fromArray([...$data, 'clips' => $clips]));
+        $file = ContentRepository::VOICE_CLIPS;
+
+        foreach ($this->voiceClipsRequired ? $clips : [] as $hash => $text) {
+            if ($voice->hash($text) !== (string) $hash) {
+                $this->problem($file, "clips.{$hash} is not the clip of \"{$text}\" in the voice of voice.json; make it again (php artisan content:voice) and remove the old one (--prune)");
+            }
+        }
+
+        foreach ($this->voiceClipsRequired ? [...$voice->praise(), $voice->retry()] : [] as $line) {
+            if ($voice->url($line) === null) {
+                $this->problem($file, "the {$line->group} phrase \"{$line->phrase}\" has no clip (php artisan content:voice)");
+            }
+        }
+    }
+
+    /**
+     * `voice-clips.json`: hash → text, each hash a file of `assets/voice`,
+     * each file there a listed hash.
+     *
+     * @return array<string, string>|null the clips, or null when the file has a problem
+     */
+    private function voiceClips(): ?array
+    {
+        $file = ContentRepository::VOICE_CLIPS;
+        $before = count($this->problems);
+        $data = $this->object($this->read($file), $file, '', ['clips']);
+
+        if ($data === null) {
+            return null;
+        }
+
+        $clips = $data['clips'];
+
+        // `{}` is an empty list once decoded; a hash of digits only comes back as a whole number.
+        if (! is_array($clips) || ($clips !== [] && array_is_list($clips))) {
+            $this->problem($file, 'clips must be an object');
+
+            return null;
+        }
+
+        $folder = "{$this->root}/assets/".VoiceClips::FOLDER;
+        $listed = [];
+
+        foreach ($clips as $hash => $text) {
+            $hash = (string) $hash;
+            $listed[] = $hash;
+
+            if (preg_match('/^[0-9a-f]{'.VoiceClips::HASH_LENGTH.'}$/', $hash) !== 1) {
+                $this->problem($file, "clips.{$hash} must be a hash of ".VoiceClips::HASH_LENGTH.' lowercase hex digits');
+            } elseif (! self::exists("{$this->root}/assets/".VoiceClips::path($hash))) {
+                $this->problem($file, "clips.{$hash}: {$this->contentFolder()}/assets/".VoiceClips::path($hash).' does not exist');
+            }
+
+            if (! is_string($text) || $text === '') {
+                $this->problem($file, "clips.{$hash} must be the text the clip was made from");
+            }
+        }
+
+        foreach (is_dir($folder) ? (scandir($folder) ?: []) : [] as $name) {
+            if (str_starts_with($name, '.')) {
+                continue;
+            }
+
+            if (! in_array(pathinfo($name, PATHINFO_FILENAME), $listed, true) || pathinfo($name, PATHINFO_EXTENSION) !== VoiceClips::EXTENSION) {
+                $this->problem($file, "{$this->contentFolder()}/assets/".VoiceClips::FOLDER."/{$name} is no clip of clips");
+            }
+        }
+
+        /** @var array<string, string> $clips */
+        return count($this->problems) === $before ? $clips : null;
+    }
+
+    /**
+     * A praise or retry phrase: `{text, style}`, the text a short sentence.
+     *
+     * @return string|null the text
+     */
+    private function voicePhrase(mixed $phrase, string $file, string $where): ?string
+    {
+        $phrase = $this->object($phrase, $file, $where, ['text', 'style']);
+
+        if ($phrase === null) {
+            return null;
+        }
+
+        $this->voiceStyle($phrase['style'], $file, "{$where}.style");
+        $text = $this->string($phrase['text'], $file, "{$where}.text");
+
+        if ($text !== null && (! $this->lettersAndSigns($text) || preg_match('/[«»]/u', $text) === 1 || ! in_array(mb_substr($text, -1), self::FINAL_MARKS, true))) {
+            $this->problem($file, "{$where}.text \"{$text}\" may hold only alphabet letters, spaces and . , ! ? - and must end with . ! or ?");
+        }
+
+        return $text;
+    }
+
+    /**
+     * An audio tag without its brackets: `playful`, `soft chuckle`.
+     */
+    private function voiceStyle(mixed $style, string $file, string $where): void
+    {
+        if (! is_string($style) || preg_match('/^[a-z]+(?: [a-z]+)*$/', $style) !== 1) {
+            $this->problem($file, "{$where} must be an audio tag in lowercase English words, like \"playful\"");
+        }
+    }
+
     // ── credits.json ────────────────────────────────────────────────────
 
     /**
@@ -490,6 +920,7 @@ final class ContentValidator
         $files = $this->creditedFiles();
         $folders = array_map(static fn (string $folder): string => "{$folder}/", $this->creditedFolders());
         $shareAlikeFolder = $this->contentFolder().'/'.self::SHARE_ALIKE_FOLDER;
+        $voiceFolder = $this->contentFolder().'/assets/'.VoiceClips::FOLDER.'/*';
         $licenses = implode(', ', array_map(static fn (License $license): string => $license->value, License::cases()));
 
         foreach ($credits as $index => $credit) {
@@ -523,7 +954,8 @@ final class ContentValidator
 
                 if ($inside === [] || str_contains($pattern, '..')) {
                     $this->problem($file, "{$where}.files \"{$pattern}\" must be under ".implode(' or ', $folders));
-                } elseif (array_filter($files, static fn (string $path): bool => CreditData::matches($pattern, $path)) === []) {
+                } elseif (array_filter($files, static fn (string $path): bool => CreditData::matches($pattern, $path)) === [] && ($this->voiceClipsRequired || $pattern !== $voiceFolder)) {
+                    // `content:voice` may run with every clip pruned: it makes them again.
                     $this->problem($file, "{$where}.files \"{$pattern}\" matches no file");
                 }
 
@@ -605,7 +1037,7 @@ final class ContentValidator
     {
         $file = "packs/{$key}.json";
         $before = count($this->problems);
-        $pack = $this->object($this->read($file), $file, '', ['key', 'version', 'title', 'style', 'words', 'sentences']);
+        $pack = $this->object($this->read($file), $file, '', ['key', 'version', 'title', 'units', 'style', 'words'], ['sentences']);
 
         if ($pack === null) {
             return;
@@ -626,24 +1058,64 @@ final class ContentValidator
         }
 
         $this->title($pack['title'], $file, 'title');
+        $units = $this->units($pack['units'], $file);
+        $reads = $units !== null && array_filter($units, static fn (Unit $unit): bool => $unit->reads()) !== [];
         $this->style($pack['style'], $file, $levels);
         $words = $this->words($pack['words'], $file);
-        $sentences = $this->sentences($pack['sentences'], $file);
+        $this->cover($pack['style'], $pack['words'], $file);
 
-        if ($words !== null && $words < self::MIN_WORDS) {
-            $this->problem($file, "has {$words} words; every pack needs at least ".self::MIN_WORDS);
+        if ($reads && ! array_key_exists('sentences', $pack)) {
+            $this->problem($file, 'needs `sentences`: it lists the reading units');
+        } elseif ($units !== null && ! $reads && array_key_exists('sentences', $pack)) {
+            $this->problem($file, '`sentences` belong to a pack that lists the reading units only');
         }
 
-        if ($sentences !== null && $sentences < self::MIN_SENTENCES) {
-            $this->problem($file, "has {$sentences} sentences; every pack needs at least ".self::MIN_SENTENCES);
+        $sentences = array_key_exists('sentences', $pack) ? $this->sentences($pack['sentences'], $file) : null;
+
+        if ($reads && $words !== null && $words < self::MIN_WORDS) {
+            $this->problem($file, "has {$words} words; a pack of the reading units needs at least ".self::MIN_WORDS);
+        }
+
+        if ($reads && $sentences !== null && $sentences < self::MIN_SENTENCES) {
+            $this->problem($file, "has {$sentences} sentences; a pack of the reading units needs at least ".self::MIN_SENTENCES);
         }
 
         if ($levels === null || count($this->problems) !== $before) {
             return;
         }
 
-        /** @var array{key: string, version: int, title: array{az: string, en: string}, style: array{item: string, slot: string, effect: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences: list<array{id: string, text: string}>} $pack */
+        /** @var array{key: string, version: int, title: array{az: string, en: string}, units: list<string>, style: array{item: string, slot: string, effect: string, cover: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences?: list<array{id: string, text: string}>} $pack */
         $this->fitsLevels(PackData::fromArray($pack), $levels, $file);
+    }
+
+    /**
+     * `units` (R5, ADR 012): a non-empty list of `Unit` values, each once,
+     * in enum order, with the four reading units together or none of them.
+     *
+     * @return list<Unit>|null
+     */
+    private function units(mixed $value, string $file): ?array
+    {
+        $before = count($this->problems);
+        $units = $this->enums(Unit::class, $value, $file, 'units');
+
+        if ($units === null || count($this->problems) !== $before) {
+            return null;
+        }
+
+        $order = array_values(array_filter(Unit::cases(), static fn (Unit $unit): bool => in_array($unit, $units, true)));
+
+        if ($order !== $units) {
+            $this->problem($file, 'units must follow the order '.implode(', ', array_map(static fn (Unit $unit): string => $unit->value, Unit::cases())));
+        }
+
+        $reading = array_filter($units, static fn (Unit $unit): bool => $unit->reads());
+
+        if ($reading !== [] && count($reading) !== count(Unit::reading())) {
+            $this->problem($file, 'units lists '.implode(', ', array_map(static fn (Unit $unit): string => $unit->value, $reading)).'; the reading units '.implode(', ', array_map(static fn (Unit $unit): string => $unit->value, Unit::reading())).' come together or not at all');
+        }
+
+        return count($this->problems) === $before ? $units : null;
     }
 
     /**
@@ -651,7 +1123,7 @@ final class ContentValidator
      */
     private function style(mixed $style, string $file, ?array $levels): void
     {
-        $style = $this->object($style, $file, 'style', ['item', 'slot', 'effect', 'palette'], ['backdrop', 'sounds', 'figures']);
+        $style = $this->object($style, $file, 'style', ['item', 'slot', 'effect', 'cover', 'palette'], ['backdrop', 'sounds', 'figures']);
 
         if ($style === null) {
             return;
@@ -659,7 +1131,7 @@ final class ContentValidator
 
         $item = $this->enum(ItemStyle::class, $style['item'], $file, 'style.item');
         $this->enum(SlotStyle::class, $style['slot'], $file, 'style.slot');
-        $this->enum(Effect::class, $style['effect'], $file, 'style.effect');
+        $effect = $this->enum(Effect::class, $style['effect'], $file, 'style.effect');
 
         if (array_key_exists('backdrop', $style)) {
             $this->asset($style['backdrop'], self::IMAGE_EXTENSIONS, $file, 'style.backdrop');
@@ -681,12 +1153,38 @@ final class ContentValidator
             $sounds = $this->object($style['sounds'], $file, 'style.sounds', [], array_map(static fn (Sound $sound): string => $sound->value, Sound::cases()));
 
             foreach ($sounds ?? [] as $name => $path) {
-                $this->asset($path, self::AUDIO_EXTENSIONS, $file, "style.sounds.{$name}");
+                $path = $this->asset($path, self::AUDIO_EXTENSIONS, $file, "style.sounds.{$name}");
+                $sound = Sound::tryFrom($name);
+
+                if ($sound !== null) {
+                    $this->packSound($sound, $path, $effect, $file);
+                }
             }
         }
 
         if ($item instanceof ItemStyle) {
             $this->figures($style, $item, $file, $levels);
+        }
+    }
+
+    /**
+     * `style.cover` (§3 "Cover"): the picture of the pack on the setup page,
+     * the `image` of one of its words, so it is already credited and never a
+     * backdrop or an avatar. A missing key is `style()`'s problem.
+     */
+    private function cover(mixed $style, mixed $words, string $file): void
+    {
+        if (! is_array($style) || ! array_key_exists('cover', $style)) {
+            return;
+        }
+
+        $cover = $this->string($style['cover'], $file, 'style.cover');
+        $images = is_array($words)
+            ? array_filter(array_map(static fn (mixed $word): mixed => is_array($word) ? ($word['image'] ?? null) : null, $words), is_string(...))
+            : [];
+
+        if ($cover !== null && ! in_array($cover, $images, true)) {
+            $this->problem($file, "style.cover \"{$cover}\" must be the `image` of one of the pack's words");
         }
     }
 
@@ -882,20 +1380,47 @@ final class ContentValidator
     }
 
     /**
-     * With all 32 letters learned, every syllable, word and sentence level
-     * gets at least MIN_LEVEL_ITEMS distinct items from the pack; every word
-     * fits a word level and every sentence a sentence level.
+     * The levels the pack lists the unit of: with all 32 letters learned,
+     * every syllable, word and sentence level gets at least MIN_LEVEL_ITEMS
+     * distinct items from the pack, and every word fits a word level and
+     * every sentence a sentence level. A pack that lists `picture` has at
+     * least MIN_PICTURES words with a picture, and every picture level gets
+     * its `items` + 2 from them; one that lists `number` has at least
+     * MIN_COUNTED, the things counted (R5).
      *
      * @param  list<LevelData>  $levels
      */
     private function fitsLevels(PackData $pack, array $levels, string $file): void
     {
-        foreach ($levels as $level) {
-            $count = count($level->keysFrom($pack));
+        $pictured = count($pack->pictured());
 
-            if ($level->unit !== Unit::Letter && $count < self::MIN_LEVEL_ITEMS) {
-                $this->problem($file, "level \"{$level->key}\" gets ".self::counted($count, "distinct {$level->unit->value}").' from this pack; it needs at least '.self::MIN_LEVEL_ITEMS);
+        if ($pack->lists(Unit::Picture) && $pictured < self::MIN_PICTURES) {
+            $this->problem($file, 'has '.self::counted($pictured, 'word').' with a picture; a pack that lists picture needs at least '.self::MIN_PICTURES);
+        }
+
+        if ($pack->lists(Unit::Number) && $pictured < self::MIN_COUNTED) {
+            $this->problem($file, 'has '.self::counted($pictured, 'word').' with a picture to count; a pack that lists number needs at least '.self::MIN_COUNTED);
+        }
+
+        foreach ($levels as $level) {
+            if (! $pack->lists($level->unit)) {
+                continue;
             }
+
+            $count = count($level->keysFrom($pack));
+            $needed = match ($level->unit) {
+                Unit::Letter, Unit::Number => 0,
+                Unit::Picture => ($level->items ?? 0) + 2,
+                default => self::MIN_LEVEL_ITEMS,
+            };
+
+            if ($count < $needed) {
+                $this->problem($file, "level \"{$level->key}\" gets ".self::counted($count, "distinct {$level->unit->value}").' from this pack; it needs at least '.$needed);
+            }
+        }
+
+        if (! $pack->lists(Unit::Word)) {
+            return;
         }
 
         $sentenceLevels = array_filter($levels, static fn (LevelData $level): bool => $level->unit === Unit::Sentence);
@@ -1142,7 +1667,7 @@ final class ContentValidator
 
     /**
      * A title in both interface languages (§9); the Azerbaijani one uses
-     * only alphabet letters.
+     * only alphabet letters, the signs of a sentence, digits and a colon.
      */
     private function title(mixed $title, string $file, string $where): void
     {
@@ -1155,8 +1680,8 @@ final class ContentValidator
         $az = $this->string($title['az'], $file, "{$where}.az");
         $this->string($title['en'], $file, "{$where}.en");
 
-        if ($az !== null && ! $this->lettersAndSigns($az)) {
-            $this->problem($file, "{$where}.az \"{$az}\" may hold only alphabet letters, spaces and . , ! ? « » -");
+        if ($az !== null && ! $this->lettersAndSigns($az, self::TITLE_SIGNS)) {
+            $this->problem($file, "{$where}.az \"{$az}\" may hold only alphabet letters, digits, spaces and . , : ! ? « » -");
         }
     }
 
@@ -1196,6 +1721,33 @@ final class ContentValidator
         if (! is_int($min) || ! is_int($max) || $min < $floor || $max < $min || ($ceiling !== null && $max > $ceiling)) {
             $bounds = $ceiling === null ? "from {$floor}" : "from {$floor} to {$ceiling}";
             $this->problem($file, "{$where} needs whole numbers {$bounds}, min ≤ max");
+        }
+    }
+
+    /**
+     * A number level's range (R5): whole numbers within 1–10, `min` < `max`,
+     * with at least one number more than a round shows, so the target can
+     * change from round to round.
+     */
+    private function numbers(mixed $range, mixed $items, string $file, string $where): void
+    {
+        $range = $this->object($range, $file, $where, ['min', 'max']);
+
+        if ($range === null) {
+            return;
+        }
+
+        $min = $range['min'];
+        $max = $range['max'];
+
+        if (! is_int($min) || ! is_int($max) || $min < self::MIN_NUMBER || $max > self::MAX_NUMBER || $min >= $max) {
+            $this->problem($file, "{$where} needs whole numbers from ".self::MIN_NUMBER.' to '.self::MAX_NUMBER.', min < max');
+
+            return;
+        }
+
+        if (is_int($items) && $max - $min + 1 < $items + 1) {
+            $this->problem($file, "{$where} holds ".($max - $min + 1).' numbers; a level of '.self::counted($items, 'item').' needs at least '.($items + 1));
         }
     }
 
@@ -1349,10 +1901,13 @@ final class ContentValidator
         $this->problem($file, "{$label} \"{$value}\" is not normalized (".($codes === '' ? 'extra spaces' : $codes).')');
     }
 
-    private function lettersAndSigns(string $text): bool
+    /**
+     * @param  list<string>  $more  characters allowed besides letters and SIGNS
+     */
+    private function lettersAndSigns(string $text, array $more = []): bool
     {
         foreach (mb_str_split($text) as $character) {
-            if (! Alphabet::isLetter($character) && ! in_array($character, self::SIGNS, true)) {
+            if (! Alphabet::isLetter($character) && ! in_array($character, [...self::SIGNS, ...$more], true)) {
                 return false;
             }
         }

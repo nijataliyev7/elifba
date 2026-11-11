@@ -43,7 +43,10 @@ use Illuminate\Support\Facades\DB;
  *    points (`PointsRule`) and the Baku dates (`SchoolCalendar`).
  *
  * A student id that is not an active student of the game's class is stored
- * as null (no one is credited). A paused game still takes events: they
+ * as null (no one is credited). In a home game (ADR 011) no student id is
+ * read at all: answers and rounds keep `student_id` null, and the round is
+ * credited to the game's child through the `child_id` `StartGame` gave it.
+ * A paused game still takes events: they
  * were made before the pause reached the board. When no open round is
  * left, the game becomes `finished` in the same transaction.
  * `RoundSolved` and `GameSessionTransitioned` are dispatched after commit.
@@ -183,7 +186,7 @@ final readonly class RecordBoardEvents
         $round->save();
 
         if ($verdict->solved) {
-            RoundSolved::dispatch($round->id, $game->id, $round->school_class_id, $studentId, $round->points);
+            RoundSolved::dispatch($round->id, $game->id, $round->school_class_id, $round->child_id, $studentId, $round->points);
         }
 
         return new AnswerResultData(
@@ -235,11 +238,12 @@ final readonly class RecordBoardEvents
     /**
      * The student at the board when they are an active student of the
      * game's class; null otherwise (an unknown, foreign or archived id
-     * credits no one).
+     * credits no one). A home game has no students: its child is the one at
+     * the board, whatever id the board sends.
      */
     private function student(GameSession $game, ?string $studentId): ?string
     {
-        if ($studentId === null) {
+        if ($studentId === null || $game->school_class_id === null) {
             return null;
         }
 

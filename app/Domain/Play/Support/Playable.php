@@ -14,6 +14,7 @@ use App\Domain\Content\Support\TeacherPacks;
 use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildWordRoundBuilder;
+use App\Domain\Play\Support\Mechanics\CountRoundBuilder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
 use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use App\Domain\Play\Support\Mechanics\RoundBuilder;
@@ -28,7 +29,12 @@ use App\Models\User;
  * cannot draw never starts. A8.1 lists the build mechanics with their
  * builders, A8.2 draws every item style and `sparkle`, and A8.3 the slot
  * styles `wagon` and `frame`: every mechanic plays in every pack. `pop`
- * reuses the find scene and has no slots.
+ * reuses the find scene and has no slots. R5 adds `count` (its own scene)
+ * and the `picture` item style, in which the board draws every round of
+ * the picture unit.
+ *
+ * A level is offered with a pack only when the pack lists the level's unit
+ * (`PackData::$units`, ADR 012): the cities never get a picture level.
  *
  * A pack is playable with a mechanic only when the board draws its item
  * style and its effect (and its slot style, for a build mechanic). Rounds
@@ -42,7 +48,7 @@ final class Playable
      */
     public static function mechanics(): array
     {
-        return [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence];
+        return [Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence, Mechanic::Count];
     }
 
     /**
@@ -50,7 +56,7 @@ final class Playable
      */
     public static function itemStyles(): array
     {
-        return [ItemStyle::Balloon, ItemStyle::Wagon, ItemStyle::Card, ItemStyle::Bubble, ItemStyle::Animal, ItemStyle::Fruit];
+        return [ItemStyle::Balloon, ItemStyle::Wagon, ItemStyle::Card, ItemStyle::Bubble, ItemStyle::Animal, ItemStyle::Fruit, ItemStyle::Picture];
     }
 
     /**
@@ -94,6 +100,7 @@ final class Playable
             Mechanic::BuildSyllable => app(BuildSyllableRoundBuilder::class),
             Mechanic::BuildWord => app(BuildWordRoundBuilder::class),
             Mechanic::BuildSentence => app(BuildSentenceRoundBuilder::class),
+            Mechanic::Count => app(CountRoundBuilder::class),
         };
     }
 
@@ -109,7 +116,10 @@ final class Playable
 
     /**
      * Why this game cannot start for a class with these learned letters, as
-     * a message for the teacher; null when it can. `$pack` is the pack as the
+     * a message for the teacher; null when it can: the level lacks the
+     * mechanic, the pack does not list the level's unit (`pack_level`, R5),
+     * letters or own words asked where they do not belong, the board cannot
+     * draw it, or the content is short. `$pack` is the pack as the
      * class's teacher plays it (`TeacherPacks`), so words the teacher hid can
      * leave a level short (`too_few_*`); with `$own` it is the pack with only
      * the teacher's own words (`TeacherPacks::pack(…, own: true)`). The setup
@@ -122,6 +132,7 @@ final class Playable
     {
         return match (true) {
             ! $level->allows($mechanic) => self::message('level_mechanic'),
+            ! $pack->lists($level->unit) => self::message('pack_level'),
             $letters !== null && $level->unit !== Unit::Letter => self::message('letters_level'),
             $own && ! self::takesOwnWords($mechanic, $level) => self::message('own_words_level'),
             ! self::draws($mechanic, $pack) => self::message('not_playable'),
@@ -132,8 +143,9 @@ final class Playable
 
     /**
      * Every game the class could set up — each mechanic its level allows,
-     * in every pack as the class's teacher plays it — with the reason it
-     * cannot start, or null: what the setup page offers. `own` is the same
+     * in every pack as the class's teacher plays it that lists the level's
+     * unit — with the reason it cannot start, or null: what the setup page
+     * offers. `own` is the same
      * answer for a game of the teacher's own words only, or null where such
      * a game is not offered (`takesOwnWords()`).
      *
@@ -150,6 +162,10 @@ final class Playable
         foreach ($content->levels() as $level) {
             foreach ($level->mechanics as $mechanic) {
                 foreach ($packs as $key => $pack) {
+                    if (! $pack->lists($level->unit)) {
+                        continue;
+                    }
+
                     $options[] = [
                         'mechanic' => $mechanic,
                         'pack' => $pack,
@@ -167,7 +183,9 @@ final class Playable
     }
 
     /**
-     * A reason from `games.setup.errors.*` in the interface language.
+     * A reason from `games.setup.errors.*` in the interface language. Every
+     * reason `reason()` and the builders give is made here, which remembers
+     * its key for `code()`.
      *
      * @param  array<string, string|int>  $replace
      */
@@ -175,7 +193,27 @@ final class Playable
     {
         $key = "games.setup.errors.{$reason}";
         $message = __($key, $replace);
+        $message = is_string($message) ? $message : $key;
+        self::$codes[$message] = $reason;
 
-        return is_string($message) ? $message : $key;
+        return $message;
     }
+
+    /**
+     * The key under `games.setup.errors.*` of a reason `reason()` gave
+     * (`too_few_syllables`…), for the setup form to tell a learned-letters
+     * shortage from the rest (docs/architecture.md §2 "Game setup"); null
+     * for null. The key comes with the message, so the two cannot drift.
+     */
+    public static function code(?string $reason): ?string
+    {
+        return $reason === null ? null : (self::$codes[$reason] ?? null);
+    }
+
+    /**
+     * Each message `message()` made → its key.
+     *
+     * @var array<string, string>
+     */
+    private static array $codes = [];
 }

@@ -4,8 +4,10 @@ use App\Models\User;
 use Laravel\Fortify\Features;
 
 /*
- * Registration requires the teacher's agreement (docs/architecture.md §7):
- * "I have read the privacy note and use Elifba with my school's permission".
+ * Registration requires the privacy-note agreement (docs/architecture.md §7
+ * "Agreements"): "I have read the privacy note". It creates an account with
+ * no role; the role and its own sentence come next, on `/role` (ADR 010,
+ * tests/Feature/Auth/RoleChoiceTest.php).
  */
 
 beforeEach(function (): void {
@@ -36,15 +38,36 @@ it('renders the registration screen with the privacy checkbox', function (): voi
         ->and(__('auth.register.terms', [], 'en'))->toContain('[');
 });
 
-it('registers a teacher who ticked the privacy checkbox and records when', function (): void {
+it('registers an account that ticked the privacy checkbox, records when, and gives it no role', function (): void {
     $this->travelTo('2026-11-09 08:30:00');
 
     $response = $this->post(route('register.store'), registration());
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('classes.index', absolute: false));
+    $response->assertRedirect(route('start', absolute: false));
 
-    expect(User::query()->sole()->terms_accepted_at?->toDateTimeString())->toBe('2026-11-09 08:30:00');
+    $user = User::query()->sole();
+    expect($user->terms_accepted_at?->toDateTimeString())->toBe('2026-11-09 08:30:00')
+        ->and($user->roleList())->toBe([])
+        ->and($user->area)->toBeNull()
+        ->and($user->teacher_agreed_at)->toBeNull()
+        ->and($user->parent_agreed_at)->toBeNull();
+});
+
+it('asks only for the privacy note, not for a role\'s sentence', function (): void {
+    foreach (['az', 'en'] as $locale) {
+        expect(__('auth.register.terms', [], $locale))
+            ->not->toBe(__('roles.agreement.teacher', [], $locale))
+            ->not->toContain(__('roles.agreement.teacher', [], $locale))
+            ->not->toContain(__('roles.agreement.parent', [], $locale));
+    }
+});
+
+it('ignores a role sent with the registration form', function (): void {
+    $this->post(route('register.store'), registration(['role' => 'teacher', 'agreement' => '1']))
+        ->assertRedirect(route('start', absolute: false));
+
+    expect(User::query()->sole()->roleList())->toBe([]);
 });
 
 it('refuses a registration without the privacy checkbox', function (array $input): void {

@@ -49,10 +49,48 @@
         "set": { "avatars.1.image": "avatars/panda.svg" },
         "problem": "avatars.json: avatars[1] \"rabbit\".image \"avatars/panda.svg\" is already the picture of avatars[0] \"panda\""
     },
+    "sounds: a moment without sounds": {
+        "file": "sounds.json",
+        "set": { "sounds.miss": [] },
+        "problem": "sounds.json: sounds.miss needs at least one sound"
+    },
+    "sounds: a file that does not exist": {
+        "file": "sounds.json",
+        "set": { "sounds.hit.0.file": "sounds/boing.ogg" },
+        "problem": "sounds.json: sounds.hit[0].file: content/assets/sounds/boing.ogg does not exist"
+    },
+    "sounds: a key in capitals": {
+        "file": "sounds.json",
+        "set": { "sounds.solved.0.key": "Pop" },
+        "problem": "sounds.json: sounds.solved[0] \"Pop\" needs a key unique in sounds.solved"
+    },
+    "sounds: an unknown effect": {
+        "file": "sounds.json",
+        "set": { "sounds.hit.0.effects": ["boom"] },
+        "problem": "sounds.json: sounds.hit[0].effects[0] must be one of burst, sparkle"
+    },
+    "sounds: a sound without a title": {
+        "file": "sounds.json",
+        "unset": ["sounds.miss.0.title"],
+        "problem": "sounds.json: sounds.miss[0] needs `title`"
+    },
+    "sounds: choices for a moment that is the pack's own": {
+        "file": "sounds.json",
+        "set": {
+            "sounds.arrive": [
+                {
+                    "key": "pop",
+                    "file": "sounds/pop.ogg",
+                    "title": { "az": "Partlama", "en": "Pop" }
+                }
+            ]
+        },
+        "problem": "sounds.json: sounds has an unknown key `arrive`"
+    },
     "levels: an unknown mechanic": {
         "file": "levels.json",
         "set": { "levels.0.mechanics": ["tap"] },
-        "problem": "levels.json: levels[0] \"letters\".mechanics[0] must be one of find, pop, build_syllable, build_word, build_sentence"
+        "problem": "levels.json: levels[0] \"letters\".mechanics[0] must be one of find, pop, build_syllable, build_word, build_sentence, count"
     },
     "levels: a mechanic that cannot play the unit": {
         "file": "levels.json",
@@ -132,7 +170,7 @@
     },
     "prompts: a mechanic and unit that a level allows have no prompt": {
         "file": "prompts.json",
-        "unset": ["prompts.5"],
+        "keep": { "prompts": 5 },
         "problem": "prompts.json: no prompt for build_sentence × sentence, which levels.json allows"
     },
     "prompts: a prompt that no level uses": {
@@ -304,10 +342,41 @@
         "unset": ["words.1.image"],
         "problem": "packs/sample.json: words[1] \"ata\" needs an `image`"
     },
+    "packs: a pack without a cover": {
+        "file": "packs/sample.json",
+        "unset": ["style.cover"],
+        "problem": "packs/sample.json: style needs `cover`"
+    },
+    "packs: a cover that is no word's picture": {
+        "file": "packs/sample.json",
+        "set": { "style.cover": "sample/backdrop.svg" },
+        "problem": "packs/sample.json: style.cover \"sample/backdrop.svg\" must be the `image` of one of the pack's words"
+    },
     "packs: a backdrop that does not exist": {
         "file": "packs/sample.json",
         "set": { "style.backdrop": "sample/sky.svg" },
         "problem": "packs/sample.json: style.backdrop: content/assets/sample/sky.svg does not exist"
+    },
+    "packs: a sound that sounds.json does not list": {
+        "file": "packs/sample.json",
+        "set": { "style.sounds.miss": "sounds/boing.ogg" },
+        "write": { "assets/sounds/boing.ogg": "" },
+        "problem": "packs/sample.json: style.sounds.miss \"sounds/boing.ogg\" must be a sound of sounds.json under sounds.miss"
+    },
+    "packs: a pop where items sparkle": {
+        "file": "packs/sample.json",
+        "set": { "style.effect": "sparkle" },
+        "problem": "packs/sample.json: style.sounds.hit \"sounds/pop.ogg\" does not suit the effect `sparkle`"
+    },
+    "packs: an arrive sound that does not exist": {
+        "file": "packs/sample.json",
+        "set": { "style.sounds.arrive": "sounds/train.ogg" },
+        "problem": "packs/sample.json: style.sounds.arrive: content/assets/sounds/train.ogg does not exist"
+    },
+    "packs: a leave sound that is not audio": {
+        "file": "packs/sample.json",
+        "set": { "style.sounds.leave": "sample/alma.svg" },
+        "problem": "packs/sample.json: style.sounds.leave \"sample/alma.svg\" must end in .ogg, .mp3, .wav"
     },
     "packs: a sound for an unknown moment": {
         "file": "packs/sample.json",
@@ -479,12 +548,12 @@
     "packs: fewer than 20 words": {
         "file": "packs/sample.json",
         "keep": { "words": 19 },
-        "problem": "packs/sample.json: has 19 words; every pack needs at least 20"
+        "problem": "packs/sample.json: has 19 words; a pack of the reading units needs at least 20"
     },
     "packs: fewer than 10 sentences": {
         "file": "packs/sample.json",
         "keep": { "sentences": 9 },
-        "problem": "packs/sample.json: has 9 sentences; every pack needs at least 10"
+        "problem": "packs/sample.json: has 9 sentences; a pack of the reading units needs at least 10"
     },
     "packs: a level with fewer than 6 distinct items": {
         "file": "packs/sample.json",
@@ -598,5 +667,236 @@
             "assets/sample/alma.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 1 1\"><image xlink:href=\"data:image/svg+xml;base64,PHN2Zy8+\" width=\"1\" height=\"1\"/></svg>"
         },
         "problem": "assets/sample/alma.svg: links to \"data:image/svg+xml;base64,PHN2Zy8+\""
+    },
+    "levels: a number level without its range": {
+        "file": "levels.json",
+        "unset": ["levels.7.numbers"],
+        "problem": "levels.json: levels[7] \"numbers-5\" needs `numbers`"
+    },
+    "levels: a range on a picture level": {
+        "file": "levels.json",
+        "set": { "levels.6.numbers": { "min": 1, "max": 5 } },
+        "problem": "levels.json: levels[6] \"pictures\": `numbers` belongs to number levels only"
+    },
+    "levels: numbers beyond ten": {
+        "file": "levels.json",
+        "set": { "levels.7.numbers": { "min": 1, "max": 12 } },
+        "problem": "levels.json: levels[7] \"numbers-5\".numbers needs whole numbers from 1 to 10, min < max"
+    },
+    "levels: a range of one number": {
+        "file": "levels.json",
+        "set": { "levels.7.numbers": { "min": 4, "max": 4 } },
+        "problem": "levels.json: levels[7] \"numbers-5\".numbers needs whole numbers from 1 to 10, min < max"
+    },
+    "levels: a range no larger than a round": {
+        "file": "levels.json",
+        "set": { "levels.7.numbers": { "min": 1, "max": 3 } },
+        "problem": "levels.json: levels[7] \"numbers-5\".numbers holds 3 numbers; a level of 3 items needs at least 4"
+    },
+    "levels: count with pictures": {
+        "file": "levels.json",
+        "set": { "levels.6.mechanics": ["find", "count"] },
+        "problem": "levels.json: levels[6] \"pictures\": count cannot be played with pictures"
+    },
+    "prompts: a template for a unit no level has": {
+        "file": "prompts.json",
+        "set": {
+            "prompts.9": {
+                "mechanic": "pop",
+                "unit": "picture",
+                "text": "Hər şəklin adını de və vur!"
+            }
+        },
+        "problem": "prompts.json: prompts[9]: no level allows pop × picture"
+    },
+    "prompts: no template for counting": {
+        "file": "prompts.json",
+        "keep": { "prompts": 8 },
+        "problem": "prompts.json: no prompt for count × number, which levels.json allows"
+    },
+    "packs: no units": {
+        "file": "packs/sample.json",
+        "unset": ["units"],
+        "problem": "packs/sample.json: the file needs `units`"
+    },
+    "packs: an unknown unit": {
+        "file": "packs/sample.json",
+        "set": {
+            "units": ["letter", "syllable", "word", "sentence", "colour"]
+        },
+        "problem": "packs/sample.json: units[4] must be one of letter, syllable, word, sentence, picture, number"
+    },
+    "packs: a unit listed twice": {
+        "file": "packs/sample.json",
+        "set": {
+            "units": [
+                "letter",
+                "syllable",
+                "word",
+                "sentence",
+                "picture",
+                "picture"
+            ]
+        },
+        "problem": "packs/sample.json: units lists a value twice"
+    },
+    "packs: units out of order": {
+        "file": "packs/sample.json",
+        "set": {
+            "units": ["picture", "letter", "syllable", "word", "sentence"]
+        },
+        "problem": "packs/sample.json: units must follow the order letter, syllable, word, sentence, picture, number"
+    },
+    "packs: some reading units without the others": {
+        "file": "packs/sample.json",
+        "set": { "units": ["letter", "word", "picture"] },
+        "problem": "packs/sample.json: units lists letter, word; the reading units letter, syllable, word, sentence come together or not at all"
+    },
+    "packs: sentences in a pack without the reading units": {
+        "file": "packs/sample.json",
+        "set": { "units": ["picture", "number"] },
+        "problem": "packs/sample.json: `sentences` belong to a pack that lists the reading units only"
+    },
+    "packs: the reading units without sentences": {
+        "file": "packs/sample.json",
+        "unset": ["sentences"],
+        "problem": "packs/sample.json: needs `sentences`: it lists the reading units"
+    },
+    "packs: pictures with too few words that have one": {
+        "file": "packs/sample.json",
+        "set": { "units": ["picture"] },
+        "unset": ["sentences"],
+        "keep": { "words": 5 },
+        "problem": "packs/sample.json: has 5 words with a picture; a pack that lists picture needs at least 6"
+    },
+    "packs: numbers with too few things to count": {
+        "file": "packs/sample.json",
+        "set": { "units": ["number"] },
+        "unset": ["sentences"],
+        "keep": { "words": 3 },
+        "problem": "packs/sample.json: has 3 words with a picture to count; a pack that lists number needs at least 4"
+    },
+    "voice: a template without an audio tag": {
+        "file": "voice.json",
+        "set": {
+            "styles": {
+                "find.letter": "playful",
+                "find.syllable": "playful",
+                "build_syllable.syllable": "playful",
+                "build_word.word": "playful",
+                "build_sentence.sentence": "playful",
+                "find.picture": "playful",
+                "find.number": "playful",
+                "count.number": "playful"
+            }
+        },
+        "problem": "voice.json: styles needs `find.word`"
+    },
+    "voice: an audio tag for a template that does not exist": {
+        "file": "voice.json",
+        "set": {
+            "styles.pop": "playful"
+        },
+        "problem": "voice.json: styles has an unknown key `pop`"
+    },
+    "voice: an audio tag in brackets": {
+        "file": "voice.json",
+        "set": {
+            "retry.style": "[warmly]"
+        },
+        "problem": "voice.json: retry.style must be an audio tag in lowercase English words"
+    },
+    "voice: a number without a name": {
+        "file": "voice.json",
+        "unset": ["spoken.numbers.7"],
+        "problem": "voice.json: spoken.numbers needs `7`"
+    },
+    "voice: a number name with a digit": {
+        "file": "voice.json",
+        "set": {
+            "spoken.numbers.3": "3"
+        },
+        "problem": "voice.json: spoken.numbers.3 must be the number's name in lowercase letters"
+    },
+    "voice: no voice id": {
+        "file": "voice.json",
+        "set": {
+            "voice.voice_id": ""
+        },
+        "problem": "voice.json: voice.voice_id must be the provider's voice id"
+    },
+    "voice: a provider content:voice cannot call": {
+        "file": "voice.json",
+        "set": {
+            "voice.provider": "azure"
+        },
+        "problem": "voice.json: voice.provider must be \"elevenlabs\""
+    },
+    "voice: a stability above 1": {
+        "file": "voice.json",
+        "set": {
+            "voice.stability": 1.3
+        },
+        "problem": "voice.json: voice.stability must be a number from 0 to 1"
+    },
+    "voice: a praise phrase in quotes": {
+        "file": "voice.json",
+        "set": {
+            "praise.0.text": "«Afərin»!"
+        },
+        "problem": "voice.json: praise[0].text \"«Afərin»!\" may hold only alphabet letters"
+    },
+    "voice: no praise": {
+        "file": "voice.json",
+        "set": {
+            "praise": []
+        },
+        "problem": "voice.json: praise needs at least one phrase"
+    },
+    "voice: a credit that does not say when": {
+        "file": "voice.json",
+        "set": {
+            "credit.changes": "Made with ElevenLabs."
+        },
+        "problem": "voice.json: credit.changes must say when the clips were made with {month}"
+    },
+    "voice clips: a clip without a file": {
+        "file": "voice-clips.json",
+        "set": {
+            "clips.0123456789abcdef": "[playful] Alma hansıdır?"
+        },
+        "problem": "voice-clips.json: clips.0123456789abcdef: content/assets/voice/0123456789abcdef.mp3 does not exist"
+    },
+    "voice clips: a file that is no clip": {
+        "file": "voice-clips.json",
+        "write": {
+            "assets/voice/aaaaaaaaaaaaaaaa.mp3": ""
+        },
+        "problem": "voice-clips.json: content/assets/voice/aaaaaaaaaaaaaaaa.mp3 is no clip of clips"
+    },
+    "voice clips: a praise phrase without a clip": {
+        "file": "voice-clips.json",
+        "unset": ["clips.838ca4a4910e967d"],
+        "delete": ["assets/voice/838ca4a4910e967d.mp3"],
+        "problem": "voice-clips.json: the praise phrase \"Əla!\" has no clip"
+    },
+    "voice clips: a clip that is not its text in this voice": {
+        "file": "voice-clips.json",
+        "set": {
+            "clips.ed17ae943ed121a3": "[excited] Afərin!"
+        },
+        "problem": "voice-clips.json: clips.ed17ae943ed121a3 is not the clip of \"[excited] Afərin!\""
+    },
+    "voice clips: a hash that is no hash": {
+        "file": "voice-clips.json",
+        "set": {
+            "clips.not-a-hash": "[playful] Alma hansıdır?"
+        },
+        "problem": "voice-clips.json: clips.not-a-hash must be a hash of 16 lowercase hex digits"
+    },
+    "voice: context with a quote": {
+        "file": "voice.json",
+        "set": { "context.previous": "«Salam»" },
+        "problem": "voice.json: context.previous must be Azerbaijani text"
     }
 }

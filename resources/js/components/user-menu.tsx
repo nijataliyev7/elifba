@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    ArrowLeftRight,
     Check,
     ChevronDown,
     Languages,
@@ -29,7 +30,9 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
+import { update as updateArea } from '@/routes/area';
 import { edit as editProfile } from '@/routes/profile';
+import type { Role } from '@/types';
 
 const themes: { mode: Appearance; title: string; icon: typeof Sun }[] = [
     { mode: 'light', title: 'settings.appearance.light', icon: Sun },
@@ -37,11 +40,15 @@ const themes: { mode: Appearance; title: string; icon: typeof Sun }[] = [
     { mode: 'system', title: 'settings.appearance.system', icon: Monitor },
 ];
 
+type Row = 'area' | 'language' | 'theme';
+
 /**
- * The teacher's menu in the shell's header, on every viewport
- * (docs/frontend.md §1, §2): who is signed in, the language and the theme,
- * Settings and logging out. Language and theme open in place, under their
- * row, so nothing slides off a phone's screen.
+ * The account's menu in the shell's header, on every viewport
+ * (docs/frontend.md §1, §2): who is signed in, the switch between the
+ * teacher and the parent area (only with both roles, architecture §1
+ * "Accounts and roles"), the language and the theme, Settings and logging
+ * out. The switch, language and theme open in place, under their row, so
+ * nothing slides off a phone's screen.
  */
 export function UserMenu() {
     const { auth } = usePage().props;
@@ -50,7 +57,7 @@ export function UserMenu() {
     const { appearance, updateAppearance } = useAppearance();
     const getInitials = useInitials();
     const cleanup = useMobileNavigation();
-    const [open, setOpen] = useState<'language' | 'theme' | null>(null);
+    const [open, setOpen] = useState<Row | null>(null);
 
     if (!auth.user) {
         return null;
@@ -58,8 +65,16 @@ export function UserMenu() {
 
     const user = auth.user;
     const theme = themes.find((item) => item.mode === appearance) ?? themes[2];
+    const switchable = auth.roles.length > 1 && auth.area !== null;
 
-    const toggle = (row: 'language' | 'theme') => (event: Event) => {
+    const switchTo = (area: Role) => {
+        if (area !== auth.area) {
+            cleanup();
+            router.put(updateArea.url(), { area });
+        }
+    };
+
+    const toggle = (row: Row) => (event: Event) => {
         event.preventDefault();
         setOpen((current) => (current === row ? null : row));
     };
@@ -103,6 +118,50 @@ export function UserMenu() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+
+                {switchable && (
+                    <>
+                        <DropdownMenuItem
+                            onSelect={toggle('area')}
+                            aria-expanded={open === 'area'}
+                            data-test="area-switch"
+                        >
+                            <ArrowLeftRight aria-hidden />
+                            <span className="flex-1">
+                                {t('roles.switch.title')}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                                {t(`roles.${auth.area}.title`)}
+                            </span>
+                            <ChevronDown
+                                aria-hidden
+                                className={cn(
+                                    'transition-transform',
+                                    open === 'area' && 'rotate-180',
+                                )}
+                            />
+                        </DropdownMenuItem>
+                        {open === 'area' &&
+                            auth.roles.map((role) => (
+                                <DropdownMenuItem
+                                    key={role}
+                                    className="pl-8"
+                                    data-test={`area-${role}`}
+                                    onSelect={() => switchTo(role)}
+                                >
+                                    <span className="flex-1">
+                                        {t(`roles.${role}.title`)}
+                                    </span>
+                                    {role === auth.area && (
+                                        <Check
+                                            aria-hidden
+                                            className="text-primary"
+                                        />
+                                    )}
+                                </DropdownMenuItem>
+                            ))}
+                    </>
+                )}
 
                 <DropdownMenuItem
                     onSelect={toggle('language')}

@@ -41,7 +41,7 @@ it('serves a manifest Chrome can install from', function (): void {
             'name' => 'Elifba',
             'short_name' => 'Elifba',
             'lang' => 'az',
-            'start_url' => '/classes',
+            'start_url' => '/start',
             'scope' => '/',
             'display' => 'standalone',
             'theme_color' => WebApp::THEME_COLOR,
@@ -49,7 +49,7 @@ it('serves a manifest Chrome can install from', function (): void {
         ])
         ->not->toHaveKey('prefer_related_applications')
         ->and($manifest['description'])->toBe(__('welcome.meta.description', [], 'az'))
-        ->and($manifest['start_url'])->toBe(route('classes.index', absolute: false))
+        ->and($manifest['start_url'])->toBe(route('start', absolute: false))
         ->and($manifest['theme_color'])->toMatch('/^#[0-9A-F]{6}$/')
         ->and($manifest['background_color'])->toMatch('/^#[0-9A-F]{6}$/');
 

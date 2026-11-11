@@ -7,7 +7,9 @@
  * tile. Once the last copy lands the round's effect takes the copies
  * (burst, or sparkle for a state symbol), the slots show the unit whole,
  * and everything leaves when the next round comes in. A round shown with
- * progress (a reload mid-round) has its filled slots drawn again.
+ * progress (a reload mid-round) has its filled slots drawn again. The
+ * pack's `leave` and `arrive` sounds go with a row going and coming, once
+ * a row each: the slots and tiles arrive as one (§3 "Sounds").
  *
  * The thin scenes on top (`build-syllable.ts`, `build-word.ts`,
  * `build-sentence.ts`) choose where the slots and tiles stand and what is
@@ -32,6 +34,11 @@ import type { BuildLayout } from './layouts';
 const FLIGHT_MS = 420;
 /** How long a new row waits for the old one to clear the board. */
 const ENTER_AFTER_MS = 650;
+/** When a row's slots and its tiles start coming in, after any wait. */
+const SLOTS_ENTER_MS = 100;
+const TILES_ENTER_MS = 350;
+/** From a tile starting to come in to the voice saying the prompt. */
+const PROMPT_AFTER_MS = 600;
 /** How high a copy arcs on its way to the slot. */
 const ARC = 150;
 
@@ -176,7 +183,7 @@ export abstract class BuildScene extends BoardScene {
 
         this.row = row;
         this.rows.add(row);
-        slots.enter(100 + wait);
+        slots.enter(SLOTS_ENTER_MS + wait);
 
         round.items.forEach((item, index) => {
             const colour = palette[(index + round.index) % palette.length];
@@ -194,10 +201,27 @@ export abstract class BuildScene extends BoardScene {
                     itemId: item.id,
                 });
             });
-            view.enter(350 + index * style.stagger);
+            view.enter(TILES_ENTER_MS + index * style.stagger);
             row.tiles.set(item.id, view);
             row.colours.set(item.id, colour);
         });
+
+        // One sound for the slots and the tiles, from whichever moves first.
+        if (this.isOpen(progress)) {
+            this.playIn(
+                Math.min(SLOTS_ENTER_MS + wait, TILES_ENTER_MS),
+                'arrive',
+            );
+        }
+
+        // The prompt once the last tile has come in most of the way.
+        this.sayPromptIn(
+            Math.max(SLOTS_ENTER_MS + wait, TILES_ENTER_MS) +
+                Math.max(0, round.items.length - 1) * style.stagger +
+                PROMPT_AFTER_MS,
+            round,
+            progress,
+        );
 
         // A round resumed mid-way: its filled slots come back.
         const filled = progress.hit_item_ids.slice(0, round.slots);
@@ -229,6 +253,7 @@ export abstract class BuildScene extends BoardScene {
         if (effect.status === 'miss') {
             tile?.wobble();
             this.play('miss');
+            this.sayRetry(row.round.id);
 
             return;
         }
@@ -267,6 +292,10 @@ export abstract class BuildScene extends BoardScene {
     protected scenery(): void {
         this.options.style.scenery?.(this, this.layout.tiles);
         this.slotStyle.scenery?.(this, this.layout.slots);
+    }
+
+    protected currentRound(): Round | null {
+        return this.row?.round ?? null;
     }
 
     /** A still copy of a tile, sized for slot `index` and coloured like the tile. */
@@ -361,6 +390,7 @@ export abstract class BuildScene extends BoardScene {
 
         row.copies = [];
         this.time.delayedCall(120, () => this.play('solved'));
+        this.sayPraiseAfter(120);
         copies.forEach((copy, at) => {
             this.time.delayedCall(140 + at * 110, () =>
                 effect.play(this, copy),
@@ -385,6 +415,8 @@ export abstract class BuildScene extends BoardScene {
             tile.leave(at * this.options.style.stagger * 0.55),
         );
         row.tiles.clear();
+        // One sound for the row going, slots, copies and any tiles left.
+        this.playIn(0, 'leave');
         row.slots.leave(0, () => {
             row.gone = true;
 

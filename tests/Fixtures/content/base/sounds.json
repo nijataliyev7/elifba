@@ -1,0 +1,27 @@
+{
+    "version": 1,
+    "sounds": {
+        "hit": [
+            {
+                "key": "pop",
+                "file": "sounds/pop.ogg",
+                "title": { "az": "Partlama", "en": "Pop" },
+                "effects": ["burst"]
+            }
+        ],
+        "miss": [
+            {
+                "key": "pop",
+                "file": "sounds/pop.ogg",
+                "title": { "az": "Partlama", "en": "Pop" }
+            }
+        ],
+        "solved": [
+            {
+                "key": "pop",
+                "file": "sounds/pop.ogg",
+                "title": { "az": "Partlama", "en": "Pop" }
+            }
+        ]
+    }
+}

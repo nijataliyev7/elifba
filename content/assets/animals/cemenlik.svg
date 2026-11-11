@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90">
+  <!-- The animals pack's backdrop: a meadow by a farm, with hills, trees, a fence and a red barn, and no animal or bird (a child counts the pictures on the tiles). Elifba own art, MIT. -->
+  <!-- 16:9 and low contrast so tiles stay readable: the colours of ADR 014's guide mixed with white, no outline, light from the top left; the farm stays in the bottom fifth (y 66–90). -->
+  <defs>
+    <linearGradient id="cemenlik_fade1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DFF4FF"/><stop offset="0.8" stop-color="#F7FEFF"/></linearGradient>
+    <radialGradient id="cemenlik_glow2" cx="0.06" cy="0" r="0.6"><stop offset="0" stop-color="#FFFDE5" stop-opacity="0.85"/><stop offset="1" stop-color="#FFFDE5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="cemenlik_fade3" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#E5E1F6" stop-opacity="0.85"/></linearGradient>
+    <filter id="cemenlik_blur035" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="0.35"/></filter>
+    <linearGradient id="cemenlik_fade4" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#E5E1F6" stop-opacity="0.85"/></linearGradient>
+    <linearGradient id="cemenlik_fade5" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.855"/><stop offset="1" stop-color="#E5E1F6" stop-opacity="0.765"/></linearGradient>
+    <radialGradient id="cemenlik_leaf6" cx="0.3" cy="0.1" r="1"><stop stop-color="#F5FFE3"/><stop offset="0.5" stop-color="#EAF4DF"/><stop offset="1" stop-color="#E3EDD2"/></radialGradient>
+    <linearGradient id="cemenlik_fade7" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="cemenlik_leaf8" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <filter id="cemenlik_blur04" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="0.4"/></filter>
+    <linearGradient id="cemenlik_fade9" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E1C0AF"/><stop offset="1" stop-color="#C3B9B8"/></linearGradient>
+    <radialGradient id="cemenlik_leaf10" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#EFFFCF"/><stop offset="0.5" stop-color="#DBECC9"/><stop offset="1" stop-color="#D0E0B2"/></radialGradient>
+    <radialGradient id="cemenlik_red11" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#FFCCD6"/><stop offset="0.5" stop-color="#FBC4C9"/><stop offset="1" stop-color="#E6BBC3"/></radialGradient>
+    <radialGradient id="cemenlik_stone12" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#EBEAEB"/><stop offset="0.5" stop-color="#DDDBE1"/><stop offset="1" stop-color="#C6C1CB"/></radialGradient>
+    <linearGradient id="cemenlik_fade13" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5DAC3"/><stop offset="1" stop-color="#E6CBBD"/></linearGradient>
+    <radialGradient id="cemenlik_leaf14" cx="0.3" cy="0.0" r="1"><stop stop-color="#EEFFCD"/><stop offset="0.5" stop-color="#D9EBC6"/><stop offset="1" stop-color="#CDDEAD"/></radialGradient>
+  </defs>
+  <rect width="160" height="90" fill="url(#cemenlik_fade1)"/>
+  <rect width="160" height="90" fill="url(#cemenlik_glow2)"/>
+  <path d="M16.00,24.00 C13.62,24.00 13.25,19.97 16.37,19.78 C17.28,15.38 24.25,14.47 26.08,18.50 C28.28,16.12 33.97,17.03 34.15,20.52 C37.27,20.52 38.00,24.00 35.25,24.00 Z" fill="url(#cemenlik_fade3)" filter="url(#cemenlik_blur035)"/>
+  <path d="M112.00,15.00 C109.83,15.00 109.50,11.33 112.33,11.17 C113.17,7.17 119.50,6.33 121.17,10.00 C123.17,7.83 128.33,8.67 128.50,11.83 C131.33,11.83 132.00,15.00 129.50,15.00 Z" fill="url(#cemenlik_fade4)" filter="url(#cemenlik_blur035)"/>
+  <path d="M138.00,37.00 C136.48,37.00 136.25,34.43 138.23,34.32 C138.82,31.52 143.25,30.93 144.42,33.50 C145.82,31.98 149.43,32.57 149.55,34.78 C151.53,34.78 152.00,37.00 150.25,37.00 Z" fill="url(#cemenlik_fade5)" filter="url(#cemenlik_blur035)"/>
+  <path d="M0,74 C18,68 38,67.6 58,71.4 C78,75.2 96,72.4 116,68.4 C134,64.8 150,67 160,69.4 L160,90 L0,90 Z" fill="url(#cemenlik_leaf6)"/>
+  <rect x="21.01" y="74.09" width="1.98" height="8.91" rx="0.99" fill="url(#cemenlik_fade7)"/>
+  <path d="M22.00,63.86 C27.15,63.86 29.39,67.69 29.13,71.12 C28.86,74.82 25.96,76.93 22.00,76.93 C18.04,76.93 15.14,74.82 14.87,71.12 C14.61,67.69 16.85,63.86 22.00,63.86 Z" fill="url(#cemenlik_leaf8)"/>
+  <ellipse cx="19.23" cy="67.16" rx="2.24" ry="1.32" fill="#FFFFFF" fill-opacity="0.45" filter="url(#cemenlik_blur04)"/>
+  <rect x="145.34" y="75.06" width="1.32" height="5.94" rx="0.66" fill="url(#cemenlik_fade9)"/>
+  <path d="M146.00,68.24 C149.43,68.24 150.93,70.79 150.75,73.08 C150.58,75.54 148.64,76.95 146.00,76.95 C143.36,76.95 141.42,75.54 141.25,73.08 C141.07,70.79 142.57,68.24 146.00,68.24 Z" fill="url(#cemenlik_leaf10)"/>
+  <ellipse cx="144.15" cy="70.44" rx="1.50" ry="0.88" fill="#FFFFFF" fill-opacity="0.45" filter="url(#cemenlik_blur04)"/>
+  <path d="M116,74.6 L126.3,67.6 C126.7,67.3 127.3,67.3 127.7,67.6 L138,74.6 L138,84 L116,84 Z" fill="url(#cemenlik_red11)"/>
+  <path d="M113.9,74.8 L126.2,66.3 C126.7,66 127.3,66 127.8,66.3 L140.1,74.8 C140.7,75.2 140.3,76 139.7,75.7 L127,67.5 L114.3,75.7 C113.7,76 113.3,75.2 113.9,74.8 Z" fill="url(#cemenlik_stone12)"/>
+  <rect x="123.4" y="76.6" width="7.2" height="7.4" rx="0.6" fill="#FFECF0"/>
+  <path d="M124,77.2 L130,83.4 M130,77.2 L124,83.4" stroke="#FBC8CC" stroke-width="0.6" stroke-linecap="round"/>
+  <circle cx="127" cy="71.6" r="1.4" fill="#FFECF0"/>
+  <g fill="url(#cemenlik_fade13)"><rect x="58" y="79.4" width="46" height="0.9" rx="0.45"/><rect x="58" y="81.8" width="46" height="0.9" rx="0.45"/><rect x="58.4" y="78" width="1.2" height="6.4" rx="0.5"/><rect x="66.4" y="78" width="1.2" height="6.4" rx="0.5"/><rect x="74.4" y="78" width="1.2" height="6.4" rx="0.5"/><rect x="82.4" y="78" width="1.2" height="6.4" rx="0.5"/><rect x="90.4" y="78" width="1.2" height="6.4" rx="0.5"/><rect x="98.4" y="78" width="1.2" height="6.4" rx="0.5"/></g>
+  <path d="M0,82.4 C24,79.4 50,80.6 80,82.2 C108,83.6 134,80.8 160,80.2 L160,90 L0,90 Z" fill="url(#cemenlik_leaf14)"/>
+</svg>

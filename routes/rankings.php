@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Http\Controllers\Rankings\PodiumController;
 use App\Http\Controllers\Rankings\RankingController;
 use Illuminate\Support\Facades\Route;
@@ -9,9 +10,10 @@ use Illuminate\Support\Facades\Route;
  * in routes/classroom.php: `{class}` binds only the current teacher's
  * classes (`BelongsToTeacher`, 404 before any controller code) and every
  * route passes its policy (`->can()`). Every route here is in
- * tests/Feature/Classroom/TeacherIsolationTest.php.
+ * tests/Feature/Classroom/TeacherIsolationTest.php. The teacher area
+ * (§1 "Accounts and roles"): rankings are a class's, never a child's.
  */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Teacher)])->group(function () {
     // ?period=day|week&date=YYYY-MM-DD (Rankings\Data\PeriodData).
     Route::get('classes/{class}/rankings', RankingController::class)
         ->can('view', 'class')

@@ -5,7 +5,6 @@ namespace App\Domain\Play\Support;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\WordData;
-use App\Domain\Content\Enums\Sound;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
@@ -20,9 +19,14 @@ use App\Domain\Play\Models\GameSession;
  * (`GET /guest-boards/{board}`, which cannot make an Inertia visit with its
  * bearer) and the remote's page. It carries the game (with the points of
  * the rounds already solved, for the result screen), the class, the pack's
- * look with its sound URLs, and the class's active students for "who is at
- * the board". The rounds come from `GET /games/{game}/state` after the board
- * has claimed the game.
+ * look with its sound URLs (the owner's choice where it made one,
+ * `BoardSounds`), what the board says besides the prompts (`voice`, the
+ * owner's choice, `BoardVoice`), and the class's active students for "who
+ * is at the board". A home game (ADR 011, §4 "At home") has no class and no
+ * students: `child` is the one at the board, with `stars`, the child's
+ * total before this game (the rounds of the child's other games still
+ * stored), for the result screen. The rounds come from
+ * `GET /games/{game}/state` after the board has claimed the game.
  *
  * A pack whose items stand in front of pictures (`animal`, `fruit`; §2
  * "Figures") also sends them: `pictures`, the pictures that show a content
@@ -38,11 +42,16 @@ use App\Domain\Play\Models\GameSession;
  *
  * @phpstan-type FigureArray array{url: string, words: list<string>}
  * @phpstan-type StudentArray array{id: string, display_name: string, avatar: array{key: string, url: string|null}}
+ *
+ * @phpstan-import-type BoardVoiceArray from BoardVoice
+ *
  * @phpstan-type BoardPropsArray array{
  *     game: array{id: string, status: string, board_epoch: int, mechanic: string, level: string, letter_case: string, rounds: int, points: object},
- *     schoolClass: array{id: string, name: string},
+ *     schoolClass: array{id: string, name: string}|null,
+ *     child: array{id: string, display_name: string, avatar: array{key: string, url: string|null}, stars: int}|null,
  *     pack: array{key: string, title: string, style: array{item: string, slot: string, effect: string, palette: list<string>, backdrop: string|null, sounds: array<string, string|null>, figures: list<FigureArray>}, pictures: object},
  *     students: list<StudentArray>,
+ *     voice: BoardVoiceArray,
  * }
  */
 final class BoardProps
@@ -55,14 +64,14 @@ final class BoardProps
         $pack = app(ContentRepository::class)->pack($game->pack);
         $style = $pack->style;
         $class = $game->schoolClass;
+        $child = $game->child;
         $avatars = Avatars::images();
-        $sounds = [];
+        $avatar = static fn (string $key): array => [
+            'key' => $key,
+            'url' => isset($avatars[$key]) ? ContentAssets::url($avatars[$key]) : null,
+        ];
+        $sounds = BoardSounds::of($pack, $game->owner);
         $rounds = GameRound::query()->where('game_session_id', $game->id)->get(['id', 'solved_at', 'points']);
-
-        foreach (Sound::cases() as $sound) {
-            $path = $style->sound($sound);
-            $sounds[$sound->value] = $path === null ? null : ContentAssets::url($path, $pack->version);
-        }
 
         return [
             'game' => [
@@ -80,7 +89,13 @@ final class BoardProps
                     ->mapWithKeys(static fn (GameRound $round): array => [$round->id => $round->points])
                     ->all(),
             ],
-            'schoolClass' => ['id' => $class->id, 'name' => $class->name],
+            'schoolClass' => $class === null ? null : ['id' => $class->id, 'name' => $class->name],
+            'child' => $child === null ? null : [
+                'id' => $child->id,
+                'display_name' => $child->display_name,
+                'avatar' => $avatar($child->avatar),
+                'stars' => self::starsBefore($game, $child->id),
+            ],
             'pack' => [
                 'key' => $pack->key,
                 'title' => $pack->title->in(app()->getLocale()),
@@ -95,17 +110,31 @@ final class BoardProps
                 ],
                 'pictures' => (object) ($style->item->hasFigures() ? self::pictures($pack) : []),
             ],
-            'students' => array_values($class->students()->active()->ordered()->get()
+            // A home game's child is always the one at the board: no grid.
+            'students' => $class === null ? [] : array_values($class->students()->active()->ordered()->get()
                 ->map(static fn (Student $student): array => [
                     'id' => $student->id,
                     'display_name' => $student->display_name,
-                    'avatar' => [
-                        'key' => $student->avatar,
-                        'url' => isset($avatars[$student->avatar]) ? ContentAssets::url($avatars[$student->avatar]) : null,
-                    ],
+                    'avatar' => $avatar($student->avatar),
                 ])
                 ->all()),
+            // Public content files: a guest board's bearer reaches nothing more (§4).
+            'voice' => app(BoardVoice::class)->of($game->owner),
         ];
+    }
+
+    /**
+     * The stars of the child's other games, as stored: what the result
+     * screen adds this game's stars to. Derived on every read, never
+     * stored (§5).
+     */
+    private static function starsBefore(GameSession $game, string $childId): int
+    {
+        // An int or a numeric string, depending on the engine.
+        return (int) GameRound::query()
+            ->where('child_id', $childId)
+            ->where('game_session_id', '!=', $game->id)
+            ->sum('points');
     }
 
     /**

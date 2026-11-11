@@ -2,7 +2,6 @@
 
 namespace App\Domain\Play\Data;
 
-use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\ContentRepository;
@@ -16,14 +15,15 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * A game as the teacher sets it up (docs/architecture.md §2): mechanic ×
- * pack × level, the number of rounds, the letter case, for a letter
- * level, the letters to ask for and, for a syllable or word level, whether
- * to play only the teacher's own words (`own_words`, §3 "Teacher words"). Every entry point (the setup page, A7's
- * phone and guest board) validates through `rules()`, which also refuses a
- * game the board cannot draw (`Playable`) or that the class's learned
- * letters, or the words its teacher hid, leave too little content for, with
- * a translated reason.
+ * A game as the teacher or the parent sets it up (docs/architecture.md §2):
+ * mechanic × pack × level, the number of rounds, the letter case, for a
+ * letter level, the letters to ask for and, for a syllable or word level,
+ * whether to play only the owner's own words (`own_words`, §3 "Teacher
+ * words"). Every entry point (the setup page of a class or a child, A7's
+ * phone and guest board) validates through `rules()` for the game's
+ * `GamePlayers`, which also refuses a game the board cannot draw
+ * (`Playable`) or that the class's or child's learned letters, or the words
+ * the owner hid, leave too little content for, with a translated reason.
  */
 final readonly class GameSetupData
 {
@@ -44,15 +44,15 @@ final readonly class GameSetupData
     /**
      * @return array<string, mixed>
      */
-    public static function rules(SchoolClass $class): array
+    public static function rules(GamePlayers $players): array
     {
         $content = app(ContentRepository::class);
-        $learned = self::learned($class);
+        $learned = $players->learned();
 
         return [
             'mechanic' => ['required', 'string', Rule::enum(Mechanic::class)],
             'pack' => ['required', 'string', Rule::in(array_keys($content->packs()))],
-            'level' => ['required', 'string', Rule::in(array_keys($content->levels())), new StartableGame($learned, $class->teacher)],
+            'level' => ['required', 'string', Rule::in(array_keys($content->levels())), new StartableGame($players)],
             'rounds' => ['sometimes', 'integer', 'between:'.Config::integer('elifba.rounds.min').','.Config::integer('elifba.rounds.max')],
             'letter_case' => ['sometimes', 'nullable', 'string', Rule::enum(LetterCase::class)],
             'letters' => ['sometimes', 'nullable', 'array', 'list', 'max:'.Alphabet::count()],
@@ -76,14 +76,15 @@ final readonly class GameSetupData
      *
      * @throws ValidationException
      */
-    public static function validate(array $input, SchoolClass $class): self
+    public static function validate(array $input, GamePlayers $players): self
     {
-        return self::fromArray(Validator::make($input, self::rules($class), self::messages())->validate());
+        return self::fromArray(Validator::make($input, self::rules($players), self::messages())->validate());
     }
 
     /**
      * Fills the defaults: `elifba.rounds.default` rounds; capitals for a
-     * letter level, the content as written otherwise.
+     * letter level, the content as written otherwise — always at a picture
+     * or number level (R5), which reads nothing.
      *
      * @param  array<array-key, mixed>  $validated
      */
@@ -99,21 +100,22 @@ final readonly class GameSetupData
             pack: self::text($validated['pack'] ?? null),
             level: $level->key,
             rounds: is_numeric($rounds) ? (int) $rounds : Config::integer('elifba.rounds.default'),
-            letter_case: $case ?? ($level->unit === Unit::Letter ? LetterCase::Upper : LetterCase::Lower),
+            // Nothing is read at a picture or number level: it is not offered there and stored as the content is written.
+            letter_case: ! $level->unit->reads() ? LetterCase::Lower : ($case ?? ($level->unit === Unit::Letter ? LetterCase::Upper : LetterCase::Lower)),
             letters: $letters === [] ? null : Alphabet::sort($letters),
             own_words: filter_var($validated['own_words'] ?? false, FILTER_VALIDATE_BOOLEAN),
         );
     }
 
     /**
-     * The class's learned letters, lowercase in alphabet order (all 32 when
-     * the class has not narrowed them).
+     * The class's or the child's learned letters, lowercase in alphabet
+     * order (all 32 when they have not been narrowed).
      *
      * @return list<string>
      */
-    public static function learned(SchoolClass $class): array
+    public static function learned(GamePlayers $players): array
     {
-        return $class->learned_letters ?? Alphabet::letters();
+        return $players->learned();
     }
 
     /**

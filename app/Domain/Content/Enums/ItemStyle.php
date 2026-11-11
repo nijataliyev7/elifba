@@ -20,6 +20,13 @@ enum ItemStyle: string
     case Fruit = 'fruit';
 
     /**
+     * A rounded tile in a palette colour filled with the item's picture, or
+     * its text when it has none (R5, ADR 012). Every round of the picture
+     * unit is drawn in it, whatever the pack's own style.
+     */
+    case Picture = 'picture';
+
+    /**
      * Whether each item stands in front of a picture from the pack's
      * `style.figures` (§2 "Figures"): the pack must list them, and no other
      * style may.
@@ -28,7 +35,7 @@ enum ItemStyle: string
     {
         return match ($this) {
             self::Animal, self::Fruit => true,
-            self::Balloon, self::Wagon, self::Card, self::Bubble => false,
+            self::Balloon, self::Wagon, self::Card, self::Bubble, self::Picture => false,
         };
     }
 }

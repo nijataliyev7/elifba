@@ -118,7 +118,7 @@ final class GoogleSignIn
         return redirect()->intended(self::home());
     }
 
-    /** Where a login lands: Fortify's, the classes. */
+    /** Where a login lands: Fortify's `home`, `/start`, which lands by role (ADR 010). */
     public static function home(): string
     {
         return Fortify::redirects('login');

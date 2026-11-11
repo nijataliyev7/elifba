@@ -1,0 +1,18 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- nar: a whole pomegranate with its crown. Elifba own art, MIT. -->
+<path d="M12.6 8.7C12.6 6.8 12.2 5.4 11.2 4.1C11 3.8 11.3 3.5 11.6 3.6C12.6 4 13.4 4.3 13.9 4.7C14.4 3.8 14.9 2.8 15.6 2C15.8 1.8 16.2 1.8 16.4 2C17.1 2.8 17.6 3.8 18.1 4.7C18.6 4.3 19.4 4 20.4 3.6C20.7 3.5 21 3.8 20.8 4.1C19.8 5.4 19.4 6.8 19.4 8.7Z" fill="url(#nar_fill1)"/>
+<path d="M12.6 8.7C12.6 6.8 12.2 5.4 11.2 4.1C11 3.8 11.3 3.5 11.6 3.6C12.6 4 13.4 4.3 13.9 4.7C14.4 3.8 14.9 2.8 15.6 2C15.8 1.8 16.2 1.8 16.4 2C17.1 2.8 17.6 3.8 18.1 4.7C18.6 4.3 19.4 4 20.4 3.6C20.7 3.5 21 3.8 20.8 4.1C19.8 5.4 19.4 6.8 19.4 8.7Z" fill="url(#nar_fill2)"/>
+<ellipse cx="16" cy="4.8" rx="2.3" ry="0.9" fill="#6E1028" opacity="0.85"/>
+<path d="M16 6.8C23 6.8 28.6 12 28.6 18.6C28.6 25.2 23 30.2 16 30.2C9 30.2 3.4 25.2 3.4 18.6C3.4 12 9 6.8 16 6.8Z" fill="url(#nar_fill3)"/>
+<path d="M16 6.8C23 6.8 28.6 12 28.6 18.6C28.6 25.2 23 30.2 16 30.2C9 30.2 3.4 25.2 3.4 18.6C3.4 12 9 6.8 16 6.8Z" fill="url(#nar_fill4)"/>
+<g filter="url(#nar_blur06)"><ellipse cx="10.3" cy="13.4" rx="3.4" ry="2" fill="#FFCBD2" fill-opacity="0.75" transform="rotate(-35 10.3 13.4)"/></g>
+<g filter="url(#nar_blur04)"><ellipse cx="21.5" cy="12.2" rx="1.2" ry="0.6" fill="#FFCBD2" fill-opacity="0.5" transform="rotate(20 21.5 12.2)"/></g>
+<defs>
+<radialGradient id="nar_fill1" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FF6B7E"/><stop offset="0.5" stop-color="#D7263F"/><stop offset="1" stop-color="#8A1534"/></radialGradient>
+<radialGradient id="nar_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#8A1534" stop-opacity="0.5"/><stop offset="0.9" stop-color="#8A1534" stop-opacity="0"/></radialGradient>
+<radialGradient id="nar_fill3" cx="0.32" cy="0.28" r="0.78"><stop stop-color="#FF6B7E"/><stop offset="0.5" stop-color="#D7263F"/><stop offset="1" stop-color="#8A1534"/></radialGradient>
+<radialGradient id="nar_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#8A1534" stop-opacity="0.75"/><stop offset="0.9" stop-color="#8A1534" stop-opacity="0"/></radialGradient>
+<filter id="nar_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+<filter id="nar_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+</defs>
+</svg>

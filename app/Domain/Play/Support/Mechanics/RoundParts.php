@@ -63,6 +63,39 @@ final class RoundParts
     }
 
     /**
+     * The numbers nearest `$target` among `$pool` (number content keys),
+     * `$count` of them: ±1 first, then ±2…, in random order within a
+     * distance. A number's "confusables" (R5): its decoys in `find` and
+     * `pop`, and N's neighbours in a `count` round.
+     *
+     * @param  list<string>  $pool  `number:{n}` keys
+     * @return list<string>
+     */
+    public static function nearest(string $target, array $pool, int $count, Randomizer $random): array
+    {
+        $n = (int) self::value($target);
+        /** @var array<int, list<string>> $byDistance */
+        $byDistance = [];
+
+        foreach ($pool as $key) {
+            if ($key !== $target) {
+                $byDistance[abs((int) self::value($key) - $n)][] = $key;
+            }
+        }
+
+        ksort($byDistance);
+        $nearest = [];
+
+        foreach ($byDistance as $keys) {
+            /** @var list<string> $shuffled */
+            $shuffled = $random->shuffleArray($keys);
+            $nearest = [...$nearest, ...$shuffled];
+        }
+
+        return array_slice($nearest, 0, $count);
+    }
+
+    /**
      * "a", "b", "c"… in display order.
      */
     public static function itemId(int $position): string

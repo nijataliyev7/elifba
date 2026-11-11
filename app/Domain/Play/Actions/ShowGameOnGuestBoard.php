@@ -11,8 +11,9 @@ use Illuminate\Support\Facades\DB;
 use LogicException;
 
 /**
- * Sends a game to a guest board the teacher claimed (docs/architecture.md
- * §4): one of their live games, or a new one started here with `StartGame`.
+ * Sends a game to a guest board the account claimed (docs/architecture.md
+ * §4): one of its live games, or a new one for a class or a child started
+ * here with `StartGame`.
  * From now on the board's bearer reaches this game and no other. It runs
  * again for the next game, without a new code.
  */
@@ -33,7 +34,7 @@ final readonly class ShowGameOnGuestBoard
             }
 
             $game = $choice->game ?? $this->startGame->handle(
-                $choice->class ?? throw new LogicException('A new game needs a class.'),
+                $choice->players ?? throw new LogicException('A new game needs a class or a child.'),
                 $choice->setup ?? throw new LogicException('A new game needs its setup.'),
             );
 

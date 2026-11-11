@@ -2,12 +2,12 @@ import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenu } from '@/components/user-menu';
-import { index as classes } from '@/routes/classes';
+import { start } from '@/routes';
 
 /**
  * The teacher shell's header on every viewport (docs/frontend.md §1): the
  * sidebar toggle (`lg+` only: below it there is no sidebar), the brand,
- * which leads to the classes, and the user menu.
+ * which leads home by role (`/start`), and the user menu.
  */
 export function AppHeader() {
     const { name } = usePage().props;
@@ -17,8 +17,7 @@ export function AppHeader() {
             <div className="flex min-w-0 items-center gap-2">
                 <SidebarTrigger className="-ml-1 hidden lg:inline-flex" />
                 <Link
-                    href={classes()}
-                    prefetch
+                    href={start()}
                     className="flex min-w-0 items-center gap-2 rounded-md px-1 transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-green-700 text-white">

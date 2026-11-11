@@ -6,11 +6,12 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { useTranslation } from '@/hooks/use-translation';
-import { home, login } from '@/routes';
-import { index as classes } from '@/routes/classes';
+import { home, login, start } from '@/routes';
 
 type Props = {
     retentionDays: number;
+    /** At most this many children per parent's account (ADR 013). */
+    childrenMax: number;
     /** Whether this instance offers Google sign-in: then the notice says what it shares (ADR 008). */
     googleSignIn: boolean;
     /** Who runs this instance, from `ELIFBA_OPERATOR_*`; null when not set. */
@@ -20,12 +21,18 @@ type Props = {
 /** The sections of the notice, in order; each has a title and a body key. */
 const SECTIONS = ['stored', 'not_stored', 'why', 'how_long', 'delete', 'where'];
 
+/** The parts of the section for parents at home, in order (ADR 013). */
+const HOME = ['stored', 'why', 'who', 'not_shared', 'delete', 'how_long'];
+
 /**
  * The privacy notice (docs/architecture.md §7), public and in every
- * interface language, with a note for parents a teacher can copy.
+ * interface language: what Elifba keeps for a class, a section for parents
+ * who play with their own children at home (§7 "Parents and their
+ * children"), and the note a teacher copies for a class's parents.
  */
 export default function Privacy({
     retentionDays,
+    childrenMax,
     googleSignIn,
     operator,
 }: Props) {
@@ -53,8 +60,15 @@ export default function Privacy({
                     <div className="flex flex-wrap items-center gap-2">
                         <LanguageSwitcher />
                         <Button asChild variant="outline" size="sm">
-                            <Link href={auth.user ? classes() : login()}>
-                                {auth.user ? t('nav.classes') : t('nav.log_in')}
+                            {/* A signed-in account goes home by role (architecture §1 "Accounts and roles"). */}
+                            <Link href={auth.user ? start() : login()}>
+                                {auth.user
+                                    ? t(
+                                          auth.area === 'parent'
+                                              ? 'nav.children'
+                                              : 'nav.classes',
+                                      )
+                                    : t('nav.log_in')}
                             </Link>
                         </Button>
                     </div>
@@ -80,6 +94,27 @@ export default function Privacy({
                             </p>
                         </section>
                     ))}
+
+                    <section
+                        className="space-y-3"
+                        aria-labelledby="home"
+                        data-test="home"
+                    >
+                        <h2 id="home" className="text-xl font-semibold">
+                            {t('privacy.home.title')}
+                        </h2>
+                        {HOME.map((part) => (
+                            <p
+                                key={part}
+                                className="leading-relaxed whitespace-pre-line"
+                            >
+                                {t(`privacy.home.${part}`, {
+                                    ...days,
+                                    max: childrenMax,
+                                })}
+                            </p>
+                        ))}
+                    </section>
 
                     {googleSignIn && (
                         <section className="space-y-2" data-test="google">

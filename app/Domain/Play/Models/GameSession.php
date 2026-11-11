@@ -4,11 +4,12 @@ namespace App\Domain\Play\Models;
 
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Policies\GameSessionPolicy;
 use App\Domain\Play\Support\Requester;
-use App\Models\Concerns\BelongsToTeacher;
+use App\Models\Concerns\BelongsToOwner;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\GameSessionFactory;
@@ -25,16 +26,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * One game a class plays: mechanic × pack × level, with its rounds as
- * snapshots (docs/architecture.md §1, §2). `status` changes only through
- * `TransitionGameSession`; `board_epoch` fences the board allowed to write
- * (§4). The current round is derived (the first open one), never stored.
- * `{game}` binds only the current teacher's games (`BelongsToTeacher`) or,
- * for a guest board's bearer, exactly the game that board shows (§4).
+ * One game a class or a parent's child plays: mechanic × pack × level, with
+ * its rounds as snapshots (docs/architecture.md §1, §2). Exactly one of
+ * `school_class_id` and `child_id` is set (`StartGame`); Play reads who the
+ * game is for only through `Play\Data\GamePlayers` (ADR 011). `status`
+ * changes only through `TransitionGameSession`; `board_epoch` fences the
+ * board allowed to write (§4). The current round is derived (the first open
+ * one), never stored. `{game}` binds only the current account's games
+ * (`BelongsToOwner`) or, for a guest board's bearer, exactly the game that
+ * board shows (§4).
  *
  * @property string $id also the channel name `game.{id}` (§4)
- * @property int $user_id the owner; equals the class's teacher
- * @property string $school_class_id
+ * @property int $user_id the owner: the class's teacher or the child's parent
+ * @property string|null $school_class_id null for a home game
+ * @property string|null $child_id the child a home game is for
  * @property Mechanic $mechanic
  * @property string $pack theme pack key
  * @property int $pack_version the pack version the rounds were built from
@@ -48,8 +53,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $started_at
  * @property CarbonImmutable|null $ended_at
  * @property CarbonImmutable $last_activity_at
- * @property-read User $teacher
- * @property-read SchoolClass $schoolClass
+ * @property-read User $owner
+ * @property-read SchoolClass|null $schoolClass
+ * @property-read Child|null $child
  * @property-read Collection<int, GameRound> $rounds
  */
 #[UseFactory(GameSessionFactory::class)]
@@ -58,8 +64,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GameSession extends Model
 {
     /** @use HasFactory<GameSessionFactory> */
-    use BelongsToTeacher, HasFactory, HasUlids {
-        BelongsToTeacher::resolveRouteBinding as resolveTeacherRouteBinding;
+    use BelongsToOwner, HasFactory, HasUlids {
+        BelongsToOwner::resolveRouteBinding as resolveOwnerRouteBinding;
     }
 
     /**
@@ -73,7 +79,7 @@ class GameSession extends Model
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    public static function whereTeacher(Builder $query, User $teacher): Builder
+    public static function whereOwner(Builder $query, User $teacher): Builder
     {
         return $query->where($query->qualifyColumn('user_id'), $teacher->id);
     }
@@ -85,7 +91,7 @@ class GameSession extends Model
 
     /**
      * A guest board's bearer (`auth:board,web` on the board routes) finds
-     * only the game its board shows now; a teacher finds their own games.
+     * only the game its board shows now; an account finds its own games.
      *
      * @param  mixed  $value
      * @param  string|null  $field
@@ -100,13 +106,16 @@ class GameSession extends Model
                 : null;
         }
 
-        return $this->resolveTeacherRouteBinding($value, $field);
+        return $this->resolveOwnerRouteBinding($value, $field);
     }
 
     /**
+     * The account the game belongs to: the class's teacher or the child's
+     * parent.
+     *
      * @return BelongsTo<User, $this>
      */
-    public function teacher(): BelongsTo
+    public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -117,6 +126,14 @@ class GameSession extends Model
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
+    }
+
+    /**
+     * @return BelongsTo<Child, $this>
+     */
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class);
     }
 
     /**

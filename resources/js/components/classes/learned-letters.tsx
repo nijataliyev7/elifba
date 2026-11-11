@@ -6,22 +6,30 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Toggle } from '@/components/ui/toggle';
 import { useTranslation } from '@/hooks/use-translation';
-import { update } from '@/routes/classes/learned-letters';
 import type { Letter } from '@/types';
 
 type Props = {
-    classId: string;
+    /** Where the letters are saved: a class's or a parent's child's (PUT). */
+    url: string;
     /** The 32 letters in alphabet order, both cases made by the server. */
     alphabet: Letter[];
-    /** Lowercase letters the class has learned. */
+    /** Lowercase letters the class or the child has learned. */
     learned: string[];
+    /** The translation key of the text under the title. */
+    description?: string;
 };
 
 /**
  * The 32 learned-letter toggles with "all" and "none" (docs/architecture.md
- * §3). Every game level uses only content made of the switched-on letters.
+ * §3), for a class or a parent's child. Every reading level uses only
+ * content made of the switched-on letters.
  */
-export function LearnedLetters({ classId, alphabet, learned }: Props) {
+export function LearnedLetters({
+    url,
+    alphabet,
+    learned,
+    description = 'classes.letters.description',
+}: Props) {
     const { t } = useTranslation();
     const [on, setOn] = useState<Set<string>>(() => new Set(learned));
     const [saving, setSaving] = useState(false);
@@ -46,7 +54,7 @@ export function LearnedLetters({ classId, alphabet, learned }: Props) {
 
     const save = (): void => {
         router.put(
-            update.url(classId),
+            url,
             {
                 letters: alphabet
                     .map((letter) => letter.lower)
@@ -64,11 +72,11 @@ export function LearnedLetters({ classId, alphabet, learned }: Props) {
 
     return (
         <section className="space-y-4" aria-labelledby="learned-letters">
-            <div id="learned-letters">
+            <div id="learned-letters" className="scroll-mt-20">
                 <Heading
                     variant="small"
                     title={t('classes.letters.title')}
-                    description={t('classes.letters.description')}
+                    description={t(description)}
                 />
             </div>
 

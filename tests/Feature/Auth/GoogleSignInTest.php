@@ -77,7 +77,7 @@ it('signs in the teacher linked to the Google account, without "remember me"', f
     assert($guard instanceof SessionGuard);
 
     throughGoogle($this)
-        ->assertRedirect(route('classes.index', absolute: false))
+        ->assertRedirect(route('start', absolute: false))
         ->assertCookieMissing($guard->getRecallerName());
 
     $this->assertAuthenticatedAs($teacher);
@@ -89,7 +89,7 @@ it('signs in the teacher linked to the Google account, without "remember me"', f
 it('links a teacher whose address is confirmed, case-insensitively, and keeps the password', function (): void {
     $teacher = User::factory()->create(['email' => 'Aygun@Gmail.com']);
 
-    throughGoogle($this)->assertRedirect(route('classes.index', absolute: false));
+    throughGoogle($this)->assertRedirect(route('start', absolute: false));
 
     $this->assertAuthenticatedAs($teacher);
     $teacher->refresh();
@@ -118,7 +118,7 @@ it('takes over an unconfirmed account and drops every credential someone else ma
     ]);
 
     // No two-factor challenge: the second factor was someone else's too.
-    throughGoogle($this)->assertRedirect(route('classes.index', absolute: false));
+    throughGoogle($this)->assertRedirect(route('start', absolute: false));
 
     $this->assertAuthenticatedAs($teacher);
     $teacher->refresh();
@@ -165,7 +165,7 @@ it('trusts only addresses Google vouches for: Gmail, or a Google Workspace domai
 
     // The school's own Google Workspace.
     $this->google->answers(['hd' => 'school.az']);
-    throughGoogle($this)->assertRedirect(route('classes.index', absolute: false));
+    throughGoogle($this)->assertRedirect(route('start', absolute: false));
     $this->assertAuthenticatedAs($teacher);
     expect($teacher->refresh()->google_id)->toBe(GOOGLE_SUB);
 });
@@ -264,7 +264,7 @@ it('asks a new teacher for the privacy-note agreement before creating the accoun
     $this->assertGuest();
 
     $this->post(route('google.register.store'), ['name' => 'Aygün müəllimə', 'terms' => '1'])
-        ->assertRedirect(route('classes.index', absolute: false));
+        ->assertRedirect(route('start', absolute: false));
 
     $teacher = User::query()->sole();
     $this->assertAuthenticatedAs($teacher);
@@ -275,12 +275,13 @@ it('asks a new teacher for the privacy-note agreement before creating the accoun
         ->and($teacher->email_verified_at)->not->toBeNull()
         ->and($teacher->terms_accepted_at)->not->toBeNull()
         ->and($teacher->locale)->toBe('az')
+        ->and($teacher->roleList())->toBe([])
         ->and(session(GoogleSignIn::PENDING))->toBeNull();
     Notification::assertNothingSent();
 
     // The next time, Google signs her straight in.
     Auth::logout();
-    throughGoogle($this)->assertRedirect(route('classes.index', absolute: false));
+    throughGoogle($this)->assertRedirect(route('start', absolute: false));
     $this->assertAuthenticatedAs($teacher);
 });
 

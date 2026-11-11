@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Support\Translations;
 
 /*
@@ -137,3 +138,29 @@ it('ships the same framework files and keys in every language', function (string
         }
     }
 })->with(otherLocales());
+
+/*
+ * The three agreements (docs/architecture.md §7 "Agreements", ADR 013): the
+ * privacy note at registration and one sentence per role, each its own key
+ * in every language, never merged.
+ */
+it('keeps each agreement its own sentence', function (string $locale): void {
+    $translations = Translations::load($locale);
+    $agreements = ['auth.register.terms', ...array_map(
+        static fn (Role $role): string => "roles.agreement.{$role->value}",
+        Role::cases(),
+    )];
+
+    foreach ($agreements as $key) {
+        expect($translations)->toHaveKey($key);
+    }
+
+    $sentences = array_map(static fn (string $key): string => $translations[$key], $agreements);
+
+    expect(array_unique($sentences))->toHaveCount(count($agreements));
+
+    foreach (Role::cases() as $role) {
+        expect($translations['auth.register.terms'])->not->toContain($translations["roles.agreement.{$role->value}"])
+            ->and($translations)->toHaveKeys(["roles.{$role->value}.title", "roles.{$role->value}.description", "roles.settings.add.{$role->value}"]);
+    }
+})->with(fn (): array => [BASE_LOCALE, ...otherLocales()]);

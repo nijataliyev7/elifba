@@ -1,14 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- buta: the paisley motif. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" fill="#1E50A0"/>
-    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" transform="translate(34 46) scale(0.62) translate(-34 -46)" fill="#D22F27" stroke-width="3.2"/>
-    <path d="M34,66 C20,66 10,57 10,44 C10,30 20,20 30,15 C36,12 40,6 46,5 C52,4 57,9 56,16 C54,12 50,12 48,16 C46,20 54,26 55,36 C56,50 48,66 34,66 Z" transform="translate(34 50) scale(0.28) translate(-34 -46)" fill="#FCEA2B" stroke-width="7"/>
-    <circle cx="19" cy="44" r="1.5" fill="#FCEA2B" stroke="none"/>
-    <circle cx="22" cy="31" r="1.5" fill="#FCEA2B" stroke="none"/>
-    <circle cx="33" cy="22" r="1.5" fill="#FCEA2B" stroke="none"/>
-    <circle cx="24" cy="56" r="1.5" fill="#FCEA2B" stroke="none"/>
-    <circle cx="38" cy="59" r="1.5" fill="#FCEA2B" stroke="none"/>
-    <circle cx="48" cy="50" r="1.5" fill="#FCEA2B" stroke="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- buta: the paisley motif, its tip curled. Elifba own art, MIT. -->
+<path d="M16.24 30.2C9.8 30.2 5.2 26.06 5.2 20.08C5.2 13.64 9.8 9.04 14.4 6.74C17.16 5.36 19 2.6 21.76 2.14C24.52 1.68 26.82 3.98 26.36 7.2C25.44 5.36 23.6 5.36 22.68 7.2C21.76 9.04 25.44 11.8 25.9 16.4C26.36 22.84 22.68 30.2 16.24 30.2Z" fill="url(#buta_fill1)"/>
+<path d="M16.24 30.2C9.8 30.2 5.2 26.06 5.2 20.08C5.2 13.64 9.8 9.04 14.4 6.74C17.16 5.36 19 2.6 21.76 2.14C24.52 1.68 26.82 3.98 26.36 7.2C25.44 5.36 23.6 5.36 22.68 7.2C21.76 9.04 25.44 11.8 25.9 16.4C26.36 22.84 22.68 30.2 16.24 30.2Z" fill="url(#buta_fill2)"/>
+<g filter="url(#buta_blur05)"><ellipse cx="9.4" cy="16.4" rx="1.2" ry="3" fill="#E4F1F9" fill-opacity="0.6" transform="rotate(25 9.4 16.4)"/></g>
+<circle cx="9.34" cy="20.08" r="0.75" fill="url(#buta_fill3)"/>
+<circle cx="10.72" cy="14.1" r="0.75" fill="url(#buta_fill4)"/>
+<circle cx="15.78" cy="9.96" r="0.75" fill="url(#buta_fill5)"/>
+<circle cx="11.64" cy="25.6" r="0.75" fill="url(#buta_fill6)"/>
+<circle cx="18.08" cy="26.98" r="0.75" fill="url(#buta_fill7)"/>
+<circle cx="22.68" cy="22.84" r="0.75" fill="url(#buta_fill8)"/>
+<circle cx="21.3" cy="15.02" r="0.75" fill="url(#buta_fill9)"/>
+<path d="M16.24 26.7C12.25 26.7 9.4 24.14 9.4 20.43C9.4 16.44 12.25 13.58 15.1 12.16C16.81 11.3 17.95 9.59 19.66 9.31C21.37 9.02 22.8 10.45 22.51 12.44C21.94 11.3 20.8 11.3 20.23 12.44C19.66 13.58 21.94 15.3 22.23 18.15C22.51 22.14 20.23 26.7 16.24 26.7Z" fill="url(#buta_fill10)"/>
+<path d="M16.24 26.7C12.25 26.7 9.4 24.14 9.4 20.43C9.4 16.44 12.25 13.58 15.1 12.16C16.81 11.3 17.95 9.59 19.66 9.31C21.37 9.02 22.8 10.45 22.51 12.44C21.94 11.3 20.8 11.3 20.23 12.44C19.66 13.58 21.94 15.3 22.23 18.15C22.51 22.14 20.23 26.7 16.24 26.7Z" fill="url(#buta_fill11)"/>
+<g filter="url(#buta_blur04)"><ellipse cx="13.2" cy="20.6" rx="0.8" ry="1.8" fill="#FDE3E6" fill-opacity="0.6" transform="rotate(25 13.2 20.6)"/></g>
+<path d="M16.24 25.6C14.31 25.6 12.93 24.36 12.93 22.56C12.93 20.63 14.31 19.25 15.69 18.56C16.52 18.15 17.07 17.32 17.9 17.18C18.72 17.04 19.41 17.73 19.28 18.7C19 18.15 18.45 18.15 18.17 18.7C17.9 19.25 19 20.08 19.14 21.46C19.28 23.39 18.17 25.6 16.24 25.6Z" fill="url(#buta_fill12)"/>
+<path d="M16.24 25.6C14.31 25.6 12.93 24.36 12.93 22.56C12.93 20.63 14.31 19.25 15.69 18.56C16.52 18.15 17.07 17.32 17.9 17.18C18.72 17.04 19.41 17.73 19.28 18.7C19 18.15 18.45 18.15 18.17 18.7C17.9 19.25 19 20.08 19.14 21.46C19.28 23.39 18.17 25.6 16.24 25.6Z" fill="url(#buta_fill13)"/>
+<defs>
+<radialGradient id="buta_fill1" cx="0.3" cy="0.3" r="0.85"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="buta_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<filter id="buta_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="buta_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill8" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill9" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill10" cx="0.3" cy="0.3" r="0.85"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="buta_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="buta_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="buta_fill12" cx="0.3" cy="0.3" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="buta_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.3"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

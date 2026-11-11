@@ -47,7 +47,7 @@ function judgedRound(array $items, array $solution): RoundData
         unit: $order === SolutionOrder::Any ? Unit::Letter : Unit::Word,
         pack: 'test',
         level: 'test',
-        prompt: new PromptData('test', null, null, null, null),
+        prompt: new PromptData('test', null, null, null, null, null),
         items: array_map(static fn (string $id): RoundItemData => new RoundItemData($id, $id, null, "test:{$id}"), $items),
         slots: $order === SolutionOrder::Any ? 0 : count($solution['item_ids']),
         solution: new SolutionData($order, $solution['item_ids']),

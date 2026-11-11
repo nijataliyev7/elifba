@@ -1,19 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- tar: the Azerbaijani long-necked lute with a figure-eight body. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <g transform="rotate(38 36 36)">
-      <rect x="33.5" y="4" width="5" height="10" rx="1" fill="#6A462F"/>
-      <line x1="33.5" y1="6" x2="30.5" y2="6"/>
-      <line x1="33.5" y1="9.5" x2="30.5" y2="9.5"/>
-      <line x1="38.5" y1="6" x2="41.5" y2="6"/>
-      <line x1="38.5" y1="9.5" x2="41.5" y2="9.5"/>
-      <rect x="34" y="13" width="4" height="22" fill="#6A462F"/>
-      <path d="M36,30 C42,30 45,33 44.5,37.5 C44.2,40 42.5,41.5 41,42.5 C46.5,43.5 49,48 48,54 C47,61 41,64 36,64 C31,64 25,61 24,54 C23,48 25.5,43.5 31,42.5 C29.5,41.5 27.8,40 27.5,37.5 C27,33 30,30 36,30 Z" fill="#A57939"/>
-      <ellipse cx="36" cy="36.5" rx="5" ry="3.8" fill="#FFF"/>
-      <ellipse cx="36" cy="53" rx="8.5" ry="7.5" fill="#FFF"/>
-      <line x1="34.8" y1="10" x2="34.8" y2="60" stroke-width="0.8"/>
-      <line x1="37.2" y1="10" x2="37.2" y2="60" stroke-width="0.8"/>
-      <rect x="32" y="55" width="8" height="2" fill="#6A462F" stroke-width="1"/>
-    </g>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- tar: the Azerbaijani tar, its double body covered with membrane, a long fretted neck. Elifba own art, MIT. -->
+<path d="M25.48 5.13L24.43 4.09" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.87 6.52L27.91 7.57" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.4 4.2L25.36 3.16" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M27.8 5.6L28.84 6.64" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M27.33 3.28L26.29 2.23" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28.72 4.67L29.77 5.71" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24.96 6L26 7.04Q26.4 7.45 26.79 7.02L29.1 4.46Q29.48 4.03 29.07 3.62L28.38 2.93Q27.97 2.52 27.54 2.9L24.98 5.21Q24.55 5.6 24.96 6Z" fill="url(#tar_fill1)"/>
+<path d="M24.96 6L26 7.04Q26.4 7.45 26.79 7.02L29.1 4.46Q29.48 4.03 29.07 3.62L28.38 2.93Q27.97 2.52 27.54 2.9L24.98 5.21Q24.55 5.6 24.96 6Z" fill="url(#tar_fill2)"/>
+<path d="M15.85 15.22L16.78 16.15Q17.01 16.38 17.24 16.15L26.17 7.22Q26.4 6.99 26.17 6.75L25.25 5.83Q25.01 5.6 24.78 5.83L15.85 14.76Q15.62 14.99 15.85 15.22Z" fill="url(#tar_fill3)"/>
+<path d="M15.85 15.22L16.78 16.15Q17.01 16.38 17.24 16.15L26.17 7.22Q26.4 6.99 26.17 6.75L25.25 5.83Q25.01 5.6 24.78 5.83L15.85 14.76Q15.62 14.99 15.85 15.22Z" fill="url(#tar_fill4)"/>
+<path d="M17.13 13.48L18.52 14.87" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M18.4 12.21L19.79 13.6" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M19.68 10.93L21.07 12.32" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M20.95 9.65L22.35 11.05" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M22.23 8.38L23.62 9.77" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M23.51 7.1L24.9 8.49" stroke="#DAD9DB" stroke-width="0.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M16.66 15.34C18.23 16.9 18.17 19.28 16.66 20.79C15.45 22 14.17 21.89 13.53 22.64C14.17 24.09 13.3 26.12 11.68 27.74C9.53 29.89 6.23 29.95 4.14 27.86C2.05 25.77 2.11 22.47 4.26 20.32C5.88 18.7 7.91 17.83 9.36 18.47C10.11 17.83 10 16.55 11.21 15.34C12.72 13.83 15.1 13.77 16.66 15.34Z" fill="url(#tar_fill5)"/>
+<path d="M16.66 15.34C18.23 16.9 18.17 19.28 16.66 20.79C15.45 22 14.17 21.89 13.53 22.64C14.17 24.09 13.3 26.12 11.68 27.74C9.53 29.89 6.23 29.95 4.14 27.86C2.05 25.77 2.11 22.47 4.26 20.32C5.88 18.7 7.91 17.83 9.36 18.47C10.11 17.83 10 16.55 11.21 15.34C12.72 13.83 15.1 13.77 16.66 15.34Z" fill="url(#tar_fill6)"/>
+<path d="M15.79 20.03C14.74 21.09 13.02 21.09 11.97 20.03C10.91 18.98 10.91 17.26 11.97 16.21C13.02 15.15 14.74 15.15 15.79 16.21C16.85 17.26 16.85 18.98 15.79 20.03Z" fill="url(#tar_fill7)"/>
+<path d="M15.79 20.03C14.74 21.09 13.02 21.09 11.97 20.03C10.91 18.98 10.91 17.26 11.97 16.21C13.02 15.15 14.74 15.15 15.79 16.21C16.85 17.26 16.85 18.98 15.79 20.03Z" fill="url(#tar_fill8)"/>
+<path d="M10.69 26.99C9.12 28.56 6.58 28.56 5.01 26.99C3.44 25.42 3.44 22.88 5.01 21.31C6.58 19.74 9.12 19.74 10.69 21.31C12.26 22.88 12.26 25.42 10.69 26.99Z" fill="url(#tar_fill9)"/>
+<path d="M10.69 26.99C9.12 28.56 6.58 28.56 5.01 26.99C3.44 25.42 3.44 22.88 5.01 21.31C6.58 19.74 9.12 19.74 10.69 21.31C12.26 22.88 12.26 25.42 10.69 26.99Z" fill="url(#tar_fill10)"/>
+<path d="M6.05 23.98L8.02 25.95Q8.2 26.12 8.02 26.29L7.68 26.64Q7.5 26.82 7.33 26.64L5.36 24.67Q5.18 24.5 5.36 24.32L5.71 23.98Q5.88 23.8 6.05 23.98Z" fill="url(#tar_fill11)"/>
+<path d="M6.43 25.05L25.45 6.03" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.75"/>
+<path d="M6.95 25.57L25.97 6.55" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.75"/>
+<g filter="url(#tar_blur045)"><ellipse cx="8.08" cy="20.9" rx="1.4" ry="0.7" fill="#FFFFFF" fill-opacity="0.6" transform="rotate(-45 8.08 20.9)"/></g>
+<defs>
+<radialGradient id="tar_fill1" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="tar_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="tar_fill3" cx="0.2" cy="0.3" r="1"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="tar_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="tar_fill5" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="tar_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="tar_fill7" cx="0.3" cy="0.3" r="0.8"><stop stop-color="#FFF4EC"/><stop offset="0.5" stop-color="#FFE4D8"/><stop offset="1" stop-color="#D2ABA8"/></radialGradient>
+<radialGradient id="tar_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D2ABA8" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D2ABA8" stop-opacity="0"/></radialGradient>
+<radialGradient id="tar_fill9" cx="0.3" cy="0.3" r="0.8"><stop stop-color="#FFF4EC"/><stop offset="0.5" stop-color="#FFE4D8"/><stop offset="1" stop-color="#D2ABA8"/></radialGradient>
+<radialGradient id="tar_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D2ABA8" stop-opacity="0.45"/><stop offset="0.9" stop-color="#D2ABA8" stop-opacity="0"/></radialGradient>
+<radialGradient id="tar_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<filter id="tar_blur045" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.45"/></filter>
+</defs>
 </svg>

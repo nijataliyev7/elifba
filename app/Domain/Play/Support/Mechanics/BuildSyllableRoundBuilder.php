@@ -67,11 +67,11 @@ final readonly class BuildSyllableRoundBuilder extends BuildRoundBuilder
         return [...array_values($ranks), array_map(self::letter(...), Alphabet::sort($learned))];
     }
 
-    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template): PromptData
+    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template, ?string $audio): PromptData
     {
         $show = $case->apply(RoundParts::value($target));
 
-        return new PromptData(text: $template->fill($show), show: $show, image: null, audio: null, tail: null);
+        return new PromptData(text: $template->fill($show), show: $show, image: null, count: null, audio: $audio, tail: null);
     }
 
     /**

@@ -44,6 +44,22 @@ return [
         'max_per_teacher' => 200,
     ],
 
+    // A parent's own children (§1, §7 "Parents and their children", ADR 011,
+    // ADR 013): a family fits, a class does not.
+    'children' => [
+        'max' => 10,
+    ],
+
+    // The board's voice (§3 "Voice", ADR 015): only `php artisan
+    // content:voice` reads the key, on the machine that makes the clips once
+    // and commits them. An instance never needs it, so `.env.example` does
+    // not name it: put it in your shell or the gitignored `.env`, and never
+    // run `config:cache` while it is there.
+    'voice' => [
+        'api_key' => env('ELEVENLABS_API_KEY'),
+        'api_url' => 'https://api.elevenlabs.io',
+    ],
+
     // Who runs this instance; shown on /privacy (§7).
     'operator' => [
         'name' => env('ELIFBA_OPERATOR_NAME'),

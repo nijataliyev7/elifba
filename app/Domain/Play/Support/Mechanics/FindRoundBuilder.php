@@ -28,8 +28,8 @@ final readonly class FindRoundBuilder extends AnyRoundBuilder
         return [$target->id];
     }
 
-    protected function prompt(PromptTemplateData $template, RoundItemData $target): PromptData
+    protected function prompt(PromptTemplateData $template, RoundItemData $target, ?string $audio): PromptData
     {
-        return new PromptData(text: $template->fill($target->text), show: $target->text, image: null, audio: null, tail: null);
+        return new PromptData(text: $template->fill($target->text), show: $target->text, image: null, count: null, audio: $audio, tail: null);
     }
 }

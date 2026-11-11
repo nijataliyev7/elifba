@@ -5,7 +5,7 @@ namespace App\Domain\Play\Support;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\TeacherPacks;
-use App\Models\User;
+use App\Domain\Play\Data\GamePlayers;
 use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -13,10 +13,10 @@ use Illuminate\Contracts\Validation\ValidationRule;
 /**
  * The rule on `level` in `GameSetupData::rules()`: the chosen mechanic,
  * pack and level make a game the board can draw, with enough content made
- * of the class's learned letters (`Playable::reason()`) in the pack as the
- * class's teacher plays it (`TeacherPacks`, with only their own words when
- * `own_words` is on), the pack `StartGame` builds from. It stays quiet when another field is invalid; that field's own rule
- * reports it.
+ * of the class's or the child's learned letters (`Playable::reason()`) in
+ * the pack as the game's owner plays it (`TeacherPacks`, with only their own
+ * words when `own_words` is on), the pack `StartGame` builds from. It stays
+ * quiet when another field is invalid; that field's own rule reports it.
  */
 final class StartableGame implements DataAwareRule, ValidationRule
 {
@@ -26,12 +26,14 @@ final class StartableGame implements DataAwareRule, ValidationRule
     private array $data = [];
 
     /**
-     * @param  list<string>  $learned
+     * @var list<string>
      */
-    public function __construct(
-        private readonly array $learned,
-        private readonly User $teacher,
-    ) {}
+    private readonly array $learned;
+
+    public function __construct(private readonly GamePlayers $players)
+    {
+        $this->learned = $players->learned();
+    }
 
     /**
      * @param  array<array-key, mixed>  $data
@@ -48,7 +50,7 @@ final class StartableGame implements DataAwareRule, ValidationRule
         $content = app(ContentRepository::class);
         $mechanic = is_string($this->data['mechanic'] ?? null) ? Mechanic::tryFrom($this->data['mechanic']) : null;
         $pack = is_string($this->data['pack'] ?? null) && $content->hasPack($this->data['pack'])
-            ? app(TeacherPacks::class)->pack($this->teacher, $this->data['pack'], $this->ownWords())
+            ? app(TeacherPacks::class)->pack($this->players->owner, $this->data['pack'], $this->ownWords())
             : null;
         $level = is_string($value) ? ($content->levels()[$value] ?? null) : null;
 
@@ -64,7 +66,7 @@ final class StartableGame implements DataAwareRule, ValidationRule
     }
 
     /**
-     * Whether only the teacher's own words are asked for; an invalid value
+     * Whether only the owner's own words are asked for; an invalid value
      * counts as no (its own rule reports it).
      */
     private function ownWords(): bool

@@ -5,3 +5,4 @@ export type * from './ui';
 export type * from './play';
 export type * from './rankings';
 export type * from './words';
+export type * from './family';

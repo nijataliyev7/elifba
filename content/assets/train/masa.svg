@@ -1,11 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- masa: a wooden table. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="17" y="30" width="5" height="26" fill="#6A462F"/>
-    <rect x="50" y="30" width="5" height="26" fill="#6A462F"/>
-    <rect x="10" y="32" width="6" height="32" fill="#A57939"/>
-    <rect x="56" y="32" width="6" height="32" fill="#A57939"/>
-    <polygon points="14,22 58,22 66,30 6,30" fill="#A57939"/>
-    <rect x="6" y="30" width="60" height="6" fill="#6A462F"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- masa: a wooden table. Elifba own art, MIT. -->
+<path d="M8.6 14L8.8 25.6" stroke="url(#masa_fill1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23.4 14L23.2 25.6" stroke="url(#masa_fill2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.2 8.6L24.8 8.6Q25.8 8.6 26.46 9.35L29.54 12.85Q30.2 13.6 29.2 13.6L2.8 13.6Q1.8 13.6 2.46 12.85L5.54 9.35Q6.2 8.6 7.2 8.6Z" fill="url(#masa_fill3)"/>
+<path d="M7.2 8.6L24.8 8.6Q25.8 8.6 26.46 9.35L29.54 12.85Q30.2 13.6 29.2 13.6L2.8 13.6Q1.8 13.6 2.46 12.85L5.54 9.35Q6.2 8.6 7.2 8.6Z" fill="url(#masa_fill4)"/>
+<g filter="url(#masa_blur04)"><ellipse cx="9.6" cy="10" rx="3.2" ry="0.6" fill="#F6EDE7" fill-opacity="0.6"/></g>
+<rect x="1.8" y="13.2" width="28.4" height="2.8" rx="1" fill="url(#masa_fill5)"/>
+<rect x="1.8" y="13.2" width="28.4" height="2.8" rx="1" fill="url(#masa_fill6)"/>
+<rect x="3.4" y="15.4" width="2.8" height="14.4" rx="1.2" fill="url(#masa_fill7)"/>
+<rect x="3.4" y="15.4" width="2.8" height="14.4" rx="1.2" fill="url(#masa_fill8)"/>
+<rect x="25.8" y="15.4" width="2.8" height="14.4" rx="1.2" fill="url(#masa_fill9)"/>
+<rect x="25.8" y="15.4" width="2.8" height="14.4" rx="1.2" fill="url(#masa_fill10)"/>
+<defs>
+<linearGradient id="masa_fill1" x1="8.8" y1="25.6" x2="8.6" y2="14" gradientUnits="userSpaceOnUse"><stop stop-color="#5F4341"/><stop offset="1" stop-color="#C48462"/></linearGradient>
+<linearGradient id="masa_fill2" x1="23.2" y1="25.6" x2="23.4" y2="14" gradientUnits="userSpaceOnUse"><stop stop-color="#5F4341"/><stop offset="1" stop-color="#C48462"/></linearGradient>
+<radialGradient id="masa_fill3" cx="0.3" cy="0.1" r="0.95"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="masa_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.4"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<filter id="masa_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="masa_fill5" cx="0.2" cy="0" r="1.2"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="masa_fill6" cx="0.8" cy="1" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.7"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="masa_fill7" cx="0.3" cy="0" r="1.2"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="masa_fill8" cx="0.8" cy="1" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="masa_fill9" cx="0.3" cy="0" r="1.2"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="masa_fill10" cx="0.8" cy="1" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.75"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

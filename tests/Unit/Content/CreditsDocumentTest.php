@@ -7,8 +7,7 @@ use App\Domain\Content\Support\CreditsDocument;
 
 /*
  * CREDITS.md and /credits from content/credits.json (docs/architecture.md
- * §8): OpenMoji's attribution verbatim, the changed OpenMoji files and the
- * license statement of the READMEs.
+ * §8): every entry and the license statement of the READMEs.
  */
 
 function realCredits(): array
@@ -21,23 +20,13 @@ it('keeps CREDITS.md up to date with content/credits.json', function (): void {
         ->toBe(CreditsDocument::render(realCredits()), 'CREDITS.md is stale: run `php artisan content:credits`.');
 });
 
-it('carries OpenMoji\'s attribution verbatim and says no OpenMoji file was changed', function (): void {
-    $document = CreditsDocument::render(realCredits());
-
-    expect($document)
-        ->toContain("\nAll emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0\n")
-        ->toContain('Changed files: none.')
-        ->and(CreditsDocument::openMoji(realCredits()))
-        ->toMatchArray(['attribution' => CreditsDocument::OPENMOJI_ATTRIBUTION, 'changed' => []]);
-});
-
 it('states which license covers what, like the READMEs', function (): void {
     $document = CreditsDocument::render(realCredits());
 
     expect($document)->toContain(CreditsDocument::STATEMENT);
 
     foreach (['README.md', 'README.az.md'] as $readme) {
-        expect(file_get_contents(base_path($readme)))->toContain('content/assets/openmoji/')->toContain('CREDITS.md');
+        expect(file_get_contents(base_path($readme)))->toContain('content/assets/fluent/')->toContain('CREDITS.md');
     }
 
     expect(file_get_contents(base_path('README.md')))->toContain(CreditsDocument::STATEMENT);
@@ -59,14 +48,12 @@ it('lists every entry with its files, author, license and source', function (): 
     }
 });
 
-it('lists changed OpenMoji files, and leaves the section out without OpenMoji', function (): void {
-    $openMoji = new CreditData(['content/assets/openmoji/1F34E.svg'], 'OpenMoji', 'OpenMoji', 'https://openmoji.org/', License::CcBySa, 'Stem recoloured.');
+it('says what Elifba changed in an entry\'s files', function (): void {
+    $changed = new CreditData(['content/assets/sounds/chime.mp3'], 'Chime', 'Someone', 'https://example.test/chime', License::Cc0, 'Trimmed to one second.');
     $font = new CreditData(['resources/fonts/inter/*'], 'Inter', 'The Inter Project Authors', 'https://github.com/rsms/inter', License::Ofl);
 
-    expect(CreditsDocument::render([$openMoji, $font]))
-        ->toContain("- Changed files:\n    - `content/assets/openmoji/1F34E.svg`: Stem recoloured.")
-        ->and(CreditsDocument::openMoji([$openMoji, $font])['changed'] ?? null)
-        ->toBe([['files' => ['content/assets/openmoji/1F34E.svg'], 'changes' => 'Stem recoloured.']])
-        ->and(CreditsDocument::render([$font]))->not->toContain('## OpenMoji')
-        ->and(CreditsDocument::openMoji([$font]))->toBeNull();
+    expect(CreditsDocument::render([$changed, $font]))
+        ->toContain("### Chime\n\n- Files: `content/assets/sounds/chime.mp3`")
+        ->toContain('- Changes: Trimmed to one second.')
+        ->and(substr_count(CreditsDocument::render([$changed, $font]), '- Changes:'))->toBe(1);
 });

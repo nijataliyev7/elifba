@@ -21,10 +21,12 @@ import { BOARD_HEIGHT, BOARD_WIDTH } from './scenes/board-scene';
 import { BuildSentenceScene } from './scenes/build-sentence';
 import { BuildSyllableScene } from './scenes/build-syllable';
 import { BuildWordScene } from './scenes/build-word';
+import { CountScene } from './scenes/count';
 import type { Figure, Pictures } from './figures';
 import { FindScene } from './scenes/find';
 import { builds } from './scenes/layouts';
-import { itemStyle, slotStyle } from './styles/registry';
+import { itemStyle, slotStyle, styleOfUnit } from './styles/registry';
+import type { BoardVoice } from './voice';
 
 /**
  * One Phaser scene per mechanic (architecture §4). A `pop` round is a find
@@ -36,6 +38,7 @@ const SCENES: Record<Mechanic, new (options: SceneOptions) => BoardScene> = {
     build_syllable: BuildSyllableScene,
     build_word: BuildWordScene,
     build_sentence: BuildSentenceScene,
+    count: CountScene,
 };
 
 export type StageOptions = {
@@ -48,10 +51,9 @@ export type StageOptions = {
     slotStyle: string;
     /** The pack palette, `#RRGGBB` strings from the props. */
     palette: string[];
-    /** The canvas colour behind the items. */
-    background: string;
     sounds: BoardSounds;
-    backdrop: string | null;
+    /** What the board says (props `voice`, §3 "Voice"); played on the page's one AudioContext. */
+    voice: BoardVoice;
     /** The pack's figures (`pack.style.figures`), drawn by `animal` and `fruit` items. */
     figures: Figure[];
     /** The pictures that show a content key (`pack.pictures`), for the same items. */
@@ -114,7 +116,9 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
         const game = new Phaser.Game({
             type: Phaser.AUTO,
             parent: options.parent,
-            backgroundColor: options.background,
+            // The page behind shows through: its colour, or the pack's
+            // backdrop over the whole screen (`board-screen.tsx`, §8).
+            transparent: true,
             banner: false,
             disableContextMenu: true,
             scale: {
@@ -128,10 +132,11 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
             scene: new Scene({
                 bridge: options.bridge,
                 style,
+                styleOf: (unit) => styleOfUnit(unit, style),
                 slots,
                 palette,
                 sounds: options.sounds,
-                backdrop: options.backdrop,
+                voice: options.voice,
                 figures: options.figures,
                 pictures: options.pictures,
                 onReady: () =>

@@ -7,6 +7,7 @@ use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\PromptTemplateData;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\Unit;
+use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Play\Data\GameSetupData;
@@ -16,6 +17,7 @@ use App\Domain\Play\Data\RoundItemData;
 use App\Domain\Play\Data\SolutionData;
 use App\Domain\Play\Enums\SolutionOrder;
 use App\Domain\Play\Support\Playable;
+use App\Domain\Play\Support\PromptVoice;
 use Illuminate\Support\Str;
 use LogicException;
 use Random\Randomizer;
@@ -30,7 +32,10 @@ use Random\Randomizer;
  * - Content: letters are the class's learned letters (targets: the
  *   teacher's choice among them, when given); syllables and words are
  *   `LevelData::keysFrom()` of the teacher's pack with the learned letters,
- *   so a teacher's own words and their syllables play too.
+ *   so a teacher's own words and their syllables play too. Pictures are the
+ *   pack's words with a picture and numbers the level's range (R5, ADR
+ *   012): neither reads the learned letters, and a teacher word, which has
+ *   no picture, never becomes a picture item.
  * - Targets go round in shuffled decks (`RoundParts::deck()`), so every
  *   target comes up equally often and never twice in a row.
  * - Decoys for a letter: when the teacher chose letters, the chosen ones
@@ -38,18 +43,27 @@ use Random\Randomizer;
  *   most confusable first), then the other chosen letters — so a round shows
  *   only chosen letters whenever enough were chosen; then (and always,
  *   without a choice) its confusables among the learned letters, then other
- *   learned letters. For syllables and words, other items of the same pack
- *   and level.
- * - Items carry no picture: a picture would let a child match pictures
- *   instead of reading.
- * - Text is cased here (`LetterCase`), never on the board.
+ *   learned letters. For a number, the nearest numbers of the range
+ *   (`RoundParts::nearest()`). For syllables, words and pictures, other
+ *   items of the same pack and level.
+ * - Items of a reading unit carry no picture: a picture would let a child
+ *   match pictures instead of reading. A picture item is the picture
+ *   (`image`), with its word as `text` for the phone; a number item is its
+ *   digits.
+ * - Text of a reading unit is cased here (`LetterCase`), never on the
+ *   board; a picture's word and a number are written as they are.
+ * - `prompt.audio` is the clip that says the prompt (`PromptVoice`, §3
+ *   "Voice"): the target's for `find`, the template's for `pop`.
  *
  * The same setup, pack, letters and seed pick the same items for every
  * mechanic built on this class.
  */
 abstract readonly class AnyRoundBuilder implements RoundBuilder
 {
-    public function __construct(protected ContentRepository $content) {}
+    public function __construct(
+        protected ContentRepository $content,
+        protected PromptVoice $voice,
+    ) {}
 
     abstract protected function mechanic(): Mechanic;
 
@@ -62,7 +76,10 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
      */
     abstract protected function solution(array $items, RoundItemData $target): array;
 
-    abstract protected function prompt(PromptTemplateData $template, RoundItemData $target): PromptData;
+    /**
+     * @param  string|null  $audio  the clip that says it (`PromptVoice`), null for none
+     */
+    abstract protected function prompt(PromptTemplateData $template, RoundItemData $target, ?string $audio): PromptData;
 
     public function shortage(PackData $pack, LevelData $level, array $learned, ?array $letters = null): ?string
     {
@@ -80,6 +97,12 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
                 : null,
             Unit::Word => count($pool) < max($need, RoundParts::MIN_TARGETS)
                 ? Playable::message('too_few_words', ['count' => $need, 'found' => count($pool)])
+                : null,
+            Unit::Picture => count($pool) < max($need, RoundParts::MIN_TARGETS)
+                ? Playable::message('too_few_pictures', ['count' => max($need, RoundParts::MIN_TARGETS), 'found' => count($pool)])
+                : null,
+            Unit::Number => count($pool) < max($need, RoundParts::MIN_TARGETS)
+                ? Playable::message('too_few_numbers', ['count' => max($need, RoundParts::MIN_TARGETS), 'found' => count($pool)])
                 : null,
             Unit::Sentence => Playable::message('level_mechanic'),
         };
@@ -107,7 +130,7 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
             $items = [];
 
             foreach ($keys as $position => $key) {
-                $items[$key] = new RoundItemData(RoundParts::itemId($position), $setup->letter_case->apply(RoundParts::written($key, $pack)), null, $key);
+                $items[$key] = $this->item(RoundParts::itemId($position), $key, $level->unit, $setup, $pack);
             }
 
             $shown = array_values($items);
@@ -120,7 +143,7 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
                 unit: $level->unit,
                 pack: $pack->key,
                 level: $level->key,
-                prompt: $this->prompt($template, $items[$target]),
+                prompt: $this->prompt($template, $items[$target], $this->voice->url($template, $target, $pack)),
                 items: $shown,
                 slots: 0,
                 solution: new SolutionData(SolutionOrder::Any, $this->solution($shown, $items[$target])),
@@ -129,6 +152,23 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
         }
 
         return $rounds;
+    }
+
+    /**
+     * One item: a reading unit's text cased, a picture's word as the pack
+     * writes it with its picture, a number's digits.
+     */
+    private function item(string $id, string $key, Unit $unit, GameSetupData $setup, PackData $pack): RoundItemData
+    {
+        $written = RoundParts::written($key, $pack);
+
+        if ($unit === Unit::Picture) {
+            $image = $pack->word($written)->image ?? throw new LogicException('A picture item has no picture.');
+
+            return new RoundItemData($id, $written, ContentAssets::url($image, $pack->version), $key);
+        }
+
+        return new RoundItemData($id, $unit->reads() ? $setup->letter_case->apply($written) : $written, null, $key);
     }
 
     /**
@@ -175,6 +215,10 @@ abstract readonly class AnyRoundBuilder implements RoundBuilder
      */
     private function decoys(string $target, array $pool, ?array $chosen, int $count, Unit $unit, Randomizer $random): array
     {
+        if ($unit === Unit::Number) {
+            return RoundParts::nearest($target, $pool, $count, $random);
+        }
+
         $confusables = $unit === Unit::Letter
             ? array_map(static fn (string $letter): string => "letter:{$letter}", Alphabet::confusables(RoundParts::value($target)))
             : [];

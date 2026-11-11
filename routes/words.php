@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Http\Controllers\Content\HiddenWordController;
 use App\Http\Controllers\Content\WordController;
 use Illuminate\Support\Facades\Route;
@@ -11,9 +12,10 @@ use Illuminate\Support\Facades\Route;
  * teacher's words (`BelongsToTeacher`, 404 before any controller code) and
  * checked by `CustomWordPolicy` (`->can()`); hiding and showing a built-in
  * word carry the pack and the word in the body. The `{word}` routes are in
- * tests/Feature/Classroom/TeacherIsolationTest.php.
+ * tests/Feature/Classroom/TeacherIsolationTest.php. The teacher area
+ * (§1 "Accounts and roles").
  */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Teacher)])->group(function () {
     // ?pack={key}: the theme pack shown; the first one otherwise.
     Route::get('words', [WordController::class, 'index'])->name('words.index');
     Route::post('words', [WordController::class, 'store'])->name('words.store');

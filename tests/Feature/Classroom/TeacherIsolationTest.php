@@ -4,6 +4,7 @@ use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Models\CustomWord;
 use App\Domain\Content\Support\Avatars;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Models\GameSession;
 use App\Models\User;
 use Illuminate\Routing\Route as RoutingRoute;
@@ -14,29 +15,37 @@ use Illuminate\Testing\TestResponse;
 use Tests\Support\Games;
 
 /*
- * Teacher isolation (docs/architecture.md §7). Every route with a `{class}`,
- * `{student}`, `{game}` or `{word}` parameter must have a case below; the first test
- * fails when one is missing, so a new route cannot skip this file.
+ * Isolation (docs/architecture.md §7). Every route with a `{class}`,
+ * `{student}`, `{game}`, `{word}` or `{child}` parameter must have a case
+ * below; the first test fails when one is missing, so a new route cannot
+ * skip this file.
  *
- * Each case is a request teacher A may make on A's own data. The tests make
- * it as teacher B (404 or 403, nothing changes), as a guest (to the login
- * page, nothing changes) and as A (it works — so the case really reaches the
- * route, and B's refusal is the isolation, not a wrong URL).
+ * Each case is a request account A may make on A's own data. The tests make
+ * it as account B and as accounts with other roles or none (404 or 403,
+ * nothing changes), as a guest (to the login page, nothing changes) and as
+ * A (it works — so the case really reaches the route, and B's refusal is
+ * the isolation, not a wrong URL). A and B are teachers and parents at once
+ * (ADR 010), so only ownership tells them apart.
  */
 
-const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word'];
+const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word', 'child'];
 
 /**
- * Teacher A owns 1A (two active students, an archived one and a live
- * game), 1B (one student), an archived 2A and a word of their own; teacher
- * B owns their own 1A with one student and a game, and a word.
+ * Account A owns 1A (two active students, an archived one and a live
+ * game), 1B (one student), an archived 2A, a word of their own and two
+ * children of their own — Aysel, who shares a name with the student and is
+ * still another record (ADR 011), and Tural — with a home game; account B
+ * owns their own 1A with one student and a game, a word, and a child with a
+ * home game.
  *
- * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord}
+ * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord, childA: Child, secondChildA: Child, homeGameA: GameSession, childB: Child, homeGameB: GameSession}
  */
 function isolationWorld(): array
 {
-    $a = User::factory()->create();
-    $b = User::factory()->create();
+    $a = User::factory()->teacherAndParent()->create();
+    $b = User::factory()->teacherAndParent()->create();
+    $childA = Child::factory()->for($a, 'parent')->create(['display_name' => 'Aysel']);
+    $childB = Child::factory()->for($b, 'parent')->create(['display_name' => 'Nigar']);
 
     $classA = SchoolClass::factory()->for($a, 'teacher')->create(['name' => '1A']);
     $otherClassA = SchoolClass::factory()->for($a, 'teacher')->create(['name' => '1B']);
@@ -61,6 +70,11 @@ function isolationWorld(): array
         // A teacher word may be a child's name, like a display name.
         'wordA' => CustomWord::factory()->for($a, 'teacher')->create(['text' => 'Aysel']),
         'wordB' => CustomWord::factory()->for($b, 'teacher')->create(['text' => 'pomidor']),
+        'childA' => $childA,
+        'secondChildA' => Child::factory()->for($a, 'parent')->create(['display_name' => 'Tural']),
+        'homeGameA' => Games::start($childA, seed: 3),
+        'childB' => $childB,
+        'homeGameB' => Games::start($childB, seed: 4),
     ];
 }
 
@@ -76,6 +90,7 @@ function isolationCases(): array
     $studentA = static fn (array $w): array => ['class' => $w['classA']->id, 'student' => $w['studentA']->id];
     $gameA = static fn (array $w): array => ['game' => $w['gameA']->id];
     $wordA = static fn (array $w): array => ['word' => $w['wordA']->id];
+    $childA = static fn (array $w): array => ['child' => $w['childA']->id];
 
     return [
         'GET classes/{class}' => ['classes.show', $classA, $none],
@@ -106,6 +121,12 @@ function isolationCases(): array
         'GET classes/{class}/podium' => ['classes.podium', $classA, $none],
         'PATCH words/{word}' => ['words.update', $wordA, static fn (array $w): array => ['text' => 'kələm', 'syllables' => 'kə-ləm']],
         'DELETE words/{word}' => ['words.destroy', $wordA, $none],
+        'GET children/{child}' => ['children.show', $childA, $none],
+        'PATCH children/{child}' => ['children.update', $childA, static fn (array $w): array => ['display_name' => 'Ayla', 'avatar' => Avatars::keys()[0]]],
+        'DELETE children/{child}' => ['children.destroy', $childA, $none],
+        'PUT children/{child}/learned-letters' => ['children.learned-letters.update', $childA, static fn (array $w): array => ['letters' => ['a', 'b', 'ə']]],
+        'GET children/{child}/games/create' => ['children.games.create', $childA, $none],
+        'POST children/{child}/games' => ['children.games.store', $childA, static fn (array $w): array => ['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'rounds' => 5]],
     ];
 }
 
@@ -151,6 +172,7 @@ function isolationSnapshot(): array
         'guest_boards' => $rows('guest_boards'),
         'custom_words' => $rows('custom_words'),
         'hidden_words' => $rows('hidden_words'),
+        'children' => $rows('children'),
     ];
 }
 
@@ -169,7 +191,7 @@ function isolationRequest(string $case, array $world): TestResponse
 
 $caseNames = static fn (): array => array_combine(array_keys(isolationCases()), array_keys(isolationCases()));
 
-it('has an isolation case for every route with {class}, {student}, {game} or {word}', function (): void {
+it('has an isolation case for every route with {class}, {student}, {game}, {word} or {child}', function (): void {
     $routes = array_keys(isolatedRoutes());
     $cases = array_keys(isolationCases());
 
@@ -210,6 +232,25 @@ it('refuses another teacher and changes nothing', function (string $case): void 
         ->and($response->getContent())->not->toContain('Aysel')
         ->and(isolationSnapshot())->toBe($before);
 })->with($caseNames);
+
+// Ownership binds before the role is checked (ADR 010): another account's
+// row is not found whatever roles the account holds, or none.
+it('refuses any other account, whatever its roles, and changes nothing', function (string $case, string $state): void {
+    $world = isolationWorld();
+    $other = User::factory()->{$state}()->create();
+    $before = isolationSnapshot();
+
+    $this->actingAs($other)->from(route('profile.edit'));
+    $response = isolationRequest($case, $world);
+
+    expect($response->status())->toBeIn([403, 404])
+        ->and($response->getContent())->not->toContain('Aysel')
+        ->and(isolationSnapshot())->toBe($before);
+})->with($caseNames)->with([
+    'a parent' => 'parent',
+    'a teacher and parent' => 'teacherAndParent',
+    'no role yet' => 'withoutRole',
+]);
 
 it('sends a guest to the login page and changes nothing', function (string $case): void {
     $world = isolationWorld();
@@ -309,6 +350,75 @@ it('lets the policies refuse another teacher on their own', function (): void {
             ->and(Gate::forUser($world['a'])->allows($ability, $world['wordA']))->toBeTrue()
             ->and(Gate::forUser($world['b'])->allows($ability, $world['wordA']))->toBeFalse();
     }
+
+    foreach (['view', 'update', 'delete'] as $ability) {
+        expect(Gate::forUser($world['a'])->allows($ability, $world['childA']))->toBeTrue()
+            ->and(Gate::forUser($world['b'])->allows($ability, $world['childA']))->toBeFalse();
+    }
+
+    foreach (['view', 'update', 'play'] as $ability) {
+        expect(Gate::forUser($world['a'])->allows($ability, $world['homeGameA']))->toBeTrue()
+            ->and(Gate::forUser($world['b'])->allows($ability, $world['homeGameA']))->toBeFalse();
+    }
+});
+
+// A parent's home game goes through the same {game} routes as a class's:
+// every case again, with A's home game in place of A's class game.
+it('refuses another account a home game on every {game} route and lets its parent through', function (string $case): void {
+    $world = isolationWorld();
+    $world['gameA'] = $world['homeGameA'];
+    $before = isolationSnapshot();
+
+    $this->actingAs($world['b'])->from(route('children.index'));
+    $response = isolationRequest($case, $world);
+
+    expect($response->status())->toBeIn([403, 404])
+        ->and($response->getContent())->not->toContain('Aysel')
+        ->and(isolationSnapshot())->toBe($before);
+
+    $this->actingAs($world['a'])->from(route('children.show', $world['childA']));
+    $owner = isolationRequest($case, $world);
+
+    expect($owner->status())->toBeLessThan(400);
+    $owner->assertSessionHasNoErrors();
+})->with(fn (): array => array_filter(
+    array_combine(array_keys(isolationCases()), array_keys(isolationCases())),
+    static fn (string $case): bool => str_contains($case, '{game}'),
+));
+
+it('refuses an order that carries another parent\'s children in the body', function (): void {
+    $world = isolationWorld();
+    $before = isolationSnapshot();
+
+    foreach ([
+        [$world['childB']->id, $world['childA']->id],
+        [$world['childA']->id],
+        [$world['childA']->id, $world['childB']->id],
+    ] as $ids) {
+        $this->actingAs($world['b'])->from(route('children.index'))
+            ->put(route('children.order'), ['child_ids' => $ids])
+            ->assertSessionHasErrors('child_ids');
+    }
+
+    // A's own two children, with B's in place of one.
+    $this->actingAs($world['a'])->from(route('children.index'))
+        ->put(route('children.order'), ['child_ids' => [$world['childA']->id, $world['childB']->id]])
+        ->assertSessionHasErrors('child_ids');
+
+    expect(isolationSnapshot())->toBe($before);
+});
+
+it('lists only the parent\'s own children and their own home games', function (): void {
+    $world = isolationWorld();
+
+    $this->actingAs($world['b'])->get(route('children.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('children/index')
+            ->where('children', [['id' => $world['childB']->id, 'display_name' => 'Nigar', 'avatar' => $world['childB']->avatar, 'stars_today' => 0]]));
+
+    $this->actingAs($world['b'])->get(route('pult', ['list' => 1]))
+        ->assertInertia(fn ($page) => $page->where('games', fn ($games): bool => ! collect($games)->contains('id', $world['homeGameA']->id)));
 });
 
 it('binds nothing for a malformed or unknown id', function (string $id): void {
@@ -316,6 +426,8 @@ it('binds nothing for a malformed or unknown id', function (string $id): void {
 
     $this->actingAs($world['a'])->get('/classes/'.rawurlencode($id))->assertNotFound();
     $this->actingAs($world['a'])->get('/games/'.rawurlencode($id).'/board')->assertNotFound();
+    $this->actingAs($world['a'])->get('/children/'.rawurlencode($id))->assertNotFound();
+    $this->actingAs($world['a'])->get('/children/'.rawurlencode($id).'/games/create')->assertNotFound();
 })->with([
     'not a ulid' => ['1'],
     'unknown ulid' => ['01JZ0000000000000000000000'],

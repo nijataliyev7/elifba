@@ -1,35 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- papaq: a tall sheepskin hat, worn. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="36" cy="48" r="17" fill="#FCEA2B"/>
-    <circle cx="29.5" cy="49" r="2" fill="#000" stroke="none"/>
-    <circle cx="42.5" cy="49" r="2" fill="#000" stroke="none"/>
-    <path d="M29.5,56 C33,59.5 39,59.5 42.5,56" fill="none"/>
-    <path d="M15,38 A2.57,2.57 0 0 1 14.71,33.86 A2.57,2.57 0 0 1 14.43,29.71 A2.57,2.57 0 0 1 14.14,25.57 A2.57,2.57 0 0 1 13.86,21.43 A2.57,2.57 0 0 1 13.57,17.29 A2.57,2.57 0 0 1 13.29,13.14 A2.57,2.57 0 0 1 13,9 A2.85,2.85 0 0 1 17.6,9 A2.85,2.85 0 0 1 22.2,9 A2.85,2.85 0 0 1 26.8,9 A2.85,2.85 0 0 1 31.4,9 A2.85,2.85 0 0 1 36,9 A2.85,2.85 0 0 1 40.6,9 A2.85,2.85 0 0 1 45.2,9 A2.85,2.85 0 0 1 49.8,9 A2.85,2.85 0 0 1 54.4,9 A2.85,2.85 0 0 1 59,9 A2.57,2.57 0 0 1 58.71,13.14 A2.57,2.57 0 0 1 58.43,17.29 A2.57,2.57 0 0 1 58.14,21.43 A2.57,2.57 0 0 1 57.86,25.57 A2.57,2.57 0 0 1 57.57,29.71 A2.57,2.57 0 0 1 57.29,33.86 A2.57,2.57 0 0 1 57,38 C50,41.5 22,41.5 15,38 Z" fill="#3F3F3F"/>
-    <path d="M17.2,15.2 C16.8,11.8 21.2,11.8 20.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M23.2,15.2 C22.8,11.8 27.2,11.8 26.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M29.2,15.2 C28.8,11.8 33.2,11.8 32.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M35.2,15.2 C34.8,11.8 39.2,11.8 38.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M41.2,15.2 C40.8,11.8 45.2,11.8 44.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M47.2,15.2 C46.8,11.8 51.2,11.8 50.8,15.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M20.2,21.2 C19.8,17.8 24.2,17.8 23.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M26.2,21.2 C25.8,17.8 30.2,17.8 29.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M32.2,21.2 C31.8,17.8 36.2,17.8 35.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M38.2,21.2 C37.8,17.8 42.2,17.8 41.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M44.2,21.2 C43.8,17.8 48.2,17.8 47.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M50.2,21.2 C49.8,17.8 54.2,17.8 53.8,21.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M17.2,27.2 C16.8,23.8 21.2,23.8 20.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M23.2,27.2 C22.8,23.8 27.2,23.8 26.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M29.2,27.2 C28.8,23.8 33.2,23.8 32.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M35.2,27.2 C34.8,23.8 39.2,23.8 38.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M41.2,27.2 C40.8,23.8 45.2,23.8 44.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M47.2,27.2 C46.8,23.8 51.2,23.8 50.8,27.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M20.2,33.2 C19.8,29.8 24.2,29.8 23.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M26.2,33.2 C25.8,29.8 30.2,29.8 29.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M32.2,33.2 C31.8,29.8 36.2,29.8 35.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M38.2,33.2 C37.8,29.8 42.2,29.8 41.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M44.2,33.2 C43.8,29.8 48.2,29.8 47.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M50.2,33.2 C49.8,29.8 54.2,29.8 53.8,33.2" fill="none" stroke="#9B9B9A" stroke-width="1.6"/>
-    <path d="M15,38 A2.57,2.57 0 0 1 14.71,33.86 A2.57,2.57 0 0 1 14.43,29.71 A2.57,2.57 0 0 1 14.14,25.57 A2.57,2.57 0 0 1 13.86,21.43 A2.57,2.57 0 0 1 13.57,17.29 A2.57,2.57 0 0 1 13.29,13.14 A2.57,2.57 0 0 1 13,9 A2.85,2.85 0 0 1 17.6,9 A2.85,2.85 0 0 1 22.2,9 A2.85,2.85 0 0 1 26.8,9 A2.85,2.85 0 0 1 31.4,9 A2.85,2.85 0 0 1 36,9 A2.85,2.85 0 0 1 40.6,9 A2.85,2.85 0 0 1 45.2,9 A2.85,2.85 0 0 1 49.8,9 A2.85,2.85 0 0 1 54.4,9 A2.85,2.85 0 0 1 59,9 A2.57,2.57 0 0 1 58.71,13.14 A2.57,2.57 0 0 1 58.43,17.29 A2.57,2.57 0 0 1 58.14,21.43 A2.57,2.57 0 0 1 57.86,25.57 A2.57,2.57 0 0 1 57.57,29.71 A2.57,2.57 0 0 1 57.29,33.86 A2.57,2.57 0 0 1 57,38 C50,41.5 22,41.5 15,38 Z" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- papaq: a tall curly lambswool hat, worn on a smiling face. Elifba own art, MIT. -->
+<circle cx="16" cy="20.6" r="9.4" fill="url(#papaq_fill1)"/>
+<g filter="url(#papaq_blur05)"><ellipse cx="12.05" cy="24.17" rx="1.6" ry="0.94" fill="#FF6DC6" fill-opacity="0.45"/></g>
+<ellipse cx="12.99" cy="20.41" rx="1.03" ry="1.41" fill="#3A234A"/>
+<circle cx="12.63" cy="19.85" r="0.47" fill="#FFFFFF"/>
+<g filter="url(#papaq_blur05)"><ellipse cx="19.95" cy="24.17" rx="1.6" ry="0.94" fill="#FF6DC6" fill-opacity="0.45"/></g>
+<ellipse cx="19.01" cy="20.41" rx="1.03" ry="1.41" fill="#3A234A"/>
+<circle cx="18.65" cy="19.85" r="0.47" fill="#FFFFFF"/>
+<path d="M12.62 23.98Q16 26.99 19.38 23.98" stroke="#4A2C42" stroke-width="1.03" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.2 16.2L6.4 4.8Q6.4 2 9.2 2L22.8 2Q25.6 2 25.6 4.8L24.8 16.2Q16 18.4 7.2 16.2Z" fill="url(#papaq_fill2)"/>
+<path d="M7.2 16.2L6.4 4.8Q6.4 2 9.2 2L22.8 2Q25.6 2 25.6 4.8L24.8 16.2Q16 18.4 7.2 16.2Z" fill="url(#papaq_fill3)"/>
+<g clip-path="url(#papaq_clip4)">
+<path d="M6.5 4.5Q7.4 2.7 8.3 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M9.4 4.5Q10.3 2.7 11.2 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M12.3 4.5Q13.2 2.7 14.1 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M15.2 4.5Q16.1 2.7 17 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M18.1 4.5Q19 2.7 19.9 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M21 4.5Q21.9 2.7 22.8 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M23.9 4.5Q24.8 2.7 25.7 4.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M7.95 7.5Q8.85 5.7 9.75 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M10.85 7.5Q11.75 5.7 12.65 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M13.75 7.5Q14.65 5.7 15.55 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M16.65 7.5Q17.55 5.7 18.45 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M19.55 7.5Q20.45 5.7 21.35 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M22.45 7.5Q23.35 5.7 24.25 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M25.35 7.5Q26.25 5.7 27.15 7.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M6.5 10.5Q7.4 8.7 8.3 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M9.4 10.5Q10.3 8.7 11.2 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M12.3 10.5Q13.2 8.7 14.1 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M15.2 10.5Q16.1 8.7 17 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M18.1 10.5Q19 8.7 19.9 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M21 10.5Q21.9 8.7 22.8 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M23.9 10.5Q24.8 8.7 25.7 10.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M7.95 13.5Q8.85 11.7 9.75 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M10.85 13.5Q11.75 11.7 12.65 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M13.75 13.5Q14.65 11.7 15.55 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M16.65 13.5Q17.55 11.7 18.45 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M19.55 13.5Q20.45 11.7 21.35 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M22.45 13.5Q23.35 11.7 24.25 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M25.35 13.5Q26.25 11.7 27.15 13.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M6.5 16.5Q7.4 14.7 8.3 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M9.4 16.5Q10.3 14.7 11.2 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M12.3 16.5Q13.2 14.7 14.1 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M15.2 16.5Q16.1 14.7 17 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M18.1 16.5Q19 14.7 19.9 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M21 16.5Q21.9 14.7 22.8 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M23.9 16.5Q24.8 14.7 25.7 16.5" stroke="#7A7385" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+</g>
+<g filter="url(#papaq_blur06)"><ellipse cx="10.2" cy="5.2" rx="1.4" ry="2.4" fill="#FFFFFF" fill-opacity="0.35" transform="rotate(10 10.2 5.2)"/></g>
+<defs>
+<radialGradient id="papaq_fill1" cx="0.35" cy="0.3" r="0.78"><stop stop-color="#FFF478"/><stop offset="0.47" stop-color="#FFB02E"/><stop offset="1" stop-color="#F70A8D"/></radialGradient>
+<filter id="papaq_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="papaq_fill2" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="papaq_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#33293D" stop-opacity="0.5"/><stop offset="0.9" stop-color="#33293D" stop-opacity="0"/></radialGradient>
+<clipPath id="papaq_clip4"><path d="M7.2 16.2L6.4 4.8Q6.4 2 9.2 2L22.8 2Q25.6 2 25.6 4.8L24.8 16.2Q16 18.4 7.2 16.2Z" /></clipPath>
+<filter id="papaq_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+</defs>
 </svg>

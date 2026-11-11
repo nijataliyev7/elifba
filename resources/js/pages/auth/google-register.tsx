@@ -21,6 +21,7 @@ type Props = {
 /**
  * The last step of signing up with Google (architecture §7 "Google sign-in"):
  * the name and the same privacy-note agreement as the registration form.
+ * The role is chosen next, on `/role` (§1 "Accounts and roles").
  */
 export default function GoogleRegister({ email, name }: Props) {
     const { t } = useTranslation();

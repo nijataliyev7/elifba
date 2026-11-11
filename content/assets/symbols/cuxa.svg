@@ -1,20 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- çuxa: the traditional long coat with cartridge pockets. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M22,13 L10,20 L6,50 L13,52 L19,28 Z" fill="#1E50A0"/>
-    <path d="M50,13 L62,20 L66,50 L59,52 L53,28 Z" fill="#1E50A0"/>
-    <path d="M28,8 L22,13 L19,28 L22,40 L14,66 L58,66 L50,40 L53,28 L50,13 L44,8 L36,26 Z" fill="#1E50A0"/>
-    <path d="M28,8 L36,26 L44,8 Z" fill="#D22F27"/>
-    <rect x="20" y="28" width="11" height="4" fill="#1E50A0" stroke-width="1.5"/>
-    <rect x="41" y="28" width="11" height="4" fill="#1E50A0" stroke-width="1.5"/>
-    <rect x="21.5" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="24.5" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="27.5" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="42.3" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="45.3" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="48.3" y="17" width="2.2" height="11" rx="1" fill="#D0CFCE" stroke-width="1.2"/>
-    <rect x="21" y="38" width="30" height="4" fill="#3F3F3F"/>
-    <rect x="33" y="37" width="6" height="6" rx="1" fill="#D0CFCE"/>
-    <line x1="36" y1="43" x2="36" y2="66"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- çuxa: the long men's coat with rows of gazyrs on the chest and a belt. Elifba own art, MIT. -->
+<path d="M23.6 4.6C26.2 5.2 27.8 7.4 28.2 10.6L29.4 21Q29.4 22.2 28.2 22.4L25.2 22.6Q24.2 22.6 24 21.6L22.4 11Z" fill="url(#cuxa_fill1)"/>
+<path d="M23.6 4.6C26.2 5.2 27.8 7.4 28.2 10.6L29.4 21Q29.4 22.2 28.2 22.4L25.2 22.6Q24.2 22.6 24 21.6L22.4 11Z" fill="url(#cuxa_fill2)"/>
+<path d="M29.4 19.6L24 19.8L24.1 21.6Q24.2 22.6 25.2 22.6L28.2 22.4Q29.4 22.2 29.4 21Z" fill="url(#cuxa_fill3)"/>
+<path d="M8.4 4.6C5.8 5.2 4.2 7.4 3.8 10.6L2.6 21Q2.6 22.2 3.8 22.4L6.8 22.6Q7.8 22.6 8 21.6L9.6 11Z" fill="url(#cuxa_fill4)"/>
+<path d="M8.4 4.6C5.8 5.2 4.2 7.4 3.8 10.6L2.6 21Q2.6 22.2 3.8 22.4L6.8 22.6Q7.8 22.6 8 21.6L9.6 11Z" fill="url(#cuxa_fill5)"/>
+<path d="M2.6 19.6L8 19.8L7.9 21.6Q7.8 22.6 6.8 22.6L3.8 22.4Q2.6 22.2 2.6 21Z" fill="url(#cuxa_fill6)"/>
+<path d="M12 3.4L20 3.4L23.8 4.8Q24.8 5.2 24.4 6.4L22.6 15.6L27.2 28.4Q27.6 29.6 26.4 29.6L5.6 29.6Q4.4 29.6 4.8 28.4L9.4 15.6L7.6 6.4Q7.2 5.2 8.2 4.8Z" fill="url(#cuxa_fill7)"/>
+<path d="M12 3.4L20 3.4L23.8 4.8Q24.8 5.2 24.4 6.4L22.6 15.6L27.2 28.4Q27.6 29.6 26.4 29.6L5.6 29.6Q4.4 29.6 4.8 28.4L9.4 15.6L7.6 6.4Q7.2 5.2 8.2 4.8Z" fill="url(#cuxa_fill8)"/>
+<path d="M16 17L18.2 29.6L13.8 29.6Z" fill="url(#cuxa_fill9)"/>
+<path d="M16 17L18.2 29.6L13.8 29.6Z" fill="url(#cuxa_fill10)"/>
+<path d="M12.4 3.4L19.6 3.4L16 11.4Z" fill="url(#cuxa_fill11)"/>
+<path d="M12.4 3.4L19.6 3.4L16 11.4Z" fill="url(#cuxa_fill12)"/>
+<path d="M22.8 6.4L17.6 6.4L17.8 10.8L22.4 10.8Z" fill="url(#cuxa_fill13)" fill-opacity="0.9"/>
+<rect x="13.15" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill14)"/>
+<rect x="13.15" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill15)"/>
+<rect x="11.9" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill16)"/>
+<rect x="11.9" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill17)"/>
+<rect x="10.65" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill18)"/>
+<rect x="10.65" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill19)"/>
+<rect x="9.4" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill20)"/>
+<rect x="9.4" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill21)"/>
+<path d="M9.2 6.4L14.4 6.4L14.2 10.8L9.6 10.8Z" fill="url(#cuxa_fill22)" fill-opacity="0.9"/>
+<rect x="17.95" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill23)"/>
+<rect x="17.95" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill24)"/>
+<rect x="19.2" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill25)"/>
+<rect x="19.2" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill26)"/>
+<rect x="20.45" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill27)"/>
+<rect x="20.45" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill28)"/>
+<rect x="21.7" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill29)"/>
+<rect x="21.7" y="5.2" width="0.9" height="5" rx="0.45" fill="url(#cuxa_fill30)"/>
+<rect x="8.8" y="14.4" width="14.4" height="2.4" rx="0.8" fill="url(#cuxa_fill31)"/>
+<rect x="8.8" y="14.4" width="14.4" height="2.4" rx="0.8" fill="url(#cuxa_fill32)"/>
+<rect x="14.4" y="13.8" width="3.2" height="3.6" rx="0.8" fill="url(#cuxa_fill33)"/>
+<rect x="14.4" y="13.8" width="3.2" height="3.6" rx="0.8" fill="url(#cuxa_fill34)"/>
+<g filter="url(#cuxa_blur06)"><ellipse cx="9.6" cy="20.4" rx="0.8" ry="3" fill="#FFFFFF" fill-opacity="0.35" transform="rotate(18 9.6 20.4)"/></g>
+<defs>
+<radialGradient id="cuxa_fill1" cx="0.3" cy="0.1" r="1"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="cuxa_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="cuxa_fill4" cx="0.3" cy="0.1" r="1"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="cuxa_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.75"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="cuxa_fill7" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="cuxa_fill8" cx="0.8" cy="1" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill9" cx="0.5" cy="0" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="cuxa_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill11" cx="0.4" cy="0.1" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="cuxa_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.4"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="cuxa_fill14" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill16" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill18" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill19" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill20" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill21" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill22" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="cuxa_fill23" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill24" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill25" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill26" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill27" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill28" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill29" cx="0.3" cy="0.1" r="1"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill30" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill31" cx="0.3" cy="0" r="1"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="cuxa_fill32" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#33293D" stop-opacity="0.3"/><stop offset="0.9" stop-color="#33293D" stop-opacity="0"/></radialGradient>
+<radialGradient id="cuxa_fill33" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="cuxa_fill34" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.4"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<filter id="cuxa_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+</defs>
 </svg>

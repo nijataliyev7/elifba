@@ -1,41 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- xalça: a carpet with a medallion and fringes. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="18" y1="5" x2="18" y2="11"/>
-    <line x1="18" y1="61" x2="18" y2="67"/>
-    <line x1="22" y1="5" x2="22" y2="11"/>
-    <line x1="22" y1="61" x2="22" y2="67"/>
-    <line x1="26" y1="5" x2="26" y2="11"/>
-    <line x1="26" y1="61" x2="26" y2="67"/>
-    <line x1="30" y1="5" x2="30" y2="11"/>
-    <line x1="30" y1="61" x2="30" y2="67"/>
-    <line x1="34" y1="5" x2="34" y2="11"/>
-    <line x1="34" y1="61" x2="34" y2="67"/>
-    <line x1="38" y1="5" x2="38" y2="11"/>
-    <line x1="38" y1="61" x2="38" y2="67"/>
-    <line x1="42" y1="5" x2="42" y2="11"/>
-    <line x1="42" y1="61" x2="42" y2="67"/>
-    <line x1="46" y1="5" x2="46" y2="11"/>
-    <line x1="46" y1="61" x2="46" y2="67"/>
-    <line x1="50" y1="5" x2="50" y2="11"/>
-    <line x1="50" y1="61" x2="50" y2="67"/>
-    <line x1="54" y1="5" x2="54" y2="11"/>
-    <line x1="54" y1="61" x2="54" y2="67"/>
-    <rect x="14" y="10" width="44" height="52" fill="#1E50A0"/>
-    <rect x="20" y="16" width="32" height="40" fill="#D22F27"/>
-    <polygon points="20,16 28,16 20,24" fill="#F1B31C"/>
-    <polygon points="52,16 44,16 52,24" fill="#F1B31C"/>
-    <polygon points="20,56 28,56 20,48" fill="#F1B31C"/>
-    <polygon points="52,56 44,56 52,48" fill="#F1B31C"/>
-    <polygon points="36,21 47,36 36,51 25,36" fill="#F1B31C"/>
-    <polygon points="36,28 41,36 36,44 31,36" fill="#1E50A0"/>
-    <circle cx="17" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="55" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="17" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="55" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="36" cy="13" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="36" cy="59" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="17" cy="36" r="1.2" fill="#FCEA2B" stroke="none"/>
-    <circle cx="55" cy="36" r="1.2" fill="#FCEA2B" stroke="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- xalça: a carpet with a diamond medallion and fringes. Elifba own art, MIT. -->
+<path d="M6.6 1.4L6.6 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.6 28.6L6.6 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.16 1.4L8.16 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.16 28.6L8.16 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.73 1.4L9.73 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.73 28.6L9.73 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.29 1.4L11.29 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.29 28.6L11.29 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.86 1.4L12.86 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.86 28.6L12.86 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.42 1.4L14.42 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.42 28.6L14.42 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.99 1.4L15.99 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.99 28.6L15.99 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17.55 1.4L17.55 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17.55 28.6L17.55 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.12 1.4L19.12 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.12 28.6L19.12 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20.68 1.4L20.68 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20.68 28.6L20.68 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.25 1.4L22.25 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.25 28.6L22.25 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23.81 1.4L23.81 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23.81 28.6L23.81 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.38 1.4L25.38 3.4" stroke="#E8E8E9" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.38 28.6L25.38 30.6" stroke="#CDCDCE" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="5" y="3" width="22" height="26" rx="1" fill="url(#xalca_fill1)"/>
+<rect x="5" y="3" width="22" height="26" rx="1" fill="url(#xalca_fill2)"/>
+<rect x="7" y="5" width="18" height="22" rx="0.6" fill="url(#xalca_fill3)"/>
+<rect x="7.6" y="5.6" width="16.8" height="20.8" rx="0.4" fill="url(#xalca_fill4)"/>
+<rect x="7.6" y="5.6" width="16.8" height="20.8" rx="0.4" fill="url(#xalca_fill5)"/>
+<path d="M6.09 6.17L6.51 6.68Q6.6 6.8 6.51 6.92L6.09 7.43Q6 7.55 5.91 7.43L5.49 6.92Q5.4 6.8 5.49 6.68L5.91 6.17Q6 6.05 6.09 6.17Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 6.17L26.51 6.68Q26.6 6.8 26.51 6.92L26.09 7.43Q26 7.55 25.91 7.43L25.49 6.92Q25.4 6.8 25.49 6.68L25.91 6.17Q26 6.05 26.09 6.17Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M6.09 9.57L6.51 10.08Q6.6 10.2 6.51 10.32L6.09 10.83Q6 10.95 5.91 10.83L5.49 10.32Q5.4 10.2 5.49 10.08L5.91 9.57Q6 9.45 6.09 9.57Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 9.57L26.51 10.08Q26.6 10.2 26.51 10.32L26.09 10.83Q26 10.95 25.91 10.83L25.49 10.32Q25.4 10.2 25.49 10.08L25.91 9.57Q26 9.45 26.09 9.57Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M6.09 12.97L6.51 13.48Q6.6 13.6 6.51 13.72L6.09 14.23Q6 14.35 5.91 14.23L5.49 13.72Q5.4 13.6 5.49 13.48L5.91 12.97Q6 12.85 6.09 12.97Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 12.97L26.51 13.48Q26.6 13.6 26.51 13.72L26.09 14.23Q26 14.35 25.91 14.23L25.49 13.72Q25.4 13.6 25.49 13.48L25.91 12.97Q26 12.85 26.09 12.97Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M6.09 16.37L6.51 16.88Q6.6 17 6.51 17.12L6.09 17.63Q6 17.75 5.91 17.63L5.49 17.12Q5.4 17 5.49 16.88L5.91 16.37Q6 16.25 6.09 16.37Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 16.37L26.51 16.88Q26.6 17 26.51 17.12L26.09 17.63Q26 17.75 25.91 17.63L25.49 17.12Q25.4 17 25.49 16.88L25.91 16.37Q26 16.25 26.09 16.37Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M6.09 19.77L6.51 20.28Q6.6 20.4 6.51 20.52L6.09 21.03Q6 21.15 5.91 21.03L5.49 20.52Q5.4 20.4 5.49 20.28L5.91 19.77Q6 19.65 6.09 19.77Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 19.77L26.51 20.28Q26.6 20.4 26.51 20.52L26.09 21.03Q26 21.15 25.91 21.03L25.49 20.52Q25.4 20.4 25.49 20.28L25.91 19.77Q26 19.65 26.09 19.77Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M6.09 23.17L6.51 23.68Q6.6 23.8 6.51 23.92L6.09 24.43Q6 24.55 5.91 24.43L5.49 23.92Q5.4 23.8 5.49 23.68L5.91 23.17Q6 23.05 6.09 23.17Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M26.09 23.17L26.51 23.68Q26.6 23.8 26.51 23.92L26.09 24.43Q26 24.55 25.91 24.43L25.49 23.92Q25.4 23.8 25.49 23.68L25.91 23.17Q26 23.05 26.09 23.17Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M9.77 3.91L10.28 3.49Q10.4 3.4 10.52 3.49L11.03 3.91Q11.15 4 11.03 4.09L10.52 4.51Q10.4 4.6 10.28 4.51L9.77 4.09Q9.65 4 9.77 3.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M9.77 27.91L10.28 27.49Q10.4 27.4 10.52 27.49L11.03 27.91Q11.15 28 11.03 28.09L10.52 28.51Q10.4 28.6 10.28 28.51L9.77 28.09Q9.65 28 9.77 27.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M13.77 3.91L14.28 3.49Q14.4 3.4 14.52 3.49L15.03 3.91Q15.15 4 15.03 4.09L14.52 4.51Q14.4 4.6 14.28 4.51L13.77 4.09Q13.65 4 13.77 3.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M13.77 27.91L14.28 27.49Q14.4 27.4 14.52 27.49L15.03 27.91Q15.15 28 15.03 28.09L14.52 28.51Q14.4 28.6 14.28 28.51L13.77 28.09Q13.65 28 13.77 27.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M17.77 3.91L18.28 3.49Q18.4 3.4 18.52 3.49L19.03 3.91Q19.15 4 19.03 4.09L18.52 4.51Q18.4 4.6 18.28 4.51L17.77 4.09Q17.65 4 17.77 3.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M17.77 27.91L18.28 27.49Q18.4 27.4 18.52 27.49L19.03 27.91Q19.15 28 19.03 28.09L18.52 28.51Q18.4 28.6 18.28 28.51L17.77 28.09Q17.65 28 17.77 27.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M21.77 3.91L22.28 3.49Q22.4 3.4 22.52 3.49L23.03 3.91Q23.15 4 23.03 4.09L22.52 4.51Q22.4 4.6 22.28 4.51L21.77 4.09Q21.65 4 21.77 3.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M21.77 27.91L22.28 27.49Q22.4 27.4 22.52 27.49L23.03 27.91Q23.15 28 23.03 28.09L22.52 28.51Q22.4 28.6 22.28 28.51L21.77 28.09Q21.65 28 21.77 27.91Z" fill="#FCFBFE" fill-opacity="0.9"/>
+<path d="M16.48 8.24L21.92 15.36Q22.4 16 21.92 16.64L16.48 23.76Q16 24.4 15.52 23.76L10.08 16.64Q9.6 16 10.08 15.36L15.52 8.24Q16 7.6 16.48 8.24Z" fill="url(#xalca_fill6)"/>
+<path d="M16.48 8.24L21.92 15.36Q22.4 16 21.92 16.64L16.48 23.76Q16 24.4 15.52 23.76L10.08 16.64Q9.6 16 10.08 15.36L15.52 8.24Q16 7.6 16.48 8.24Z" fill="url(#xalca_fill7)"/>
+<path d="M16.37 11.07L19.83 15.53Q20.2 16 19.83 16.47L16.37 20.93Q16 21.4 15.63 20.93L12.17 16.47Q11.8 16 12.17 15.53L15.63 11.07Q16 10.6 16.37 11.07Z" fill="url(#xalca_fill8)"/>
+<path d="M16.37 11.07L19.83 15.53Q20.2 16 19.83 16.47L16.37 20.93Q16 21.4 15.63 20.93L12.17 16.47Q11.8 16 12.17 15.53L15.63 11.07Q16 10.6 16.37 11.07Z" fill="url(#xalca_fill9)"/>
+<path d="M16.24 13.72L17.76 15.68Q18 16 17.76 16.32L16.24 18.28Q16 18.6 15.76 18.28L14.24 16.32Q14 16 14.24 15.68L15.76 13.72Q16 13.4 16.24 13.72Z" fill="url(#xalca_fill10)"/>
+<path d="M8 5.6L10.8 5.6Q11.2 5.6 10.92 5.88L7.88 8.92Q7.6 9.2 7.6 8.8L7.6 6Q7.6 5.6 8 5.6Z" fill="url(#xalca_fill11)"/>
+<path d="M24 5.6L21.2 5.6Q20.8 5.6 21.08 5.88L24.12 8.92Q24.4 9.2 24.4 8.8L24.4 6Q24.4 5.6 24 5.6Z" fill="url(#xalca_fill12)"/>
+<path d="M8 26.4L10.8 26.4Q11.2 26.4 10.92 26.12L7.88 23.08Q7.6 22.8 7.6 23.2L7.6 26Q7.6 26.4 8 26.4Z" fill="url(#xalca_fill13)"/>
+<path d="M24 26.4L21.2 26.4Q20.8 26.4 21.08 26.12L24.12 23.08Q24.4 22.8 24.4 23.2L24.4 26Q24.4 26.4 24 26.4Z" fill="url(#xalca_fill14)"/>
+<g filter="url(#xalca_blur06)"><rect x="8.4" y="6.4" width="5" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.25"/></g>
+<defs>
+<radialGradient id="xalca_fill1" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="xalca_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="xalca_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="xalca_fill4" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="xalca_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.55"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="xalca_fill6" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="xalca_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.4"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="xalca_fill8" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="xalca_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.4"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="xalca_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="xalca_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="xalca_fill12" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="xalca_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="xalca_fill14" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<filter id="xalca_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+</defs>
 </svg>

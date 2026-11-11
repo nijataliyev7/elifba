@@ -11,6 +11,7 @@ use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Enums\SolutionOrder;
 use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use Tests\Support\BuildRounds;
+use Tests\Support\Voice;
 
 /*
  * `build_sentence` rounds from the real content (docs/architecture.md §2,
@@ -18,6 +19,10 @@ use Tests\Support\BuildRounds;
  * final punctuation fixed after the last slot, with one decoy word of
  * another sentence of the level.
  */
+
+// Which clips are made is content: no clip here, so prompt.audio is null;
+// tests/Feature/Play/PromptVoiceTest checks it with clips.
+beforeEach(fn () => Voice::none($this->app));
 
 /**
  * @param  list<string>|null  $learned

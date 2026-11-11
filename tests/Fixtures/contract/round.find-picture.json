@@ -1,0 +1,49 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T1A",
+    "index": 2,
+    "total": 10,
+    "mechanic": "find",
+    "unit": "picture",
+    "pack": "animals",
+    "level": "pictures",
+    "prompt": {
+        "text": "«pişik» hansıdır?",
+        "show": "pişik",
+        "image": null,
+        "count": null,
+        "audio": "http://localhost/content/voice/751593d62a821c07.mp3?v=1",
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "dovşan",
+            "image": "http://localhost/content/fluent/1F407.svg?v=5",
+            "content_key": "word:dovşan"
+        },
+        {
+            "id": "b",
+            "text": "pişik",
+            "image": "http://localhost/content/fluent/1F408.svg?v=5",
+            "content_key": "word:pişik"
+        },
+        {
+            "id": "c",
+            "text": "dəvəquşu",
+            "image": "http://localhost/content/animals/devequsu.svg?v=5",
+            "content_key": "word:dəvəquşu"
+        },
+        {
+            "id": "d",
+            "text": "it",
+            "image": "http://localhost/content/fluent/1F415.svg?v=5",
+            "content_key": "word:it"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["b"]
+    },
+    "effect": "sparkle"
+}

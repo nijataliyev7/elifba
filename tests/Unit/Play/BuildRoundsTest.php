@@ -1,7 +1,9 @@
 <?php
 
 use App\Domain\Content\Data\LevelData;
+use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Play\Data\GameSetupData;
@@ -26,11 +28,13 @@ it('builds ten solvable rounds in every pack and level with all letters learned'
     $builder = Playable::builder($mechanic);
     $levels = array_filter($content->levels(), static fn (LevelData $level): bool => $level->allows($mechanic));
 
+    // The six reading packs; the colours and the numbers (R6) list no
+    // reading unit, so no build level is offered with them.
     expect($levels)->not->toBeEmpty()
-        ->and($content->packs())->toHaveCount(6);
+        ->and(array_filter($content->packs(), static fn (PackData $pack): bool => $pack->lists(Unit::Word)))->toHaveCount(6);
 
     foreach ($levels as $level) {
-        foreach ($content->packs() as $pack) {
+        foreach (array_filter($content->packs(), static fn (PackData $pack): bool => $pack->lists($level->unit)) as $pack) {
             $game = "{$mechanic->value} × {$level->key} × {$pack->key}";
 
             expect($builder->shortage($pack, $level, Alphabet::letters()))->toBeNull($game);

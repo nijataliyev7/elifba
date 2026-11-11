@@ -12,12 +12,15 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { BoardChild } from '@/components/games/board-child';
 import { BoardPrompt } from '@/components/games/board-prompt';
 import { BoardResult } from '@/components/games/board-result';
 import { BoardStudents } from '@/components/games/board-students';
 import type { GuestBoardActionsProps } from '@/components/games/guest-board-actions';
 import { GuestBoardActions } from '@/components/games/guest-board-actions';
 import { PairingCard } from '@/components/games/pairing-card';
+import { studentAvatars } from '@/components/games/student-grid';
+import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -48,7 +51,7 @@ import { lockLandscape, useFullscreen } from '@/hooks/use-fullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from '@/hooks/use-translation';
 import { useWakeLock } from '@/hooks/use-wake-lock';
-import { show } from '@/routes/classes';
+import { pairingOnLoad, playersHome, playersLabel } from '@/lib/game-players';
 import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
 import type { BoardProps } from '@/types';
@@ -94,6 +97,11 @@ type Props = BoardProps & {
  * has gone quiet. A teacher who turned the phone remote off gets a board
  * with no channel at all, like one without Reverb.
  *
+ * A home game (§4 "At home", ADR 011) is played by the child touching the
+ * screen: the child stands where the class's grid would, the pairing card
+ * waits for «Pultu qoş» (on the start screen too), and the result adds
+ * this game's stars to the child's total.
+ *
  * Two board modes, one board: a teacher board (`games/board`) and a guest
  * board (`lovhe`) differ only in `auth` and in `guest`'s parts.
  *
@@ -105,8 +113,10 @@ type Props = BoardProps & {
 export function BoardScreen({
     game,
     schoolClass,
+    child,
     pack,
     students,
+    voice,
     auth,
     guest,
     phoneRemote = true,
@@ -123,6 +133,9 @@ export function BoardScreen({
     >('loading');
     const fullscreen = useFullscreen();
     const small = useIsMobile();
+    const label = playersLabel({ schoolClass, child });
+    const home = playersHome({ schoolClass, child });
+    const pairsOnLoad = pairingOnLoad({ schoolClass, child });
 
     useEffect(() => forceLightTheme(), []);
 
@@ -182,7 +195,6 @@ export function BoardScreen({
         figures,
     } = pack.style;
     const { pictures } = pack;
-    const background = colours.background;
 
     useEffect(() => {
         const parent = host.current;
@@ -206,9 +218,8 @@ export function BoardScreen({
                         itemStyle,
                         slotStyle,
                         palette,
-                        background,
                         sounds,
-                        backdrop,
+                        voice,
                         figures,
                         pictures,
                     }),
@@ -243,9 +254,8 @@ export function BoardScreen({
         itemStyle,
         slotStyle,
         palette,
-        background,
         sounds,
-        backdrop,
+        voice,
         figures,
         pictures,
     ]);
@@ -274,6 +284,7 @@ export function BoardScreen({
         const created = new LiveBoard({
             channel: gameChannel(echo, game.id),
             board: controller,
+            pairing: pairsOnLoad,
         });
 
         setLink(created);
@@ -282,7 +293,7 @@ export function BoardScreen({
             created.dispose();
             echo.disconnect();
         };
-    }, [controller, auth, game.id, open, phoneRemote]);
+    }, [controller, auth, game.id, open, phoneRemote, pairsOnLoad]);
 
     const pairingShown =
         guest === undefined &&
@@ -337,12 +348,26 @@ export function BoardScreen({
         <>
             <main
                 className="fixed inset-0 flex touch-manipulation flex-col overflow-hidden select-none"
-                style={{ backgroundColor: background, color: colours.text }}
+                style={{
+                    backgroundColor: colours.background,
+                    color: colours.text,
+                    // The pack's scene fills the screen behind the canvas,
+                    // which is transparent (architecture §8 "Backdrops").
+                    ...(backdrop !== null && {
+                        backgroundImage: `url("${backdrop}")`,
+                        backgroundPosition: 'center bottom',
+                        backgroundSize: 'cover',
+                        backgroundRepeat: 'no-repeat',
+                    }),
+                }}
             >
                 <header className="flex items-center gap-6 px-6 pt-5 pb-2 max-lg:gap-3 max-lg:px-3 max-lg:pt-2 max-lg:pb-1 max-sm:flex-col max-sm:items-stretch max-sm:gap-2 xl:px-10 xl:pt-8">
                     <BoardPrompt
                         round={playing ? view.round : null}
                         accent={colours.accent}
+                        onRepeat={
+                            voice.prompt ? () => bridge.repeatPrompt() : null
+                        }
                     />
 
                     <div className="flex shrink-0 flex-col items-end gap-3 max-lg:flex-row max-lg:items-center max-lg:gap-2 max-sm:justify-end">
@@ -498,14 +523,18 @@ export function BoardScreen({
                 )}
 
                 <footer className="flex items-center justify-between gap-4 px-6 pt-2 pb-5 max-lg:gap-2 max-lg:px-3 max-lg:pt-1 max-lg:pb-2 max-sm:flex-wrap xl:px-10 xl:pb-8">
-                    <BoardStudents
-                        students={students}
-                        studentId={view.studentId}
-                        accent={colours.accent}
-                        disabled={view.phase === 'replaced'}
-                        onChoose={(id) => controller?.setStudent(id)}
-                        onNext={() => controller?.nextStudent()}
-                    />
+                    {child !== null ? (
+                        <BoardChild child={child} accent={colours.accent} />
+                    ) : (
+                        <BoardStudents
+                            students={students}
+                            studentId={view.studentId}
+                            accent={colours.accent}
+                            disabled={view.phase === 'replaced'}
+                            onChoose={(id) => controller?.setStudent(id)}
+                            onNext={() => controller?.nextStudent()}
+                        />
+                    )}
 
                     {link !== null && liveView.remote !== 'none' && (
                         <RemoteStatus remote={liveView.remote} />
@@ -538,13 +567,19 @@ export function BoardScreen({
                     <Curtain solid className="max-lg:landscape:flex-row">
                         <div className="flex min-w-0 flex-col items-center gap-10 max-lg:gap-5">
                             <div className="flex flex-col items-center gap-2 text-center">
+                                {child !== null && (
+                                    <StudentAvatar
+                                        avatar={child.avatar.key}
+                                        avatars={studentAvatars([child])}
+                                        initial={child.display_name.slice(0, 1)}
+                                        className="mb-2 size-28 text-4xl max-lg:mb-0 max-lg:size-16 max-lg:text-2xl max-lg:landscape:hidden"
+                                    />
+                                )}
                                 <h1 className="text-5xl font-bold max-lg:text-3xl">
                                     {pack.title}
                                 </h1>
                                 <p className="text-2xl max-lg:text-lg">
-                                    {t('games.board.class', {
-                                        name: schoolClass.name,
-                                    })}
+                                    {t(label.key, label.values)}
                                     {' · '}
                                     {t('games.board.rounds', {
                                         count: game.rounds,
@@ -581,6 +616,22 @@ export function BoardScreen({
                                         : t('games.board.loading')}
                                 </p>
                             )}
+                            {guest === undefined &&
+                                link !== null &&
+                                view.phase === 'ready' &&
+                                !pairingShown && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="lg"
+                                        className="max-lg:h-11"
+                                        onClick={() => link.showPairing()}
+                                        data-test="open-pairing"
+                                    >
+                                        <Smartphone />
+                                        {t('games.board.pairing.open')}
+                                    </Button>
+                                )}
                             <RotateHint />
                         </div>
                         {view.phase === 'ready' && pairingShown && (
@@ -599,7 +650,8 @@ export function BoardScreen({
                 {view.phase === 'finished' && (
                     <Curtain solid>
                         <BoardResult
-                            classId={schoolClass.id}
+                            players={{ schoolClass, child }}
+                            child={child}
                             points={view.points}
                             tally={view.tally}
                             pending={view.pending}
@@ -640,8 +692,8 @@ export function BoardScreen({
                                     variant="outline"
                                     className="max-lg:h-11"
                                 >
-                                    <Link href={show(schoolClass.id)}>
-                                        {t('games.board.back_to_class')}
+                                    <Link href={home.href}>
+                                        {t(home.label)}
                                     </Link>
                                 </Button>
                                 <Button

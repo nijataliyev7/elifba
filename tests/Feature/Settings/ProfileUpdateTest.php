@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
@@ -76,6 +78,43 @@ class ProfileUpdateTest extends TestCase
             ->assertRedirect(route('home'));
 
         $this->assertGuest();
+        $this->assertNull($user->fresh());
+    }
+
+    public function test_deleting_the_account_removes_its_roles()
+    {
+        $user = User::factory()->teacherAndParent()->create();
+        $other = User::factory()->create();
+
+        expect(DB::table('model_has_roles')->where('model_id', $user->id)->count())->toBe(2);
+
+        $this
+            ->actingAs($user)
+            ->delete(route('profile.destroy'), [
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('home'));
+
+        $this->assertNull($user->fresh());
+        expect(DB::table('model_has_roles')->where('model_id', $user->id)->exists())->toBeFalse()
+            ->and($other->fresh()?->roleList())->toBe([Role::Teacher])
+            ->and(DB::table('roles')->count())->toBe(2);
+    }
+
+    public function test_an_account_without_a_role_can_still_delete_itself()
+    {
+        $user = User::factory()->withoutRole()->create();
+
+        $this->actingAs($user)->get(route('profile.edit'))->assertOk();
+
+        $this
+            ->actingAs($user)
+            ->delete(route('profile.destroy'), [
+                'password' => 'password',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('home'));
+
         $this->assertNull($user->fresh());
     }
 

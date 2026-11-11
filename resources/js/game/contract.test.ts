@@ -101,6 +101,50 @@ describe('strict schemas', () => {
             Round.safeParse({ ...(round as object), unit: 'phrase' }).success,
         ).toBe(false);
     });
+
+    it('rejects a prompt without count, and a count outside 1–10 (R5)', () => {
+        const parsed = Round.parse(round);
+        const { count: _count, ...prompt } = parsed.prompt;
+
+        expect(Round.safeParse({ ...parsed, prompt }).success).toBe(false);
+
+        for (const count of [0, 11, 2.5]) {
+            expect(
+                Round.safeParse({
+                    ...parsed,
+                    prompt: { ...parsed.prompt, count },
+                }).success,
+            ).toBe(false);
+        }
+    });
+});
+
+describe('picture and counting rounds (R5)', () => {
+    const fixture = (name: string) =>
+        Round.parse(fixtures[`../../../tests/Fixtures/contract/${name}`]);
+
+    it('gives every item of a picture round its picture and the prompt none', () => {
+        const round = fixture('round.find-picture.json');
+
+        expect(round.unit).toBe('picture');
+        expect(round.items.every((item) => item.image !== null)).toBe(true);
+        expect(round.prompt.image).toBeNull();
+        expect(round.prompt.count).toBeNull();
+        expect(round.prompt.show).toBe('pişik');
+    });
+
+    it("shows a count round's picture N times and never the number", () => {
+        const round = fixture('round.count.json');
+        const answer = round.items.find(
+            (item) => item.id === round.solution.item_ids[0],
+        );
+
+        expect(round.mechanic).toBe('count');
+        expect(round.prompt.image).not.toBeNull();
+        expect(round.prompt.show).toBeNull();
+        expect(answer?.text).toBe(String(round.prompt.count));
+        expect(round.items.every((item) => item.image === null)).toBe(true);
+    });
 });
 
 /*

@@ -3,7 +3,7 @@
 namespace App\Domain\Classroom\Models;
 
 use App\Domain\Classroom\Policies\SchoolClassPolicy;
-use App\Models\Concerns\BelongsToTeacher;
+use App\Models\Concerns\BelongsToOwner;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\SchoolClassFactory;
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * A teacher's class, e.g. "1A" (docs/architecture.md §1). Archived classes
  * are hidden from pickers and deleted after `elifba.retention_days`.
- * `{class}` binds only the current teacher's classes (`BelongsToTeacher`).
+ * `{class}` binds only the current teacher's classes (`BelongsToOwner`).
  *
  * @property string $id
  * @property int $user_id
@@ -41,13 +41,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SchoolClass extends Model
 {
     /** @use HasFactory<SchoolClassFactory> */
-    use BelongsToTeacher, HasFactory, HasUlids;
+    use BelongsToOwner, HasFactory, HasUlids;
 
     /**
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    public static function whereTeacher(Builder $query, User $teacher): Builder
+    public static function whereOwner(Builder $query, User $teacher): Builder
     {
         return $query->where($query->qualifyColumn('user_id'), $teacher->id);
     }

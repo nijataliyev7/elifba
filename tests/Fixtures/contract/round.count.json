@@ -1,0 +1,43 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T1C",
+    "index": 4,
+    "total": 10,
+    "mechanic": "count",
+    "unit": "number",
+    "pack": "fruit",
+    "level": "numbers-5",
+    "prompt": {
+        "text": "Neçə «alma» var?",
+        "show": null,
+        "image": "http://localhost/content/fluent/1F34E.svg?v=5",
+        "count": 4,
+        "audio": "http://localhost/content/voice/b813aade0285ff0b.mp3?v=1",
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "3",
+            "image": null,
+            "content_key": "number:3"
+        },
+        {
+            "id": "b",
+            "text": "5",
+            "image": null,
+            "content_key": "number:5"
+        },
+        {
+            "id": "c",
+            "text": "4",
+            "image": null,
+            "content_key": "number:4"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["c"]
+    },
+    "effect": "burst"
+}

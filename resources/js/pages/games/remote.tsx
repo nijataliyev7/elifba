@@ -16,7 +16,9 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { RemoteItems } from '@/components/games/remote-items';
+import { RemoteQuestion } from '@/components/games/remote-question';
 import { RemoteSlots } from '@/components/games/remote-slots';
+import { BoardChild } from '@/components/games/board-child';
 import { StudentGrid, studentAvatars } from '@/components/games/student-grid';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
@@ -41,7 +43,8 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { cn } from '@/lib/utils';
 import { pult } from '@/routes';
-import { show } from '@/routes/classes';
+import { playersHome, playersLabel } from '@/lib/game-players';
+import type { GamePlayers } from '@/lib/game-players';
 import { destroy as closeBoard } from '@/routes/guest-boards';
 import { edit as nextGame } from '@/routes/guest-boards/game';
 import type { BoardStudent, RemoteProps } from '@/types';
@@ -61,14 +64,20 @@ import type { BoardStudent, RemoteProps } from '@/types';
  * A guest board (`guestBoard`) was paired by its claim, so the phone has no
  * pairing card to ask for; instead it closes the board, and after the game
  * sends the next one to it without a new code.
+ *
+ * In a home game (§4 "At home") the child is always the one at the board:
+ * the phone shows the child where the class's grid would be, and sends no
+ * `client-student`.
  */
 export default function Remote({
     game,
     schoolClass,
+    child,
     students,
     guestBoard,
 }: RemoteProps) {
     const { t } = useTranslation();
+    const label = playersLabel({ schoolClass, child });
     const { url } = usePage();
     const debug =
         new URLSearchParams(url.split('?')[1] ?? '').get('debug') === '1';
@@ -162,9 +171,7 @@ export default function Remote({
                     </Button>
                     <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">
-                            {t('games.board.class', {
-                                name: schoolClass.name,
-                            })}
+                            {t(label.key, label.values)}
                         </p>
                         <p className="truncate text-sm text-muted-foreground">
                             {round !== null
@@ -209,7 +216,7 @@ export default function Remote({
 
                 {over ? (
                     <Finished
-                        classId={schoolClass.id}
+                        players={{ schoolClass, child }}
                         guestBoardId={guestBoard?.id ?? null}
                     />
                 ) : (
@@ -227,6 +234,9 @@ export default function Remote({
                                 <p className="text-center font-board text-xl">
                                     {round.prompt.text}
                                 </p>
+                            )}
+                            {round !== null && round.mechanic === 'count' && (
+                                <RemoteQuestion round={round} />
                             )}
                             {round !== null && round.slots > 0 && (
                                 <RemoteSlots
@@ -256,12 +266,16 @@ export default function Remote({
                         </section>
 
                         <footer className="sticky bottom-0 flex flex-col gap-3 border-t bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                            <RemoteStudents
-                                students={students}
-                                studentId={state?.student_id ?? null}
-                                disabled={!boardHere}
-                                onChoose={(id) => link?.setStudent(id)}
-                            />
+                            {child !== null ? (
+                                <BoardChild child={child} />
+                            ) : (
+                                <RemoteStudents
+                                    students={students}
+                                    studentId={state?.student_id ?? null}
+                                    disabled={!boardHere}
+                                    onChoose={(id) => link?.setStudent(id)}
+                                />
+                            )}
                             <div className="grid grid-cols-3 gap-2">
                                 {status === 'paused' ? (
                                     <ControlButton
@@ -591,14 +605,16 @@ function EndGame({
 }
 
 function Finished({
-    classId,
+    players,
     guestBoardId,
 }: {
-    classId: string;
+    /** The class or the child the game was for. */
+    players: GamePlayers;
     /** The guest board that showed the game: the next game goes to it. */
     guestBoardId: string | null;
 }) {
     const { t } = useTranslation();
+    const home = playersHome(players);
 
     return (
         <section className="flex flex-1 flex-col items-center justify-end gap-3 p-4 pb-8 text-center">
@@ -634,9 +650,7 @@ function Finished({
                     </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-14 text-base">
-                    <Link href={show(classId)}>
-                        {t('games.board.back_to_class')}
-                    </Link>
+                    <Link href={home.href}>{t(home.label)}</Link>
                 </Button>
             </div>
         </section>

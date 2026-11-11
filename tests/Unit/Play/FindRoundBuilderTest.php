@@ -13,6 +13,7 @@ use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
 use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
+use Tests\Support\Voice;
 
 /*
  * `find` rounds from the real content (docs/architecture.md §2): seeded,
@@ -20,6 +21,10 @@ use Random\Randomizer;
  * decoys for a letter from the teacher's chosen letters first, then its
  * confusables, cased on the server, no pictures.
  */
+
+// Which clips are made is content: no clip here, so prompt.audio is null;
+// tests/Feature/Play/PromptVoiceTest checks it with clips.
+beforeEach(fn () => Voice::none($this->app));
 
 /**
  * @param  list<string>|null  $learned  null = all 32

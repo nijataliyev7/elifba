@@ -1,6 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- aypara: a crescent moon. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M35.57,10.12 A27,27 0 1 0 57.66,47.99 A22,22 0 0 1 35.57,10.12 Z" fill="#FCEA2B"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- aypara: the crescent moon. Elifba own art, MIT. -->
+<path d="M17.22 2.66A13.6 13.6 0 1 0 26.18 23.13A11.2 11.2 0 1 1 17.22 2.66Z" fill="url(#aypara_fill1)"/>
+<path d="M17.22 2.66A13.6 13.6 0 1 0 26.18 23.13A11.2 11.2 0 1 1 17.22 2.66Z" fill="url(#aypara_fill2)"/>
+<g filter="url(#aypara_blur05)"><ellipse cx="5.8" cy="14.6" rx="1" ry="3.6" fill="#FFFFFF" fill-opacity="0.8" transform="rotate(10 5.8 14.6)"/></g>
+<defs>
+<radialGradient id="aypara_fill1" cx="0.25" cy="0.3" r="0.85"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="aypara_fill2" cx="0.6" cy="1" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="aypara_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+</defs>
 </svg>

@@ -32,6 +32,23 @@
             "mechanic": "build_sentence",
             "unit": "sentence",
             "text": "Sözlərdən cümlə qur!"
-        }
+        },
+        { "mechanic": "find", "unit": "picture", "text": "«{x}» hansıdır?" },
+        {
+            "mechanic": "pop",
+            "unit": "picture",
+            "text": "Hər şəklin adını de və vur!"
+        },
+        {
+            "mechanic": "find",
+            "unit": "number",
+            "text": "«{x}» rəqəmini tap!"
+        },
+        {
+            "mechanic": "pop",
+            "unit": "number",
+            "text": "Hər rəqəmi de və vur!"
+        },
+        { "mechanic": "count", "unit": "number", "text": "Neçə «{x}» var?" }
     ]
 }

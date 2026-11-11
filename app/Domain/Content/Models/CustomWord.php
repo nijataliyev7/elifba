@@ -6,7 +6,7 @@ use App\Domain\Content\Data\WordData;
 use App\Domain\Content\Policies\CustomWordPolicy;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\Syllabifier;
-use App\Models\Concerns\BelongsToTeacher;
+use App\Models\Concerns\BelongsToOwner;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\CustomWordFactory;
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * never in `build_word`. Setting `text` sets `word_key` (`word:{lower}`),
  * which the unique index on `(user_id, word_key)` compares. The text may be a
  * child's name: never log it or put it in a URL; routes use the ULID.
- * `{word}` binds only the current teacher's words (`BelongsToTeacher`) and
+ * `{word}` binds only the current teacher's words (`BelongsToOwner`) and
  * passes `CustomWordPolicy`.
  *
  * @property string $id
@@ -45,7 +45,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CustomWord extends Model
 {
     /** @use HasFactory<CustomWordFactory> */
-    use BelongsToTeacher, HasFactory, HasUlids;
+    use BelongsToOwner, HasFactory, HasUlids;
 
     /**
      * `word:{lower}`, the content key a word plays under.
@@ -59,7 +59,7 @@ class CustomWord extends Model
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    public static function whereTeacher(Builder $query, User $teacher): Builder
+    public static function whereOwner(Builder $query, User $teacher): Builder
     {
         return $query->where($query->qualifyColumn('user_id'), $teacher->id);
     }

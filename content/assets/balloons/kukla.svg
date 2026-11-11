@@ -1,26 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- kukla: a rag doll with pigtails, a dress and stiff arms and legs. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M28,58 L27,65 M44,58 L45,65" fill="none" stroke-width="7"/>
-    <path d="M28,58 L27,65 M44,58 L45,65" fill="none" stroke="#FFF" stroke-width="3"/>
-    <ellipse cx="27" cy="66" rx="4" ry="2.2" fill="#EA5A47"/>
-    <ellipse cx="45" cy="66" rx="4" ry="2.2" fill="#EA5A47"/>
-    <path d="M24,40 L14,52" fill="none" stroke-width="7"/>
-    <path d="M48,40 L58,52" fill="none" stroke-width="7"/>
-    <path d="M24,40 L14,52 M48,40 L58,52" fill="none" stroke="#FADCBC" stroke-width="3"/>
-    <path d="M27,36 L45,36 L53,60 C42,63 30,63 19,60 Z" fill="#EA5A47"/>
-    <path d="M30,38 L42,38 L44,50 L28,50 Z" fill="#FFF" stroke-width="1.5"/>
-    <circle cx="36" cy="41.5" r="1.3" fill="#000" stroke="none"/>
-    <circle cx="36" cy="46" r="1.3" fill="#000" stroke="none"/>
-    <path d="M19,24 C12,26 10,34 12,40 C15,36 18,32 21,28 Z" fill="#6A462F"/>
-    <path d="M53,24 C60,26 62,34 60,40 C57,36 54,32 51,28 Z" fill="#6A462F"/>
-    <path d="M17,24 L13,20 L13,28 Z M55,24 L59,20 L59,28 Z" fill="#FCEA2B" stroke-width="1.5"/>
-    <circle cx="36" cy="24" r="13" fill="#FADCBC"/>
-    <path d="M23,23 C24,13 30,10 36,10 C42,10 48,13 49,23 C45,18 40,16 36,16 C32,16 27,18 23,23 Z" fill="#6A462F"/>
-    <circle cx="31" cy="25" r="2.2" fill="#000" stroke="none"/>
-    <circle cx="41" cy="25" r="2.2" fill="#000" stroke="none"/>
-    <circle cx="27.5" cy="29.5" r="2.4" fill="#FFA7C0" stroke="none"/>
-    <circle cx="44.5" cy="29.5" r="2.4" fill="#FFA7C0" stroke="none"/>
-    <path d="M32,30 C34,32.5 38,32.5 40,30" fill="none" stroke-width="1.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- kukla: a doll with pigtails in a red dress and a white apron. Elifba own art, MIT. -->
+<ellipse cx="8.7" cy="10.4" rx="2.1" ry="3.2" fill="url(#kukla_fill1)" transform="rotate(18 8.7 10.4)"/>
+<ellipse cx="8.7" cy="10.4" rx="2.1" ry="3.2" fill="url(#kukla_fill2)" transform="rotate(18 8.7 10.4)"/>
+<ellipse cx="23.3" cy="10.4" rx="2.1" ry="3.2" fill="url(#kukla_fill3)" transform="rotate(-18 23.3 10.4)"/>
+<ellipse cx="23.3" cy="10.4" rx="2.1" ry="3.2" fill="url(#kukla_fill4)" transform="rotate(-18 23.3 10.4)"/>
+<path d="M13.9 25.4L13.9 28.4" stroke="url(#kukla_fill5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.1 25.4L18.1 28.4" stroke="url(#kukla_fill6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="13.5" cy="29.1" rx="1.9" ry="1.1" fill="url(#kukla_fill7)"/>
+<g filter="url(#kukla_blur025)"><ellipse cx="12.9" cy="28.6" rx="0.7" ry="0.3" fill="#E6E4E8" fill-opacity="0.6"/></g>
+<ellipse cx="18.5" cy="29.1" rx="1.9" ry="1.1" fill="url(#kukla_fill8)"/>
+<g filter="url(#kukla_blur025)"><ellipse cx="17.9" cy="28.6" rx="0.7" ry="0.3" fill="#E6E4E8" fill-opacity="0.6"/></g>
+<path d="M12.4 16.8L8.6 21.6" stroke="url(#kukla_fill9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.6 16.8L23.4 21.6" stroke="url(#kukla_fill10)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="8.3" cy="22" r="1.3" fill="url(#kukla_fill11)"/>
+<circle cx="8.3" cy="22" r="1.3" fill="url(#kukla_fill12)"/>
+<circle cx="23.7" cy="22" r="1.3" fill="url(#kukla_fill13)"/>
+<circle cx="23.7" cy="22" r="1.3" fill="url(#kukla_fill14)"/>
+<path d="M14 15.2L18 15.2Q19.6 15.2 20.26 16.66L24.1 25.11Q24.6 26.2 23.4 26.2L8.6 26.2Q7.4 26.2 7.9 25.11L11.74 16.66Q12.4 15.2 14 15.2Z" fill="url(#kukla_fill15)"/>
+<path d="M14 15.2L18 15.2Q19.6 15.2 20.26 16.66L24.1 25.11Q24.6 26.2 23.4 26.2L8.6 26.2Q7.4 26.2 7.9 25.11L11.74 16.66Q12.4 15.2 14 15.2Z" fill="url(#kukla_fill16)"/>
+<path d="M14.5 18.6L17.5 18.6Q18.4 18.6 18.56 19.49L19.44 24.31Q19.6 25.2 18.7 25.2L13.3 25.2Q12.4 25.2 12.56 24.31L13.44 19.49Q13.6 18.6 14.5 18.6Z" fill="url(#kukla_fill17)"/>
+<path d="M14.5 18.6L17.5 18.6Q18.4 18.6 18.56 19.49L19.44 24.31Q19.6 25.2 18.7 25.2L13.3 25.2Q12.4 25.2 12.56 24.31L13.44 19.49Q13.6 18.6 14.5 18.6Z" fill="url(#kukla_fill18)"/>
+<g filter="url(#kukla_blur03)"><ellipse cx="14.2" cy="20.2" rx="0.6" ry="1.4" fill="#FCFCFC" fill-opacity="0.8" transform="rotate(8 14.2 20.2)"/></g>
+<circle cx="12.2" cy="16.6" r="2" fill="url(#kukla_fill19)"/>
+<circle cx="12.2" cy="16.6" r="2" fill="url(#kukla_fill20)"/>
+<g filter="url(#kukla_blur03)"><ellipse cx="11.6" cy="15.9" rx="0.8" ry="0.5" fill="#FDE3E6" fill-opacity="0.6" transform="rotate(-30 11.6 15.9)"/></g>
+<circle cx="19.8" cy="16.6" r="2" fill="url(#kukla_fill21)"/>
+<circle cx="19.8" cy="16.6" r="2" fill="url(#kukla_fill22)"/>
+<path d="M13.2 15.1Q16 14.4 18.8 15.1Q18.6 17.4 16 16.6Q13.4 17.4 13.2 15.1Z" fill="url(#kukla_fill23)"/>
+<path d="M13.2 15.1Q16 14.4 18.8 15.1Q18.6 17.4 16 16.6Q13.4 17.4 13.2 15.1Z" fill="url(#kukla_fill24)"/>
+<circle cx="16" cy="9.4" r="6.2" fill="url(#kukla_fill25)"/>
+<circle cx="16" cy="9.4" r="6.2" fill="url(#kukla_fill26)"/>
+<path d="M9.8 10C9.4 5.4 12.2 2.6 16 2.6C19.8 2.6 22.6 5.4 22.2 10C21.4 8 19.8 6.8 18.2 6.4C17.4 7.4 15.4 7.8 13.4 7.4C11.8 7.8 10.6 8.6 9.8 10Z" fill="url(#kukla_fill27)"/>
+<path d="M9.8 10C9.4 5.4 12.2 2.6 16 2.6C19.8 2.6 22.6 5.4 22.2 10C21.4 8 19.8 6.8 18.2 6.4C17.4 7.4 15.4 7.8 13.4 7.4C11.8 7.8 10.6 8.6 9.8 10Z" fill="url(#kukla_fill28)"/>
+<g filter="url(#kukla_blur04)"><ellipse cx="13.2" cy="4.2" rx="1.8" ry="0.7" fill="#EEE7E5" fill-opacity="0.55" transform="rotate(-20 13.2 4.2)"/></g>
+<ellipse cx="10.4" cy="6.4" rx="1.3" ry="0.9" fill="url(#kukla_fill29)" transform="rotate(-25 10.4 6.4)"/>
+<ellipse cx="10.4" cy="6.4" rx="1.3" ry="0.9" fill="url(#kukla_fill30)" transform="rotate(-25 10.4 6.4)"/>
+<ellipse cx="8.2" cy="7.4" rx="1.3" ry="0.9" fill="url(#kukla_fill31)" transform="rotate(-25 8.2 7.4)"/>
+<ellipse cx="8.2" cy="7.4" rx="1.3" ry="0.9" fill="url(#kukla_fill32)" transform="rotate(-25 8.2 7.4)"/>
+<circle cx="9.3" cy="6.9" r="0.7" fill="url(#kukla_fill33)"/>
+<ellipse cx="21.6" cy="6.4" rx="1.3" ry="0.9" fill="url(#kukla_fill34)" transform="rotate(25 21.6 6.4)"/>
+<ellipse cx="21.6" cy="6.4" rx="1.3" ry="0.9" fill="url(#kukla_fill35)" transform="rotate(25 21.6 6.4)"/>
+<ellipse cx="23.8" cy="7.4" rx="1.3" ry="0.9" fill="url(#kukla_fill36)" transform="rotate(25 23.8 7.4)"/>
+<ellipse cx="23.8" cy="7.4" rx="1.3" ry="0.9" fill="url(#kukla_fill37)" transform="rotate(25 23.8 7.4)"/>
+<circle cx="22.7" cy="6.9" r="0.7" fill="url(#kukla_fill38)"/>
+<ellipse cx="13.6" cy="10.6" rx="0.8" ry="0.92" fill="#3A234A"/>
+<circle cx="13.32" cy="10.23" r="0.45" fill="#FFFFFF"/>
+<ellipse cx="18.4" cy="10.6" rx="0.8" ry="0.92" fill="#3A234A"/>
+<circle cx="18.12" cy="10.23" r="0.45" fill="#FFFFFF"/>
+<g filter="url(#kukla_blur035)"><ellipse cx="12.2" cy="12.7" rx="1.1" ry="0.7" fill="#FF7DA0" fill-opacity="0.55"/></g>
+<g filter="url(#kukla_blur035)"><ellipse cx="19.8" cy="12.7" rx="1.1" ry="0.7" fill="#FF7DA0" fill-opacity="0.55"/></g>
+<path d="M14.7 13.1Q16 14.3 17.3 13.1" stroke="#8A004F" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<radialGradient id="kukla_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="kukla_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="kukla_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<linearGradient id="kukla_fill5" x1="13.9" y1="28.4" x2="13.9" y2="25.4" gradientUnits="userSpaceOnUse"><stop stop-color="#E59B1F"/><stop offset="1" stop-color="#FFC532"/></linearGradient>
+<linearGradient id="kukla_fill6" x1="18.1" y1="28.4" x2="18.1" y2="25.4" gradientUnits="userSpaceOnUse"><stop stop-color="#E59B1F"/><stop offset="1" stop-color="#FFC532"/></linearGradient>
+<radialGradient id="kukla_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<filter id="kukla_blur025" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.25"/></filter>
+<radialGradient id="kukla_fill8" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<linearGradient id="kukla_fill9" x1="8.6" y1="21.6" x2="12.4" y2="16.8" gradientUnits="userSpaceOnUse"><stop stop-color="#E59B1F"/><stop offset="1" stop-color="#FFC532"/></linearGradient>
+<linearGradient id="kukla_fill10" x1="23.4" y1="21.6" x2="19.6" y2="16.8" gradientUnits="userSpaceOnUse"><stop stop-color="#E59B1F"/><stop offset="1" stop-color="#FFC532"/></linearGradient>
+<radialGradient id="kukla_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="kukla_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="kukla_fill14" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill15" cx="0.3" cy="0.15" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill16" cx="0.8" cy="0.95" r="0.7"><stop stop-color="#B22945" stop-opacity="0.7"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill17" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="kukla_fill18" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.4"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<filter id="kukla_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<radialGradient id="kukla_fill19" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill20" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.4"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill21" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill22" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill23" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="kukla_fill24" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.3"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill25" cx="0.32" cy="0.28" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="kukla_fill26" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.5"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill27" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="kukla_fill28" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<filter id="kukla_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="kukla_fill29" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill30" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.3"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill31" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill32" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.3"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill33" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill34" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill35" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.3"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill36" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kukla_fill37" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.3"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kukla_fill38" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<filter id="kukla_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+</defs>
 </svg>

@@ -5,9 +5,24 @@
  * correct tile lands in its frame (the scene keeps it there), and once the
  * round is solved the frames give way to one plate with the unit whole —
  * «TUT», «nənə», «Tar gözəldir.» — which floats up when the round is over.
+ *
+ * Drawn in ADR 014's Fluent manner, each look painted once per colour and
+ * size (`frameTexture()`, `plateTexture()`), never with an outline: an
+ * empty frame is a pale well set into the board, its upper inner edges in
+ * shade; a filled one is a white face set into a surface in the pack
+ * colour, lit from the top left, with a soft shadow in the colour's deep
+ * shade; the next frame to fill has a soft glow behind it.
  */
 import type Phaser from 'phaser';
 import { textOn } from '../palette';
+import {
+    css,
+    glowTexture,
+    paintPlate,
+    paintRecess,
+    step,
+    texture,
+} from './fluent';
 import { hex, shade } from './item';
 import type { SlotRowOptions, SlotSpot, SlotStyle, SlotView } from './types';
 
@@ -15,9 +30,86 @@ const MARGIN = 120;
 const GAP = 34;
 /** Space between a frame's edge and the copy in it. */
 const PAD = 16;
-const STROKE = 8;
+/** The coloured rim round a filled frame's face. */
+const RIM = 8;
 const RADIUS = 22;
 const PAPER = 0xffffff;
+/** Room round a frame in its texture, for the shadow. */
+const SHADOW = 16;
+
+/** A frame, empty (a well) or filled (a plate), painted once per colour and size. */
+function frameTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    width: number,
+    height: number,
+    filled: boolean,
+): string {
+    const w = step(width);
+    const h = step(height);
+    const key = `frame-${filled ? 'filled' : 'empty'}-${css(colour)}-${w}x${h}`;
+
+    return texture(scene, key, w + SHADOW * 2, h + SHADOW * 2, (context) => {
+        const box = { x: SHADOW, y: SHADOW, width: w, height: h };
+
+        if (filled) {
+            paintPlate(context, box, {
+                colour,
+                radius: RADIUS,
+                inset: { side: RIM, top: RIM, bottom: RIM },
+                face: PAPER,
+                faceRadius: RADIUS - RIM / 2,
+                shadow: { blur: 14, drop: 6 },
+            });
+        } else {
+            paintRecess(context, box, colour, RADIUS);
+        }
+    });
+}
+
+/** The solved unit's plate, painted once per colour and size. */
+function plateTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    width: number,
+    height: number,
+): string {
+    const w = step(width);
+    const h = step(height);
+
+    return texture(
+        scene,
+        `frame-plate-${css(colour)}-${w}x${h}`,
+        w + SHADOW * 4,
+        h + SHADOW * 4,
+        (context) =>
+            paintPlate(
+                context,
+                { x: SHADOW * 2, y: SHADOW * 2, width: w, height: h },
+                {
+                    colour,
+                    radius: 30,
+                    inset: { side: RIM + 2, top: RIM + 2, bottom: RIM + 2 },
+                    face: PAPER,
+                    faceRadius: 30 - RIM / 2,
+                    shadow: { blur: 22, drop: 10 },
+                },
+            ),
+    );
+}
+
+/** An image of a texture painted at a size rounded up (`step()`), shown at `width` × `height`. */
+function fitted(
+    image: Phaser.GameObjects.Image,
+    width: number,
+    height: number,
+    room: number,
+): Phaser.GameObjects.Image {
+    return image.setScale(
+        width / (image.width - room * 2),
+        height / (image.height - room * 2),
+    );
+}
 
 type Geometry = {
     xs: number[];
@@ -35,7 +127,7 @@ export function frameGeometry(options: SlotRowOptions): Geometry {
     const tailRoom = tail === null ? 0 : Math.min(110, height * 0.45);
     const across = (1920 - MARGIN * 2 - tailRoom - GAP * (n - 1)) / n;
     let innerWidth = Math.min(
-        (height - PAD * 2 - STROKE) / aspect,
+        (height - PAD * 2 - RIM) / aspect,
         across - PAD * 2,
         380,
     );
@@ -73,9 +165,9 @@ class FrameRow implements SlotView {
     private readonly geometry: Geometry;
     private readonly frames: {
         holder: Phaser.GameObjects.Container;
-        paper: Phaser.GameObjects.Graphics;
+        paper: Phaser.GameObjects.Image;
     }[];
-    private readonly glow: Phaser.GameObjects.Graphics;
+    private readonly glow: Phaser.GameObjects.Image;
     private readonly tail: Phaser.GameObjects.Text | null = null;
     private readonly colour: number;
     private filled = 0;
@@ -86,32 +178,44 @@ class FrameRow implements SlotView {
         options: SlotRowOptions,
     ) {
         this.geometry = frameGeometry(options);
-        this.colour = shade(options.palette[0], -0.12);
+        this.colour = options.palette[0];
 
         const { xs, y, frame } = this.geometry;
 
         this.root = scene.add.container(0, 0).setDepth(1);
+
+        // The next frame to fill glows behind it, so the class sees where the piece goes.
+        const spread = 18;
+
+        this.glow = fitted(
+            scene.add.image(
+                0,
+                0,
+                glowTexture(
+                    scene,
+                    this.colour,
+                    frame.width,
+                    frame.height,
+                    RADIUS,
+                    spread,
+                ),
+            ),
+            frame.width,
+            frame.height,
+            spread * 2,
+        );
+        this.glow.setAlpha(0);
+        this.root.add(this.glow);
         this.frames = xs.map((x) => {
-            const paper = scene.add.graphics();
-            const holder = scene.add.container(x, y, [paper]);
+            const paper = scene.add.image(0, 0, this.look(false));
+            const holder = scene.add.container(x, y, [
+                fitted(paper, frame.width, frame.height, SHADOW),
+            ]);
 
             this.root.add(holder);
 
             return { holder, paper };
         });
-
-        // The next frame to fill breathes, so the class sees where the piece goes.
-        this.glow = scene.add.graphics();
-        this.glow.lineStyle(STROKE + 6, this.colour, 1);
-        this.glow.strokeRoundedRect(
-            -frame.width / 2 - 8,
-            -frame.height / 2 - 8,
-            frame.width + 16,
-            frame.height + 16,
-            RADIUS + 6,
-        );
-        this.glow.setAlpha(0);
-        this.root.add(this.glow);
 
         if (options.tail !== null && this.geometry.tail !== null) {
             this.tail = scene.add
@@ -169,7 +273,7 @@ class FrameRow implements SlotView {
 
         this.scene.tweens.add({
             targets: this.glow,
-            alpha: { from: 0, to: 0.35 },
+            alpha: { from: 0, to: 0.75 },
             delay: delay + this.frames.length * 90 + 200,
             duration: 700,
             yoyo: true,
@@ -223,20 +327,16 @@ class FrameRow implements SlotView {
             label.displayWidth + 100,
             Math.min(frame.width * 2, room),
         );
-        const plate = scene.add.graphics();
-
-        plate.fillStyle(0x1f2937, 0.12);
-        plate.fillRoundedRect(
-            -width / 2 + 8,
-            -height / 2 + 12,
+        const plate = fitted(
+            scene.add.image(
+                0,
+                0,
+                plateTexture(scene, this.colour, width, height),
+            ),
             width,
             height,
-            30,
+            SHADOW * 2,
         );
-        plate.fillStyle(PAPER, 1);
-        plate.fillRoundedRect(-width / 2, -height / 2, width, height, 30);
-        plate.lineStyle(STROKE + 2, this.colour, 1);
-        plate.strokeRoundedRect(-width / 2, -height / 2, width, height, 30);
 
         const whole = scene.add.container(960, y, [plate, label]);
 
@@ -280,30 +380,25 @@ class FrameRow implements SlotView {
         this.root.destroy();
     }
 
-    /** Empty frames are pale; filled ones take the pack colour; the glow sits on the next. */
+    /** A frame's texture: a pale well while empty, a plate in the pack colour once filled. */
+    private look(filled: boolean): string {
+        const { frame } = this.geometry;
+
+        return frameTexture(
+            this.scene,
+            this.colour,
+            frame.width,
+            frame.height,
+            filled,
+        );
+    }
+
+    /** Empty frames are wells; filled ones take the pack colour; the glow sits behind the next. */
     private draw(): void {
-        const { frame, xs } = this.geometry;
-        const left = -frame.width / 2;
-        const top = -frame.height / 2;
+        const { xs } = this.geometry;
 
         this.frames.forEach(({ paper }, index) => {
-            const filled = index < this.filled;
-
-            paper.clear();
-            paper.fillStyle(PAPER, filled ? 0.95 : 0.8);
-            paper.fillRoundedRect(left, top, frame.width, frame.height, RADIUS);
-            paper.lineStyle(
-                STROKE,
-                filled ? this.colour : shade(this.colour, 0.45),
-                1,
-            );
-            paper.strokeRoundedRect(
-                left,
-                top,
-                frame.width,
-                frame.height,
-                RADIUS,
-            );
+            paper.setTexture(this.look(index < this.filled));
         });
 
         const next = xs[this.filled];

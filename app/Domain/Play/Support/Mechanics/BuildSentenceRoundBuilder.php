@@ -60,13 +60,14 @@ final readonly class BuildSentenceRoundBuilder extends BuildRoundBuilder
         return [$decoys];
     }
 
-    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template): PromptData
+    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template, ?string $audio): PromptData
     {
         return new PromptData(
             text: $template->text,
             show: null,
             image: null,
-            audio: null,
+            count: null,
+            audio: $audio,
             tail: self::sentence($target, $pack)->punctuation(),
         );
     }

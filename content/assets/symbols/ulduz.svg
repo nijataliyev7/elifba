@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- ulduz: a golden eight-pointed star. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="36,5 42.12,21.22 57.92,14.08 50.78,29.88 67,36 50.78,42.12 57.92,57.92 42.12,50.78 36,67 29.88,50.78 14.08,57.92 21.22,42.12 5,36 21.22,29.88 14.08,14.08 29.88,21.22" fill="#FCEA2B"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- ulduz: the eight-pointed star. Elifba own art, MIT. -->
+<path d="M16.48 2.59L19 7.79Q19.21 8.24 19.69 8.08L25.14 6.18Q26.18 5.82 25.82 6.86L23.92 12.31Q23.76 12.79 24.21 13L29.41 15.52Q30.4 16 29.41 16.48L24.21 19Q23.76 19.21 23.92 19.69L25.82 25.14Q26.18 26.18 25.14 25.82L19.69 23.92Q19.21 23.76 19 24.21L16.48 29.41Q16 30.4 15.52 29.41L13 24.21Q12.79 23.76 12.31 23.92L6.86 25.82Q5.82 26.18 6.18 25.14L8.08 19.69Q8.24 19.21 7.79 19L2.59 16.48Q1.6 16 2.59 15.52L7.79 13Q8.24 12.79 8.08 12.31L6.18 6.86Q5.82 5.82 6.86 6.18L12.31 8.08Q12.79 8.24 13 7.79L15.52 2.59Q16 1.6 16.48 2.59Z" fill="url(#ulduz_fill1)"/>
+<path d="M16.48 2.59L19 7.79Q19.21 8.24 19.69 8.08L25.14 6.18Q26.18 5.82 25.82 6.86L23.92 12.31Q23.76 12.79 24.21 13L29.41 15.52Q30.4 16 29.41 16.48L24.21 19Q23.76 19.21 23.92 19.69L25.82 25.14Q26.18 26.18 25.14 25.82L19.69 23.92Q19.21 23.76 19 24.21L16.48 29.41Q16 30.4 15.52 29.41L13 24.21Q12.79 23.76 12.31 23.92L6.86 25.82Q5.82 26.18 6.18 25.14L8.08 19.69Q8.24 19.21 7.79 19L2.59 16.48Q1.6 16 2.59 15.52L7.79 13Q8.24 12.79 8.08 12.31L6.18 6.86Q5.82 5.82 6.86 6.18L12.31 8.08Q12.79 8.24 13 7.79L15.52 2.59Q16 1.6 16.48 2.59Z" fill="url(#ulduz_fill2)"/>
+<g filter="url(#ulduz_blur06)"><path d="M15.71 8.54L16.78 11.13Q16.93 11.5 17.3 11.35L19.89 10.27Q20.63 9.97 20.33 10.71L19.25 13.3Q19.1 13.67 19.47 13.82L22.06 14.89Q22.8 15.2 22.06 15.51L19.47 16.58Q19.1 16.73 19.25 17.1L20.33 19.69Q20.63 20.43 19.89 20.13L17.3 19.05Q16.93 18.9 16.78 19.27L15.71 21.86Q15.4 22.6 15.09 21.86L14.02 19.27Q13.87 18.9 13.5 19.05L10.91 20.13Q10.17 20.43 10.47 19.69L11.55 17.1Q11.7 16.73 11.33 16.58L8.74 15.51Q8 15.2 8.74 14.89L11.33 13.82Q11.7 13.67 11.55 13.3L10.47 10.71Q10.17 9.97 10.91 10.27L13.5 11.35Q13.87 11.5 14.02 11.13L15.09 8.54Q15.4 7.8 15.71 8.54Z" fill="#FFF9B0" fill-opacity="0.45"/></g>
+<g filter="url(#ulduz_blur04)"><ellipse cx="11.6" cy="10.4" rx="1.6" ry="0.8" fill="#FFFFFF" fill-opacity="0.85" transform="rotate(-40 11.6 10.4)"/></g>
+<defs>
+<radialGradient id="ulduz_fill1" cx="0.32" cy="0.28" r="0.75"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="ulduz_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="ulduz_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+<filter id="ulduz_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+</defs>
 </svg>

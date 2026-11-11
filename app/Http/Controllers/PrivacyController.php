@@ -9,7 +9,9 @@ use Inertia\Response;
 
 /**
  * The privacy notice (docs/architecture.md §7): what is stored, why, for how
- * long, how to delete it, who operates this instance, and a note for parents.
+ * long, how to delete it, who operates this instance, a section for parents
+ * who play with their own children at home (§7 "Parents and their
+ * children", ADR 013) and the note a teacher copies for a class's parents.
  * Public, in every interface language.
  */
 final class PrivacyController extends Controller
@@ -21,6 +23,8 @@ final class PrivacyController extends Controller
 
         return Inertia::render('privacy', [
             'retentionDays' => Config::integer('elifba.retention_days'),
+            // At most this many children per parent (ADR 013).
+            'childrenMax' => Config::integer('elifba.children.max'),
             // What Google sign-in shares, when this instance offers it (ADR 008).
             'googleSignIn' => GoogleSignIn::enabled(),
             'operator' => [

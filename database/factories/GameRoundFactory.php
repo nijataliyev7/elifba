@@ -39,7 +39,9 @@ class GameRoundFactory extends Factory
 
         return [
             'game_session_id' => GameSession::factory(),
-            'school_class_id' => fn (array $attributes): string => GameSession::query()->whereKey($attributes['game_session_id'])->firstOrFail()->school_class_id,
+            // Copied from the game, as StartGame does.
+            'school_class_id' => fn (array $attributes): ?string => GameSession::query()->whereKey($attributes['game_session_id'])->firstOrFail()->school_class_id,
+            'child_id' => fn (array $attributes): ?string => GameSession::query()->whereKey($attributes['game_session_id'])->firstOrFail()->child_id,
             'position' => fn (array $attributes): int => GameRound::query()->where('game_session_id', $attributes['game_session_id'])->count(),
             'payload' => [
                 'mechanic' => Mechanic::Find->value,

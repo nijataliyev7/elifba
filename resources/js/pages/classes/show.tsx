@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { index, podium, rankings, show } from '@/routes/classes';
 import { create as createGame } from '@/routes/classes/games';
+import { update as updateLetters } from '@/routes/classes/learned-letters';
 import type { Avatar, Letter, SchoolClass, Student } from '@/types';
 
 type Props = {
@@ -77,7 +78,18 @@ export default function ClassShow({
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                        {!schoolClass.archived && (
+                            <Button asChild className="w-full sm:w-auto">
+                                <Link
+                                    href={createGame(schoolClass.id)}
+                                    data-test="start-game"
+                                >
+                                    <Play />
+                                    {t('classes.show.start_game')}
+                                </Link>
+                            </Button>
+                        )}
                         {students.length > 0 && (
                             <Button variant="outline" asChild>
                                 <Link
@@ -108,17 +120,6 @@ export default function ClassShow({
                                     schoolClass.archived ? 'default' : 'outline'
                                 }
                             />
-                        )}
-                        {!schoolClass.archived && (
-                            <Button asChild>
-                                <Link
-                                    href={createGame(schoolClass.id)}
-                                    data-test="start-game"
-                                >
-                                    <Play />
-                                    {t('classes.show.start_game')}
-                                </Link>
-                            </Button>
                         )}
                     </div>
                 </div>
@@ -180,7 +181,7 @@ export default function ClassShow({
 
                 <LearnedLetters
                     key={schoolClass.learned_letters.join('')}
-                    classId={schoolClass.id}
+                    url={updateLetters.url(schoolClass.id)}
                     alphabet={alphabet}
                     learned={schoolClass.learned_letters}
                 />

@@ -1,44 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- tut: a long white mulberry with leaves. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M36,8 C36,12 38,15 37,20" fill="none"/>
-    <path d="M36,13 Q22,10.1 14,22 Q28,24.9 36,13 Z" fill="#5C9E31"/><path d="M36,13 L18.4,20.2" fill="none" stroke-width="1.5"/>
-    <path d="M37,12 Q47.1,21.9 60,16 Q49.9,6.1 37,12 Z" fill="#5C9E31"/><path d="M37,12 L55.4,15.2" fill="none" stroke-width="1.5"/>
-    <g transform="translate(37 40) rotate(-8)">
-    <circle cx="-2.8" cy="-14.5" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="2.8" cy="-14.5" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-5.6" cy="-9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="0" cy="-9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="5.6" cy="-9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-2.8" cy="-4.8" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="2.8" cy="-4.8" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-5.6" cy="0" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="0" cy="0" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="5.6" cy="0" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-2.8" cy="4.8" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="2.8" cy="4.8" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-5.6" cy="9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="0" cy="9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="5.6" cy="9.7" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-2.8" cy="14.5" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="2.8" cy="14.5" r="4" fill="#FFFFFF" stroke-width="1.2"/>
-    <circle cx="-4.2" cy="-15.9" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="1.4" cy="-15.9" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-7" cy="-11.1" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-1.4" cy="-11.1" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="4.2" cy="-11.1" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-4.2" cy="-6.2" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="1.4" cy="-6.2" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-7" cy="-1.4" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-1.4" cy="-1.4" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="4.2" cy="-1.4" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-4.2" cy="3.4" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="1.4" cy="3.4" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-7" cy="8.3" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-1.4" cy="8.3" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="4.2" cy="8.3" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="-4.2" cy="13.1" r="1" fill="#D0CFCE" stroke="none"/>
-    <circle cx="1.4" cy="13.1" r="1" fill="#D0CFCE" stroke="none"/>
-    </g>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- tut: a white mulberry on its stalk with a leaf. Elifba own art, MIT. -->
+<path d="M18.6 4.4C18.98 9.8 23.48 11.59 30.2 7.6C26.16 1.87 21.55 0.49 18.6 4.4Z" fill="url(#tut_fill1)"/>
+<path d="M18.6 4.4C18.98 9.8 23.48 11.59 30.2 7.6C26.16 1.87 21.55 0.49 18.6 4.4Z" fill="url(#tut_fill2)"/>
+<path d="M19.3 4.59Q24.24 6.58 28.81 7.22" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M14.6 7.8C14.8 5.8 15.8 4 18.2 2.6" stroke="url(#tut_fill3)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.4 8.8C18.6 8.8 21 13.4 21 19.2C21 25 18.6 29.6 14.4 29.6C10.2 29.6 7.8 25 7.8 19.2C7.8 13.4 10.2 8.8 14.4 8.8Z" fill="url(#tut_fill4)"/>
+<circle cx="11.4" cy="10.1" r="2" fill="url(#tut_fill5)"/>
+<circle cx="14.4" cy="10.1" r="2" fill="url(#tut_fill5)"/>
+<circle cx="17.4" cy="10.1" r="2" fill="url(#tut_fill5)"/>
+<circle cx="9.9" cy="12.68" r="2" fill="url(#tut_fill5)"/>
+<circle cx="12.9" cy="12.68" r="2" fill="url(#tut_fill5)"/>
+<circle cx="15.9" cy="12.68" r="2" fill="url(#tut_fill5)"/>
+<circle cx="18.9" cy="12.68" r="2" fill="url(#tut_fill5)"/>
+<circle cx="8.4" cy="15.26" r="2" fill="url(#tut_fill5)"/>
+<circle cx="11.4" cy="15.26" r="2" fill="url(#tut_fill5)"/>
+<circle cx="14.4" cy="15.26" r="2" fill="url(#tut_fill5)"/>
+<circle cx="17.4" cy="15.26" r="2" fill="url(#tut_fill5)"/>
+<circle cx="20.4" cy="15.26" r="2" fill="url(#tut_fill5)"/>
+<circle cx="9.9" cy="17.84" r="2" fill="url(#tut_fill5)"/>
+<circle cx="12.9" cy="17.84" r="2" fill="url(#tut_fill5)"/>
+<circle cx="15.9" cy="17.84" r="2" fill="url(#tut_fill5)"/>
+<circle cx="18.9" cy="17.84" r="2" fill="url(#tut_fill5)"/>
+<circle cx="8.4" cy="20.42" r="2" fill="url(#tut_fill5)"/>
+<circle cx="11.4" cy="20.42" r="2" fill="url(#tut_fill5)"/>
+<circle cx="14.4" cy="20.42" r="2" fill="url(#tut_fill5)"/>
+<circle cx="17.4" cy="20.42" r="2" fill="url(#tut_fill5)"/>
+<circle cx="20.4" cy="20.42" r="2" fill="url(#tut_fill5)"/>
+<circle cx="9.9" cy="23" r="2" fill="url(#tut_fill5)"/>
+<circle cx="12.9" cy="23" r="2" fill="url(#tut_fill5)"/>
+<circle cx="15.9" cy="23" r="2" fill="url(#tut_fill5)"/>
+<circle cx="18.9" cy="23" r="2" fill="url(#tut_fill5)"/>
+<circle cx="9.9" cy="25.58" r="2" fill="url(#tut_fill5)"/>
+<circle cx="12.9" cy="25.58" r="2" fill="url(#tut_fill5)"/>
+<circle cx="15.9" cy="25.58" r="2" fill="url(#tut_fill5)"/>
+<circle cx="18.9" cy="25.58" r="2" fill="url(#tut_fill5)"/>
+<circle cx="12.9" cy="28.16" r="2" fill="url(#tut_fill5)"/>
+<circle cx="15.9" cy="28.16" r="2" fill="url(#tut_fill5)"/>
+<circle cx="10.7" cy="9.34" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="13.7" cy="9.34" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="16.7" cy="9.34" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="9.2" cy="11.92" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="12.2" cy="11.92" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="15.2" cy="11.92" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.2" cy="11.92" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="7.7" cy="14.5" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="10.7" cy="14.5" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="13.7" cy="14.5" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="16.7" cy="14.5" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="19.7" cy="14.5" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="9.2" cy="17.08" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="12.2" cy="17.08" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="15.2" cy="17.08" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.2" cy="17.08" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="7.7" cy="19.66" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="10.7" cy="19.66" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="13.7" cy="19.66" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="16.7" cy="19.66" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="19.7" cy="19.66" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="9.2" cy="22.24" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="12.2" cy="22.24" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="15.2" cy="22.24" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.2" cy="22.24" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="9.2" cy="24.82" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="12.2" cy="24.82" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="15.2" cy="24.82" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.2" cy="24.82" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="12.2" cy="27.4" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="15.2" cy="27.4" r="0.56" fill="#FFFFFF" fill-opacity="0.85"/>
+<path d="M14.4 8.8C18.6 8.8 21 13.4 21 19.2C21 25 18.6 29.6 14.4 29.6C10.2 29.6 7.8 25 7.8 19.2C7.8 13.4 10.2 8.8 14.4 8.8Z" fill="url(#tut_fill6)"/>
+<defs>
+<radialGradient id="tut_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="tut_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<linearGradient id="tut_fill3" x1="14.6" y1="7.8" x2="18.2" y2="2.6" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<radialGradient id="tut_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#D8C08A"/><stop offset="0.5" stop-color="#B99C62"/><stop offset="1" stop-color="#86693E"/></radialGradient>
+<radialGradient id="tut_fill5" cx="0.32" cy="0.28" r="0.85"><stop stop-color="#FFFBEA"/><stop offset="0.45" stop-color="#EADBB0"/><stop offset="1" stop-color="#B89C64"/></radialGradient>
+<radialGradient id="tut_fill6" cx="0.85" cy="0.9" r="0.65"><stop stop-color="#86693E" stop-opacity="0.5"/><stop offset="0.9" stop-color="#86693E" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

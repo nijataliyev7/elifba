@@ -11,6 +11,7 @@ use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Support\Mechanics\BuildSentenceRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use App\Domain\Play\Support\Mechanics\BuildWordRoundBuilder;
+use App\Domain\Play\Support\Mechanics\CountRoundBuilder;
 use App\Domain\Play\Support\Mechanics\FindRoundBuilder;
 use App\Domain\Play\Support\Mechanics\PopRoundBuilder;
 use App\Domain\Play\Support\Playable;
@@ -22,14 +23,16 @@ use Random\Randomizer;
  * `find` in the `balloon` style with the `burst` effect. A8.1 lists the
  * build mechanics with their builders, A8.2 draws every item style and
  * `sparkle`, A8.3 the slot styles `wagon` and `frame`: every mechanic plays
- * in every pack. tests/Fixtures/playable.json pins the lists for Vitest,
+ * in every pack. R5 adds `count` and the `picture` item style; a level is
+ * offered only with a pack that lists its unit (`pack_level`).
+ * tests/Fixtures/playable.json pins the lists for Vitest,
  * which checks each key has its code in resources/js/game/styles/registry.ts.
  */
 
 const PLAYABLE_FIXTURE = __DIR__.'/../../Fixtures/playable.json';
 
 it('lists what the board draws and a builder for every mechanic', function (): void {
-    expect(Playable::mechanics())->toBe([Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence])
+    expect(Playable::mechanics())->toBe([Mechanic::Find, Mechanic::Pop, Mechanic::BuildSyllable, Mechanic::BuildWord, Mechanic::BuildSentence, Mechanic::Count])
         ->and(Playable::mechanics())->toBe(Mechanic::cases())
         ->and(Playable::itemStyles())->toBe(ItemStyle::cases())
         ->and(Playable::slotStyles())->toBe([SlotStyle::Wagon, SlotStyle::Frame])
@@ -40,7 +43,22 @@ it('lists what the board draws and a builder for every mechanic', function (): v
         ->and(Playable::builder(Mechanic::Pop))->toBeInstanceOf(PopRoundBuilder::class)
         ->and(Playable::builder(Mechanic::BuildSyllable))->toBeInstanceOf(BuildSyllableRoundBuilder::class)
         ->and(Playable::builder(Mechanic::BuildWord))->toBeInstanceOf(BuildWordRoundBuilder::class)
-        ->and(Playable::builder(Mechanic::BuildSentence))->toBeInstanceOf(BuildSentenceRoundBuilder::class);
+        ->and(Playable::builder(Mechanic::BuildSentence))->toBeInstanceOf(BuildSentenceRoundBuilder::class)
+        ->and(Playable::builder(Mechanic::Count))->toBeInstanceOf(CountRoundBuilder::class);
+});
+
+it('answers pack_level for a level whose unit the pack does not list, before anything else', function (): void {
+    $content = app(ContentRepository::class);
+    $cities = $content->pack('cities');
+
+    foreach (['pictures-easy', 'pictures', 'numbers-5', 'numbers-10'] as $key) {
+        expect(Playable::reason(Mechanic::Find, $cities, $content->level($key), Alphabet::letters(), ['a', 'b']))
+            ->toBe(__('games.setup.errors.pack_level'), $key);
+    }
+
+    expect(Playable::reason(Mechanic::Count, $cities, $content->level('numbers-5'), Alphabet::letters()))->toBe(__('games.setup.errors.pack_level'))
+        ->and(Playable::reason(Mechanic::Count, $cities, $content->level('pictures'), Alphabet::letters()))->toBe(__('games.setup.errors.level_mechanic'))
+        ->and(Playable::reason(Mechanic::Count, $content->pack('animals'), $content->level('numbers-5'), Alphabet::letters()))->toBeNull();
 });
 
 it('starts every build mechanic at every level that has it, in every pack, with all letters learned', function (): void {
@@ -54,6 +72,13 @@ it('starts every build mechanic at every level that has it, in every pack, with 
             }
 
             foreach ($content->packs() as $pack) {
+                // The colours and the numbers (R6) list no reading unit.
+                if (! $pack->lists($level->unit)) {
+                    expect(Playable::reason($mechanic, $pack, $level, Alphabet::letters()))->toBe(__('games.setup.errors.pack_level'), $pack->key);
+
+                    continue;
+                }
+
                 expect(Playable::builder($mechanic)->shortage($pack, $level, Alphabet::letters()))->toBeNull()
                     ->and(Playable::reason($mechanic, $pack, $level, Alphabet::letters()))
                     ->toBeNull("{$mechanic->value} × {$level->key} × {$pack->key}");
@@ -83,7 +108,8 @@ it('plays a pack only when the board draws its look, its effect and, for a build
 it('draws every mechanic in every pack, the train with wagons and the rest with frames', function (): void {
     $packs = app(ContentRepository::class)->packs();
 
-    expect($packs)->toHaveCount(6);
+    // The six reading packs and, from R6, the colours and the numbers.
+    expect($packs)->toHaveCount(8);
 
     foreach ($packs as $pack) {
         expect($pack->style->slot)->toBe($pack->key === 'train' ? SlotStyle::Wagon : SlotStyle::Frame, $pack->key);
@@ -155,4 +181,21 @@ it('says why a game cannot start, first the level, then the board, then the cont
         ->and(Playable::reason(Mechanic::Find, $content->pack('symbols'), $content->level('letters'), Alphabet::letters()))->toBeNull()
         ->and(Playable::reason(Mechanic::Find, $balloons, $content->level('letters'), ['a']))->toBe(__('games.setup.errors.too_few_letters', ['count' => 4]))
         ->and(Playable::reason(Mechanic::Find, $balloons, $content->level('letters'), Alphabet::letters()))->toBeNull();
+});
+
+it('yields the key of each reason with its message, in any language', function (): void {
+    $content = app(ContentRepository::class);
+    $balloons = $content->pack('balloons');
+    $code = static fn (Mechanic $mechanic, string $level, array $learned): ?string => Playable::code(Playable::reason($mechanic, $balloons, $content->level($level), $learned));
+
+    expect($code(Mechanic::Find, 'letters', ['a']))->toBe('too_few_letters')
+        ->and($code(Mechanic::Find, 'sentences', Alphabet::letters()))->toBe('level_mechanic')
+        ->and($code(Mechanic::BuildWord, 'words-long', ['a']))->toBe('too_few_words')
+        ->and($code(Mechanic::Find, 'letters', Alphabet::letters()))->toBeNull()
+        ->and(Playable::code(null))->toBeNull()
+        ->and(Playable::code('A message no reason gave.'))->toBeNull();
+
+    app()->setLocale('en');
+
+    expect($code(Mechanic::Find, 'letters', ['a']))->toBe('too_few_letters');
 });

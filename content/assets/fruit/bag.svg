@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90">
+  <!-- The fruit pack's backdrop: an orchard, rows of round fruit trees on a hill, with no fruit on them (a child counts the fruit on the tiles). Elifba own art, MIT. -->
+  <!-- 16:9 and low contrast so tiles stay readable: the colours of ADR 014's guide mixed with white, no outline, light from the top left; the trees stay in the bottom fifth (y 72–90). -->
+  <defs>
+    <linearGradient id="bag_fade1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7F7FF"/><stop offset="0.8" stop-color="#FFFEF0"/></linearGradient>
+    <radialGradient id="bag_glow2" cx="0.06" cy="0" r="0.6"><stop offset="0" stop-color="#FFF0E5" stop-opacity="0.85"/><stop offset="1" stop-color="#FFF0E5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="bag_fade3" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#E5E1F6" stop-opacity="0.85"/></linearGradient>
+    <filter id="bag_blur035" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="0.35"/></filter>
+    <linearGradient id="bag_fade4" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#E5E1F6" stop-opacity="0.85"/></linearGradient>
+    <radialGradient id="bag_leaf5" cx="0.3" cy="0.1" r="1"><stop stop-color="#F6FFE6"/><stop offset="0.5" stop-color="#ECF5E2"/><stop offset="1" stop-color="#E6EFD6"/></radialGradient>
+    <linearGradient id="bag_fade6" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf7" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <filter id="bag_blur04" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="0.4"/></filter>
+    <linearGradient id="bag_fade8" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf9" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade10" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf11" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade12" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf13" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade14" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf15" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade16" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf17" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade18" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf19" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <linearGradient id="bag_fade20" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ECD6CB"/><stop offset="1" stop-color="#D8D2D1"/></linearGradient>
+    <radialGradient id="bag_leaf21" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#F4FFE0"/><stop offset="0.5" stop-color="#E8F3DC"/><stop offset="1" stop-color="#E0EBCD"/></radialGradient>
+    <radialGradient id="bag_leaf22" cx="0.3" cy="0.0" r="1"><stop stop-color="#F2FFD8"/><stop offset="0.5" stop-color="#E2F0D2"/><stop offset="1" stop-color="#D8E6BF"/></radialGradient>
+    <linearGradient id="bag_fade23" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf24" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <linearGradient id="bag_fade25" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf26" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <linearGradient id="bag_fade27" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf28" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <linearGradient id="bag_fade29" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf30" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <linearGradient id="bag_fade31" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf32" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <linearGradient id="bag_fade33" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCB5A1"/><stop offset="1" stop-color="#B9ACAB"/></linearGradient>
+    <radialGradient id="bag_leaf34" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+    <radialGradient id="bag_leaf35" cx="0.3" cy="0.0" r="1"><stop stop-color="#ECFFC7"/><stop offset="0.5" stop-color="#D5E9BF"/><stop offset="1" stop-color="#C7DBA4"/></radialGradient>
+  </defs>
+  <rect width="160" height="90" fill="url(#bag_fade1)"/>
+  <rect width="160" height="90" fill="url(#bag_glow2)"/>
+  <path d="M24.00,18.00 C22.05,18.00 21.75,14.70 24.30,14.55 C25.05,10.95 30.75,10.20 32.25,13.50 C34.05,11.55 38.70,12.30 38.85,15.15 C41.40,15.15 42.00,18.00 39.75,18.00 Z" fill="url(#bag_fade3)" filter="url(#bag_blur035)"/>
+  <path d="M124.00,26.00 C121.62,26.00 121.25,21.97 124.37,21.78 C125.28,17.38 132.25,16.47 134.08,20.50 C136.28,18.12 141.97,19.03 142.15,22.52 C145.27,22.52 146.00,26.00 143.25,26.00 Z" fill="url(#bag_fade4)" filter="url(#bag_blur035)"/>
+  <path d="M0,76 C26,71 52,71.4 80,73.2 C108,75 134,71 160,72 L160,90 L0,90 Z" fill="url(#bag_leaf5)"/>
+  <rect x="7.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade6)"/>
+  <path d="M8.00,74.02 C9.72,74.02 10.46,75.30 10.38,76.44 C10.29,77.67 9.32,78.38 8.00,78.38 C6.68,78.38 5.71,77.67 5.62,76.44 C5.54,75.30 6.28,74.02 8.00,74.02 Z" fill="url(#bag_leaf7)"/>
+  <ellipse cx="7.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="19.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade8)"/>
+  <path d="M20.00,74.02 C21.72,74.02 22.46,75.30 22.38,76.44 C22.29,77.67 21.32,78.38 20.00,78.38 C18.68,78.38 17.71,77.67 17.62,76.44 C17.54,75.30 18.28,74.02 20.00,74.02 Z" fill="url(#bag_leaf9)"/>
+  <ellipse cx="19.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="31.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade10)"/>
+  <path d="M32.00,74.02 C33.72,74.02 34.46,75.30 34.38,76.44 C34.29,77.67 33.32,78.38 32.00,78.38 C30.68,78.38 29.71,77.67 29.62,76.44 C29.54,75.30 30.28,74.02 32.00,74.02 Z" fill="url(#bag_leaf11)"/>
+  <ellipse cx="31.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="127.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade12)"/>
+  <path d="M128.00,74.02 C129.72,74.02 130.46,75.30 130.38,76.44 C130.29,77.67 129.32,78.38 128.00,78.38 C126.68,78.38 125.71,77.67 125.62,76.44 C125.54,75.30 126.28,74.02 128.00,74.02 Z" fill="url(#bag_leaf13)"/>
+  <ellipse cx="127.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="139.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade14)"/>
+  <path d="M140.00,74.02 C141.72,74.02 142.46,75.30 142.38,76.44 C142.29,77.67 141.32,78.38 140.00,78.38 C138.68,78.38 137.71,77.67 137.62,76.44 C137.54,75.30 138.28,74.02 140.00,74.02 Z" fill="url(#bag_leaf15)"/>
+  <ellipse cx="139.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="151.40" y="77.43" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade16)"/>
+  <path d="M152.00,74.02 C153.72,74.02 154.46,75.30 154.38,76.44 C154.29,77.67 153.32,78.38 152.00,78.38 C150.68,78.38 149.71,77.67 149.62,76.44 C149.54,75.30 150.28,74.02 152.00,74.02 Z" fill="url(#bag_leaf17)"/>
+  <ellipse cx="151.08" cy="75.12" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="43.40" y="78.03" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade18)"/>
+  <path d="M44.00,74.62 C45.72,74.62 46.46,75.90 46.38,77.04 C46.29,78.27 45.32,78.98 44.00,78.98 C42.68,78.98 41.71,78.27 41.62,77.04 C41.54,75.90 42.28,74.62 44.00,74.62 Z" fill="url(#bag_leaf19)"/>
+  <ellipse cx="43.08" cy="75.72" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="115.40" y="78.03" width="1.20" height="2.97" rx="0.60" fill="url(#bag_fade20)"/>
+  <path d="M116.00,74.62 C117.72,74.62 118.46,75.90 118.38,77.04 C118.29,78.27 117.32,78.98 116.00,78.98 C114.68,78.98 113.71,78.27 113.62,77.04 C113.54,75.90 114.28,74.62 116.00,74.62 Z" fill="url(#bag_leaf21)"/>
+  <ellipse cx="115.08" cy="75.72" rx="0.75" ry="0.44" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <path d="M0,82.4 C30,79.8 56,80.4 80,81.4 C104,82.4 130,80 160,80.6 L160,90 L0,90 Z" fill="url(#bag_leaf22)"/>
+  <rect x="9.37" y="82.73" width="1.26" height="5.67" rx="0.63" fill="url(#bag_fade23)"/>
+  <path d="M10.00,76.22 C13.28,76.22 14.70,78.66 14.54,80.84 C14.37,83.19 12.52,84.54 10.00,84.54 C7.48,84.54 5.63,83.19 5.46,80.84 C5.30,78.66 6.72,76.22 10.00,76.22 Z" fill="url(#bag_leaf24)"/>
+  <ellipse cx="8.24" cy="78.32" rx="1.43" ry="0.84" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="27.28" y="81.92" width="1.44" height="6.48" rx="0.72" fill="url(#bag_fade25)"/>
+  <path d="M28.00,74.48 C31.74,74.48 33.38,77.26 33.18,79.76 C32.99,82.45 30.88,83.98 28.00,83.98 C25.12,83.98 23.01,82.45 22.82,79.76 C22.62,77.26 24.26,74.48 28.00,74.48 Z" fill="url(#bag_leaf26)"/>
+  <ellipse cx="25.98" cy="76.88" rx="1.63" ry="0.96" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="45.40" y="83.00" width="1.20" height="5.40" rx="0.60" fill="url(#bag_fade27)"/>
+  <path d="M46.00,76.80 C49.12,76.80 50.48,79.12 50.32,81.20 C50.16,83.44 48.40,84.72 46.00,84.72 C43.60,84.72 41.84,83.44 41.68,81.20 C41.52,79.12 42.88,76.80 46.00,76.80 Z" fill="url(#bag_leaf28)"/>
+  <ellipse cx="44.32" cy="78.80" rx="1.36" ry="0.80" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="113.40" y="83.00" width="1.20" height="5.40" rx="0.60" fill="url(#bag_fade29)"/>
+  <path d="M114.00,76.80 C117.12,76.80 118.48,79.12 118.32,81.20 C118.16,83.44 116.40,84.72 114.00,84.72 C111.60,84.72 109.84,83.44 109.68,81.20 C109.52,79.12 110.88,76.80 114.00,76.80 Z" fill="url(#bag_leaf30)"/>
+  <ellipse cx="112.32" cy="78.80" rx="1.36" ry="0.80" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="131.28" y="81.92" width="1.44" height="6.48" rx="0.72" fill="url(#bag_fade31)"/>
+  <path d="M132.00,74.48 C135.74,74.48 137.38,77.26 137.18,79.76 C136.99,82.45 134.88,83.98 132.00,83.98 C129.12,83.98 127.01,82.45 126.82,79.76 C126.62,77.26 128.26,74.48 132.00,74.48 Z" fill="url(#bag_leaf32)"/>
+  <ellipse cx="129.98" cy="76.88" rx="1.63" ry="0.96" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <rect x="149.37" y="82.73" width="1.26" height="5.67" rx="0.63" fill="url(#bag_fade33)"/>
+  <path d="M150.00,76.22 C153.28,76.22 154.70,78.66 154.54,80.84 C154.37,83.19 152.52,84.54 150.00,84.54 C147.48,84.54 145.63,83.19 145.46,80.84 C145.30,78.66 146.72,76.22 150.00,76.22 Z" fill="url(#bag_leaf34)"/>
+  <ellipse cx="148.24" cy="78.32" rx="1.43" ry="0.84" fill="#FFFFFF" fill-opacity="0.45" filter="url(#bag_blur04)"/>
+  <path d="M0,87.4 C40,86.4 80,87.2 120,86.8 C140,86.6 152,86.4 160,86.5 L160,90 L0,90 Z" fill="url(#bag_leaf35)"/>
+</svg>

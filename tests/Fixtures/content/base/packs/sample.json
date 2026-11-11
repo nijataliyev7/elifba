@@ -2,10 +2,12 @@
     "key": "sample",
     "version": 1,
     "title": { "az": "Nümunə", "en": "Sample" },
+    "units": ["letter", "syllable", "word", "sentence", "picture", "number"],
     "style": {
         "item": "card",
         "slot": "frame",
         "effect": "burst",
+        "cover": "sample/alma.svg",
         "backdrop": "sample/backdrop.svg",
         "palette": ["#F6C445", "#5DB075"],
         "sounds": { "hit": "sounds/pop.ogg" }

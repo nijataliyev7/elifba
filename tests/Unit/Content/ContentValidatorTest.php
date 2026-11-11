@@ -40,14 +40,43 @@ it('requires a picture for every word since A5 switched it on', function (): voi
         ->toBe([]);
 });
 
-it('gives every pack a sound for every moment, a chime instead of a pop where the effect is sparkle', function (): void {
+it('gives every pack a sound for every moment an account may choose, a chime instead of a pop where the effect is sparkle', function (): void {
     foreach ((new ContentRepository(base_path('content')))->packs() as $pack) {
-        foreach (Sound::cases() as $sound) {
+        foreach (Sound::choosable() as $sound) {
             expect($pack->style->sound($sound))->not->toBeNull();
         }
 
         expect($pack->style->sound(Sound::Hit))->toBe($pack->style->effect === Effect::Sparkle ? 'sounds/chime.mp3' : 'sounds/pop.mp3');
     }
+});
+
+it('gives the train its own sounds for a round arriving and leaving, and no other pack any', function (): void {
+    foreach ((new ContentRepository(base_path('content')))->packs() as $pack) {
+        $train = $pack->key === 'train';
+
+        expect($pack->style->sound(Sound::Arrive))->toBe($train ? 'sounds/train-arrive.mp3' : null, $pack->key)
+            ->and($pack->style->sound(Sound::Leave))->toBe($train ? 'sounds/train-leave.mp3' : null, $pack->key);
+    }
+});
+
+it('accepts a pack\'s own arrive and leave sounds, which sounds.json does not list', function (): void {
+    $root = ContentFixture::make([
+        'file' => 'packs/sample.json',
+        'set' => ['style.sounds.arrive' => 'sounds/arrive.ogg', 'style.sounds.leave' => 'sounds/pop.ogg'],
+        'write' => ['assets/sounds/arrive.ogg' => ''],
+    ]);
+
+    expect((new ContentValidator($root))->validate())->toBe([]);
+});
+
+it('needs a credits entry for an arrive or leave sound, as for every asset', function (): void {
+    $root = ContentFixture::make([
+        'file' => 'packs/sample.json',
+        'set' => ['style.sounds.leave' => 'sample/leave.ogg'],
+        'write' => ['assets/sample/leave.ogg' => ''],
+    ]);
+
+    expect((new ContentValidator($root))->validate())->toBe(['credits.json: content/assets/sample/leave.ogg has no entry']);
 });
 
 it('credits every font and asset file the repository ships', function (): void {
@@ -94,10 +123,14 @@ it('asks for twice as many figures as the fullest round of any level shows', fun
         'words-short' => 4,
         'words-long' => 5,
         'sentences' => 5,
+        'pictures-easy' => 2,
+        'pictures' => 4,
+        'numbers-5' => 3,
+        'numbers-10' => 4,
     ])->and(ContentValidator::FIGURES_PER_ITEM * max($most))->toBe(10);
 
     expect(array_map(static fn (ItemStyle $style): bool => $style->hasFigures(), ItemStyle::cases()))
-        ->toBe([false, false, false, false, true, true]);
+        ->toBe([false, false, false, false, true, true, false]);
 
     foreach ($content->packs() as $pack) {
         $figures = count($pack->style->figures);

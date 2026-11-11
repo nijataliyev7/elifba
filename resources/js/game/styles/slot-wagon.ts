@@ -8,9 +8,38 @@
  * wagon (the scene keeps it there, so it rides along). Once the round is
  * solved the wagons carry one long sign with the unit whole, and the train
  * pulls away to the left.
+ *
+ * Drawn in ADR 014's Fluent manner, each part painted once per colour and
+ * size, never with an outline: the locomotive's boiler and cab lit from
+ * the top left in the pack colour, its roof, bands and dome in the
+ * colour's shade, a glass window, a brass lamp with a soft glow, chimney,
+ * chassis and cowcatcher in the guide's violet black; an empty wagon is a
+ * pale well, a filled one a lit surface in its colour; the next wagon to
+ * fill has a soft glow behind it; the steam is soft cloud, and the solved
+ * unit's sign is a white face set into a plate in the pack colour.
  */
 import Phaser from 'phaser';
 import { textOn } from '../palette';
+import {
+    BRASS,
+    CLOUD,
+    css,
+    glowTexture,
+    highlight,
+    METAL,
+    mix,
+    paintPlate,
+    paintRecess,
+    rgba,
+    roundedRect,
+    SKY,
+    step,
+    surface,
+    texture,
+    tones,
+    TYRE,
+} from './fluent';
+import type { Material } from './fluent';
 import { hex, shade } from './item';
 import type { SlotRowOptions, SlotSpot, SlotStyle, SlotView } from './types';
 import { drawRails, proportions, wheel } from './wagon';
@@ -21,8 +50,443 @@ const GAP = 0.14;
 const LOCOMOTIVE = 1.2;
 const END_CAR = 0.5;
 const ROOF = 18;
-const CHASSIS = 0x374151;
 const PAPER = 0xffffff;
+/** Room round a painted part in its texture. */
+const PAD = 12;
+/** How far the next wagon's glow spreads. */
+const SPREAD = 18;
+
+/** A vertical gradient through a material, light at the top. */
+function lengthwise(
+    context: CanvasRenderingContext2D,
+    top: number,
+    bottom: number,
+    material: Material,
+): CanvasGradient {
+    const fill = context.createLinearGradient(0, top, 0, bottom);
+
+    fill.addColorStop(0, css(material.light));
+    fill.addColorStop(0.45, css(material.base));
+    fill.addColorStop(1, css(material.shade));
+
+    return fill;
+}
+
+/** An image of a texture painted `pad` px larger all round, shown with its part `width` px wide. */
+function sized(
+    image: Phaser.GameObjects.Image,
+    width: number,
+    painted: number,
+): Phaser.GameObjects.Image {
+    return image.setScale(width / painted);
+}
+
+/**
+ * A wagon's shell, `w` px wide, painted once per colour and size: empty, a
+ * pale well; filled, a lit surface in the colour. Both stand on the frame
+ * under the body, in the guide's violet black.
+ */
+function shellTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    w: number,
+    filled: boolean,
+): string {
+    const { height: b } = proportions(w);
+    const key = `train-shell-${filled ? 'filled' : 'empty'}-${css(colour)}-${w}`;
+
+    return texture(scene, key, w + PAD * 2, b + PAD * 2, (context) => {
+        const box = { x: PAD, y: PAD, width: w, height: b };
+        const body = () => roundedRect(context, PAD, PAD, w, b, 14);
+
+        if (filled) {
+            surface(context, body, box, colour);
+            highlight(
+                context,
+                PAD + w * 0.22,
+                PAD + b * 0.1,
+                w * 0.14,
+                b * 0.04,
+                0,
+                colour,
+                0.8,
+            );
+        } else {
+            paintRecess(context, box, colour, 14);
+        }
+
+        // The frame under the body.
+        const t = tones(colour);
+
+        context.save();
+        body();
+        context.clip();
+        context.fillStyle = lengthwise(
+            context,
+            PAD + b - 18,
+            PAD + b,
+            filled ? { light: t.shade, base: t.shade, shade: t.deep } : TYRE,
+        );
+        context.fillRect(PAD, PAD + b - 18, w, 18);
+        context.restore();
+    });
+}
+
+/** The end car without its mark, `w` px wide (a wagon's), painted once per colour and size. */
+function endCarTexture(scene: Phaser.Scene, colour: number, w: number): string {
+    const { height: b } = proportions(w);
+    const car = w * END_CAR;
+    const deck = b * 0.55;
+
+    return texture(
+        scene,
+        `train-end-${css(colour)}-${w}`,
+        car + PAD * 2,
+        deck + PAD * 2,
+        (context) => {
+            context.fillStyle = lengthwise(
+                context,
+                PAD + deck - 18,
+                PAD + deck,
+                TYRE,
+            );
+            context.fillRect(PAD, PAD + deck - 18, car, 18);
+
+            const box = { x: PAD, y: PAD, width: car, height: deck - 10 };
+
+            surface(
+                context,
+                () => roundedRect(context, PAD, PAD, car, deck - 10, 10),
+                box,
+                shade(colour, 0.75),
+                { depth: 0.6 },
+            );
+        },
+    );
+}
+
+/** Where the locomotive's parts are, from its left end (`x0`) and the middle of a wagon's body. */
+function locomotiveParts(w: number) {
+    const { height: b, radius: r } = proportions(w);
+    const length = w * LOCOMOTIVE;
+    const boilerTop = -b * 0.28;
+    const boilerHeight = b * 0.62;
+    const cabLeft = length * 0.6;
+    const cabTop = -b / 2 - w * 0.3;
+
+    return {
+        b,
+        r,
+        length,
+        rail: b / 2 + r,
+        boilerTop,
+        boilerHeight,
+        cabLeft,
+        cabTop,
+        chimney: length * 0.16,
+        // The texture's room to the left of x0 and above the body's middle.
+        left: length * 0.02 + PAD,
+        top: -cabTop + 16 + PAD,
+    };
+}
+
+/**
+ * The locomotive without its wheels and rod, `w` px a wagon's width,
+ * painted once per colour and size. Facing left: cowcatcher, lamp,
+ * chimney, boiler with its bands and dome, cab with its roof and window.
+ */
+function locomotiveTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    w: number,
+): string {
+    const parts = locomotiveParts(w);
+    const { b, length, rail, boilerTop, boilerHeight, cabLeft, cabTop } = parts;
+    const t = tones(colour);
+
+    return texture(
+        scene,
+        `train-locomotive-${css(colour)}-${w}`,
+        parts.left + length * 0.98 + 12 + PAD,
+        parts.top + rail + PAD,
+        (context) => {
+            context.translate(parts.left, parts.top);
+
+            // Chassis and cowcatcher.
+            context.fillStyle = lengthwise(context, b / 2 - 20, b / 2, TYRE);
+            context.fillRect(length * 0.06, b / 2 - 20, length * 0.94, 20);
+            context.beginPath();
+            context.moveTo(-length * 0.02, rail - 4);
+            context.lineTo(length * 0.1, rail - 4);
+            context.lineTo(length * 0.1, b / 2 - 22);
+            context.closePath();
+            context.fillStyle = lengthwise(context, b / 2 - 22, rail - 4, TYRE);
+            context.fill();
+
+            // Chimney with its crown.
+            const chimney = parts.chimney;
+
+            surface(
+                context,
+                () => {
+                    context.beginPath();
+                    context.rect(
+                        chimney,
+                        boilerTop - w * 0.22,
+                        w * 0.12,
+                        w * 0.24,
+                    );
+                },
+                {
+                    x: chimney,
+                    y: boilerTop - w * 0.22,
+                    width: w * 0.12,
+                    height: w * 0.24,
+                },
+                TYRE,
+            );
+
+            const crown = {
+                x: chimney - w * 0.03,
+                y: boilerTop - w * 0.27,
+                width: w * 0.18,
+                height: w * 0.07,
+            };
+
+            surface(
+                context,
+                () =>
+                    roundedRect(
+                        context,
+                        crown.x,
+                        crown.y,
+                        crown.width,
+                        crown.height,
+                        6,
+                    ),
+                crown,
+                TYRE,
+            );
+
+            // Boiler, its bands and the dome.
+            const boiler = {
+                x: length * 0.08,
+                y: boilerTop,
+                width: length * 0.56,
+                height: boilerHeight,
+            };
+            const boilerShape = () =>
+                roundedRect(
+                    context,
+                    boiler.x,
+                    boiler.y,
+                    boiler.width,
+                    boiler.height,
+                    boilerHeight * 0.3,
+                );
+
+            surface(context, boilerShape, boiler, colour);
+            context.save();
+            boilerShape();
+            context.clip();
+
+            for (const at of [0.22, 0.4]) {
+                context.fillStyle = lengthwise(
+                    context,
+                    boilerTop,
+                    boilerTop + boilerHeight,
+                    {
+                        light: mix(t.shade, t.base, 0.4),
+                        base: t.shade,
+                        shade: t.deep,
+                    },
+                );
+                context.fillRect(length * at, boilerTop, 10, boilerHeight);
+            }
+
+            context.restore();
+            highlight(
+                context,
+                length * 0.2,
+                boilerTop + boilerHeight * 0.18,
+                length * 0.12,
+                boilerHeight * 0.07,
+                0,
+                colour,
+                0.8,
+            );
+
+            const dome = {
+                x: length * 0.44 - w * 0.08,
+                y: boilerTop - w * 0.07,
+                width: w * 0.16,
+                height: w * 0.14,
+            };
+
+            surface(
+                context,
+                () => {
+                    context.beginPath();
+                    context.ellipse(
+                        length * 0.44,
+                        boilerTop,
+                        w * 0.08,
+                        w * 0.07,
+                        0,
+                        0,
+                        Math.PI * 2,
+                    );
+                },
+                dome,
+                t.shade,
+                { depth: 0.7 },
+            );
+
+            // Cab, its window and roof.
+            const cab = {
+                x: cabLeft,
+                y: cabTop,
+                width: length * 0.38,
+                height: b / 2 - cabTop - 10,
+            };
+
+            surface(
+                context,
+                () =>
+                    roundedRect(
+                        context,
+                        cab.x,
+                        cab.y,
+                        cab.width,
+                        cab.height,
+                        10,
+                    ),
+                cab,
+                colour,
+            );
+
+            const window = {
+                x: cabLeft + length * 0.07,
+                y: cabTop + 26,
+                width: length * 0.24,
+                height: b * 0.36,
+            };
+
+            surface(
+                context,
+                () =>
+                    roundedRect(
+                        context,
+                        window.x,
+                        window.y,
+                        window.width,
+                        window.height,
+                        8,
+                    ),
+                window,
+                SKY,
+            );
+            highlight(
+                context,
+                window.x + window.width * 0.3,
+                window.y + window.height * 0.28,
+                window.width * 0.2,
+                window.height * 0.12,
+                Phaser.Math.DegToRad(-30),
+                SKY.light,
+                0.85,
+            );
+
+            const roof = {
+                x: cabLeft - 12,
+                y: cabTop - 16,
+                width: length * 0.38 + 24,
+                height: 26,
+            };
+
+            surface(
+                context,
+                () => roundedRect(context, roof.x, roof.y, roof.width, 26, 10),
+                roof,
+                t.shade,
+                { depth: 0.7 },
+            );
+
+            // The lamp, brass with a soft glow.
+            const lamp = {
+                x: length * 0.07,
+                y: boilerTop + boilerHeight * 0.3,
+            };
+            const lampRadius = w * 0.05;
+
+            context.save();
+            context.shadowColor = rgba(BRASS.light, 0.9);
+            context.shadowBlur = lampRadius * 1.6;
+            surface(
+                context,
+                () => {
+                    context.beginPath();
+                    context.arc(lamp.x, lamp.y, lampRadius, 0, Math.PI * 2);
+                },
+                {
+                    x: lamp.x - lampRadius,
+                    y: lamp.y - lampRadius,
+                    width: lampRadius * 2,
+                    height: lampRadius * 2,
+                },
+                BRASS,
+            );
+            context.restore();
+        },
+    );
+}
+
+/** A soft puff of steam, white cloud tinted violet at its edge: painted once. */
+function puffTexture(scene: Phaser.Scene): string {
+    return texture(scene, 'train-puff', 64, 64, (context) => {
+        const cloud = context.createRadialGradient(26, 24, 0, 32, 32, 32);
+
+        cloud.addColorStop(0, rgba(CLOUD.light, 0.95));
+        cloud.addColorStop(0.55, rgba(CLOUD.base, 0.85));
+        cloud.addColorStop(0.85, rgba(CLOUD.shade, 0.5));
+        cloud.addColorStop(1, rgba(CLOUD.shade, 0));
+        context.fillStyle = cloud;
+        context.beginPath();
+        context.arc(32, 32, 32, 0, Math.PI * 2);
+        context.fill();
+    });
+}
+
+/** The solved unit's sign, painted once per colour and size. */
+function signTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    width: number,
+    height: number,
+): string {
+    const w = step(width);
+    const h = step(height);
+
+    return texture(
+        scene,
+        `train-sign-${css(colour)}-${w}x${h}`,
+        w + PAD * 2,
+        h + PAD * 2,
+        (context) =>
+            paintPlate(
+                context,
+                { x: PAD, y: PAD, width: w, height: h },
+                {
+                    colour,
+                    radius: 18,
+                    inset: { side: 8, top: 8, bottom: 8 },
+                    face: PAPER,
+                    faceRadius: 14,
+                    shadow: { blur: 10, drop: 5 },
+                },
+            ),
+    );
+}
 
 /** The top of the slot train's rails: the sleepers end at the band's bottom. */
 function railOf(options: Pick<SlotRowOptions, 'band'>): number {
@@ -82,13 +546,15 @@ class Train implements SlotView {
     private readonly root: Phaser.GameObjects.Container;
     private readonly geometry: Geometry;
     private readonly wheels: {
-        wheel: Phaser.GameObjects.Graphics;
+        wheel: Phaser.GameObjects.Image;
         radius: number;
     }[] = [];
-    private readonly shells: Phaser.GameObjects.Graphics[];
-    private readonly glow: Phaser.GameObjects.Graphics;
+    private readonly shells: Phaser.GameObjects.Image[];
+    private readonly glow: Phaser.GameObjects.Image;
     private readonly palette: number[];
     private readonly colour: number;
+    /** The texture width of a wagon: the geometry's, rounded up. */
+    private readonly painted: number;
     private filled = 0;
     private gone = false;
     /** Where the steam comes out, inside the train. */
@@ -103,32 +569,27 @@ class Train implements SlotView {
         this.geometry = trainGeometry(options);
         this.palette = options.palette;
         this.colour = options.palette[0];
+        this.painted = step(this.geometry.width);
         this.root = scene.add.container(0, 0).setDepth(1);
 
-        const { slots, tail } = this.geometry;
+        const { slots, tail, width, body } = this.geometry;
 
+        // The next wagon to fill glows behind it, so the class sees where the piece goes.
+        this.glow = scene.add.image(
+            0,
+            0,
+            glowTexture(scene, this.colour, width, body + ROOF, 16, SPREAD),
+        );
+        this.glow.setScale(width / step(width)).setAlpha(0);
+        this.root.add(this.glow);
         this.couplers();
         this.locomotive();
-        this.shells = slots.map((x) => this.car(x, this.geometry.width));
+        this.shells = slots.map((x, index) => this.car(x, index));
 
         if (tail !== null && options.tail !== null) {
             this.endCar(tail, options.tail);
         }
 
-        // The next wagon to fill glows, so the class sees where the piece goes.
-        const { width, body } = this.geometry;
-
-        this.glow = scene.add.graphics();
-        this.glow.lineStyle(12, shade(this.colour, -0.1), 1);
-        this.glow.strokeRoundedRect(
-            -width / 2 - 10,
-            -body / 2 - ROOF - 10,
-            width + 20,
-            body + ROOF + 20,
-            20,
-        );
-        this.glow.setAlpha(0);
-        this.root.add(this.glow);
         this.draw();
     }
 
@@ -154,7 +615,7 @@ class Train implements SlotView {
         });
         this.scene.tweens.add({
             targets: this.glow,
-            alpha: { from: 0, to: 0.45 },
+            alpha: { from: 0, to: 0.8 },
             delay: delay + 1500,
             duration: 650,
             yoyo: true,
@@ -201,24 +662,13 @@ class Train implements SlotView {
         }
 
         const signWidth = Math.max(to - from, label.displayWidth + 80);
-        const sign = scene.add.graphics();
+        const sign = scene.add.image(
+            0,
+            0,
+            signTexture(scene, this.colour, signWidth, height),
+        );
 
-        sign.fillStyle(PAPER, 1);
-        sign.fillRoundedRect(
-            -signWidth / 2,
-            -height / 2,
-            signWidth,
-            height,
-            18,
-        );
-        sign.lineStyle(8, shade(this.colour, -0.3), 1);
-        sign.strokeRoundedRect(
-            -signWidth / 2,
-            -height / 2,
-            signWidth,
-            height,
-            18,
-        );
+        sign.setScale(signWidth / step(signWidth), height / step(height));
 
         const whole = scene.add.container((from + to) / 2, y - ROOF / 2, [
             sign,
@@ -268,22 +718,17 @@ class Train implements SlotView {
         this.root.destroy();
     }
 
+    /** A filled wagon is a lit surface in its colour, an empty one a pale well; the glow sits behind the next. */
     private draw(): void {
-        const { width, body } = this.geometry;
-        const left = -width / 2;
-        const top = -body / 2;
-
         this.shells.forEach((shell, index) => {
-            const filled = index < this.filled;
-            const colour = this.palette[(index + 1) % this.palette.length];
-
-            shell.clear();
-
-            // A filled wagon is solid; an empty one is a pale outline.
-            shell.fillStyle(filled ? colour : PAPER, filled ? 1 : 0.85);
-            shell.fillRoundedRect(left, top, width, body, 14);
-            shell.lineStyle(6, shade(colour, -0.28), filled ? 1 : 0.55);
-            shell.strokeRoundedRect(left, top, width, body, 14);
+            shell.setTexture(
+                shellTexture(
+                    this.scene,
+                    this.carColour(index),
+                    this.painted,
+                    index < this.filled,
+                ),
+            );
         });
 
         const next = this.geometry.slots[this.filled];
@@ -291,11 +736,15 @@ class Train implements SlotView {
         this.glow.setVisible(next !== undefined);
 
         if (next !== undefined) {
-            this.glow.setPosition(next, this.geometry.y);
+            this.glow.setPosition(next, this.geometry.y - ROOF / 2);
         }
     }
 
-    /** The bars between the cars, behind them. */
+    private carColour(index: number): number {
+        return this.palette[(index + 1) % this.palette.length];
+    }
+
+    /** The bars between the cars, behind them: thin, in the guide's violet black. */
     private couplers(): void {
         const { locomotive, slots, tail, width, y, body } = this.geometry;
         const bar = this.scene.add.graphics();
@@ -309,31 +758,40 @@ class Train implements SlotView {
             from = x + half;
         }
 
-        bar.fillStyle(CHASSIS, 1);
-
         for (const [start, end] of ends) {
+            bar.fillStyle(TYRE.base, 1);
             bar.fillRect(
                 start - 2,
                 y + body * 0.18,
                 end - start + 4,
                 body * 0.1,
             );
+            bar.fillStyle(TYRE.light, 1);
+            bar.fillRect(start - 2, y + body * 0.18, end - start + 4, 2);
         }
 
         this.root.add(bar);
     }
 
-    /** An empty wagon: the chassis and wheels, and a shell `draw()` fills in. */
-    private car(x: number, width: number): Phaser.GameObjects.Graphics {
-        const { y, body, radius } = this.geometry;
-        const chassis = this.scene.add.graphics({ x, y });
+    /** An empty wagon on its wheels; `draw()` fills it in. */
+    private car(x: number, index: number): Phaser.GameObjects.Image {
+        const { y, body, radius, width } = this.geometry;
+        const shell = sized(
+            this.scene.add.image(
+                x,
+                y,
+                shellTexture(
+                    this.scene,
+                    this.carColour(index),
+                    this.painted,
+                    false,
+                ),
+            ),
+            width,
+            this.painted,
+        );
 
-        chassis.fillStyle(CHASSIS, 1);
-        chassis.fillRect(-width / 2, body / 2 - 18, width, 18);
-
-        const shell = this.scene.add.graphics({ x, y });
-
-        this.root.add([chassis, shell]);
+        this.root.add(shell);
 
         for (const side of [-1, 1]) {
             this.addWheel(x + side * width * 0.3, y + body / 2, radius);
@@ -345,17 +803,18 @@ class Train implements SlotView {
     /** The short car at the end that carries the sentence's last mark. */
     private endCar(x: number, mark: string): void {
         const { width, body, radius, y } = this.geometry;
-        const car = width * END_CAR;
-        const g = this.scene.add.graphics({ x, y });
         const deck = body * 0.55;
+        const car = sized(
+            this.scene.add.image(
+                x,
+                y + body / 2 - deck / 2,
+                endCarTexture(this.scene, this.colour, this.painted),
+            ),
+            width,
+            this.painted,
+        );
 
-        g.fillStyle(CHASSIS, 1);
-        g.fillRect(-car / 2, body / 2 - 18, car, 18);
-        g.fillStyle(shade(this.colour, 0.75), 1);
-        g.fillRoundedRect(-car / 2, body / 2 - deck, car, deck - 10, 10);
-        g.lineStyle(5, shade(this.colour, -0.28), 1);
-        g.strokeRoundedRect(-car / 2, body / 2 - deck, car, deck - 10, 10);
-        this.root.add(g);
+        this.root.add(car);
         this.addWheel(x, y + body / 2, radius * 0.85);
 
         const label = this.scene.add
@@ -371,117 +830,28 @@ class Train implements SlotView {
         this.root.add(label);
     }
 
-    /** The locomotive, facing left: cowcatcher, chimney, boiler, cab, three wheels. */
+    /** The locomotive, facing left, on a small front wheel and two big ones joined by a rod. */
     private locomotive(): void {
-        const { width, body, radius, y, rail } = this.geometry;
+        const { width, radius, y, rail } = this.geometry;
         const length = width * LOCOMOTIVE;
         const x0 = this.geometry.locomotive - length / 2;
-        const g = this.scene.add.graphics();
-        const main = this.colour;
-        const dark = shade(main, -0.35);
-        const boilerTop = y - body * 0.28;
-        const boilerHeight = body * 0.62;
-        const cabLeft = x0 + length * 0.6;
-        const cabTop = y - body / 2 - width * 0.3;
+        const parts = locomotiveParts(this.painted);
+        const scale = width / this.painted;
+        const body = this.scene.add
+            .image(
+                x0 - parts.left * scale,
+                y - parts.top * scale,
+                locomotiveTexture(this.scene, this.colour, this.painted),
+            )
+            .setOrigin(0, 0)
+            .setScale(scale);
 
-        // Chassis.
-        g.fillStyle(CHASSIS, 1);
-        g.fillRect(x0 + length * 0.06, y + body / 2 - 20, length * 0.94, 20);
+        this.root.add(body);
 
-        // Boiler and the bands round it.
-        g.fillStyle(main, 1);
-        g.fillRoundedRect(
-            x0 + length * 0.08,
-            boilerTop,
-            length * 0.56,
-            boilerHeight,
-            boilerHeight * 0.3,
-        );
-        g.fillStyle(dark, 1);
+        const boilerTop = y + parts.boilerTop * scale;
 
-        for (const at of [0.22, 0.4]) {
-            g.fillRect(x0 + length * at, boilerTop, 10, boilerHeight);
-        }
-
-        // Chimney with its crown, and the dome.
-        const chimney = x0 + length * 0.16;
-
-        g.fillStyle(CHASSIS, 1);
-        g.fillRect(
-            chimney,
-            boilerTop - width * 0.22,
-            width * 0.12,
-            width * 0.24,
-        );
-        g.fillRoundedRect(
-            chimney - width * 0.03,
-            boilerTop - width * 0.27,
-            width * 0.18,
-            width * 0.07,
-            6,
-        );
-        g.fillStyle(dark, 1);
-        g.fillEllipse(
-            x0 + length * 0.44,
-            boilerTop,
-            width * 0.16,
-            width * 0.14,
-        );
-
-        // Cab, its roof and window.
-        g.fillStyle(main, 1);
-        g.fillRoundedRect(
-            cabLeft,
-            cabTop,
-            length * 0.38,
-            y + body / 2 - cabTop - 10,
-            10,
-        );
-        g.fillStyle(dark, 1);
-        g.fillRoundedRect(
-            cabLeft - 12,
-            cabTop - 16,
-            length * 0.38 + 24,
-            26,
-            10,
-        );
-        g.fillStyle(PAPER, 0.92);
-        g.fillRoundedRect(
-            cabLeft + length * 0.07,
-            cabTop + 26,
-            length * 0.24,
-            body * 0.36,
-            8,
-        );
-        g.lineStyle(6, dark, 1);
-        g.strokeRoundedRect(
-            cabLeft,
-            cabTop,
-            length * 0.38,
-            y + body / 2 - cabTop - 10,
-            10,
-        );
-
-        // Lamp and cowcatcher at the front.
-        g.fillStyle(0xf6c445, 1);
-        g.fillCircle(
-            x0 + length * 0.07,
-            boilerTop + boilerHeight * 0.3,
-            width * 0.05,
-        );
-        g.fillStyle(CHASSIS, 1);
-        g.fillTriangle(
-            x0 - length * 0.02,
-            rail - 4,
-            x0 + length * 0.1,
-            rail - 4,
-            x0 + length * 0.1,
-            y + body / 2 - 22,
-        );
-
-        this.root.add(g);
         this.chimneyTop = {
-            x: chimney + width * 0.06,
+            x: x0 + parts.chimney * scale + width * 0.06,
             y: boilerTop - width * 0.27,
         };
 
@@ -497,13 +867,21 @@ class Train implements SlotView {
 
         const rod = this.scene.add.graphics();
 
-        rod.fillStyle(0x9ca3af, 1);
+        rod.fillStyle(METAL.base, 1);
         rod.fillRoundedRect(
             drive[0] - 8,
             rail - big - 6,
             drive[1] - drive[0] + 16,
             12,
             6,
+        );
+        rod.fillStyle(METAL.light, 1);
+        rod.fillRoundedRect(
+            drive[0] - 4,
+            rail - big - 5,
+            drive[1] - drive[0] + 8,
+            3,
+            1.5,
         );
         this.root.add(rod);
     }
@@ -515,7 +893,7 @@ class Train implements SlotView {
         this.root.add(turning);
     }
 
-    /** Puffs of steam from the chimney, rising and fading. */
+    /** Puffs of soft steam from the chimney, rising and fading. */
     private puff(count: number): void {
         for (let index = 0; index < count; index++) {
             this.scene.time.delayedCall(index * 160, () => {
@@ -523,20 +901,19 @@ class Train implements SlotView {
                     return;
                 }
 
-                const cloud = this.scene.add.circle(
+                const cloud = this.scene.add.image(
                     this.root.x + this.chimneyTop.x,
                     this.root.y + this.chimneyTop.y,
-                    this.geometry.width * 0.08,
-                    PAPER,
-                    0.9,
+                    puffTexture(this.scene),
                 );
+                const size = (this.geometry.width * 0.16) / cloud.width;
 
-                cloud.setDepth(1.5);
+                cloud.setScale(size).setDepth(1.5);
                 this.scene.tweens.add({
                     targets: cloud,
                     y: cloud.y - 110,
                     x: cloud.x + Phaser.Math.Between(10, 60),
-                    scale: 2.6,
+                    scale: size * 2.6,
                     alpha: 0,
                     duration: 1100,
                     ease: 'Sine.easeOut',

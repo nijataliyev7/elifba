@@ -1,17 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- qardaş: two brothers, an older and a younger boy. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M8.2,64 L8.2,43.5 C8.2,37.2 13.5,35.1 17.7,35.1 C21.9,38.2 26.1,38.2 30.3,35.1 C34.5,35.1 39.8,37.2 39.8,43.5 L39.8,64" fill="#61B2E4"/>
-    <circle cx="24" cy="23.6" r="10.5" fill="#FCEA2B"/>
-    <circle cx="20" cy="23.6" r="1.7" fill="#000" stroke="none"/>
-    <circle cx="28" cy="23.6" r="1.7" fill="#000" stroke="none"/>
-    <path d="M20.6,28 C22.7,29.6 25.3,29.6 27.4,28" fill="none"/>
-    <path d="M13,24.6 C11.9,13.1 19.8,11 25.1,11.5 C30.3,12 36.1,15.2 35,24.6 C29.2,18.3 19.8,18.3 13,24.6 Z" fill="#6A462F"/>
-    <path d="M37.2,64 L37.2,51.5 C37.2,46.4 41.5,44.7 44.9,44.7 C48.3,47.2 51.7,47.2 55.1,44.7 C58.5,44.7 62.8,46.4 62.8,51.5 L62.8,64" fill="#F4AA41"/>
-    <circle cx="50" cy="35.4" r="8.5" fill="#FCEA2B"/>
-    <circle cx="46.8" cy="35.4" r="1.4" fill="#000" stroke="none"/>
-    <circle cx="53.2" cy="35.4" r="1.4" fill="#000" stroke="none"/>
-    <path d="M47.3,38.9 C49,40.3 51,40.3 52.7,38.9" fill="none"/>
-    <path d="M41,36.2 C40.2,26.9 46.6,25.2 50.9,25.6 C55.1,26 59.8,28.6 59,36.2 C54.2,31.1 46.6,31.1 41,36.2 Z" fill="#F1B31C"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- qardaş: two brothers, the elder taller. Elifba own art, MIT. -->
+<rect x="9.76" y="13.8" width="2.88" height="4.32" fill="url(#qardas_fill1)"/>
+<rect x="9.76" y="13.8" width="2.88" height="4.32" fill="url(#qardas_fill2)"/>
+<path d="M9.18 15.82C6.64 15.91 4.24 17.26 3.76 20.38L3.33 30L19.07 30L18.64 20.38C18.16 17.26 15.76 15.91 13.22 15.82Q11.2 17.74 9.18 15.82Z" fill="url(#qardas_fill3)"/>
+<path d="M9.18 15.82C6.64 15.91 4.24 17.26 3.76 20.38L3.33 30L19.07 30L18.64 20.38C18.16 17.26 15.76 15.91 13.22 15.82Q11.2 17.74 9.18 15.82Z" fill="url(#qardas_fill4)"/>
+<g filter="url(#qardas_blur04)"><ellipse cx="6.64" cy="18.46" rx="2.02" ry="0.77" fill="#FFFFFF" fill-opacity="0.45" transform="rotate(-30 6.64 18.46)"/></g>
+<circle cx="6.54" cy="11.98" r="0.96" fill="url(#qardas_fill5)"/>
+<circle cx="6.54" cy="11.98" r="0.96" fill="url(#qardas_fill6)"/>
+<circle cx="15.86" cy="11.98" r="0.96" fill="url(#qardas_fill7)"/>
+<circle cx="15.86" cy="11.98" r="0.96" fill="url(#qardas_fill8)"/>
+<ellipse cx="11.2" cy="11.4" rx="4.7" ry="4.99" fill="url(#qardas_fill9)"/>
+<ellipse cx="11.2" cy="11.4" rx="4.7" ry="4.99" fill="url(#qardas_fill10)"/>
+<path d="M6.21 11.64C5.54 7.56 8.32 5.16 11.44 5.26C14.66 5.35 16.86 7.56 16.19 11.64C15.81 10.2 15.33 9.58 14.75 9.38C14.08 10.25 13.02 10.44 12.64 9.48C11.78 10.34 10.62 10.34 10.34 9.38C9.47 10.25 8.32 10.15 8.03 9.19C7.26 9.67 6.59 10.54 6.21 11.64Z" fill="url(#qardas_fill11)"/>
+<path d="M6.21 11.64C5.54 7.56 8.32 5.16 11.44 5.26C14.66 5.35 16.86 7.56 16.19 11.64C15.81 10.2 15.33 9.58 14.75 9.38C14.08 10.25 13.02 10.44 12.64 9.48C11.78 10.34 10.62 10.34 10.34 9.38C9.47 10.25 8.32 10.15 8.03 9.19C7.26 9.67 6.59 10.54 6.21 11.64Z" fill="url(#qardas_fill12)"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="9.18" cy="6.7" rx="1.54" ry="0.58" fill="#FEF5E1" fill-opacity="0.6" transform="rotate(-20 9.18 6.7)"/></g>
+<ellipse cx="9.47" cy="11.88" rx="0.62" ry="0.81" fill="#3A234A"/>
+<circle cx="9.25" cy="11.56" r="0.28" fill="#FFFFFF"/>
+<path d="M8.7 10.44Q9.38 9.96 10.14 10.34" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="8.32" cy="13.56" rx="0.96" ry="0.58" fill="#FF8A80" fill-opacity="0.45"/></g>
+<ellipse cx="12.93" cy="11.88" rx="0.62" ry="0.81" fill="#3A234A"/>
+<circle cx="12.71" cy="11.56" r="0.28" fill="#FFFFFF"/>
+<path d="M13.7 10.44Q13.02 9.96 12.26 10.34" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="14.08" cy="13.56" rx="0.96" ry="0.58" fill="#FF8A80" fill-opacity="0.45"/></g>
+<path d="M9.86 13.61Q11.2 14.76 12.54 13.61" stroke="#8A004F" stroke-width="0.43" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="20.77" y="19.05" width="2.46" height="3.69" fill="url(#qardas_fill13)"/>
+<rect x="20.77" y="19.05" width="2.46" height="3.69" fill="url(#qardas_fill14)"/>
+<path d="M20.28 20.77C18.11 20.85 16.05 22 15.64 24.67L15.28 30L28.72 30L28.36 24.67C27.95 22 25.89 20.85 23.72 20.77Q22 22.41 20.28 20.77Z" fill="url(#qardas_fill15)"/>
+<path d="M20.28 20.77C18.11 20.85 16.05 22 15.64 24.67L15.28 30L28.72 30L28.36 24.67C27.95 22 25.89 20.85 23.72 20.77Q22 22.41 20.28 20.77Z" fill="url(#qardas_fill16)"/>
+<g filter="url(#qardas_blur04)"><ellipse cx="18.11" cy="23.03" rx="1.72" ry="0.66" fill="#FFFFFF" fill-opacity="0.45" transform="rotate(-30 18.11 23.03)"/></g>
+<circle cx="18.02" cy="17.49" r="0.82" fill="url(#qardas_fill17)"/>
+<circle cx="18.02" cy="17.49" r="0.82" fill="url(#qardas_fill18)"/>
+<circle cx="25.98" cy="17.49" r="0.82" fill="url(#qardas_fill19)"/>
+<circle cx="25.98" cy="17.49" r="0.82" fill="url(#qardas_fill20)"/>
+<ellipse cx="22" cy="17" rx="4.02" ry="4.26" fill="url(#qardas_fill21)"/>
+<ellipse cx="22" cy="17" rx="4.02" ry="4.26" fill="url(#qardas_fill22)"/>
+<path d="M17.74 17.2C17.16 13.72 19.54 11.67 22.2 11.75C24.95 11.83 26.84 13.72 26.26 17.2C25.94 15.97 25.53 15.44 25.03 15.28C24.46 16.02 23.56 16.18 23.23 15.36C22.49 16.1 21.51 16.1 21.26 15.28C20.52 16.02 19.54 15.93 19.29 15.11C18.64 15.52 18.06 16.26 17.74 17.2Z" fill="url(#qardas_fill23)"/>
+<path d="M17.74 17.2C17.16 13.72 19.54 11.67 22.2 11.75C24.95 11.83 26.84 13.72 26.26 17.2C25.94 15.97 25.53 15.44 25.03 15.28C24.46 16.02 23.56 16.18 23.23 15.36C22.49 16.1 21.51 16.1 21.26 15.28C20.52 16.02 19.54 15.93 19.29 15.11C18.64 15.52 18.06 16.26 17.74 17.2Z" fill="url(#qardas_fill24)"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="20.28" cy="12.98" rx="1.31" ry="0.49" fill="#FEF5E1" fill-opacity="0.6" transform="rotate(-20 20.28 12.98)"/></g>
+<ellipse cx="20.52" cy="17.41" rx="0.53" ry="0.69" fill="#3A234A"/>
+<circle cx="20.34" cy="17.13" r="0.28" fill="#FFFFFF"/>
+<path d="M19.87 16.18Q20.44 15.77 21.1 16.1" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="19.54" cy="18.84" rx="0.82" ry="0.49" fill="#FF8A80" fill-opacity="0.45"/></g>
+<ellipse cx="23.48" cy="17.41" rx="0.53" ry="0.69" fill="#3A234A"/>
+<circle cx="23.29" cy="17.13" r="0.28" fill="#FFFFFF"/>
+<path d="M24.13 16.18Q23.56 15.77 22.9 16.1" stroke="#BD6A1E" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#qardas_blur035)"><ellipse cx="24.46" cy="18.84" rx="0.82" ry="0.49" fill="#FF8A80" fill-opacity="0.45"/></g>
+<path d="M20.85 18.89Q22 19.87 23.15 18.89" stroke="#8A004F" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<radialGradient id="qardas_fill1" cx="0.5" cy="0" r="1"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill2" cx="0.5" cy="0" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.8"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill3" cx="0.3" cy="0.1" r="0.9"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="qardas_fill4" cx="0.85" cy="1" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<filter id="qardas_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="qardas_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill9" cx="0.32" cy="0.25" r="0.85"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.45"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill11" cx="0.3" cy="0.2" r="0.85"><stop stop-color="#FFE446"/><stop offset="0.5" stop-color="#F7BD38"/><stop offset="1" stop-color="#D77A1C"/></radialGradient>
+<radialGradient id="qardas_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D77A1C" stop-opacity="0.5"/><stop offset="0.9" stop-color="#D77A1C" stop-opacity="0"/></radialGradient>
+<filter id="qardas_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+<radialGradient id="qardas_fill13" cx="0.5" cy="0" r="1"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill14" cx="0.5" cy="0" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.8"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill15" cx="0.3" cy="0.1" r="0.9"><stop stop-color="#FFA35F"/><stop offset="0.5" stop-color="#FF7E51"/><stop offset="1" stop-color="#EE534A"/></radialGradient>
+<radialGradient id="qardas_fill16" cx="0.85" cy="1" r="0.7"><stop stop-color="#EE534A" stop-opacity="0.6"/><stop offset="0.9" stop-color="#EE534A" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill17" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill18" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill19" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill20" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.4"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill21" cx="0.32" cy="0.25" r="0.85"><stop stop-color="#FFE134"/><stop offset="0.5" stop-color="#FFC532"/><stop offset="1" stop-color="#E59B1F"/></radialGradient>
+<radialGradient id="qardas_fill22" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E59B1F" stop-opacity="0.45"/><stop offset="0.9" stop-color="#E59B1F" stop-opacity="0"/></radialGradient>
+<radialGradient id="qardas_fill23" cx="0.3" cy="0.2" r="0.85"><stop stop-color="#FFE446"/><stop offset="0.5" stop-color="#F7BD38"/><stop offset="1" stop-color="#D77A1C"/></radialGradient>
+<radialGradient id="qardas_fill24" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D77A1C" stop-opacity="0.5"/><stop offset="0.9" stop-color="#D77A1C" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

@@ -106,3 +106,27 @@ it('keeps the payload apart from the id, the index and the total', function (): 
     expect(array_keys($round->payload()))->not->toContain('id', 'index', 'total')
         ->and(RoundData::fromPayload($fixture['id'], $fixture['index'], $fixture['total'], $round->payload())->toArray())->toBe($fixture);
 });
+
+it('reads a round stored before prompt.count as count null, and writes the key back', function (): void {
+    $fixture = contractFixture(CONTRACT_FIXTURES.'/round.find-word.json');
+    $stored = RoundData::fromArray($fixture)->payload();
+    unset($stored['prompt']['count']);
+
+    $round = RoundData::fromPayload($fixture['id'], $fixture['index'], $fixture['total'], $stored);
+
+    expect($round->prompt->count)->toBeNull()
+        ->and($round->toArray())->toBe($fixture);
+});
+
+it('draws the picture of a count round N times and names no number', function (): void {
+    $round = RoundData::fromArray(contractFixture(CONTRACT_FIXTURES.'/round.count.json'));
+    $answer = $round->item($round->solution->item_ids[0]);
+
+    expect($round->mechanic)->toBe(Mechanic::Count)
+        ->and($round->unit)->toBe(Unit::Number)
+        ->and($round->prompt->count)->toBe(4)
+        ->and($round->prompt->image)->not->toBeNull()
+        ->and($round->prompt->show)->toBeNull()
+        ->and($answer?->text)->toBe('4')
+        ->and($answer?->content_key)->toBe('number:4');
+});

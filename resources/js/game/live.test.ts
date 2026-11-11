@@ -172,6 +172,7 @@ function round(index: number, target: string): Round {
             text: '«Ə» hərfini tap!',
             show: 'Ə',
             image: null,
+            count: null,
             audio: null,
             tail: null,
         },
@@ -200,7 +201,8 @@ const SEQUENCE: Round[] = [0, 1].map((index) => ({
     prompt: {
         text: 'Sözü hecalardan yığ!',
         show: null,
-        image: '/content/openmoji/1F475.svg?v=2',
+        image: '/content/fluent/1F475.svg?v=2',
+        count: null,
         audio: null,
         tail: null,
     },
@@ -305,6 +307,7 @@ async function wallBoard(
         applyHit: (effect: HitEffect) =>
             log.push(`hit:${effect.itemId}:${effect.status}`),
         setPaused: (paused) => log.push(paused ? 'pause' : 'play'),
+        repeatPrompt: () => log.push('repeat'),
     };
 
     bridge.connect(scene);

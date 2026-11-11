@@ -1,14 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- çay: hot tea in a pear-shaped glass on a saucer. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="36" cy="61" rx="24" ry="5" fill="#FFF"/>
-    <path d="M27,22 L45,22 C45,28 40,33 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,33 27,28 27,22 Z" fill="#92D3F5"/>
-    <path d="M30.2,28 L41.8,28 C40.6,31.5 40,34.5 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,34.5 31.4,31.5 30.2,28 Z" fill="#D22F27" stroke="none"/>
-    <path d="M30.2,28 L41.8,28" fill="none" stroke-width="1.5"/>
-    <path d="M27,22 L45,22 C45,28 40,33 40,37 C40,41 48,44 48,51 C48,57 42,60 36,60 C30,60 24,57 24,51 C24,44 32,41 32,37 C32,33 27,28 27,22 Z" fill="none"/>
-    <path d="M29,46 C28,49 28.5,52 30.5,54.5" fill="none" stroke="#FFF" stroke-width="2"/>
-    <path d="M30,17 C27,14 33,12 30,8 M36,17 C33,14 39,12 36,8 M42,17 C39,14 45,12 42,8" fill="none" stroke="#9B9B9A" stroke-width="2"/>
-    <path d="M49,59 A6,6 0 0 1 61,59 Z" fill="#FCEA2B"/>
-    <path d="M55,59 L51.5,55.5 M55,59 L55,54 M55,59 L58.5,55.5" fill="none" stroke="#F1B31C" stroke-width="1.2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- çay: tea in a pear-shaped glass on a saucer, steam rising, a sugar cube beside it. Elifba own art, MIT. -->
+<ellipse cx="16" cy="27.2" rx="14" ry="3.2" fill="url(#cay_fill1)"/>
+<ellipse cx="16" cy="27.2" rx="14" ry="3.2" fill="url(#cay_fill2)"/>
+<ellipse cx="16" cy="26.6" rx="10.2" ry="2" fill="url(#cay_fill3)"/>
+<ellipse cx="16" cy="26.6" rx="10.2" ry="2" fill="url(#cay_fill4)"/>
+<path d="M28.4 27C28.4 28.38 22.85 29.5 16 29.5C9.15 29.5 3.6 28.38 3.6 27C3.6 25.62 9.15 24.5 16 24.5C22.85 24.5 28.4 25.62 28.4 27Z" stroke="#F24756" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M9.06 8.4L20.14 8.4C19.98 10.75 17.96 12.77 17.96 14.62C17.96 16.3 21.15 17.98 21.15 21.17C21.15 24.7 18.46 26.54 14.6 26.54C10.74 26.54 8.05 24.7 8.05 21.17C8.05 17.98 11.24 16.3 11.24 14.62C11.24 12.77 9.22 10.75 9.06 8.4Z" fill="url(#cay_fill5)" fill-opacity="0.7"/>
+<path d="M9.06 8.4L20.14 8.4C19.98 10.75 17.96 12.77 17.96 14.62C17.96 16.3 21.15 17.98 21.15 21.17C21.15 24.7 18.46 26.54 14.6 26.54C10.74 26.54 8.05 24.7 8.05 21.17C8.05 17.98 11.24 16.3 11.24 14.62C11.24 12.77 9.22 10.75 9.06 8.4Z" fill="url(#cay_fill6)"/>
+<g clip-path="url(#cay_clip7)">
+<rect x="0" y="10" width="32" height="20" fill="url(#cay_fill8)" fill-opacity="0.92"/>
+<rect x="0" y="10" width="32" height="20" fill="url(#cay_fill9)"/>
+</g>
+<ellipse cx="14.6" cy="10.1" rx="5.1" ry="0.7" fill="url(#cay_fill10)"/>
+<path d="M20.06 8.48C20.06 9.02 17.62 9.45 14.6 9.45C11.58 9.45 9.14 9.02 9.14 8.48C9.14 7.95 11.58 7.52 14.6 7.52C17.62 7.52 20.06 7.95 20.06 8.48Z" stroke="#F8CA4D" stroke-width="0.67" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.24 15.29Q14.6 15.96 17.96 15.29" stroke="#F8CA4D" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85"/>
+<g filter="url(#cay_blur029)"><path d="M9.73 18.98C9.06 21.5 9.9 23.86 11.91 25.2C9.73 24.7 8.22 22.34 9.73 18.98Z" fill="#FFFFFF" fill-opacity="0.9"/></g>
+<g filter="url(#cay_blur029)"><ellipse cx="19.3" cy="21.34" rx="0.5" ry="1.85" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(-10 19.3 21.34)"/></g>
+<g filter="url(#cay_blur025)"><ellipse cx="11.24" cy="10.58" rx="0.38" ry="1.18" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(35 11.24 10.58)"/></g>
+<path d="M12.4 6.6C11.2 5.2 13.6 4.2 12.4 2.6" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M16.6 6.6C15.4 5.2 17.8 4.2 16.6 2.6" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<path d="M25.88 21.12L28.12 22.08Q28.4 22.2 28.12 22.32L25.88 23.28Q25.6 23.4 25.32 23.28L23.08 22.32Q22.8 22.2 23.08 22.08L25.32 21.12Q25.6 21 25.88 21.12Z" fill="url(#cay_fill11)"/>
+<path d="M23.08 22.32L25.32 23.28Q25.6 23.4 25.6 23.7L25.6 25.9Q25.6 26.2 25.32 26.08L23.08 25.12Q22.8 25 22.8 24.7L22.8 22.5Q22.8 22.2 23.08 22.32Z" fill="url(#cay_fill12)"/>
+<path d="M23.08 22.32L25.32 23.28Q25.6 23.4 25.6 23.7L25.6 25.9Q25.6 26.2 25.32 26.08L23.08 25.12Q22.8 25 22.8 24.7L22.8 22.5Q22.8 22.2 23.08 22.32Z" fill="url(#cay_fill13)"/>
+<path d="M25.88 23.28L28.12 22.32Q28.4 22.2 28.4 22.5L28.4 24.7Q28.4 25 28.12 25.12L25.88 26.08Q25.6 26.2 25.6 25.9L25.6 23.7Q25.6 23.4 25.88 23.28Z" fill="url(#cay_fill14)"/>
+<path d="M25.88 23.28L28.12 22.32Q28.4 22.2 28.4 22.5L28.4 24.7Q28.4 25 28.12 25.12L25.88 26.08Q25.6 26.2 25.6 25.9L25.6 23.7Q25.6 23.4 25.88 23.28Z" fill="url(#cay_fill15)"/>
+<defs>
+<radialGradient id="cay_fill1" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FAF5FF"/><stop offset="0.5" stop-color="#DBCEED"/><stop offset="1" stop-color="#ACA9B3"/></radialGradient>
+<radialGradient id="cay_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#ACA9B3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#ACA9B3" stop-opacity="0"/></radialGradient>
+<radialGradient id="cay_fill3" cx="0.7" cy="0.8" r="0.9"><stop stop-color="#FAF5FF"/><stop offset="0.5" stop-color="#DBCEED"/><stop offset="1" stop-color="#ACA9B3"/></radialGradient>
+<radialGradient id="cay_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#ACA9B3" stop-opacity="0.3"/><stop offset="0.9" stop-color="#ACA9B3" stop-opacity="0"/></radialGradient>
+<radialGradient id="cay_fill5" cx="0.3" cy="0.3" r="0.85"><stop stop-color="#E8FDFF"/><stop offset="0.5" stop-color="#C7EBFF"/><stop offset="1" stop-color="#8FBDE6"/></radialGradient>
+<radialGradient id="cay_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#8FBDE6" stop-opacity="0.5"/><stop offset="0.9" stop-color="#8FBDE6" stop-opacity="0"/></radialGradient>
+<clipPath id="cay_clip7"><path d="M9.06 8.4L20.14 8.4C19.98 10.75 17.96 12.77 17.96 14.62C17.96 16.3 21.15 17.98 21.15 21.17C21.15 24.7 18.46 26.54 14.6 26.54C10.74 26.54 8.05 24.7 8.05 21.17C8.05 17.98 11.24 16.3 11.24 14.62C11.24 12.77 9.22 10.75 9.06 8.4Z" /></clipPath>
+<radialGradient id="cay_fill8" cx="0.3" cy="0.3" r="0.85"><stop stop-color="#E8743B"/><stop offset="0.5" stop-color="#B0391F"/><stop offset="1" stop-color="#5E2A1E"/></radialGradient>
+<radialGradient id="cay_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5E2A1E" stop-opacity="0.5"/><stop offset="0.9" stop-color="#5E2A1E" stop-opacity="0"/></radialGradient>
+<radialGradient id="cay_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F4953F"/><stop offset="0.5" stop-color="#D8622F"/><stop offset="1" stop-color="#8A3A22"/></radialGradient>
+<filter id="cay_blur029" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.29"/></filter>
+<filter id="cay_blur025" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.25"/></filter>
+<radialGradient id="cay_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="cay_fill12" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="cay_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.3"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<radialGradient id="cay_fill14" cx="0.2" cy="0.2" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="cay_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.6"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

@@ -7,7 +7,7 @@
  */
 import Phaser from 'phaser';
 import type { Round } from '../contract';
-import { shade } from '../styles/item';
+import { css, paintPlate, texture } from '../styles/fluent';
 import type { SceneOptions } from './board-scene';
 import { BuildScene } from './build';
 import { BUILD_LAYOUTS, PICTURE_FRAME as FRAME } from './layouts';
@@ -25,24 +25,41 @@ export class BuildWordScene extends BuildScene {
         super('build_word', options);
     }
 
+    /**
+     * The question's frame, painted once per pack colour in ADR 014's
+     * Fluent manner: a white face set into a plate in the colour, lit from
+     * the top left, with a soft shadow in its deep shade — no outline.
+     */
+    private frameTexture(): string {
+        const { width, height } = FRAME;
+        const colour = this.palette[0];
+        const room = 24;
+
+        return texture(
+            this,
+            `build-word-frame-${css(colour)}-${width}x${height}`,
+            width + room * 2,
+            height + room * 2,
+            (context) =>
+                paintPlate(
+                    context,
+                    { x: room, y: room, width, height },
+                    {
+                        colour,
+                        radius: 36,
+                        inset: { side: 8, top: 8, bottom: 8 },
+                        face: 0xffffff,
+                        faceRadius: 32,
+                        shadow: { blur: 22, drop: 10 },
+                    },
+                ),
+        );
+    }
+
     protected ask(round: Round, wait: number): void {
         this.dropPicture();
 
-        const { width, height } = FRAME;
-        const card = this.add.graphics();
-
-        card.fillStyle(0x1f2937, 0.12);
-        card.fillRoundedRect(
-            -width / 2 + 8,
-            -height / 2 + 12,
-            width,
-            height,
-            36,
-        );
-        card.fillStyle(0xffffff, 1);
-        card.fillRoundedRect(-width / 2, -height / 2, width, height, 36);
-        card.lineStyle(8, shade(this.palette[0], -0.12), 1);
-        card.strokeRoundedRect(-width / 2, -height / 2, width, height, 36);
+        const card = this.add.image(0, 0, this.frameTexture());
 
         const picture = this.add.container(FRAME.x, FRAME.y, [card]);
 
@@ -81,7 +98,7 @@ export class BuildWordScene extends BuildScene {
             return;
         }
 
-        // Pictures are SVGs (OpenMoji or the pack's own): rasterised at a
+        // Pictures are SVGs (the pack's emoji set or its own): rasterised at a
         // size of their own, as backdrops are, so WebGL draws them sharp.
         this.load.svg(key, url, { width: RASTER, height: RASTER });
         this.load.once(

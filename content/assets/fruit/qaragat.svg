@@ -1,23 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- qarağat: a bunch of blackcurrants on a stalk with a leaf. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20,10 C26,14 30,20 34,26 C38,34 36,46 37,58" fill="none" stroke="#5C9E31" stroke-width="3"/>
-    <path d="M20,10 C26,14 30,20 34,26 C38,34 36,46 37,58" fill="none"/>
-    <path d="M40,10 L45,6 L48,11 L54,8 L54,14 L60,16 L56,20 L59,25 L52,25 L50,30 L46,26 L42,26 L42,20 L38,17 Z" fill="#5C9E31"/>
-    <path d="M40,12 L52,22" fill="none" stroke-width="1.5"/>
-    <circle cx="30" cy="26" r="6" fill="#3F3F3F"/>
-    <circle cx="28" cy="24" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="37" cy="32" r="6" fill="#3F3F3F"/>
-    <circle cx="35" cy="30" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="29" cy="37" r="6" fill="#3F3F3F"/>
-    <circle cx="27" cy="35" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="39" cy="42" r="6" fill="#3F3F3F"/>
-    <circle cx="37" cy="40" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="31" cy="48" r="6" fill="#3F3F3F"/>
-    <circle cx="29" cy="46" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="40" cy="53" r="6" fill="#3F3F3F"/>
-    <circle cx="38" cy="51" r="1.3" fill="#FFF" stroke="none"/>
-    <circle cx="33" cy="59" r="6" fill="#3F3F3F"/>
-    <circle cx="31" cy="57" r="1.3" fill="#FFF" stroke="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- qarağat: a string of blackcurrants with a leaf. Elifba own art, MIT. -->
+<path d="M20.4 7.4C19.2 5.6 19.6 3.4 21.4 2.6C22.6 2 23.8 2.4 24.6 3.2C25.2 1.8 26.8 1.2 28.2 2C29.8 2.8 30.2 4.8 29.2 6.2C30.4 6.6 31 8.2 30.4 9.6C29.6 11.2 27.6 11.6 26.2 10.6C25 11 23.6 10.6 22.6 9.4C21.8 8.6 21 8 20.4 7.4Z" fill="url(#qaragat_fill1)"/>
+<path d="M20.4 7.4C19.2 5.6 19.6 3.4 21.4 2.6C22.6 2 23.8 2.4 24.6 3.2C25.2 1.8 26.8 1.2 28.2 2C29.8 2.8 30.2 4.8 29.2 6.2C30.4 6.6 31 8.2 30.4 9.6C29.6 11.2 27.6 11.6 26.2 10.6C25 11 23.6 10.6 22.6 9.4C21.8 8.6 21 8 20.4 7.4Z" fill="url(#qaragat_fill2)"/>
+<path d="M20.8 7.2L25.4 6.2M25.4 6.2L28.2 3.2M25.4 6.2L29.4 8.4M25.4 6.2L24.4 3.6" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M21 7.2C15 6.6 10.4 9.4 8.6 14C7.2 17.8 8 22.6 10.4 26.2" stroke="url(#qaragat_fill3)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="13.4" cy="9.6" r="3.4" fill="url(#qaragat_fill4)"/>
+<circle cx="13.4" cy="9.6" r="3.4" fill="url(#qaragat_fill5)"/>
+<g filter="url(#qaragat_blur027)"><ellipse cx="12.11" cy="8.17" rx="1.09" ry="0.68" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 12.11 8.17)"/></g>
+<circle cx="13.91" cy="12.05" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="8.6" cy="14.6" r="3.6" fill="url(#qaragat_fill6)"/>
+<circle cx="8.6" cy="14.6" r="3.6" fill="url(#qaragat_fill7)"/>
+<g filter="url(#qaragat_blur029)"><ellipse cx="7.23" cy="13.09" rx="1.15" ry="0.72" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 7.23 13.09)"/></g>
+<circle cx="9.14" cy="17.19" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="15.4" cy="15.6" r="3.8" fill="url(#qaragat_fill8)"/>
+<circle cx="15.4" cy="15.6" r="3.8" fill="url(#qaragat_fill9)"/>
+<g filter="url(#qaragat_blur03)"><ellipse cx="13.96" cy="14" rx="1.22" ry="0.76" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 13.96 14)"/></g>
+<circle cx="15.97" cy="18.34" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="10.2" cy="20.6" r="3.9" fill="url(#qaragat_fill10)"/>
+<circle cx="10.2" cy="20.6" r="3.9" fill="url(#qaragat_fill11)"/>
+<g filter="url(#qaragat_blur031)"><ellipse cx="8.72" cy="18.96" rx="1.25" ry="0.78" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 8.72 18.96)"/></g>
+<circle cx="10.79" cy="23.41" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="17.6" cy="22.2" r="4.1" fill="url(#qaragat_fill12)"/>
+<circle cx="17.6" cy="22.2" r="4.1" fill="url(#qaragat_fill13)"/>
+<g filter="url(#qaragat_blur033)"><ellipse cx="16.04" cy="20.48" rx="1.31" ry="0.82" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 16.04 20.48)"/></g>
+<circle cx="18.21" cy="25.15" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="11.6" cy="27" r="3.6" fill="url(#qaragat_fill14)"/>
+<circle cx="11.6" cy="27" r="3.6" fill="url(#qaragat_fill15)"/>
+<g filter="url(#qaragat_blur029)"><ellipse cx="10.23" cy="25.49" rx="1.15" ry="0.72" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 10.23 25.49)"/></g>
+<circle cx="12.14" cy="29.59" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<circle cx="22.4" cy="15.4" r="3.4" fill="url(#qaragat_fill16)"/>
+<circle cx="22.4" cy="15.4" r="3.4" fill="url(#qaragat_fill17)"/>
+<g filter="url(#qaragat_blur027)"><ellipse cx="21.11" cy="13.97" rx="1.09" ry="0.68" fill="#D5D0E1" fill-opacity="0.85" transform="rotate(-35 21.11 13.97)"/></g>
+<circle cx="22.91" cy="17.85" r="0.55" fill="#3A234A" fill-opacity="0.8"/>
+<defs>
+<radialGradient id="qaragat_fill1" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="qaragat_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<linearGradient id="qaragat_fill3" x1="21" y1="7.2" x2="10.4" y2="26.2" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<radialGradient id="qaragat_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<filter id="qaragat_blur027" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.27"/></filter>
+<radialGradient id="qaragat_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<filter id="qaragat_blur029" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.29"/></filter>
+<radialGradient id="qaragat_fill8" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<filter id="qaragat_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<radialGradient id="qaragat_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<filter id="qaragat_blur031" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.31"/></filter>
+<radialGradient id="qaragat_fill12" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<filter id="qaragat_blur033" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.33"/></filter>
+<radialGradient id="qaragat_fill14" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+<radialGradient id="qaragat_fill16" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#74619A"/><stop offset="0.5" stop-color="#3D2A57"/><stop offset="1" stop-color="#1B1029"/></radialGradient>
+<radialGradient id="qaragat_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#1B1029" stop-opacity="0.6"/><stop offset="0.9" stop-color="#1B1029" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

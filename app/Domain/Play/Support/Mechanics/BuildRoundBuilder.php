@@ -16,6 +16,7 @@ use App\Domain\Play\Data\SolutionData;
 use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Enums\SolutionOrder;
 use App\Domain\Play\Support\Playable;
+use App\Domain\Play\Support\PromptVoice;
 use Illuminate\Support\Str;
 use LogicException;
 use Random\Randomizer;
@@ -35,7 +36,10 @@ use Random\Randomizer;
  */
 abstract readonly class BuildRoundBuilder implements RoundBuilder
 {
-    public function __construct(protected ContentRepository $content) {}
+    public function __construct(
+        protected ContentRepository $content,
+        protected PromptVoice $voice,
+    ) {}
 
     abstract protected function mechanic(): Mechanic;
 
@@ -71,7 +75,10 @@ abstract readonly class BuildRoundBuilder implements RoundBuilder
      */
     abstract protected function decoys(string $target, PackData $pack, LevelData $level, array $learned): array;
 
-    abstract protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template): PromptData;
+    /**
+     * @param  string|null  $audio  the clip that says it (`PromptVoice`, §3 "Voice"), null for none
+     */
+    abstract protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template, ?string $audio): PromptData;
 
     public function shortage(PackData $pack, LevelData $level, array $learned, ?array $letters = null): ?string
     {
@@ -118,7 +125,7 @@ abstract readonly class BuildRoundBuilder implements RoundBuilder
                 unit: $level->unit,
                 pack: $pack->key,
                 level: $level->key,
-                prompt: $this->prompt($target, $pack, $case, $template),
+                prompt: $this->prompt($target, $pack, $case, $template, $this->voice->url($template, $target, $pack)),
                 items: $items,
                 slots: count($solution),
                 solution: new SolutionData(SolutionOrder::Sequence, $solution),

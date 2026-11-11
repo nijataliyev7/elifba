@@ -1,12 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- armudu: the pear-shaped tea glass with a gold rim. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M23,12 L49,12 C49,20 41,26 41,32 C41,37 53,41 53,49 C53,57 45,61 36,61 C27,61 19,57 19,49 C19,41 31,37 31,32 C31,26 23,20 23,12 Z" fill="#92D3F5"/>
-    <path d="M23.4,12 L48.6,12 L48,16.5 L24,16.5 Z" fill="#F1B31C" stroke="none"/>
-    <path d="M24.5,47 C24,51 25.5,54.5 28.5,56.5" fill="none" stroke="#FFF" stroke-width="3"/>
-    <path d="M27.5,19.5 C29.5,22.5 31,25 32,28" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <path d="M23,12 L49,12 C49,20 41,26 41,32 C41,37 53,41 53,49 C53,57 45,61 36,61 C27,61 19,57 19,49 C19,41 31,37 31,32 C31,26 23,20 23,12 Z" fill="none"/>
-    <line x1="24" y1="16.5" x2="48" y2="16.5" stroke-width="1.5"/>
-    <rect x="30.6" y="31" width="10.8" height="3.5" rx="1" fill="#F1B31C" stroke-width="1.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- armudu: an empty pear-shaped tea glass with a gold rim. Elifba own art, MIT. -->
+<ellipse cx="16" cy="29.4" rx="7.4" ry="0.9" fill="#8FBDE6" fill-opacity="0.35"/>
+<path d="M8.08 3.4L23.92 3.4C23.68 6.76 20.8 9.64 20.8 12.28C20.8 14.68 25.36 17.08 25.36 21.64C25.36 26.68 21.52 29.32 16 29.32C10.48 29.32 6.64 26.68 6.64 21.64C6.64 17.08 11.2 14.68 11.2 12.28C11.2 9.64 8.32 6.76 8.08 3.4Z" fill="url(#armudu_fill1)" fill-opacity="0.75"/>
+<path d="M8.08 3.4L23.92 3.4C23.68 6.76 20.8 9.64 20.8 12.28C20.8 14.68 25.36 17.08 25.36 21.64C25.36 26.68 21.52 29.32 16 29.32C10.48 29.32 6.64 26.68 6.64 21.64C6.64 17.08 11.2 14.68 11.2 12.28C11.2 9.64 8.32 6.76 8.08 3.4Z" fill="url(#armudu_fill2)"/>
+<ellipse cx="16" cy="3.64" rx="7.56" ry="1.32" fill="url(#armudu_fill3)" fill-opacity="0.7"/>
+<path d="M23.8 3.52C23.8 4.28 20.31 4.9 16 4.9C11.69 4.9 8.2 4.28 8.2 3.52C8.2 2.76 11.69 2.14 16 2.14C20.31 2.14 23.8 2.76 23.8 3.52Z" stroke="#F8CA4D" stroke-width="0.96" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.2 13.24Q16 14.2 20.8 13.24" stroke="#F8CA4D" stroke-width="0.72" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85"/>
+<g filter="url(#armudu_blur042)"><path d="M9.04 18.52C8.08 22.12 9.28 25.48 12.16 27.4C9.04 26.68 6.88 23.32 9.04 18.52Z" fill="#FFFFFF" fill-opacity="0.9"/></g>
+<g filter="url(#armudu_blur042)"><ellipse cx="22.72" cy="21.88" rx="0.72" ry="2.64" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(-10 22.72 21.88)"/></g>
+<g filter="url(#armudu_blur036)"><ellipse cx="11.2" cy="6.52" rx="0.54" ry="1.68" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(35 11.2 6.52)"/></g>
+<defs>
+<radialGradient id="armudu_fill1" cx="0.3" cy="0.3" r="0.85"><stop stop-color="#E8FDFF"/><stop offset="0.5" stop-color="#C7EBFF"/><stop offset="1" stop-color="#8FBDE6"/></radialGradient>
+<radialGradient id="armudu_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#8FBDE6" stop-opacity="0.7"/><stop offset="0.9" stop-color="#8FBDE6" stop-opacity="0"/></radialGradient>
+<radialGradient id="armudu_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#D0EDFF"/><stop offset="0.5" stop-color="#9CC8EE"/><stop offset="1" stop-color="#6E99CC"/></radialGradient>
+<filter id="armudu_blur042" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.42"/></filter>
+<filter id="armudu_blur036" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.36"/></filter>
+</defs>
 </svg>

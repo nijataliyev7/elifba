@@ -1,14 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- tunel: rails going into a dark arched tunnel in a green hill. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4,56 C8,30 20,12 36,12 C52,12 64,30 68,56 Z" fill="#B1CC33"/>
-    <path d="M56,22 C62,30 66,42 68,56 L60,56 C60,40 58,30 56,22 Z" fill="#5C9E31" stroke="none"/>
-    <path d="M4,56 C8,30 20,12 36,12 C52,12 64,30 68,56" fill="none"/>
-    <path d="M20,56 L20,40 C20,22 52,22 52,40 L52,56 Z" fill="#D0CFCE"/>
-    <path d="M25,56 L25,41 C25,28 47,28 47,41 L47,56 Z" fill="#3F3F3F"/>
-    <path d="M30,30 L30,26 M42,30 L42,26 M22.5,36 L19.5,35 M49.5,36 L52.5,35" fill="none" stroke="#000" stroke-width="1.5"/>
-    <path d="M4,56 L68,56" fill="none"/>
-    <path d="M31,56 L24,67 M41,56 L48,67" fill="none"/>
-    <path d="M30,59 L42,59 M28,63 L44,63 M26.5,66 L45.5,66" fill="none" stroke="#6A462F" stroke-width="2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- tunel: a railway tunnel through a green hill. Elifba own art, MIT. -->
+<path d="M1 29.6Q1.4 13 9 7Q16 1.6 23 7Q30.6 13 31 29.6Z" fill="url(#tunel_fill1)"/>
+<path d="M1 29.6Q1.4 13 9 7Q16 1.6 23 7Q30.6 13 31 29.6Z" fill="url(#tunel_fill2)"/>
+<g filter="url(#tunel_blur05)"><ellipse cx="9.6" cy="8.6" rx="2.6" ry="1" fill="#FFFFFF" fill-opacity="0.55" transform="rotate(-35 9.6 8.6)"/></g>
+<path d="M7.2 29.6L7.2 20.4Q7.2 11.4 16 11.4Q24.8 11.4 24.8 20.4L24.8 29.6Z" fill="url(#tunel_fill3)"/>
+<path d="M7.2 29.6L7.2 20.4Q7.2 11.4 16 11.4Q24.8 11.4 24.8 20.4L24.8 29.6Z" fill="url(#tunel_fill4)"/>
+<path d="M10 29.6L10 20.6Q10 14.4 16 14.4Q22 14.4 22 20.6L22 29.6Z" fill="url(#tunel_fill5)"/>
+<path d="M10 29.6L10 20.6Q10 14.4 16 14.4Q22 14.4 22 20.6L22 29.6Z" fill="url(#tunel_fill6)"/>
+<rect x="10.8" y="28.6" width="10.4" height="0.9" rx="0.4" fill="url(#tunel_fill7)"/>
+<rect x="11.8" y="26.4" width="8.4" height="0.9" rx="0.4" fill="url(#tunel_fill8)"/>
+<rect x="12.6" y="24.6" width="6.8" height="0.9" rx="0.4" fill="url(#tunel_fill9)"/>
+<path d="M12.6 29.6L14.6 23.4" stroke="#C2BDC9" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.4 29.6L17.4 23.4" stroke="#C2BDC9" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<radialGradient id="tunel_fill1" cx="0.3" cy="0.15" r="0.9"><stop stop-color="#67C175"/><stop offset="0.5" stop-color="#3BDE75"/><stop offset="1" stop-color="#286A54"/></radialGradient>
+<radialGradient id="tunel_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#286A54" stop-opacity="0.5"/><stop offset="0.9" stop-color="#286A54" stop-opacity="0"/></radialGradient>
+<filter id="tunel_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="tunel_fill3" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="tunel_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.5"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<radialGradient id="tunel_fill5" cx="0.5" cy="0.2" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="tunel_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#33293D" stop-opacity="0.5"/><stop offset="0.9" stop-color="#33293D" stop-opacity="0"/></radialGradient>
+<radialGradient id="tunel_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#B57A5E"/><stop offset="0.5" stop-color="#A2694F"/><stop offset="1" stop-color="#6A4532"/></radialGradient>
+<radialGradient id="tunel_fill8" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#B57A5E"/><stop offset="0.5" stop-color="#A2694F"/><stop offset="1" stop-color="#6A4532"/></radialGradient>
+<radialGradient id="tunel_fill9" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#B57A5E"/><stop offset="0.5" stop-color="#A2694F"/><stop offset="1" stop-color="#6A4532"/></radialGradient>
+</defs>
 </svg>

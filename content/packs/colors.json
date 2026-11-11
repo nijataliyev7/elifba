@@ -1,0 +1,32 @@
+{
+    "key": "colors",
+    "version": 6,
+    "title": { "az": "Rənglər", "en": "Colours" },
+    "units": ["picture"],
+    "style": {
+        "item": "picture",
+        "slot": "frame",
+        "effect": "burst",
+        "cover": "colors/goy.svg",
+        "backdrop": "colors/goy-uzu.svg",
+        "palette": ["#3F3F3F"],
+        "sounds": {
+            "hit": "sounds/pop.mp3",
+            "miss": "sounds/pluck-down.mp3",
+            "solved": "sounds/bells.mp3"
+        }
+    },
+    "words": [
+        { "text": "qırmızı", "image": "colors/qirmizi.svg" },
+        { "text": "sarı", "image": "colors/sari.svg" },
+        { "text": "yaşıl", "image": "colors/yasil.svg" },
+        { "text": "göy", "image": "colors/goy.svg" },
+        { "text": "narıncı", "image": "colors/narinci.svg" },
+        { "text": "bənövşəyi", "image": "colors/benovseyi.svg" },
+        { "text": "çəhrayı", "image": "colors/cehrayi.svg" },
+        { "text": "qəhvəyi", "image": "colors/qehveyi.svg" },
+        { "text": "qara", "image": "colors/qara.svg" },
+        { "text": "ağ", "image": "colors/ag.svg" },
+        { "text": "boz", "image": "colors/boz.svg" }
+    ]
+}

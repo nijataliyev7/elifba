@@ -16,9 +16,12 @@
  * shrinks only to fit a long word (`böyürtkən`, `dəvəquşu`) on the plate.
  *
  * The scene rasterises every figure once (`FIGURE_RASTER`, the largest an
- * item draws one), so `draw()` can also make the build rounds' copies.
+ * item draws one), so `draw()` can also make the build rounds' copies. The
+ * plate is painted once per colour and size (`plateTexture()`) in the
+ * Fluent manner of the pictures above it, without an outline.
  */
 import Phaser from 'phaser';
+import { css, paintPlate, step, texture } from './fluent';
 import { itemLabel, shade } from './item';
 import type { Band, ItemDrawing, ItemLayout, ItemLook } from './types';
 
@@ -32,6 +35,8 @@ const ROOM = 0.86;
 const RIM = 0.022;
 /** Space kept free at both ends of a band. */
 const BAND_GAP = 6;
+/** Room around the plate in its texture, for its shadow ÷ the item's width. */
+const PAD = 0.06;
 
 /** How one style of figure item is shaped and laid out. */
 export type FigureShape = {
@@ -91,6 +96,41 @@ export function figureLayout(
     };
 }
 
+/**
+ * The plate without its text, painted once per colour and size in ADR
+ * 014's Fluent manner: no outline — a surface in the colour, lit from the
+ * top left, whose rim shows round a light face set into it — and a soft
+ * shadow in the colour's deep shade, never grey.
+ */
+function plateTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    width: number,
+): { key: string; pad: number; w: number; h: number } {
+    const w = step(width);
+    const h = Math.round(w * PLATE);
+    const pad = Math.ceil(w * PAD);
+    const key = `figure-plate-${css(colour)}-${w}`;
+
+    texture(scene, key, w + pad * 2, h + pad * 2, (context) => {
+        const rim = Math.max(4, w * RIM);
+
+        paintPlate(
+            context,
+            { x: pad, y: pad, width: w, height: h },
+            {
+                colour,
+                radius: h * 0.28,
+                inset: { side: rim, top: rim, bottom: rim },
+                face: shade(colour, 0.86),
+                shadow: { blur: w * 0.05, drop: w * 0.025 },
+            },
+        );
+    });
+
+    return { key, pad, w, h };
+}
+
 /** A figure item, still: the picture, the plate in a palette colour and the text. */
 export function drawFigure(
     scene: Phaser.Scene,
@@ -108,7 +148,6 @@ export function drawFigure(
         width * shape.maxFigure,
         (plateTop - top) / (1 - shape.overlap),
     );
-    const radius = plate * 0.28;
     const rim = Math.max(4, width * RIM);
     const face = shade(colour, 0.86);
     const parts: Phaser.GameObjects.GameObject[] = [];
@@ -125,22 +164,12 @@ export function drawFigure(
         );
     }
 
-    const sign = scene.add.graphics();
+    const paint = plateTexture(scene, colour, width);
+    const scale = width / paint.w;
+    const sign = scene.add
+        .image(0, plateTop + plate / 2, paint.key)
+        .setScale(scale);
 
-    sign.fillStyle(0x1f2937, 0.16);
-    sign.fillRoundedRect(-width / 2 + 6, plateTop + 10, width, plate, radius);
-    sign.fillStyle(face, 1);
-    sign.fillRoundedRect(-width / 2, plateTop, width, plate, radius);
-    sign.lineStyle(rim, colour, 1);
-    sign.strokeRoundedRect(
-        -width / 2 + rim / 2,
-        plateTop + rim / 2,
-        width - rim,
-        plate - rim,
-        radius - rim / 2,
-    );
-    sign.lineStyle(3, shade(colour, -0.3), 1);
-    sign.strokeRoundedRect(-width / 2, plateTop, width, plate, radius);
     parts.push(sign);
 
     const label = itemLabel(
@@ -157,9 +186,15 @@ export function drawFigure(
     return {
         root: scene.add.container(0, 0, parts),
         body: sign,
-        // The whole item, picture and plate, takes a touch.
+        // The whole item, picture and plate, takes a touch: in the plate
+        // image's own frame, in texture px.
         hitArea: {
-            hitArea: new Phaser.Geom.Rectangle(-width / 2, top, width, height),
+            hitArea: new Phaser.Geom.Rectangle(
+                paint.pad,
+                paint.pad + paint.h / 2 + (top - plateTop - plate / 2) / scale,
+                paint.w,
+                height / scale,
+            ),
             hitAreaCallback: (
                 area: Phaser.Geom.Rectangle,
                 px: number,

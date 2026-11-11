@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Classroom\Models\SchoolClass;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Actions\CloseGuestBoard;
 use App\Domain\Play\Actions\TransitionGameSession;
 use App\Domain\Play\Enums\GameSessionStatus;
@@ -147,4 +148,35 @@ it('refuses the bearer even when the owner is logged in on the same computer, fo
 
     joinChannel($this->game, GuestBoards::bearer($board['token']))->assertForbidden();
     joinChannel($this->game)->assertOk();
+});
+
+it('authorizes the owner of a home game and the board that shows it, and nobody else', function (): void {
+    $parent = User::factory()->parent()->create();
+    $child = Child::factory()->for($parent, 'parent')->create();
+    $home = Games::start($child);
+    $board = GuestBoards::showing($home);
+    $otherBoard = GuestBoards::showing(Games::start($child, seed: 2));
+
+    // The parent's session and the board showing the game.
+    $this->actingAs($parent);
+    joinChannel($home)->assertOk()->assertExactJson(['auth' => channelSignature($home)]);
+    $this->app['auth']->guard('web')->forgetUser();
+    joinChannel($home, GuestBoards::bearer($board['token']))->assertOk()->assertExactJson(['auth' => channelSignature($home)]);
+
+    // Not the board showing the parent's other game, another parent, a
+    // teacher, an account without a role, or a guest.
+    joinChannel($home, GuestBoards::bearer($otherBoard['token']))->assertForbidden();
+
+    foreach ([User::factory()->parent()->create(), $this->teacher, User::factory()->teacherAndParent()->create(), User::factory()->withoutRole()->create()] as $other) {
+        $this->actingAs($other);
+        joinChannel($home)->assertForbidden();
+    }
+
+    $this->app['auth']->guard('web')->forgetUser();
+    joinChannel($home)->assertForbidden();
+
+    // Nobody once it has ended.
+    app(TransitionGameSession::class)->handle($home, GameSessionStatus::Finished);
+    $this->actingAs($parent);
+    joinChannel($home)->assertForbidden();
 });

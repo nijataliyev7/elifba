@@ -4,6 +4,7 @@ use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\SoundChoices;
 use App\Domain\Play\Actions\CloseGuestBoard;
 use App\Domain\Play\Actions\PruneGuestBoards;
 use App\Domain\Play\Enums\GameSessionStatus;
@@ -140,28 +141,38 @@ it('sends the board exactly the board props, whatever the teacher chose for the 
 
     $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
 
-    expect(array_keys($poll->json('props')))->toBe(['game', 'schoolClass', 'pack', 'students'])
+    expect(array_keys($poll->json('props')))->toBe(['game', 'schoolClass', 'child', 'pack', 'students', 'voice'])
         ->and($poll->json('props'))->toEqual(json_decode((string) json_encode(BoardProps::of($game->refresh())), true));
 })->with(['remote on' => [true], 'remote off' => [false]]);
+
+it('plays the sounds the game\'s owner chose, as the teacher board does', function (): void {
+    $this->teacher->forceFill(['board_sounds' => ['miss' => 'pluck-down']])->save();
+    $game = Games::start($this->class);
+    $board = GuestBoards::showing($game);
+
+    $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
+
+    expect($poll->json('props.pack.style.sounds.miss'))->toBe(ContentAssets::url('sounds/pluck-down.mp3', SoundChoices::version()));
+});
 
 it('sends the board the pictures and figures of the game\'s pack, as the teacher board gets them', function (): void {
     $game = Games::start($this->class, ['pack' => 'animals']);
     $board = GuestBoards::showing($game);
     $pack = app(ContentRepository::class)->pack('animals');
-    $cow = array_search('openmoji/1F404.svg', $pack->style->figures, true);
+    $cow = array_search('fluent/1F404.svg', $pack->style->figures, true);
 
     $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
 
     expect($poll->json('props.pack.style.item'))->toBe('animal')
         ->and($poll->json('props.pack.style.figures'))->toHaveCount(count($pack->style->figures))
-        ->and($poll->json("props.pack.style.figures.{$cow}"))->toBe(['url' => ContentAssets::url('openmoji/1F404.svg', $pack->version), 'words' => ['word:inək']])
+        ->and($poll->json("props.pack.style.figures.{$cow}"))->toBe(['url' => ContentAssets::url('fluent/1F404.svg', $pack->version), 'words' => ['word:inək']])
         ->and($poll->json('props.pack.style.figures.0.words'))->toBe([])
         ->and($poll->json('props.pack.pictures')['word:dəvəquşu'])->toBe([ContentAssets::url('animals/devequsu.svg', $pack->version)])
         ->and($poll->json('props.pack.pictures')['letter:p'])->toBe(array_map(
             static fn (string $path): string => ContentAssets::url($path, $pack->version),
-            ['openmoji/1F408.svg', 'openmoji/1F405.svg', 'openmoji/1F427.svg'],
+            ['fluent/1F408.svg', 'fluent/1F405.svg', 'fluent/1F427.svg'],
         ))
-        ->and($poll->json('props.pack.pictures')['syllable:pi'])->toBe([ContentAssets::url('openmoji/1F408.svg', $pack->version)])
+        ->and($poll->json('props.pack.pictures')['syllable:pi'])->toBe([ContentAssets::url('fluent/1F408.svg', $pack->version)])
         ->and($poll->json('props.pack.pictures'))->not->toHaveKey('letter:ə');
 });
 
@@ -218,9 +229,12 @@ it('offers the teacher who claimed it the next game, on the same page as the cod
             ->where('code', null)
             ->where('board', ['id' => $board['board']->id])
             ->where('games.0.id', $game->id)
+            // Named as the setup names it: «Hərflər · Tap!».
+            ->where('games.0.level', ['title' => 'Hərflər', 'unit' => 'letter'])
             ->where('classes', [['id' => $this->class->id, 'name' => '1A']])
             ->has('setup.classes.'.$this->class->id.'.options')
-            ->has('setup.classes.'.$this->class->id.'.letters'));
+            ->has('setup.classes.'.$this->class->id.'.letters')
+            ->where('setup.classes.'.$this->class->id.'.allLetters', true));
 });
 
 it('offers no next game for a board that is not the teacher\'s, or not active', function (Closure $board): void {

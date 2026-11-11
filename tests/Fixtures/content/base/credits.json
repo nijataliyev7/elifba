@@ -26,6 +26,13 @@
             "changes": "Drawn as plain shapes for the tests."
         },
         {
+            "files": ["content/assets/voice/*"],
+            "title": "Sample voice clips",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
             "files": ["content/assets/sample/words/*"],
             "title": "Sample word pictures",
             "author": "Elifba",

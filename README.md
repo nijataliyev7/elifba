@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  Free and open source, made for first-grade reading lessons. Use it at <a href="https://elifba.io"><strong>elifba.io</strong></a>, with nothing to install.
+  Free and open source, made for first-grade reading lessons and for parents at home. Use it at <a href="https://elifba.io"><strong>elifba.io</strong></a>, with nothing to install.
 </p>
 
 <p align="center">
@@ -26,10 +26,12 @@
 
 ## What it does
 
-1. A **teacher** registers, creates a **class** and adds **students** by pasting a list of first names. Elifba suggests short display names and gives every child a cartoon animal. Children never get an account.
-2. The teacher opens a **game** on the laptop connected to the projector: the **board**. A game is one of four mechanics (find a letter, syllable or word; build a syllable; build a word; build a sentence) in one of six themes (train, balloons, animals, fruit, our cities, national symbols), filtered to the letters the class has learned.
+1. A **teacher** registers, chooses «Müəllim» (Teacher), creates a **class** and adds **students** by pasting a list of first names. Elifba suggests short display names and gives every child a cartoon animal. Children never get an account.
+2. The teacher opens a **game** on the laptop connected to the projector: the **board**. A game is one of six mechanics (find a letter, syllable, word or picture; read and tap; build a syllable; build a word; build a sentence; count) in one of eight themes (train, balloons, animals, fruit, our cities, national symbols, colours, numbers). Reading games use only the letters the class has learned.
 3. The teacher scans the board's QR code, or types its six-digit code at `/pult`, and the phone becomes the **remote**. A child touches an item on the wall; at the same moment the teacher taps it on the phone, and the board bursts it. To the class it looks as if the wall reacted to the child. A touch screen or a mouse works without a phone, and a shared school computer can be a **guest board** (`/lovhe`) without the teacher logging in on it.
 4. Solved rounds give points to the child at the board. Each class has a daily and a weekly **ranking**, and a **podium** with an image the teacher can share as a WhatsApp status: names, avatars, places, points and the date, nothing else.
+
+**The board speaks.** It says each round's prompt aloud in Azerbaijani («Dovşan hansıdır?», «Ba hecasını tap!») and praises a solved round («Afərin!»). The voice is synthetic: about nine hundred clips made once with ElevenLabs and shipped in the repository, so nothing is synthesised while you play and no key is needed to run Elifba. It never says a name, and a prompt with a teacher's own word stays silent. Each account can turn the prompt or the praise off in Settings.
 
 The interface is Azerbaijani first, with English; the reading content is always Azerbaijani.
 
@@ -38,6 +40,23 @@ The interface is Azerbaijani first, with English; the reading content is always 
 | <img src="docs/screenshots/class.png" width="560" alt="The class page of 1A: sixteen students, each with a number, a cartoon animal and a first name"> | <img src="docs/screenshots/remote.png" width="220" alt="The phone remote: the prompt «Ö» hərfini tap!, four letter buttons with Ö marked as the answer, Aysel at the board, and pause, skip and end buttons"> |
 
 <img src="docs/screenshots/podium.png" width="820" alt="The podium of 1A for 9 November 2026: Aysel first with 21 points, Murad second with 18, Nigar third with 15, and the WhatsApp status image beside it">
+
+## At home, for parents
+
+Elifba works without a class too. A **parent** registers, chooses «Valideyn» (Parent) and adds their **children**: a first name and a cartoon animal each, up to ten. One account can be a teacher and a parent at once; the second role is added later in Settings.
+
+- **Picture and number games** for children of three to six who cannot read yet: find the animal, fruit or colour the parent names, say a picture's name and tap it, count pictures, and recognise the numbers 1 to 10. The board says the prompt aloud («Dovşan hansıdır?», «Neçə alma var?»), so a child who cannot read yet can play; the parent can still read it instead.
+- **The reading games** of the classroom, for a child who is starting to read, built from the letters that child has learned.
+- **The same board and remote.** The board opens on a laptop or a tablet at home; the phone becomes the remote, or the child touches the screen.
+- **Stars, not rankings.** Each child collects stars by day and by week. Brothers and sisters are never compared: there is no ranking, place, podium or share card at home.
+
+| Choose the role                                                                                                                                                              | Your children                                                                                                                                                        | A child's stars                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="docs/screenshots/role.png" width="220" alt="After registering: «Elifba-dan necə istifadə edəcəksiniz?» with two cards, Müəllim and Valideyn, and Valideyn chosen"> | <img src="docs/screenshots/children.png" width="220" alt="Uşaqlarım: three children, Nərmin, Tural and Ayla, each with an animal, today's stars and an Oyna button"> | <img src="docs/screenshots/child.png" width="220" alt="Nərmin's page: 3 stars today, 8 this week and 20 in all, and a bar for each of the last seven days"> |
+
+| A picture game at home                                                                                                                                        | The parent's remote                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <img src="docs/screenshots/home-board.png" width="560" alt="The board at home: «zürafə» hansıdır? over a giraffe and a cat, and Tural playing in the corner"> | <img src="docs/screenshots/home-remote.png" width="220" alt="The remote on the parent's phone: the giraffe marked as the answer, the cat, Tural playing, and pause, skip and end buttons"> |
 
 ## Help
 
@@ -60,7 +79,7 @@ composer setup     # Composer and npm packages, .env, app and Reverb keys, the S
 composer dev       # Vite, Reverb, the log tail and artisan serve
 ```
 
-Open `http://elifba.test` (Herd) or `http://localhost:8000` (without Herd) and register: the first account is a teacher like every other. Mail goes to the log in development; the link that confirms the address is the last one this prints:
+Open `http://elifba.test` (Herd) or `http://localhost:8000` (without Herd) and register, then choose a role («Müəllim» or «Valideyn»); the first account is like every other. Mail goes to the log in development; the link that confirms the address is the last one this prints:
 
 ```bash
 tr -d '\r' < storage/logs/laravel.log | grep -oE 'https?://[^] ()<]+/email/verify/[^] ()<]+$' | tail -n 1
@@ -74,7 +93,7 @@ The code:
 
 - **Stack:** Laravel 13, Inertia 3, React 19, TypeScript, Tailwind 4, shadcn/ui, Phaser for the board, Laravel Reverb for the phone, Wayfinder, Pest. Built on the official Laravel React starter kit.
 - **Design:** [`docs/architecture.md`](docs/architecture.md) is the contract the code follows; [`docs/glossary.md`](docs/glossary.md) maps Azerbaijani terms to code names; [`docs/decisions/`](docs/decisions/) records the hard-to-reverse choices; [`docs/frontend.md`](docs/frontend.md) has the UI rules.
-- **Domains:** `app/Domain/{Language,Content,Classroom,Play,Rankings}`, one-way in that order.
+- **Domains:** `app/Domain/{Language,Content,Classroom,Family,Play,Rankings}`, one-way in that order.
 - **Content:** letters, words, sentences, prompts and theme pictures are files in [`content/`](content/), checked by `php artisan content:validate`.
 - **Languages:** `lang/az.json` (base) and `lang/en.json`; a test keeps them in step.
 - **CI:** GitHub Actions runs `composer ci:check` on SQLite, the Pest suite on PostgreSQL 17, and [`scripts/docker-smoke.sh`](scripts/docker-smoke.sh) against the Docker stack.
@@ -111,7 +130,7 @@ docker compose up -d --build --wait
 
 The first build takes a few minutes. The command returns when every service is healthy; `docker compose ps` shows them, and `docker compose logs -f app` follows the log. The app runs its database migrations each time it starts.
 
-**The first teacher.** Open `https://elifba.example.az/register` and register. Anyone who can open the address can register as a teacher, and each teacher sees only their own classes. Without SMTP, the confirmation link is in the log:
+**The first account.** Open `https://elifba.example.az/register` and register. Anyone who can open the address can register as a teacher or a parent, and each account sees only its own classes and children. Without SMTP, the confirmation link is in the log:
 
 ```bash
 docker compose logs app | tr -d '\r' | grep -oE 'https?://[^] ()<]+/email/verify/[^] ()<]+$' | tail -n 1
@@ -160,7 +179,7 @@ Open `http://localhost:8088/register`; the confirmation link is in the log as ab
 
 ## Privacy
 
-Elifba stores the minimum about children: a first name (and a surname initial only to tell two apart) and a cartoon avatar, owned by one teacher. No student login, no photos, no birth dates, no third-party scripts, fonts or analytics. Deleting a student or a class deletes it. Details: [architecture §7](docs/architecture.md#7-childrens-privacy).
+Elifba stores the minimum about children: a first name (and a surname initial only to tell two apart) and a cartoon avatar, owned by one teacher. A parent's child is the same: a first name and an avatar, owned by one parent, with no age or birth date. No student login, no photos, no birth dates, no third-party scripts, fonts or analytics. Deleting a student, a class or a child deletes it. Details: [architecture §7](docs/architecture.md#7-childrens-privacy).
 
 ## Security
 
@@ -168,6 +187,6 @@ Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Elifba's code and its own art are under the [MIT License](LICENSE). Files made by others keep their own licenses: the OpenMoji pictures in `content/assets/openmoji/` are under CC BY-SA 4.0, the fonts in `resources/fonts/` under the SIL Open Font License 1.1, and Kenney's avatars and sounds are CC0 1.0 (public domain). Showing a picture does not put the code that shows it under the picture's license.
+Elifba's code and its own art are under the [MIT License](LICENSE). Files made by others keep their own licenses: the Fluent Emoji pictures in `content/assets/fluent/` are © Microsoft Corporation under the MIT License, the fonts in `resources/fonts/` under the SIL Open Font License 1.1, and Kenney's avatars and sounds are CC0 1.0 (public domain). The board's voice in `content/assets/voice/` is synthetic speech made for Elifba with ElevenLabs, under the MIT License too.
 
-All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). [CREDITS.md](CREDITS.md) lists every asset with its author, source and license (and the app shows the same list at `/credits`).
+[CREDITS.md](CREDITS.md) lists every asset with its author, source and license (and the app shows the same list at `/credits`).

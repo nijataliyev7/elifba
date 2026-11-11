@@ -1,16 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- otaq: a room seen from inside, with a lamp, a picture and a rug. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="6,6 66,6 52,18 20,18" fill="#D0CFCE"/>
-    <polygon points="6,6 20,18 20,46 6,62" fill="#61B2E4"/>
-    <polygon points="66,6 52,18 52,46 66,62" fill="#61B2E4"/>
-    <rect x="20" y="18" width="32" height="28" fill="#92D3F5"/>
-    <polygon points="20,46 52,46 66,62 6,62" fill="#A57939"/>
-    <ellipse cx="36" cy="54" rx="14" ry="4" fill="#EA5A47"/>
-    <rect x="29" y="24" width="14" height="11" fill="#F1B31C" stroke-width="1.5"/>
-    <path d="M30.5,33.5 L35,28 L38,31 L40,29 L41.5,33.5 Z" fill="#B1CC33" stroke-width="1"/>
-    <path d="M36,6 L36,11" fill="none"/>
-    <path d="M31,15 C31,11 41,11 41,15 Z" fill="#FCEA2B"/>
-    <path d="M6,6 L66,6 L66,62 L6,62 Z" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- otaq: a room seen from its door, a window, a lamp and a round rug. Elifba own art, MIT. -->
+<g clip-path="url(#otaq_clip1)">
+<path d="M1.6 1.6L30.4 1.6L22.6 7.4L9.4 7.4Z" fill="url(#otaq_fill2)"/>
+<path d="M1.6 1.6L30.4 1.6L22.6 7.4L9.4 7.4Z" fill="url(#otaq_fill3)"/>
+<path d="M1.6 1.6L9.4 7.4L9.4 20.6L1.6 30.4Z" fill="url(#otaq_fill4)"/>
+<path d="M1.6 1.6L9.4 7.4L9.4 20.6L1.6 30.4Z" fill="url(#otaq_fill5)"/>
+<path d="M30.4 1.6L22.6 7.4L22.6 20.6L30.4 30.4Z" fill="url(#otaq_fill6)"/>
+<path d="M30.4 1.6L22.6 7.4L22.6 20.6L30.4 30.4Z" fill="url(#otaq_fill7)"/>
+<rect x="9.4" y="7.4" width="13.2" height="13.2" fill="url(#otaq_fill8)"/>
+<rect x="9.4" y="7.4" width="13.2" height="13.2" fill="url(#otaq_fill9)"/>
+<path d="M9.4 20.6L22.6 20.6L30.4 30.4L1.6 30.4Z" fill="url(#otaq_fill10)"/>
+<path d="M9.4 20.6L22.6 20.6L30.4 30.4L1.6 30.4Z" fill="url(#otaq_fill11)"/>
+</g>
+<rect x="11.8" y="9.4" width="8.4" height="7.2" rx="0.8" fill="url(#otaq_fill12)"/>
+<rect x="11.8" y="9.4" width="8.4" height="7.2" rx="0.8" fill="url(#otaq_fill13)"/>
+<rect x="12.6" y="10.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill14)"/>
+<rect x="12.6" y="10.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill15)"/>
+<rect x="16.4" y="10.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill16)"/>
+<rect x="16.4" y="10.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill17)"/>
+<rect x="12.6" y="13.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill18)"/>
+<rect x="12.6" y="13.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill19)"/>
+<rect x="16.4" y="13.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill20)"/>
+<rect x="16.4" y="13.2" width="3" height="2.6" rx="0.3" fill="url(#otaq_fill21)"/>
+<g filter="url(#otaq_blur02)"><ellipse cx="13.6" cy="10.9" rx="0.6" ry="0.3" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(-30 13.6 10.9)"/></g>
+<ellipse cx="16" cy="25.2" rx="8.6" ry="2.8" fill="url(#otaq_fill22)"/>
+<ellipse cx="16" cy="25.2" rx="8.6" ry="2.8" fill="url(#otaq_fill23)"/>
+<ellipse cx="16" cy="25.2" rx="5.6" ry="1.7" fill="#FFD3DC" fill-opacity="0.55"/>
+<ellipse cx="16" cy="25.2" rx="3.4" ry="1" fill="url(#otaq_fill24)"/>
+<path d="M16 1.6L16 3.6" stroke="#6A6571" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.8 6.2Q13.2 3.2 16 3.2Q18.8 3.2 19.2 6.2Z" fill="url(#otaq_fill25)"/>
+<path d="M12.8 6.2Q13.2 3.2 16 3.2Q18.8 3.2 19.2 6.2Z" fill="url(#otaq_fill26)"/>
+<g filter="url(#otaq_blur03)"><ellipse cx="16" cy="6.4" rx="2.4" ry="0.5" fill="#FFF8C2" fill-opacity="0.9"/></g>
+<defs>
+<clipPath id="otaq_clip1"><rect x="1.6" y="1.6" width="28.8" height="28.8" rx="4" /></clipPath>
+<radialGradient id="otaq_fill2" cx="0.5" cy="0" r="0.9"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="otaq_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.3"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill4" cx="0.2" cy="0.2" r="1"><stop stop-color="#FFE4B3"/><stop offset="0.5" stop-color="#FFD19E"/><stop offset="1" stop-color="#D19580"/></radialGradient>
+<radialGradient id="otaq_fill5" cx="0" cy="1" r="0.7"><stop stop-color="#D19580" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D19580" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill6" cx="0.8" cy="0.2" r="1"><stop stop-color="#FFE4B3"/><stop offset="0.5" stop-color="#FFD19E"/><stop offset="1" stop-color="#D19580"/></radialGradient>
+<radialGradient id="otaq_fill7" cx="1" cy="1" r="0.7"><stop stop-color="#D19580" stop-opacity="0.8"/><stop offset="0.9" stop-color="#D19580" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill8" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FFE4B3"/><stop offset="0.5" stop-color="#FFD19E"/><stop offset="1" stop-color="#D19580"/></radialGradient>
+<radialGradient id="otaq_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D19580" stop-opacity="0.2"/><stop offset="0.9" stop-color="#D19580" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill10" cx="0.5" cy="0" r="1"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="otaq_fill11" cx="0.5" cy="1" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.5"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill12" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="otaq_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.3"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill14" cx="0.2" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="otaq_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.3"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill16" cx="0.2" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="otaq_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.3"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill18" cx="0.2" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="otaq_fill19" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.3"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill20" cx="0.2" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="otaq_fill21" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.3"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<filter id="otaq_blur02" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.2"/></filter>
+<radialGradient id="otaq_fill22" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="otaq_fill23" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="otaq_fill24" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="otaq_fill25" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="otaq_fill26" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.4"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="otaq_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+</defs>
 </svg>

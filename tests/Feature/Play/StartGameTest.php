@@ -3,6 +3,7 @@
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Language\Support\Az;
 use App\Domain\Play\Actions\StartGame;
+use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
@@ -85,7 +86,7 @@ it('uses only the letters the class has learned', function (): void {
 });
 
 it('stores the game and its rounds together or not at all', function (): void {
-    $setup = GameSetupData::validate(['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'rounds' => 5], $this->class);
+    $setup = GameSetupData::validate(['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'rounds' => 5], GamePlayers::forClass($this->class));
     $saved = 0;
 
     GameRound::creating(function () use (&$saved): void {
@@ -94,7 +95,7 @@ it('stores the game and its rounds together or not at all', function (): void {
         }
     });
 
-    expect(fn () => app(StartGame::class)->handle($this->class, $setup, 1))->toThrow(RuntimeException::class);
+    expect(fn () => app(StartGame::class)->handle(GamePlayers::forClass($this->class), $setup, 1))->toThrow(RuntimeException::class);
 
     expect(GameSession::query()->count())->toBe(0)
         ->and(GameRound::query()->count())->toBe(0);
@@ -104,5 +105,5 @@ it('gives the game to the class\'s teacher', function (): void {
     $game = Games::start($this->class);
 
     expect($game->user_id)->toBe($this->class->user_id)
-        ->and($game->teacher->is($this->class->teacher))->toBeTrue();
+        ->and($game->owner->is($this->class->teacher))->toBeTrue();
 });

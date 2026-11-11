@@ -1,10 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- nar: a pomegranate with its crown. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M28,22 L26,9 L31,13 L33.5,6.5 L36,12 L38.5,6.5 L41,13 L46,9 L44,22 Z" fill="#D22F27"/>
-    <circle cx="36" cy="42" r="23" fill="#EA5A47"/>
-    <path d="M53,30 C58,42 54,56 40,62 C50,60 58,52 59,42 C59.4,37 57.4,33 53,30 Z" fill="#D22F27" stroke="none"/>
-    <circle cx="36" cy="42" r="23" fill="none"/>
-    <path d="M24,32 C25,28 28,25.5 31,24.5" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- nar: a pomegranate with its crown, split open to show its seeds. Elifba own art, MIT. -->
+<path d="M11.95 9.2L11.28 4.39Q11.2 3.8 11.64 4.21L13.31 5.73Q13.6 6 13.79 5.65L15.31 2.92Q15.6 2.4 15.87 2.94L17.22 5.64Q17.4 6 17.68 5.72L19.38 4.02Q19.8 3.6 19.78 4.2L19.61 9.2Q19.6 9.6 19.2 9.6L12.4 9.6Q12 9.6 11.95 9.2Z" fill="url(#nar_fill1)"/>
+<path d="M11.95 9.2L11.28 4.39Q11.2 3.8 11.64 4.21L13.31 5.73Q13.6 6 13.79 5.65L15.31 2.92Q15.6 2.4 15.87 2.94L17.22 5.64Q17.4 6 17.68 5.72L19.38 4.02Q19.8 3.6 19.78 4.2L19.61 9.2Q19.6 9.6 19.2 9.6L12.4 9.6Q12 9.6 11.95 9.2Z" fill="url(#nar_fill2)"/>
+<circle cx="15.6" cy="18.6" r="11.4" fill="url(#nar_fill3)"/>
+<circle cx="15.6" cy="18.6" r="11.4" fill="url(#nar_fill4)"/>
+<g filter="url(#nar_blur06)"><ellipse cx="9.8" cy="12.8" rx="2.4" ry="1.4" fill="#FDE3E6" fill-opacity="0.65" transform="rotate(-40 9.8 12.8)"/></g>
+<ellipse cx="19.4" cy="21.4" rx="6.6" ry="5" fill="url(#nar_fill5)" transform="rotate(-28 19.4 21.4)"/>
+<ellipse cx="19.6" cy="21.6" rx="5.6" ry="4.1" fill="url(#nar_fill6)" transform="rotate(-28 19.6 21.6)"/>
+<ellipse cx="19.6" cy="21.6" rx="5.6" ry="4.1" fill="url(#nar_fill7)" transform="rotate(-28 19.6 21.6)"/>
+<circle cx="16.2" cy="21.6" r="1.2" fill="url(#nar_fill8)"/>
+<circle cx="15.8" cy="21.18" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.4" cy="19.4" r="1.2" fill="url(#nar_fill9)"/>
+<circle cx="18" cy="18.98" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="20.8" cy="18.2" r="1.2" fill="url(#nar_fill10)"/>
+<circle cx="20.4" cy="17.78" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="18.6" cy="22.6" r="1.2" fill="url(#nar_fill11)"/>
+<circle cx="18.2" cy="22.18" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="21" cy="21" r="1.2" fill="url(#nar_fill12)"/>
+<circle cx="20.6" cy="20.58" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="23.2" cy="19.6" r="1.2" fill="url(#nar_fill13)"/>
+<circle cx="22.8" cy="19.18" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="20.6" cy="24.2" r="1.2" fill="url(#nar_fill14)"/>
+<circle cx="20.2" cy="23.78" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="23" cy="22.8" r="1.2" fill="url(#nar_fill15)"/>
+<circle cx="22.6" cy="22.38" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<circle cx="16.8" cy="24.4" r="1.2" fill="url(#nar_fill16)"/>
+<circle cx="16.4" cy="23.98" r="0.3" fill="#FFFFFF" fill-opacity="0.85"/>
+<defs>
+<radialGradient id="nar_fill1" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill2" cx="0.6" cy="1" r="0.7"><stop stop-color="#B22945" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="nar_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.65"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="nar_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+<radialGradient id="nar_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#D6435F"/><stop offset="0.5" stop-color="#9E2442"/><stop offset="1" stop-color="#6A1530"/></radialGradient>
+<radialGradient id="nar_fill6" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#FFF6F0"/><stop offset="0.5" stop-color="#FFDCD6"/><stop offset="1" stop-color="#E8A5AD"/></radialGradient>
+<radialGradient id="nar_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#E8A5AD" stop-opacity="0.3"/><stop offset="0.9" stop-color="#E8A5AD" stop-opacity="0"/></radialGradient>
+<radialGradient id="nar_fill8" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill9" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill10" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill11" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill12" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill13" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill14" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill15" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="nar_fill16" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+</defs>
 </svg>

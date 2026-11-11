@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureRoleChosen;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetLocale;
@@ -8,6 +9,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Spatie\Permission\Exceptions\UnauthorizedException;
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,9 +29,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
-        // A signed-in teacher opening a guest page (login, register) lands
-        // where login does, on the classes: there is no dashboard.
-        $middleware->redirectUsersTo(fn (): string => route('classes.index'));
+        // A signed-in account opening a guest page (login, register) lands
+        // where login does, by role: there is no dashboard.
+        $middleware->redirectUsersTo(fn (): string => route('start'));
+
+        // The areas of docs/architecture.md §1 "Accounts and roles" (ADR 010):
+        // `role` is the package's, with an App\Enums\Role name or two.
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+            'role.chosen' => EnsureRoleChosen::class,
+        ]);
 
         $middleware->web(append: [
             SetLocale::class,
@@ -45,4 +55,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // An area the account lacks is 403; a typed or bookmarked page leads
+        // home instead of to an error (ADR 010 decision 3).
+        $exceptions->render(function (UnauthorizedException $exception, Request $request) {
+            if ($request->isMethod('GET') && ! $request->expectsJson() && $request->user() !== null) {
+                return to_route('start');
+            }
+
+            return null;
+        });
     })->create();

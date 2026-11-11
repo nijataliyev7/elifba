@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { navAreas } from '@/components/app/nav-areas';
+import { useNavAreas } from '@/components/app/nav-areas';
 import { useTranslation } from '@/hooks/use-translation';
 import { activeArea, activePage } from '@/lib/nav-active';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 export function AreaPills() {
     const { url } = usePage();
     const { t } = useTranslation();
-    const area = activeArea(navAreas, url);
+    const area = activeArea(useNavAreas(), url);
 
     if (!area || area.pages.length < 2) {
         return null;

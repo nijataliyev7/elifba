@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\Support\FakeReverb;
 use Tests\Support\GuestBoards;
 
@@ -19,6 +20,10 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->reverb = FakeReverb::install($this->app);
+
+        // spatie/laravel-permission caches what it loaded; its testing guide
+        // forgets it before every test (ADR 010).
+        $this->app->make(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**

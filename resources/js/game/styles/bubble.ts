@@ -1,12 +1,18 @@
 /**
  * The `bubble` item style (docs/architecture.md §2): a soap bubble tinted
- * with a pack colour, with a light rim, two highlights and its item's text
- * in dark letters. Bubbles grow in from below, drift and breathe while
- * they wait, jiggle on a miss and float up out of sight when their round
- * is over.
+ * with a pack colour, with a light rim, a highlight and its item's text in
+ * dark letters. Bubbles grow in from below, drift and breathe while they
+ * wait, jiggle on a miss and float up out of sight when their round is
+ * over.
+ *
+ * It is drawn in ADR 014's Fluent manner, once per colour and size
+ * (`bubbleTexture()`): no outline — a pale, see-through body lit from the
+ * top left, its rim deepening into the colour and its shade at the bottom
+ * right, and one soft highlight like a window's reflection.
  */
 import Phaser from 'phaser';
 import type { RoundItem } from '../contract';
+import { css, highlight, mix, rgba, step, texture, tones } from './fluent';
 import { BoardItem, itemLabel, shade } from './item';
 import type {
     ItemDrawing,
@@ -16,47 +22,113 @@ import type {
 } from './types';
 
 const MARGIN = 130;
+/** Room around the bubble in its texture ÷ the width. */
+const PAD = 0.02;
+
+/** The tint the bubble's middle shows, which the text is chosen for. */
+function fillOf(colour: number): number {
+    return shade(colour, 0.72);
+}
+
+/** The bubble without its text, painted once per colour and size. */
+function bubbleTexture(
+    scene: Phaser.Scene,
+    colour: number,
+    width: number,
+): { key: string; pad: number; w: number } {
+    const w = step(width);
+    const pad = Math.ceil(w * PAD);
+    const key = `bubble-${css(colour)}-${w}`;
+
+    texture(scene, key, w + pad * 2, w + pad * 2, (context) => {
+        const r = w / 2;
+        const c = pad + r;
+        const fill = fillOf(colour);
+        const t = tones(colour);
+        const disc = () => {
+            context.beginPath();
+            context.arc(c, c, r, 0, Math.PI * 2);
+        };
+
+        // The body: pale and see-through, lit from the top left.
+        const body = context.createRadialGradient(
+            c - r * 0.4,
+            c - r * 0.5,
+            0,
+            c - r * 0.4,
+            c - r * 0.5,
+            r * 1.7,
+        );
+
+        body.addColorStop(0, rgba(mix(fill, 0xffffff, 0.6), 0.9));
+        body.addColorStop(0.45, rgba(fill, 0.86));
+        body.addColorStop(1, rgba(mix(fill, colour, 0.35), 0.9));
+        disc();
+        context.fillStyle = body;
+        context.fill();
+
+        // The rim deepens into the colour, darkest at the bottom right.
+        const rim = context.createRadialGradient(c, c, 0, c, c, r);
+
+        rim.addColorStop(0.7, rgba(colour, 0));
+        rim.addColorStop(0.9, rgba(colour, 0.5));
+        rim.addColorStop(1, rgba(t.shade, 0.8));
+        disc();
+        context.fillStyle = rim;
+        context.fill();
+
+        const shadeSide = context.createRadialGradient(
+            c + r,
+            c + r,
+            0,
+            c + r,
+            c + r,
+            r * 1.5,
+        );
+
+        shadeSide.addColorStop(0, rgba(t.shade, 0.45));
+        shadeSide.addColorStop(1, rgba(t.shade, 0));
+        disc();
+        context.fillStyle = shadeSide;
+        context.fill();
+
+        highlight(
+            context,
+            c - r * 0.45,
+            c - r * 0.5,
+            r * 0.3,
+            r * 0.14,
+            Phaser.Math.DegToRad(-42),
+            0xffffff,
+            0.95,
+        );
+    });
+
+    return { key, pad, w };
+}
 
 function draw(scene: Phaser.Scene, text: string, look: ItemLook): ItemDrawing {
     const { width, colour } = look;
-    const r = width / 2;
-    const fill = shade(colour, 0.72);
-    const bubble = scene.add.graphics();
-
-    bubble.fillStyle(fill, 0.85);
-    bubble.fillCircle(0, 0, r);
-    bubble.fillStyle(colour, 0.22);
-    bubble.fillCircle(r * 0.08, r * 0.1, r * 0.86);
-    bubble.lineStyle(8, colour, 0.9);
-    bubble.strokeCircle(0, 0, r);
-    bubble.lineStyle(3, 0xffffff, 0.8);
-    bubble.strokeCircle(0, 0, r - 7);
-
-    // Highlights: an arc at the top left and a dot below it.
-    bubble.lineStyle(r * 0.09, 0xffffff, 0.85);
-    bubble.beginPath();
-    bubble.arc(
-        0,
-        0,
-        r * 0.74,
-        Phaser.Math.DegToRad(200),
-        Phaser.Math.DegToRad(250),
+    const paint = bubbleTexture(scene, colour, width);
+    const bubble = scene.add.image(0, 0, paint.key).setScale(width / paint.w);
+    const label = itemLabel(
+        scene,
+        text,
+        width * 0.42,
+        fillOf(colour),
+        width * 0.74,
     );
-    bubble.strokePath();
-    bubble.fillStyle(0xffffff, 0.85);
-    bubble.fillCircle(
-        Math.cos(Phaser.Math.DegToRad(265)) * r * 0.74,
-        Math.sin(Phaser.Math.DegToRad(265)) * r * 0.74,
-        r * 0.05,
-    );
-
-    const label = itemLabel(scene, text, width * 0.42, fill, width * 0.74);
 
     return {
         root: scene.add.container(0, 0, [bubble, label]),
         body: bubble,
+        // The image's own frame, in texture px: the touch takes the bubble.
         hitArea: {
-            hitArea: new Phaser.Geom.Circle(0, 0, r * 1.04),
+            hitArea: new Phaser.Geom.Circle(
+                paint.pad + paint.w / 2,
+                paint.pad + paint.w / 2,
+                (paint.w / 2) * 1.04,
+            ),
             hitAreaCallback: (
                 area: Phaser.Geom.Circle,
                 px: number,

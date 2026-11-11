@@ -6,6 +6,7 @@ use App\Domain\Content\Data\CreditData;
 use App\Domain\Content\Data\LevelData;
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\PromptTemplateData;
+use App\Domain\Content\Data\VoiceData;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\Unit;
 use InvalidArgumentException;
@@ -14,7 +15,8 @@ use RuntimeException;
 
 /**
  * The one reader of built-in content (docs/architecture.md §3, ADR 004):
- * levels, prompts, credits and theme packs from a content root.
+ * levels, prompts, credits, theme packs and the voice (`voice.json` with
+ * the clip list of `voice-clips.json`, §3 "Voice") from a content root.
  *
  * With a compiled file (`php artisan content:cache` writes
  * `bootstrap/cache/content.php`, which OPcache keeps in memory) it reads
@@ -25,11 +27,18 @@ use RuntimeException;
  *
  * `content/alphabet.json` and `content/avatars.json` are read by
  * `Language\Support\Alphabet` and `Content\Support\Avatars`.
+ *
+ * @phpstan-import-type VoiceArray from VoiceData
  */
 final class ContentRepository
 {
     /**
-     * @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>}|null
+     * The clip list `php artisan content:voice` writes, beside `voice.json`.
+     */
+    public const string VOICE_CLIPS = 'voice-clips.json';
+
+    /**
+     * @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>}|null
      */
     private ?array $data = null;
 
@@ -47,6 +56,8 @@ final class ContentRepository
      * @var list<PromptTemplateData>|null
      */
     private ?array $prompts = null;
+
+    private ?VoiceData $voice = null;
 
     /**
      * @param  string  $root  the content directory (`content/`, or a fixture copy)
@@ -156,10 +167,24 @@ final class ContentRepository
     }
 
     /**
+     * The voice and its clips (ADR 015). Read through `VoiceClips`.
+     */
+    public function voice(): VoiceData
+    {
+        if ($this->voice === null) {
+            /** @var VoiceArray $data checked by `ContentValidator` */
+            $data = $this->data()['voice'];
+            $this->voice = VoiceData::fromArray($data);
+        }
+
+        return $this->voice;
+    }
+
+    /**
      * The content as the JSON files hold it now, ignoring any compiled file:
      * what `content:cache` compiles.
      *
-     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>}
+     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>}
      *
      * @throws RuntimeException when a file is missing or not valid JSON
      */
@@ -176,6 +201,7 @@ final class ContentRepository
             'prompts' => self::listIn($this->root.'/prompts.json', 'prompts'),
             'credits' => self::listIn($this->root.'/credits.json', 'credits'),
             'packs' => $packs,
+            'voice' => self::voiceIn($this->root),
         ];
     }
 
@@ -216,17 +242,37 @@ final class ContentRepository
     }
 
     /**
-     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>}
+     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>}
      */
     private function data(): array
     {
         if ($this->data === null) {
-            /** @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>} $compiled */
+            /** @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>} $compiled */
             $compiled = $this->readsCompiled() ? require $this->compiled : $this->sources();
             $this->data = $compiled;
         }
 
         return $this->data;
+    }
+
+    /**
+     * `voice.json` with `clips`, the clip list `content:voice` writes to
+     * `voice-clips.json`.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws RuntimeException when a file is missing, not valid JSON or not an object
+     */
+    public static function voiceIn(string $root): array
+    {
+        $voice = self::decode($root.'/voice.json');
+        $clips = self::decode($root.'/'.self::VOICE_CLIPS);
+
+        if (! is_array($voice) || ! is_array($clips) || ! is_array($clips['clips'] ?? null)) {
+            throw new RuntimeException('voice.json and '.self::VOICE_CLIPS.' must be objects, the second with `clips`.');
+        }
+
+        return [...$voice, 'clips' => $clips['clips']];
     }
 
     /**

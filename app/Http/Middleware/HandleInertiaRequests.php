@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Role;
 use App\Models\User;
 use App\Support\Translations;
 use Illuminate\Http\Request;
@@ -38,6 +39,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $locale = app()->getLocale();
+        $user = $request->user();
+        $user = $user instanceof User ? $user : null;
 
         return [
             ...parent::share($request),
@@ -45,11 +48,33 @@ class HandleInertiaRequests extends Middleware
             'locale' => $locale,
             'locales' => Translations::locales(),
             'translations' => fn (): array => Translations::for($locale),
-            // A teacher, never a guest board's bearer (docs/architecture.md §4).
+            // An account, never a guest board's bearer (docs/architecture.md §4),
+            // with its roles and the area whose navigation the page shows (§1
+            // "Accounts and roles").
             'auth' => [
-                'user' => $request->user() instanceof User ? $request->user() : null,
+                'user' => $user,
+                'roles' => $user === null ? [] : array_map(static fn (Role $role): string => $role->value, $user->roleList()),
+                'area' => $user === null ? null : $this->area($request, $user)?->value,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * The area of the page: the route's own inside the teacher or the parent
+     * group, otherwise the account's (ADR 010 decision 7), which the shared
+     * and account pages follow.
+     */
+    private function area(Request $request, User $user): ?Role
+    {
+        $middleware = $request->route()?->gatherMiddleware() ?? [];
+
+        foreach (Role::cases() as $role) {
+            if (in_array(Role::middleware($role), $middleware, true)) {
+                return $role;
+            }
+        }
+
+        return $user->area();
     }
 }

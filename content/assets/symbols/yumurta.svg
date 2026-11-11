@@ -1,17 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- yumurta: a painted Novruz egg. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M36,8 C48,8 56,26 56,40 C56,54 47,64 36,64 C25,64 16,54 16,40 C16,26 24,8 36,8 Z" fill="#D22F27"/>
-    <path d="M18.5,24 L53.5,24 L54.5,29 L17.5,29 Z" fill="#B1CC33" stroke="none"/>
-    <path d="M16.6,33 L55.6,33 L55.8,45 L16.2,45 Z" fill="#FCEA2B" stroke="none"/>
-    <path d="M17.2,49 L54.8,49 L53.2,54 L18.8,54 Z" fill="#B1CC33" stroke="none"/>
-    <polyline points="16.6,39 21,34 26,44 31,34 36,44 41,34 46,44 51,34 55.6,39" fill="none" stroke="#D22F27" stroke-width="2"/>
-    <line x1="18.4" y1="24" x2="53.6" y2="24" stroke-width="1.5"/>
-    <line x1="17.4" y1="29" x2="54.6" y2="29" stroke-width="1.5"/>
-    <line x1="16.6" y1="33" x2="55.4" y2="33" stroke-width="1.5"/>
-    <line x1="16.2" y1="45" x2="55.8" y2="45" stroke-width="1.5"/>
-    <line x1="17.2" y1="49" x2="54.8" y2="49" stroke-width="1.5"/>
-    <line x1="18.8" y1="54" x2="53.2" y2="54" stroke-width="1.5"/>
-    <path d="M36,8 C48,8 56,26 56,40 C56,54 47,64 36,64 C25,64 16,54 16,40 C16,26 24,8 36,8 Z" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- yumurta: a painted Novruz egg with coloured bands. Elifba own art, MIT. -->
+<path d="M16 1.8C22.4 1.8 26.6 11 26.6 19C26.6 25.6 22 30 16 30C10 30 5.4 25.6 5.4 19C5.4 11 9.6 1.8 16 1.8Z" fill="url(#yumurta_fill1)"/>
+<g clip-path="url(#yumurta_clip2)">
+<rect x="0" y="11.6" width="32" height="3.2" fill="#FFE45C"/>
+<rect x="0" y="21" width="32" height="3.2" fill="#7CC04A"/>
+<path d="M4 18.8L6 16.6L8 18.8L10 16.6L12 18.8L14 16.6L16 18.8L18 16.6L20 18.8L22 16.6L24 18.8L26 16.6L28 18.8" stroke="#FFF6D0" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 26.2L6 27.6L8 26.2L10 27.6L12 26.2L14 27.6L16 26.2L18 27.6L20 26.2L22 27.6L24 26.2L26 27.6L28 26.2" stroke="#FFE45C" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="12.4" cy="7.8" r="0.9" fill="url(#yumurta_fill3)"/>
+<circle cx="16" cy="7.8" r="0.9" fill="url(#yumurta_fill4)"/>
+<circle cx="19.6" cy="7.8" r="0.9" fill="url(#yumurta_fill5)"/>
+</g>
+<path d="M16 1.8C22.4 1.8 26.6 11 26.6 19C26.6 25.6 22 30 16 30C10 30 5.4 25.6 5.4 19C5.4 11 9.6 1.8 16 1.8Z" fill="url(#yumurta_fill6)"/>
+<g filter="url(#yumurta_blur06)"><ellipse cx="11" cy="8.4" rx="1.6" ry="2.8" fill="#FFFFFF" fill-opacity="0.75" transform="rotate(25 11 8.4)"/></g>
+<defs>
+<radialGradient id="yumurta_fill1" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<clipPath id="yumurta_clip2"><path d="M16 1.8C22.4 1.8 26.6 11 26.6 19C26.6 25.6 22 30 16 30C10 30 5.4 25.6 5.4 19C5.4 11 9.6 1.8 16 1.8Z" /></clipPath>
+<radialGradient id="yumurta_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="yumurta_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="yumurta_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="yumurta_fill6" cx="0.85" cy="0.9" r="0.75"><stop stop-color="#7A1E3A" stop-opacity="0.7"/><stop offset="0.9" stop-color="#7A1E3A" stop-opacity="0"/></radialGradient>
+<filter id="yumurta_blur06" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.6"/></filter>
+</defs>
 </svg>

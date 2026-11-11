@@ -19,7 +19,9 @@ type Props = {
  * the answer is marked for the teacher (`answerItemIds`: none in `pop`,
  * where every item is one), an item the board already burst is done, and
  * a tap shows its state until the board's ack — pending, then correct,
- * miss or not delivered. Item text is content, in `font-board`.
+ * miss or not delivered. Item text is content, in `font-board`. A picture
+ * item (R5) shows its picture big with the word under it, for the adult to
+ * say; the board shows the picture alone.
  */
 export function RemoteItems({
     round,
@@ -30,6 +32,7 @@ export function RemoteItems({
 }: Props) {
     const { t } = useTranslation();
     const sequence = round.solution.order === 'sequence';
+    const picture = round.unit === 'picture';
     const answers = answerItemIds(round, hitItemIds);
     const lastTap = new Map<string, Tap>();
 
@@ -90,10 +93,20 @@ export function RemoteItems({
                             <img
                                 src={item.image}
                                 alt=""
-                                className="size-12 object-contain"
+                                className={cn(
+                                    'object-contain',
+                                    picture ? 'size-20' : 'size-12',
+                                )}
                             />
                         )}
-                        <span className="max-w-full truncate">{item.text}</span>
+                        <span
+                            className={cn(
+                                'max-w-full truncate',
+                                picture && 'text-2xl',
+                            )}
+                        >
+                            {item.text}
+                        </span>
                         {status === 'lost' && (
                             <span className="font-sans text-xs font-medium text-destructive">
                                 {t('games.remote.tap_lost')}

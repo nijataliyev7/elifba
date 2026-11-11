@@ -1,13 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- papaq: a striped party hat with a pompom, worn on a face. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="36" cy="48" r="17" fill="#FCEA2B"/>
-    <circle cx="29.5" cy="49" r="2" fill="#000" stroke="none"/>
-    <circle cx="42.5" cy="49" r="2" fill="#000" stroke="none"/>
-    <path d="M29.5,56 C33,59.5 39,59.5 42.5,56" fill="none"/>
-    <path d="M22,38 L42,10 L52,37 C44,40 30,40.5 22,38 Z" fill="#61B2E4"/>
-    <path d="M27.5,30.5 L46.5,22.5 L49.2,29.8 L24,35.4 Z M34.2,21.2 L43.2,17.3 L44.7,21.3 L30.9,26.4 Z" fill="#FCEA2B" stroke-width="1.5"/>
-    <path d="M22,38 L42,10 L52,37 C44,40 30,40.5 22,38 Z" fill="none"/>
-    <circle cx="42" cy="9" r="4.5" fill="#EA5A47"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- papaq: a striped party hat with a pompom, worn on a smiling face. Elifba own art, MIT. -->
+<circle cx="15" cy="19" r="10.8" fill="url(#papaq_fill1)"/>
+<g filter="url(#papaq_blur05)"><ellipse cx="10.8" cy="22.6" rx="1.8" ry="1.1" fill="#FF6DC6" fill-opacity="0.45"/></g>
+<g filter="url(#papaq_blur05)"><ellipse cx="19.2" cy="22.6" rx="1.8" ry="1.1" fill="#FF6DC6" fill-opacity="0.45"/></g>
+<ellipse cx="11.6" cy="18.4" rx="1.15" ry="1.55" fill="#3A234A"/>
+<circle cx="11.2" cy="17.78" r="0.55" fill="#FFFFFF"/>
+<ellipse cx="18.4" cy="18.4" rx="1.15" ry="1.55" fill="#3A234A"/>
+<circle cx="18" cy="17.78" r="0.55" fill="#FFFFFF"/>
+<path d="M11.2 23.2Q15 26.6 18.8 23.2" stroke="#4A2C42" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.09 10.2L22.08 2.7Q22.6 2.4 22.68 3L23.5 9.41Q23.6 10.2 22.8 10.22L9.2 10.58Q8.4 10.6 9.09 10.2Z" fill="url(#papaq_fill2)"/>
+<path d="M9.09 10.2L22.08 2.7Q22.6 2.4 22.68 3L23.5 9.41Q23.6 10.2 22.8 10.22L9.2 10.58Q8.4 10.6 9.09 10.2Z" fill="url(#papaq_fill3)"/>
+<path d="M10.96 9.12L13.5 7.65Q13.51 7.65 13.52 7.65L23.23 7.39Q23.24 7.39 23.24 7.4L23.42 8.79Q23.42 8.8 23.41 8.8L10.97 9.12Q10.96 9.12 10.96 9.12Z" fill="url(#papaq_fill4)"/>
+<path d="M10.96 9.12L13.5 7.65Q13.51 7.65 13.52 7.65L23.23 7.39Q23.24 7.39 23.24 7.4L23.42 8.79Q23.42 8.8 23.41 8.8L10.97 9.12Q10.96 9.12 10.96 9.12Z" fill="url(#papaq_fill5)"/>
+<path d="M16.22 6.08L18.62 4.7Q18.62 4.7 18.63 4.7L22.87 4.58Q22.88 4.58 22.88 4.59L23.05 5.9Q23.05 5.91 23.04 5.91L16.22 6.09Q16.21 6.09 16.22 6.08Z" fill="url(#papaq_fill6)"/>
+<path d="M16.22 6.08L18.62 4.7Q18.62 4.7 18.63 4.7L22.87 4.58Q22.88 4.58 22.88 4.59L23.05 5.9Q23.05 5.91 23.04 5.91L16.22 6.09Q16.21 6.09 16.22 6.08Z" fill="url(#papaq_fill7)"/>
+<path d="M7.9 10.4Q16 12.6 24 10Q24.3 11.4 23.4 12Q16 14 8.4 12.2Q7.6 11.6 7.9 10.4Z" fill="url(#papaq_fill8)"/>
+<path d="M7.9 10.4Q16 12.6 24 10Q24.3 11.4 23.4 12Q16 14 8.4 12.2Q7.6 11.6 7.9 10.4Z" fill="url(#papaq_fill9)"/>
+<g filter="url(#papaq_blur035)"><ellipse cx="14" cy="7.6" rx="2.2" ry="0.5" fill="#FFFFFF" fill-opacity="0.5" transform="rotate(-30 14 7.6)"/></g>
+<circle cx="22.8" cy="3.2" r="2.2" fill="url(#papaq_fill10)"/>
+<circle cx="22.8" cy="3.2" r="2.2" fill="url(#papaq_fill11)"/>
+<g filter="url(#papaq_blur03)"><ellipse cx="22" cy="2.4" rx="0.8" ry="0.5" fill="#FDE3E6" fill-opacity="0.7" transform="rotate(-35 22 2.4)"/></g>
+<defs>
+<radialGradient id="papaq_fill1" cx="0.35" cy="0.3" r="0.78"><stop stop-color="#FFF478"/><stop offset="0.47" stop-color="#FFB02E"/><stop offset="1" stop-color="#F70A8D"/></radialGradient>
+<filter id="papaq_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="papaq_fill2" cx="0.25" cy="0.25" r="0.9"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="papaq_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="papaq_fill4" cx="0.2" cy="0.2" r="1"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="papaq_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.35"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="papaq_fill6" cx="0.2" cy="0.2" r="1"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="papaq_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.35"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="papaq_fill8" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#FCFBFE"/><stop offset="0.5" stop-color="#E8E8E9"/><stop offset="1" stop-color="#CDCDCE"/></radialGradient>
+<radialGradient id="papaq_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CDCDCE" stop-opacity="0.4"/><stop offset="0.9" stop-color="#CDCDCE" stop-opacity="0"/></radialGradient>
+<filter id="papaq_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+<radialGradient id="papaq_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="papaq_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="papaq_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+</defs>
 </svg>

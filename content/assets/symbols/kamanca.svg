@@ -1,21 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- kamança: the spike fiddle with its bow. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="28" y1="51" x2="28" y2="65" stroke="#000" stroke-width="5"/>
-    <line x1="28" y1="51" x2="28" y2="65" stroke="#9B9B9A" stroke-width="2"/>
-    <rect x="25.5" y="5" width="5" height="8" rx="1" fill="#6A462F"/>
-    <line x1="25.5" y1="7" x2="21.5" y2="7"/>
-    <line x1="25.5" y1="11" x2="21.5" y2="11"/>
-    <line x1="30.5" y1="7" x2="34.5" y2="7"/>
-    <line x1="30.5" y1="11" x2="34.5" y2="11"/>
-    <rect x="26" y="12" width="4" height="22" fill="#6A462F"/>
-    <circle cx="28" cy="42" r="12" fill="#A57939"/>
-    <circle cx="28" cy="42" r="8" fill="#FFF"/>
-    <rect x="24.5" y="44" width="7" height="2" fill="#6A462F" stroke-width="1"/>
-    <line x1="27" y1="10" x2="27" y2="50" stroke-width="0.8"/>
-    <line x1="29" y1="10" x2="29" y2="50" stroke-width="0.8"/>
-    <path d="M48,8 C60,22 60,50 50,64" fill="none" stroke="#000" stroke-width="5"/>
-    <path d="M48,8 C60,22 60,50 50,64" fill="none" stroke="#A57939" stroke-width="2"/>
-    <line x1="48.5" y1="10" x2="50" y2="62" stroke-width="1.2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- kamança: the spike fiddle, a round body on a spike, and its bow. Elifba own art, MIT. -->
+<path d="M24.4 2.6Q29.6 16 25.6 29.4" stroke="url(#kamanca_fill1)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24.6 3.6L25.2 28.4" stroke="#F4F1EA" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<rect x="24.2" y="26.6" width="2.2" height="2.4" rx="0.6" fill="url(#kamanca_fill2)"/>
+<path d="M10.43 27.15L10.01 30.14" stroke="url(#kamanca_fill3)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.55 6.07L11.05 5.86" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.21 6.3L15.71 6.51" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.78 4.4L11.28 4.19" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.45 4.64L15.94 4.85" stroke="#E8A66F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.47 7.24L13.96 7.45Q14.46 7.52 14.5 7.02L14.71 4.17Q14.75 3.66 14.25 3.59L13.25 3.45Q12.76 3.38 12.65 3.88L12.07 6.68Q11.97 7.17 12.47 7.24Z" fill="url(#kamanca_fill4)"/>
+<path d="M12.47 7.24L13.96 7.45Q14.46 7.52 14.5 7.02L14.71 4.17Q14.75 3.66 14.25 3.59L13.25 3.45Q12.76 3.38 12.65 3.88L12.07 6.68Q11.97 7.17 12.47 7.24Z" fill="url(#kamanca_fill5)"/>
+<path d="M14.68 2.97C14.61 3.43 14.19 3.75 13.73 3.69C13.27 3.62 12.95 3.2 13.02 2.74C13.08 2.28 13.51 1.96 13.96 2.03C14.42 2.09 14.74 2.52 14.68 2.97Z" fill="url(#kamanca_fill6)"/>
+<path d="M14.68 2.97C14.61 3.43 14.19 3.75 13.73 3.69C13.27 3.62 12.95 3.2 13.02 2.74C13.08 2.28 13.51 1.96 13.96 2.03C14.42 2.09 14.74 2.52 14.68 2.97Z" fill="url(#kamanca_fill7)"/>
+<path d="M12.76 6.95L13.76 7.09Q14.09 7.13 14.05 7.47L12.6 17.78Q12.55 18.11 12.22 18.07L11.22 17.93Q10.89 17.88 10.93 17.55L12.38 7.23Q12.43 6.9 12.76 6.95Z" fill="url(#kamanca_fill8)"/>
+<path d="M12.76 6.95L13.76 7.09Q14.09 7.13 14.05 7.47L12.6 17.78Q12.55 18.11 12.22 18.07L11.22 17.93Q10.89 17.88 10.93 17.55L12.38 7.23Q12.43 6.9 12.76 6.95Z" fill="url(#kamanca_fill9)"/>
+<path d="M16.62 22.93C16.2 25.96 13.4 28.07 10.36 27.65C7.33 27.22 5.22 24.42 5.64 21.38C6.07 18.35 8.87 16.24 11.91 16.67C14.94 17.09 17.05 19.89 16.62 22.93Z" fill="url(#kamanca_fill10)"/>
+<path d="M16.62 22.93C16.2 25.96 13.4 28.07 10.36 27.65C7.33 27.22 5.22 24.42 5.64 21.38C6.07 18.35 8.87 16.24 11.91 16.67C14.94 17.09 17.05 19.89 16.62 22.93Z" fill="url(#kamanca_fill11)"/>
+<path d="M15.1 22.88C14.79 25.09 12.75 26.62 10.55 26.31C8.35 26 6.81 23.97 7.12 21.76C7.43 19.56 9.47 18.02 11.67 18.33C13.88 18.64 15.41 20.68 15.1 22.88Z" fill="url(#kamanca_fill12)"/>
+<path d="M15.1 22.88C14.79 25.09 12.75 26.62 10.55 26.31C8.35 26 6.81 23.97 7.12 21.76C7.43 19.56 9.47 18.02 11.67 18.33C13.88 18.64 15.41 20.68 15.1 22.88Z" fill="url(#kamanca_fill13)"/>
+<path d="M9.65 23.64L12.15 23.99Q12.4 24.03 12.36 24.28L12.33 24.53Q12.29 24.78 12.04 24.74L9.55 24.39Q9.3 24.36 9.33 24.11L9.37 23.86Q9.4 23.61 9.65 23.64Z" fill="url(#kamanca_fill14)"/>
+<path d="M10.48 24.1L12.89 6.96" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.75"/>
+<path d="M11.23 24.2L13.64 7.07" stroke="#FFFFFF" stroke-width="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.75"/>
+<g filter="url(#kamanca_blur04)"><ellipse cx="8.82" cy="19.29" rx="1.2" ry="0.7" fill="#FFFFFF" fill-opacity="0.6" transform="rotate(-40 8.82 19.29)"/></g>
+<defs>
+<linearGradient id="kamanca_fill1" x1="24" y1="29" x2="26" y2="3" gradientUnits="userSpaceOnUse"><stop stop-color="#5F4341"/><stop offset="1" stop-color="#C48462"/></linearGradient>
+<radialGradient id="kamanca_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<linearGradient id="kamanca_fill3" x1="10.01" y1="30.14" x2="10.43" y2="27.15" gradientUnits="userSpaceOnUse"><stop stop-color="#988EA1"/><stop offset="1" stop-color="#DAD9DB"/></linearGradient>
+<radialGradient id="kamanca_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="kamanca_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="kamanca_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#EFBE85"/><stop offset="0.5" stop-color="#E8AC81"/><stop offset="1" stop-color="#D6753D"/></radialGradient>
+<radialGradient id="kamanca_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D6753D" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D6753D" stop-opacity="0"/></radialGradient>
+<radialGradient id="kamanca_fill8" cx="0.2" cy="0.3" r="1"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<radialGradient id="kamanca_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#703B50" stop-opacity="0.5"/><stop offset="0.9" stop-color="#703B50" stop-opacity="0"/></radialGradient>
+<radialGradient id="kamanca_fill10" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="kamanca_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<radialGradient id="kamanca_fill12" cx="0.3" cy="0.3" r="0.8"><stop stop-color="#FFF4EC"/><stop offset="0.5" stop-color="#FFE4D8"/><stop offset="1" stop-color="#D2ABA8"/></radialGradient>
+<radialGradient id="kamanca_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D2ABA8" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D2ABA8" stop-opacity="0"/></radialGradient>
+<radialGradient id="kamanca_fill14" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#AA7E73"/><stop offset="0.5" stop-color="#8C5E51"/><stop offset="1" stop-color="#703B50"/></radialGradient>
+<filter id="kamanca_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+</defs>
 </svg>

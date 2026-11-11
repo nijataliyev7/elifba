@@ -1,479 +1,572 @@
-import { Form } from '@inertiajs/react';
-import { useState } from 'react';
+import { Form, Link } from '@inertiajs/react';
+import {
+    Blocks,
+    CaseSensitive,
+    Hash,
+    Image as ImageIcon,
+    ListOrdered,
+    MousePointerClick,
+    Puzzle,
+    Search,
+    Text,
+    WholeWord,
+} from 'lucide-react';
+import type { ComponentType } from 'react';
+import { useMemo, useState } from 'react';
+import { SetupExtras } from '@/components/games/setup-extras';
+import { SetupStart } from '@/components/games/setup-start';
+import {
+    SetupLabel,
+    SetupQuestion,
+    SetupRowButton,
+    SetupTile,
+} from '@/components/games/setup-tiles';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { Toggle } from '@/components/ui/toggle';
-import { AddWordDialog } from '@/components/words/add-word-dialog';
 import { useTranslation } from '@/hooks/use-translation';
-import { cn } from '@/lib/utils';
-import type { GameSetupProps, SetupOption } from '@/types';
+import {
+    chooseLevel,
+    chooseMechanic,
+    choosePack,
+    chooseUnit,
+    extrasSummary,
+    initialState,
+    isLettersShortage,
+    levelChoices,
+    mechanicChoices,
+    mechanicHint,
+    mechanicName,
+    packChoices,
+    readsUnit,
+    setupCatalog,
+    startSummary,
+    unitGroups,
+} from '@/lib/setup-choices';
+import type { ChoiceState, Extras, Fragment } from '@/lib/setup-choices';
+import type {
+    PlayersSetup,
+    SetupRefusal,
+    SetupUnit,
+    SharedSetup,
+} from '@/types';
 import type { RouteFormDefinition } from '@/wayfinder';
 
-export type GameSetupFormProps = Omit<GameSetupProps, 'schoolClass'> & {
-    /** Where the setup goes: the setup page's `StartGame`, or a guest board from the phone. */
-    form: RouteFormDefinition<'post'>;
-    /** Fields the form sends as they are (the class, for a guest board); their errors show at the top. */
-    hidden?: Record<string, string>;
-    submitLabel?: string;
+export type GameSetupFormProps = SharedSetup &
+    PlayersSetup & {
+        /** Where the setup goes: the setup page's `StartGame`, or a guest board from the phone. */
+        form: RouteFormDefinition<'post'>;
+        /** Fields the form sends as they are (the class or the child, on a guest board); their errors show at the top. */
+        hidden?: Record<string, string>;
+        submitLabel?: string;
+        /** A home game (ADR 011): the units played without reading come first. */
+        home?: boolean;
+        /** The setup page in the shell (a card from `lg`); otherwise the guest board on a phone. */
+        page?: boolean;
+        /** Who plays, for the card («1A sinfi», «Oynayır: Aysel»). */
+        players?: string;
+        /** The learned letters on the class's or the child's page; null on the guest board. */
+        lettersHref?: string | null;
+    };
+
+const UNIT_ICONS: Record<SetupUnit, ComponentType<{ className?: string }>> = {
+    letter: CaseSensitive,
+    syllable: Blocks,
+    word: WholeWord,
+    sentence: Text,
+    picture: ImageIcon,
+    number: Hash,
+};
+
+const MECHANIC_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+    pop: MousePointerClick,
+    find: Search,
+    build_syllable: Puzzle,
+    build_word: Puzzle,
+    build_sentence: Puzzle,
+    count: ListOrdered,
 };
 
 /**
- * The game setup form (docs/architecture.md §2, "Game setup"): a theme
- * pack, a level, the number of rounds, the letter case, for the letter
- * level, which letters to ask for and, where the server offers it
- * (`option.own`), whether to play only the teacher's own words: on by
- * default when they can start the game, with a dialog to add words when
- * they are too few. Mechanics come in the content's order (`levels.json`:
- * «Oxu və vur» first). What can start comes from the server's
- * `options` (`GameSetupOptions`) — the same check `GameSetupData::rules()`
- * makes — so a pack the board cannot draw yet is shown as coming soon and a
- * level the class lacks content for shows the server's reason. Errors come
- * back on their fields. The setup page and the phone's guest board pages
- * (`/pult/{code}`, `/guest-boards/{board}/game`) use it alike.
+ * The game setup (docs/frontend.md rule 13, architecture §2 "Game setup"):
+ * three questions — what the children practise (the
+ * unit and its level), how they play (the mechanic), which theme — then
+ * «Əlavə» and the start bar. The choosing logic is `lib/setup-choices.ts`;
+ * what can start is the server's `options`. The setup page and the phone's
+ * guest board pages use it alike, for a class or a parent's child (`home`).
  */
 export function GameSetupForm({
     packs,
     levels,
     options,
     letters,
+    allLetters,
     letterCases,
     rounds,
     wordMaxLength,
     form,
     hidden = {},
     submitLabel,
+    home = false,
+    page = false,
+    players,
+    lettersHref = null,
 }: GameSetupFormProps) {
     const { t } = useTranslation();
-
-    const drawable = (pack: string) =>
-        options.some((option) => option.pack === pack && option.drawable);
-    const startableIn = (pack: string) =>
-        options.find((option) => option.pack === pack && option.startable);
-
-    const firstPack =
-        packs.find((pack) => startableIn(pack.key))?.key ??
-        packs.find((pack) => drawable(pack.key))?.key ??
-        '';
-
-    const [pack, setPack] = useState(firstPack);
-    const mechanics = [
-        ...new Set(
-            options
-                .filter((option) => option.pack === pack && option.drawable)
-                .map((option) => option.mechanic),
-        ),
-    ];
-    const [chosenMechanic, setMechanic] = useState(
-        startableIn(firstPack)?.mechanic ?? mechanics[0] ?? 'find',
+    const catalog = useMemo(
+        () => setupCatalog(packs, levels, options, home),
+        [packs, levels, options, home],
     );
-    const mechanic = mechanics.includes(chosenMechanic)
-        ? chosenMechanic
-        : (mechanics[0] ?? chosenMechanic);
+    const [state, setState] = useState<ChoiceState | null>(() =>
+        initialState(catalog),
+    );
+    const [lockedUnit, setLockedUnit] = useState<SetupUnit | null>(null);
+    const [roundCount, setRoundCount] = useState(rounds.default);
+    // The server's default (capitals for letters, as written otherwise)
+    // until the adult picks one.
+    const [chosenCase, setCase] = useState<'upper' | 'lower' | null>(null);
+    const [asked, setAsked] = useState<Set<string>>(() => new Set());
+    // «Yalnız mənim sözlərim» leads wherever the owner's words can start.
+    const [chosenOwnWords, setOwnWords] = useState(true);
 
-    const levelOptions = levels
-        .map((level) => ({
-            level,
-            option: options.find(
-                (option) =>
-                    option.pack === pack &&
-                    option.mechanic === mechanic &&
-                    option.level === level.key,
-            ),
-        }))
-        .filter(
-            (entry): entry is typeof entry & { option: SetupOption } =>
-                entry.option !== undefined,
+    const changeLetters =
+        lettersHref === null ? null : (
+            <Link
+                href={lettersHref}
+                className="font-medium text-foreground underline underline-offset-4"
+            >
+                {t('games.setup.locked.change')}
+            </Link>
         );
 
-    const [chosenLevel, setLevel] = useState(
-        startableIn(firstPack)?.level ?? '',
-    );
-    const level =
-        levelOptions.find(
-            (entry) =>
-                entry.level.key === chosenLevel && entry.option.startable,
-        )?.level ??
-        levelOptions.find((entry) => entry.option.startable)?.level ??
-        null;
-    const letterLevel = level?.unit === 'letter';
-    const own =
-        levelOptions.find((entry) => entry.level.key === level?.key)?.option
-            .own ?? null;
-    // «Yalnız mənim sözlərim» leads wherever the teacher's words can start
-    // the game; otherwise the form falls back to every word.
-    const [chosenOwnWords, setOwnWords] = useState(true);
-    const ownWords = chosenOwnWords && own?.startable === true;
+    if (state === null) {
+        return (
+            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                {t('games.setup.none')} {changeLetters}
+            </p>
+        );
+    }
 
-    // The server's default (capitals for letters, as written otherwise)
-    // until the teacher picks one.
-    const [chosenCase, setCase] = useState<'upper' | 'lower' | null>(null);
+    const { choice } = state;
+    const level = levels.find((item) => item.key === choice.level);
+    const pack = packs.find((item) => item.key === choice.pack);
+    const option = catalog.option(choice.level, choice.mechanic, choice.pack);
+    const reads = readsUnit(choice.unit);
+    const letterLevel = choice.unit === 'letter';
     const letterCase = chosenCase ?? (letterLevel ? 'upper' : 'lower');
+    const own = option?.own ?? null;
+    const ownWords = chosenOwnWords && own?.startable === true;
+    const groups = unitGroups(catalog);
+    const unitLevels = levelChoices(catalog, choice.unit);
+    const mechanics = mechanicChoices(catalog, choice.level);
+    const themes = packChoices(catalog, choice.level, choice.mechanic);
+    const locked = groups
+        .flatMap((group) => group.units)
+        .find((item) => item.unit === lockedUnit && !item.startable);
 
-    const [roundCount, setRoundCount] = useState(String(rounds.default));
-    const [asked, setAsked] = useState<Set<string>>(() => new Set());
-
-    const toggleLetter = (letter: string, pressed: boolean) => {
-        setAsked((current) => {
-            const next = new Set(current);
-
-            if (pressed) {
-                next.add(letter);
-            } else {
-                next.delete(letter);
-            }
-
-            return next;
-        });
+    const extras: Extras = {
+        rounds: roundCount,
+        letterCase: reads ? letterCase : null,
+        letters: letterLevel ? asked.size : null,
+        ownWords: own?.startable === true ? ownWords : null,
     };
+    const say = (fragments: Fragment[]) =>
+        fragments.map((item) => t(item.key, item.values)).join(' · ');
+    const game = t('games.setup.summary.game', {
+        level: level?.title ?? '',
+        mechanic: t(mechanicName(choice.mechanic, choice.unit)),
+    });
+    const details = [pack?.title ?? '', say(startSummary(extras))].join(' · ');
+
+    /** A short reason on a locked unit or level: «Daha çox hərf lazımdır» for a learned-letters shortage. */
+    const shortReason = (status: SetupRefusal) =>
+        isLettersShortage(status.code)
+            ? t('games.setup.locked.letters')
+            : status.reason;
+    /** The full reason, with «Hərfləri dəyiş» after a learned-letters shortage. */
+    const fullReason = (status: SetupRefusal) => (
+        <>
+            {status.reason}
+            {isLettersShortage(status.code) && changeLetters !== null && (
+                <> {changeLetters}</>
+            )}
+        </>
+    );
+
+    const update = (next: ChoiceState) => {
+        setState(next);
+        setLockedUnit(null);
+    };
+    const mechanicTitle = (key: string) => t(mechanicName(key, choice.unit));
+    const packTitle = (key: string) =>
+        packs.find((item) => item.key === key)?.title ?? key;
 
     return (
-        <>
-            {!options.some((option) => option.startable) && (
-                <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                    {t('games.setup.none')}
-                </p>
-            )}
-
-            <Form {...form} className="flex flex-col gap-8">
-                {({ processing, errors }) => (
-                    <>
-                        {Object.entries(hidden).map(([name, value]) => (
-                            <input
-                                key={name}
-                                type="hidden"
-                                name={name}
-                                value={value}
-                            />
-                        ))}
-                        <InputError
-                            message={
-                                Object.entries(errors).find(([name]) =>
-                                    Object.hasOwn(hidden, name),
-                                )?.[1]
-                            }
+        <Form
+            {...form}
+            className={
+                page
+                    ? 'flex flex-col lg:grid lg:grid-cols-[minmax(0,720px)_320px] lg:items-start lg:gap-8'
+                    : 'flex flex-col'
+            }
+        >
+            {({ processing, errors }) => (
+                <>
+                    {Object.entries(hidden).map(([name, value]) => (
+                        <input
+                            key={name}
+                            type="hidden"
+                            name={name}
+                            value={value}
                         />
-                        <input type="hidden" name="mechanic" value={mechanic} />
+                    ))}
+                    <input type="hidden" name="level" value={choice.level} />
+                    <input
+                        type="hidden"
+                        name="mechanic"
+                        value={choice.mechanic}
+                    />
+                    <input type="hidden" name="pack" value={choice.pack} />
+                    <input type="hidden" name="rounds" value={roundCount} />
+                    {reads && (
                         <input
                             type="hidden"
                             name="letter_case"
                             value={letterCase}
                         />
-                        {ownWords && (
-                            <input type="hidden" name="own_words" value="1" />
+                    )}
+                    {letterLevel &&
+                        letters
+                            .filter((letter) => asked.has(letter.lower))
+                            .map((letter) => (
+                                <input
+                                    key={letter.lower}
+                                    type="hidden"
+                                    name="letters[]"
+                                    value={letter.lower}
+                                />
+                            ))}
+                    {ownWords && (
+                        <input type="hidden" name="own_words" value="1" />
+                    )}
+
+                    <div className="flex min-w-0 flex-col gap-10">
+                        {Object.keys(errors).some((name) =>
+                            Object.hasOwn(hidden, name),
+                        ) && (
+                            <InputError
+                                message={
+                                    Object.entries(errors).find(([name]) =>
+                                        Object.hasOwn(hidden, name),
+                                    )?.[1]
+                                }
+                            />
                         )}
-                        {letterLevel &&
-                            letters
-                                .filter((letter) => asked.has(letter.lower))
-                                .map((letter) => (
-                                    <input
-                                        key={letter.lower}
-                                        type="hidden"
-                                        name="letters[]"
-                                        value={letter.lower}
-                                    />
-                                ))}
 
-                        <fieldset className="grid gap-3">
-                            <legend className="mb-3 text-sm font-medium">
-                                {t('games.setup.pack')}
-                            </legend>
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                {packs.map((item) => {
-                                    const ready = drawable(item.key);
-
-                                    return (
-                                        <label
-                                            key={item.key}
-                                            className={cn(
-                                                'flex min-w-0 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors has-[input:checked]:border-primary has-[input:checked]:bg-accent has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring',
-                                                !ready &&
-                                                    'cursor-not-allowed opacity-60',
+                        <SetupQuestion number={1} title={t('games.setup.unit')}>
+                            <div className="grid gap-5">
+                                {groups.map((group) => (
+                                    <div key={group.key} className="grid gap-2">
+                                        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                            {t(
+                                                `games.setup.groups.${group.key}`,
                                             )}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="pack"
-                                                value={item.key}
-                                                checked={pack === item.key}
-                                                disabled={!ready}
-                                                onChange={() =>
-                                                    setPack(item.key)
-                                                }
-                                                className="sr-only"
-                                            />
-                                            <span
-                                                aria-hidden
-                                                className="flex shrink-0 -space-x-1.5"
-                                            >
-                                                {item.style.palette
-                                                    .slice(0, 4)
-                                                    .map((colour) => (
-                                                        <span
-                                                            key={colour}
-                                                            className="size-5 rounded-full border-2 border-background"
-                                                            style={{
-                                                                backgroundColor:
-                                                                    colour,
-                                                            }}
-                                                        />
-                                                    ))}
-                                            </span>
-                                            <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                                                <span className="max-w-full truncate font-medium">
-                                                    {item.title}
-                                                </span>
-                                                {!ready && (
-                                                    <Badge variant="secondary">
-                                                        {t(
-                                                            'games.setup.coming_soon',
-                                                        )}
-                                                    </Badge>
-                                                )}
-                                            </span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-                            <InputError message={errors.pack} />
-                        </fieldset>
-
-                        {mechanics.length > 1 && (
-                            <fieldset className="grid gap-3">
-                                <legend className="mb-3 text-sm font-medium">
-                                    {t('games.setup.mechanic')}
-                                </legend>
-                                <div className="flex flex-wrap gap-2">
-                                    {mechanics.map((item) => (
-                                        <Button
-                                            key={item}
-                                            type="button"
-                                            variant={
-                                                item === mechanic
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            aria-pressed={item === mechanic}
-                                            onClick={() => setMechanic(item)}
-                                        >
-                                            {t(`games.mechanics.${item}`)}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </fieldset>
-                        )}
-                        <InputError message={errors.mechanic} />
-
-                        <fieldset className="grid gap-3">
-                            <legend className="mb-3 text-sm font-medium">
-                                {t('games.setup.level')}
-                            </legend>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                {levelOptions.map(({ level: item, option }) => (
-                                    <label
-                                        key={item.key}
-                                        className={cn(
-                                            'flex min-w-0 cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-colors has-[input:checked]:border-primary has-[input:checked]:bg-accent has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring',
-                                            !option.startable &&
-                                                'cursor-not-allowed opacity-70',
-                                        )}
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                name="level"
-                                                value={item.key}
-                                                checked={
-                                                    level?.key === item.key
-                                                }
-                                                disabled={!option.startable}
-                                                onChange={() =>
-                                                    setLevel(item.key)
-                                                }
-                                                className="size-4 accent-primary"
-                                            />
-                                            <span className="truncate font-medium">
-                                                {item.title}
-                                            </span>
-                                        </span>
-                                        {option.reason !== null && (
-                                            <span className="text-xs text-muted-foreground">
-                                                {option.reason}
-                                            </span>
-                                        )}
-                                    </label>
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+                                            {group.units.map((item) => (
+                                                <SetupTile
+                                                    key={item.unit}
+                                                    chosen={
+                                                        item.unit ===
+                                                        choice.unit
+                                                    }
+                                                    locked={!item.startable}
+                                                    icon={UNIT_ICONS[item.unit]}
+                                                    title={t(
+                                                        `games.setup.units.${item.unit}`,
+                                                    )}
+                                                    line={
+                                                        item.startable
+                                                            ? t(
+                                                                  `games.setup.unit_hints.${item.unit}`,
+                                                              )
+                                                            : shortReason(item)
+                                                    }
+                                                    onClick={() =>
+                                                        item.startable
+                                                            ? update(
+                                                                  chooseUnit(
+                                                                      catalog,
+                                                                      state,
+                                                                      item.unit,
+                                                                  ),
+                                                              )
+                                                            : setLockedUnit(
+                                                                  item.unit,
+                                                              )
+                                                    }
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
-                            <InputError message={errors.level} />
-                        </fieldset>
-
-                        {letterLevel && (
-                            <fieldset className="grid gap-3">
-                                <legend className="mb-1 text-sm font-medium">
-                                    {t('games.setup.letters')}
-                                </legend>
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('games.setup.letters_hint')}
+                            <div aria-live="polite">
+                                {locked !== undefined && (
+                                    <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                                        <span className="font-medium text-foreground">
+                                            {t('games.setup.locked.unit', {
+                                                unit: t(
+                                                    `games.setup.units.${locked.unit}`,
+                                                ),
+                                            })}
+                                        </span>{' '}
+                                        {fullReason(locked)}
                                     </p>
-                                    {asked.size > 0 && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setAsked(new Set())}
+                                )}
+                            </div>
+
+                            <fieldset className="mt-2 grid gap-1">
+                                <SetupLabel>
+                                    {t('games.setup.level')}
+                                </SetupLabel>
+                                {unitLevels.length > 1 ? (
+                                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                                        {unitLevels.map((item) => (
+                                            <SetupRowButton
+                                                key={item.level.key}
+                                                chosen={
+                                                    item.level.key ===
+                                                    choice.level
+                                                }
+                                                locked={!item.startable}
+                                                className="h-auto flex-row justify-start py-2 text-left"
+                                                onClick={() =>
+                                                    update(
+                                                        chooseLevel(
+                                                            catalog,
+                                                            state,
+                                                            item.level.key,
+                                                        ),
+                                                    )
+                                                }
+                                            >
+                                                <span className="flex min-w-0 flex-1 flex-col">
+                                                    <span>
+                                                        {item.level.title}
+                                                    </span>
+                                                    <span className="text-xs font-normal opacity-80">
+                                                        {item.startable
+                                                            ? item.level.hint
+                                                            : shortReason(item)}
+                                                    </span>
+                                                </span>
+                                            </SetupRowButton>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">
+                                        {level?.hint}
+                                    </p>
+                                )}
+                                {unitLevels
+                                    .filter(
+                                        (item) =>
+                                            !item.startable &&
+                                            isLettersShortage(item.code),
+                                    )
+                                    .map((item) => (
+                                        <p
+                                            key={item.level.key}
+                                            className="text-sm text-muted-foreground"
                                         >
-                                            {t('games.setup.letters_clear')}
-                                        </Button>
+                                            <span className="font-medium text-foreground">
+                                                {item.level.title}
+                                            </span>
+                                            {' — '}
+                                            {fullReason(item)}
+                                        </p>
+                                    ))}
+                                <InputError message={errors.level} />
+                            </fieldset>
+
+                            {reads && (
+                                <div className="grid gap-1 text-sm text-muted-foreground">
+                                    <p>
+                                        {allLetters
+                                            ? t('games.setup.learned.all')
+                                            : t('games.setup.learned.some', {
+                                                  count: letters.length,
+                                              })}
+                                    </p>
+                                    {(!allLetters || lettersHref !== null) && (
+                                        <p className="flex flex-wrap items-baseline gap-x-3">
+                                            {!allLetters && (
+                                                <span
+                                                    lang="az"
+                                                    className="font-board text-base tracking-[0.2em] text-foreground"
+                                                >
+                                                    {letters
+                                                        .map(
+                                                            (letter) =>
+                                                                letter.upper,
+                                                        )
+                                                        .join(' ')}
+                                                </span>
+                                            )}
+                                            {lettersHref !== null && (
+                                                <Link
+                                                    href={lettersHref}
+                                                    className="font-medium text-foreground underline underline-offset-4"
+                                                >
+                                                    {t(
+                                                        'games.setup.learned.change',
+                                                    )}
+                                                </Link>
+                                            )}
+                                        </p>
                                     )}
                                 </div>
-                                <div
-                                    role="group"
-                                    aria-label={t('games.setup.letters')}
-                                    className="flex flex-wrap gap-2"
-                                >
-                                    {letters.map((letter) => (
-                                        <Toggle
-                                            key={letter.lower}
-                                            variant="outline"
-                                            lang="az"
-                                            pressed={asked.has(letter.lower)}
-                                            onPressedChange={(pressed) =>
-                                                toggleLetter(
-                                                    letter.lower,
-                                                    pressed,
-                                                )
-                                            }
-                                            className="h-11 min-w-11 font-board text-lg data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                                        >
-                                            {letterCase === 'upper'
-                                                ? letter.upper
-                                                : letter.lower}
-                                        </Toggle>
-                                    ))}
-                                </div>
-                                <InputError
-                                    message={
-                                        errors.letters ??
-                                        Object.entries(errors).find(([key]) =>
-                                            key.startsWith('letters.'),
-                                        )?.[1]
-                                    }
-                                />
-                            </fieldset>
-                        )}
+                            )}
+                        </SetupQuestion>
 
-                        {own !== null && (
-                            <fieldset className="grid gap-3">
-                                <legend className="mb-1 text-sm font-medium">
-                                    {t('games.setup.words')}
-                                </legend>
-                                <div className="flex flex-wrap gap-2">
-                                    {[false, true].map((item) => (
-                                        <Button
-                                            key={String(item)}
-                                            type="button"
-                                            variant={
-                                                item === ownWords
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            aria-pressed={item === ownWords}
-                                            disabled={item && !own.startable}
-                                            onClick={() => setOwnWords(item)}
-                                        >
-                                            {t(
-                                                item
-                                                    ? 'games.setup.words_own'
-                                                    : 'games.setup.words_all',
-                                            )}
-                                        </Button>
-                                    ))}
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {own.reason ?? t('games.setup.words_hint')}
-                                </p>
-                                {!own.startable && (
-                                    <div>
-                                        <AddWordDialog
-                                            maxLength={wordMaxLength}
-                                        />
-                                    </div>
-                                )}
-                                <InputError message={errors.own_words} />
-                            </fieldset>
-                        )}
-
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div className="grid content-start gap-2">
-                                <Label htmlFor="rounds">
-                                    {t('games.setup.rounds')}
-                                </Label>
-                                <Input
-                                    id="rounds"
-                                    name="rounds"
-                                    type="number"
-                                    inputMode="numeric"
-                                    min={rounds.min}
-                                    max={rounds.max}
-                                    value={roundCount}
-                                    onChange={(event) =>
-                                        setRoundCount(event.target.value)
-                                    }
-                                    className="max-w-32"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    {t('games.setup.rounds_hint', {
-                                        min: rounds.min,
-                                        max: rounds.max,
-                                    })}
-                                </p>
-                                <InputError message={errors.rounds} />
+                        <SetupQuestion
+                            number={2}
+                            title={t('games.setup.mechanic')}
+                        >
+                            <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+                                {mechanics.map((item) => (
+                                    <SetupTile
+                                        key={item.mechanic}
+                                        only={mechanics.length === 1}
+                                        chosen={
+                                            item.mechanic === choice.mechanic
+                                        }
+                                        locked={!item.startable}
+                                        icon={
+                                            MECHANIC_ICONS[item.mechanic] ??
+                                            Puzzle
+                                        }
+                                        title={mechanicTitle(item.mechanic)}
+                                        line={
+                                            item.startable
+                                                ? t(
+                                                      mechanicHint(
+                                                          item.mechanic,
+                                                          choice.unit,
+                                                      ),
+                                                  )
+                                                : item.reason
+                                        }
+                                        onClick={() =>
+                                            update(
+                                                chooseMechanic(
+                                                    catalog,
+                                                    state,
+                                                    item.mechanic,
+                                                ),
+                                            )
+                                        }
+                                    />
+                                ))}
                             </div>
+                            <div aria-live="polite">
+                                {state.replaced.mechanic !== null && (
+                                    <p className="rounded-lg bg-accent px-3 py-2 text-sm">
+                                        {t('games.setup.replaced.mechanic', {
+                                            old: mechanicTitle(
+                                                state.replaced.mechanic.from,
+                                            ),
+                                            new: mechanicTitle(
+                                                state.replaced.mechanic.to,
+                                            ),
+                                        })}
+                                    </p>
+                                )}
+                            </div>
+                            <InputError message={errors.mechanic} />
+                        </SetupQuestion>
 
-                            <fieldset className="grid content-start gap-2">
-                                <legend className="mb-2 text-sm font-medium">
-                                    {t('games.setup.letter_case')}
-                                </legend>
-                                <div className="flex flex-wrap gap-2">
-                                    {letterCases.map((item) => (
-                                        <Button
-                                            key={item}
-                                            type="button"
-                                            variant={
-                                                item === letterCase
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            aria-pressed={item === letterCase}
-                                            onClick={() => setCase(item)}
-                                        >
-                                            {t(
-                                                `games.setup.letter_cases.${item}`,
-                                            )}
-                                        </Button>
-                                    ))}
-                                </div>
-                                <InputError message={errors.letter_case} />
-                            </fieldset>
-                        </div>
+                        <SetupQuestion number={3} title={t('games.setup.pack')}>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                                {themes.map((item) => (
+                                    <SetupTile
+                                        key={item.pack.key}
+                                        stacked
+                                        chosen={item.pack.key === choice.pack}
+                                        locked={!item.startable}
+                                        picture={item.pack.cover}
+                                        title={item.pack.title}
+                                        line={
+                                            item.startable ? undefined : !item.drawable ? (
+                                                <Badge variant="secondary">
+                                                    {t(
+                                                        'games.setup.coming_soon',
+                                                    )}
+                                                </Badge>
+                                            ) : (
+                                                item.reason
+                                            )
+                                        }
+                                        onClick={() =>
+                                            update(
+                                                choosePack(
+                                                    catalog,
+                                                    state,
+                                                    item.pack.key,
+                                                ),
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </div>
+                            <div aria-live="polite">
+                                {state.replaced.pack !== null && (
+                                    <p className="rounded-lg bg-accent px-3 py-2 text-sm">
+                                        {t('games.setup.replaced.pack', {
+                                            old: packTitle(
+                                                state.replaced.pack.from,
+                                            ),
+                                            new: packTitle(
+                                                state.replaced.pack.to,
+                                            ),
+                                        })}
+                                    </p>
+                                )}
+                            </div>
+                            <InputError message={errors.pack} />
+                        </SetupQuestion>
 
-                        <div>
-                            <Button
-                                type="submit"
-                                size="lg"
-                                disabled={processing || level === null}
-                            >
-                                {processing && <Spinner />}
-                                {submitLabel ?? t('games.setup.start')}
-                            </Button>
-                        </div>
-                    </>
-                )}
-            </Form>
-        </>
+                        <SetupExtras
+                            summary={say(extrasSummary(extras))}
+                            rounds={rounds}
+                            roundCount={roundCount}
+                            onRounds={setRoundCount}
+                            letterCase={reads ? letterCase : null}
+                            letterCases={letterCases}
+                            onLetterCase={setCase}
+                            letters={letters}
+                            asked={letterLevel ? asked : null}
+                            onAsked={setAsked}
+                            own={own}
+                            ownWords={ownWords}
+                            onOwnWords={setOwnWords}
+                            teacher={!home}
+                            wordMaxLength={wordMaxLength}
+                            errors={errors}
+                        />
+                    </div>
+
+                    <SetupStart
+                        cover={pack?.cover ?? ''}
+                        game={game}
+                        details={details}
+                        players={players}
+                        label={submitLabel ?? t('games.setup.start')}
+                        processing={processing}
+                        page={page}
+                    />
+                </>
+            )}
+        </Form>
     );
 }

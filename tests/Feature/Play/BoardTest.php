@@ -5,6 +5,7 @@ use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\SoundChoices;
 use App\Domain\Play\Data\GameStateData;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Events\GameSessionTransitioned;
@@ -63,6 +64,9 @@ describe('the board page', function (): void {
                             'hit' => ContentAssets::url((string) $pack->style->sounds['hit'], $pack->version),
                             'miss' => ContentAssets::url((string) $pack->style->sounds['miss'], $pack->version),
                             'solved' => ContentAssets::url((string) $pack->style->sounds['solved'], $pack->version),
+                            // The balloons have no sound of their own for a round arriving or leaving.
+                            'arrive' => null,
+                            'leave' => null,
                         ],
                         'figures' => [],
                     ],
@@ -105,21 +109,21 @@ describe('the board page', function (): void {
         // word's picture, the bear and the cow are «ayı» and «inək».
         'animals' => ['animals', 'animal', [
             'word:dəvəquşu' => ['animals/devequsu.svg'],
-            'letter:a' => ['openmoji/1F40E.svg', 'openmoji/1F43B.svg', 'openmoji/1F41D.svg'],
-            'letter:i' => ['openmoji/1F415.svg', 'openmoji/1F404.svg'],
-            'syllable:də' => ['openmoji/1F43F.svg', 'openmoji/1F42A.svg', 'animals/devequsu.svg'],
-            'syllable:ruz' => ['openmoji/1F413.svg'],
-        ], ['letter:ə', 'syllable:ma'], ['openmoji/1F995.svg' => [], 'openmoji/1F43B.svg' => ['word:ayı'], 'openmoji/1F404.svg' => ['word:inək']]],
+            'letter:a' => ['fluent/1F40E.svg', 'fluent/1F43B.svg', 'fluent/1F41D.svg'],
+            'letter:i' => ['fluent/1F415.svg', 'fluent/1F404.svg'],
+            'syllable:də' => ['fluent/1F43F.svg', 'fluent/1F42A.svg', 'animals/devequsu.svg'],
+            'syllable:ruz' => ['fluent/1F413.svg'],
+        ], ['letter:ə', 'syllable:ma'], ['fluent/1F995.svg' => [], 'fluent/1F43B.svg' => ['word:ayı'], 'fluent/1F404.svg' => ['word:inək']]],
         // «al» begins «alma», «albalı» and «alça», not «ananas» (a-na-nas);
         // «ma» begins none, so it takes the words it ends (al-ma, xur-ma).
         'fruit' => ['fruit', 'fruit', [
             'word:qreypfrut' => ['fruit/qreypfrut.svg'],
-            'letter:ş' => ['openmoji/1F351.svg'],
+            'letter:ş' => ['fluent/1F351.svg'],
             'letter:ə' => ['fruit/erik.svg', 'fruit/encir.svg', 'fruit/ezgil.svg'],
-            'syllable:al' => ['openmoji/1F34E.svg', 'fruit/albali.svg', 'fruit/alca.svg'],
-            'syllable:a' => ['openmoji/1F34D.svg', 'openmoji/1F951.svg'],
-            'syllable:ma' => ['openmoji/1F34E.svg', 'fruit/xurma.svg'],
-        ], ['letter:o', 'syllable:ruz'], ['openmoji/1F34E.svg' => ['word:alma'], 'openmoji/1F349.svg' => ['word:qarpız'], 'fruit/erik.svg' => ['word:ərik']]],
+            'syllable:al' => ['fluent/1F34E.svg', 'fruit/albali.svg', 'fruit/alca.svg'],
+            'syllable:a' => ['fluent/1F34D.svg', 'fluent/1F951.svg'],
+            'syllable:ma' => ['fluent/1F34E.svg', 'fruit/xurma.svg'],
+        ], ['letter:o', 'syllable:ruz'], ['fluent/1F34E.svg' => ['word:alma'], 'fluent/1F349.svg' => ['word:qarpız'], 'fruit/erik.svg' => ['word:ərik']]],
     ]);
 
     it('serves sounds from the app\'s own host, versioned', function (): void {
@@ -127,6 +131,48 @@ describe('the board page', function (): void {
 
         $this->get(route('games.board', $game))->assertInertia(fn (Assert $page) => $page
             ->where('pack.style.sounds.hit', fn (string $url): bool => str_starts_with($url, url('/content/')) && str_ends_with($url, '?v='.app(ContentRepository::class)->pack('balloons')->version)));
+    });
+
+    it('plays the sounds the teacher chose, and the pack\'s own for the rest', function (): void {
+        $this->teacher->forceFill(['board_sounds' => ['miss' => 'pluck-down', 'solved' => 'bells']])->save();
+        $game = Games::start($this->class);
+        $pack = app(ContentRepository::class)->pack('balloons');
+
+        $this->get(route('games.board', $game))->assertInertia(fn (Assert $page) => $page
+            ->where('pack.style.sounds', [
+                'hit' => ContentAssets::url((string) $pack->style->sounds['hit'], $pack->version),
+                'miss' => ContentAssets::url('sounds/pluck-down.mp3', SoundChoices::version()),
+                'solved' => ContentAssets::url('sounds/bells.mp3', SoundChoices::version()),
+                'arrive' => null,
+                'leave' => null,
+            ]));
+    });
+
+    it('plays the train\'s own sounds as a round arrives and leaves, which no choice replaces', function (string $mechanic, string $level): void {
+        // Not a choice in Settings → Oyun; a stored one is never read.
+        $this->teacher->forceFill(['board_sounds' => ['arrive' => 'pop', 'leave' => 'bells']])->save();
+        $train = app(ContentRepository::class)->pack('train');
+
+        $this->get(route('games.board', Games::start($this->class, ['mechanic' => $mechanic, 'pack' => 'train', 'level' => $level])))->assertInertia(fn (Assert $page) => $page
+            ->where('pack.style.sounds.arrive', ContentAssets::url('sounds/train-arrive.mp3', $train->version))
+            ->where('pack.style.sounds.leave', ContentAssets::url('sounds/train-leave.mp3', $train->version))
+            ->where('pack.style.sounds.solved', ContentAssets::url('sounds/bells.mp3', $train->version)));
+    })->with([
+        'find' => ['find', 'letters'],
+        'build_word' => ['build_word', 'words-short'],
+    ]);
+
+    it('never pops where items sparkle, and forgets a sound the catalogue no longer lists', function (): void {
+        $this->teacher->forceFill(['board_sounds' => ['hit' => 'pop', 'miss' => 'no-such-sound']])->save();
+        $symbols = app(ContentRepository::class)->pack('symbols');
+        $balloons = app(ContentRepository::class)->pack('balloons');
+
+        $this->get(route('games.board', Games::start($this->class, ['pack' => 'symbols'])))->assertInertia(fn (Assert $page) => $page
+            ->where('pack.style.sounds.hit', ContentAssets::url('sounds/chime.mp3', $symbols->version))
+            ->where('pack.style.sounds.miss', ContentAssets::url((string) $symbols->style->sounds['miss'], $symbols->version)));
+
+        $this->get(route('games.board', Games::start($this->class)))->assertInertia(fn (Assert $page) => $page
+            ->where('pack.style.sounds.hit', ContentAssets::url('sounds/pop.mp3', SoundChoices::version())));
     });
 
     it('offers the phone remote by default, and not once the teacher turned it off', function (): void {

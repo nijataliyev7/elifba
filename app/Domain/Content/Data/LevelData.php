@@ -11,8 +11,9 @@ use App\Domain\Language\Support\Syllabifier;
  * A level from `content/levels.json` (docs/architecture.md §2): which unit,
  * which content of a pack fits it, which mechanics it allows and how many
  * items a round shows. Exactly one filter belongs to each unit: `shapes`
- * for syllables, `syllables` for words, `words` for sentences, none for
- * letters (they come from the alphabet and the class's learned letters).
+ * for syllables, `syllables` for words, `words` for sentences, `numbers`
+ * for numbers (R5), none for letters (they come from the alphabet and the
+ * class's learned letters) and pictures (the pack's words with a picture).
  */
 final readonly class LevelData
 {
@@ -23,6 +24,7 @@ final readonly class LevelData
      * @param  list<string>  $shapes  syllable shapes (`CV`, `CVC`…) for syllable levels
      * @param  RangeData|null  $syllables  syllables per word for word levels
      * @param  RangeData|null  $words  words per sentence for sentence levels
+     * @param  RangeData|null  $numbers  the numbers of a number level (within 1–10)
      */
     public function __construct(
         public string $key,
@@ -34,10 +36,11 @@ final readonly class LevelData
         public array $shapes,
         public ?RangeData $syllables,
         public ?RangeData $words,
+        public ?RangeData $numbers = null,
     ) {}
 
     /**
-     * @param  array{key: string, title: array{az: string, en: string}, unit: string, mechanics: list<string>, items?: int, decoys?: int, shapes?: list<string>, syllables?: array{min: int, max: int}, words?: array{min: int, max: int}}  $data
+     * @param  array{key: string, title: array{az: string, en: string}, unit: string, mechanics: list<string>, items?: int, decoys?: int, shapes?: list<string>, syllables?: array{min: int, max: int}, words?: array{min: int, max: int}, numbers?: array{min: int, max: int}}  $data
      */
     public static function fromArray(array $data): self
     {
@@ -51,6 +54,7 @@ final readonly class LevelData
             shapes: $data['shapes'] ?? [],
             syllables: isset($data['syllables']) ? RangeData::fromArray($data['syllables']) : null,
             words: isset($data['words']) ? RangeData::fromArray($data['words']) : null,
+            numbers: isset($data['numbers']) ? RangeData::fromArray($data['numbers']) : null,
         );
     }
 
@@ -68,7 +72,7 @@ final readonly class LevelData
     public function mostItems(): int
     {
         $longest = match ($this->unit) {
-            Unit::Letter => 1,
+            Unit::Letter, Unit::Picture, Unit::Number => 1,
             Unit::Syllable => max([0, ...array_map(strlen(...), $this->shapes)]),
             Unit::Word => $this->syllables->max ?? 0,
             Unit::Sentence => $this->words->max ?? 0,
@@ -121,7 +125,10 @@ final readonly class LevelData
      * The distinct items of a pack this level can use, as content keys
      * (`syllable:ba`, `word:alma`, `sentence:fruit:…`), in pack order. With
      * `$letters`, only items made of those lowercase letters; null = all 32.
-     * Letter levels take nothing from a pack.
+     * Letter levels take nothing from a pack. A picture level (R5) takes the
+     * `word:` keys of the pack's words with a picture and a number level the
+     * `number:{n}` keys of its range; neither reads `$letters`, since nothing
+     * there is read.
      *
      * @param  list<string>|null  $letters
      * @return list<string>
@@ -130,6 +137,14 @@ final readonly class LevelData
     {
         $learned = static fn (array $used): bool => $letters === null || array_diff($used, $letters) === [];
         $keys = [];
+
+        if ($this->unit === Unit::Picture) {
+            $keys = array_map(static fn (WordData $word): string => $word->key(), $pack->pictured());
+        }
+
+        if ($this->unit === Unit::Number && $this->numbers !== null) {
+            $keys = array_map(self::numberKey(...), range($this->numbers->min, $this->numbers->max));
+        }
 
         if ($this->unit === Unit::Syllable) {
             foreach ($pack->words as $word) {
@@ -158,5 +173,13 @@ final readonly class LevelData
         }
 
         return array_values(array_unique($keys));
+    }
+
+    /**
+     * `number:{n}`, the content key of a number item (R5).
+     */
+    public static function numberKey(int $number): string
+    {
+        return Unit::Number->value.':'.$number;
     }
 }

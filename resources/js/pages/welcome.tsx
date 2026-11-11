@@ -2,6 +2,8 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import boardImage from '../../images/welcome/board.webp';
 import classImage from '../../images/welcome/class.webp';
+import homeRemoteImage from '../../images/welcome/home-remote.webp';
+import homeImage from '../../images/welcome/home.webp';
 import podiumImage from '../../images/welcome/podium.webp';
 import remoteImage from '../../images/welcome/remote.webp';
 import setupImage from '../../images/welcome/setup.webp';
@@ -13,8 +15,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { SampleWall } from '@/components/welcome/sample-wall';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import { credits, home, login, privacy, register } from '@/routes';
-import { index as classes } from '@/routes/classes';
+import { credits, home, login, privacy, register, start } from '@/routes';
 import type { WelcomeProps } from '@/types/welcome';
 
 /** The logo's green, for the main action and the step numbers (frontend.md rule 10). */
@@ -23,24 +24,40 @@ const MAIN_ACTION =
 
 /**
  * The landing page (`/`, frontend.md rule 10): what Elifba is, how a lesson
- * goes, what a teacher gets, what is kept about children and what it costs.
- * Every fact is a prop from `WelcomeController`.
+ * goes, what a teacher gets, what a parent does at home (R7), what is kept
+ * about children and what it costs. Every fact is a prop from
+ * `WelcomeController`.
  */
 export default function Welcome({
     sourceUrl,
     mechanics,
     packs,
+    picturePacks,
     letters,
     avatars,
     sample,
 }: WelcomeProps) {
     const { auth, name } = usePage().props;
     const { t } = useTranslation();
-    const teacher = auth.user !== null;
+    const signedIn = auth.user !== null;
+    // A signed-in account goes on through `/start`, which lands it by area.
+    const areaAction =
+        auth.area === 'parent'
+            ? 'welcome.hero.children'
+            : auth.area === 'teacher'
+              ? 'welcome.hero.classes'
+              : 'welcome.hero.start';
+    const areaLink =
+        auth.area === 'parent'
+            ? 'nav.children'
+            : auth.area === 'teacher'
+              ? 'nav.classes'
+              : 'welcome.hero.start';
+    const homePacks = packs.filter((pack) => picturePacks.includes(pack.key));
 
-    const mainAction = teacher ? (
+    const mainAction = signedIn ? (
         <Button asChild size="lg" className={MAIN_ACTION}>
-            <Link href={classes()}>{t('welcome.hero.classes')}</Link>
+            <Link href={start()}>{t(areaAction)}</Link>
         </Button>
     ) : (
         <Button asChild size="lg" className={MAIN_ACTION}>
@@ -87,9 +104,9 @@ export default function Welcome({
                         {t('welcome.github')}
                     </GitHubLink>
 
-                    {teacher ? (
+                    {signedIn ? (
                         <Button asChild variant="outline">
-                            <Link href={classes()}>{t('nav.classes')}</Link>
+                            <Link href={start()}>{t(areaLink)}</Link>
                         </Button>
                     ) : (
                         <>
@@ -134,6 +151,12 @@ export default function Welcome({
                                 {mainAction}
                                 {sourceAction}
                             </div>
+                            <a
+                                href="#welcome-parents"
+                                className="mt-5 inline-block font-medium underline underline-offset-4 hover:decoration-2"
+                            >
+                                {t('welcome.hero.parents')}
+                            </a>
                         </div>
                     </section>
 
@@ -268,33 +291,7 @@ export default function Welcome({
                                     <p className="text-muted-foreground">
                                         {t('welcome.get.packs_text')}
                                     </p>
-                                    <ul className="mt-5 flex flex-wrap gap-2">
-                                        {packs.map((pack) => (
-                                            <li
-                                                key={pack.key}
-                                                className="flex items-center gap-2.5 rounded-full border py-1.5 pr-4 pl-2"
-                                            >
-                                                <span
-                                                    aria-hidden
-                                                    className="flex -space-x-1.5"
-                                                >
-                                                    {pack.palette
-                                                        .slice(0, 4)
-                                                        .map((colour) => (
-                                                            <span
-                                                                key={colour}
-                                                                className="size-5 rounded-full border-2 border-background"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        colour,
-                                                                }}
-                                                            />
-                                                        ))}
-                                                </span>
-                                                {pack.title}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <PackList packs={packs} />
                                 </dd>
                             </div>
 
@@ -336,6 +333,84 @@ export default function Welcome({
                                 text={t('welcome.get.touch_text')}
                             />
                         </dl>
+                    </section>
+
+                    <section
+                        aria-labelledby="welcome-parents"
+                        className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-x-12 gap-y-10 px-4 pb-24 sm:px-6 lg:grid-cols-12 lg:px-8 lg:pb-32"
+                    >
+                        <div className="lg:col-span-4">
+                            <h2
+                                id="welcome-parents"
+                                className="scroll-mt-6 text-3xl font-semibold tracking-tight lg:text-4xl"
+                            >
+                                {t('welcome.parents.title')}
+                            </h2>
+                            <p className="mt-4 max-w-lg text-lg text-pretty text-muted-foreground">
+                                {t('welcome.parents.text')}
+                            </p>
+                        </div>
+
+                        <div className="min-w-0 lg:col-span-8">
+                            <div className="relative mr-3 mb-10 sm:mr-5">
+                                <Picture
+                                    src={homeImage}
+                                    width={1200}
+                                    height={675}
+                                    alt={t('welcome.parents.alt')}
+                                    position="object-center"
+                                />
+                                <img
+                                    src={homeRemoteImage}
+                                    width={540}
+                                    height={490}
+                                    loading="lazy"
+                                    decoding="async"
+                                    alt={t('welcome.parents.remote_alt')}
+                                    className="absolute -right-3 -bottom-10 w-[26%] rounded-xl bg-white shadow-xl ring-1 shadow-black/15 ring-black/10 sm:-right-5 dark:ring-white/15"
+                                />
+                            </div>
+
+                            <ul
+                                role="list"
+                                className="mt-14 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-3"
+                            >
+                                <Point
+                                    title={t('welcome.parents.role.title')}
+                                    text={t('welcome.parents.role.text')}
+                                />
+                                <Point
+                                    title={t('welcome.parents.child.title')}
+                                    text={t('welcome.parents.child.text')}
+                                />
+                                <Point
+                                    title={t('welcome.parents.play.title')}
+                                    text={t('welcome.parents.play.text')}
+                                />
+                            </ul>
+
+                            <dl className="mt-14 grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2">
+                                <div className="sm:col-span-2">
+                                    <dt className="text-xl font-semibold">
+                                        {t('welcome.parents.pictures')}
+                                    </dt>
+                                    <dd className="mt-2">
+                                        <p className="text-muted-foreground">
+                                            {t('welcome.parents.pictures_text')}
+                                        </p>
+                                        <PackList packs={homePacks} />
+                                    </dd>
+                                </div>
+                                <Fact
+                                    title={t('welcome.parents.reading')}
+                                    text={t('welcome.parents.reading_text')}
+                                />
+                                <Fact
+                                    title={t('welcome.parents.stars')}
+                                    text={t('welcome.parents.stars_text')}
+                                />
+                            </dl>
+                        </div>
                     </section>
 
                     <section
@@ -495,6 +570,43 @@ function Picture({ src, width, height, alt, position }: PictureProps) {
                 position,
             )}
         />
+    );
+}
+
+type PackListProps = { packs: WelcomeProps['packs'] };
+
+/** The packs as pills, each with the first colours of its palette. */
+function PackList({ packs }: PackListProps) {
+    return (
+        <ul className="mt-5 flex flex-wrap gap-2">
+            {packs.map((pack) => (
+                <li
+                    key={pack.key}
+                    className="flex items-center gap-2.5 rounded-full border py-1.5 pr-4 pl-2"
+                >
+                    <span aria-hidden className="flex -space-x-1.5">
+                        {pack.palette.slice(0, 4).map((colour) => (
+                            <span
+                                key={colour}
+                                className="size-5 rounded-full border-2 border-background"
+                                style={{ backgroundColor: colour }}
+                            />
+                        ))}
+                    </span>
+                    {pack.title}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+/** One thing a parent does, in «Evdə, uşağınızla»; not a numbered step. */
+function Point({ title, text }: { title: string; text: string }) {
+    return (
+        <li className="border-t-2 border-green-700 pt-4 dark:border-green-500">
+            <h3 className="font-semibold">{title}</h3>
+            <p className="mt-1 text-pretty text-muted-foreground">{text}</p>
+        </li>
     );
 }
 

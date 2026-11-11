@@ -10,6 +10,7 @@ use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\Syllabifier;
+use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
@@ -90,7 +91,7 @@ function hideBuiltIn(User $teacher, string $pack, string $word): void
  */
 function optionFor(SchoolClass $class, string $mechanic, string $pack, string $level): array
 {
-    foreach (GameSetupOptions::forClass($class)['options'] as $option) {
+    foreach (GameSetupOptions::for(GamePlayers::forClass($class))['options'] as $option) {
         if ($option['mechanic'] === $mechanic && $option['pack'] === $pack && $option['level'] === $level) {
             return $option;
         }
@@ -108,7 +109,7 @@ function optionFor(SchoolClass $class, string $mechanic, string $pack, string $l
 function setupErrors(SchoolClass $class, array $setup): array
 {
     try {
-        GameSetupData::validate($setup, $class);
+        GameSetupData::validate($setup, GamePlayers::forClass($class));
     } catch (ValidationException $exception) {
         /** @var array<string, list<string>> $errors */
         $errors = $exception->errors();
@@ -242,11 +243,17 @@ it('answers with reasons, never an error, when a teacher hides every word of a p
         hideBuiltIn($this->teacher, 'fruit', $word->text);
     }
 
-    $fruit = array_values(array_filter(GameSetupOptions::forClass($this->class)['options'], static fn (array $option): bool => $option['pack'] === 'fruit'));
+    $fruit = array_values(array_filter(GameSetupOptions::for(GamePlayers::forClass($this->class))['options'], static fn (array $option): bool => $option['pack'] === 'fruit'));
     $startable = array_values(array_filter($fruit, static fn (array $option): bool => $option['startable']));
 
-    expect($fruit)->toHaveCount(15)
-        ->and(array_map(static fn (array $option): string => "{$option['mechanic']} × {$option['level']}", $startable))->toBe(['pop × letters', 'find × letters', 'build_sentence × sentences'])
+    // A number level takes nothing from the pack; a picture or count round takes its pictures.
+    expect($fruit)->toHaveCount(15 + 10)
+        ->and(array_map(static fn (array $option): string => "{$option['mechanic']} × {$option['level']}", $startable))->toBe([
+            'pop × letters', 'find × letters', 'build_sentence × sentences',
+            'pop × numbers-5', 'find × numbers-5', 'pop × numbers-10', 'find × numbers-10',
+        ])
+        ->and(optionFor($this->class, 'find', 'fruit', 'pictures')['reason'])->toBe(Playable::message('too_few_pictures', ['count' => 4, 'found' => 0]))
+        ->and(optionFor($this->class, 'count', 'fruit', 'numbers-5')['reason'])->toBe(Playable::message('too_few_pictures', ['count' => 2, 'found' => 0]))
         ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 4, 'found' => 0]))
         ->and(optionFor($this->class, 'pop', 'fruit', 'words-short')['reason'])->toBe(Playable::message('too_few_words', ['count' => 4, 'found' => 0]))
         ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['reason'])->toBe(Playable::message('too_few_syllables', ['count' => 2, 'found' => 0]))
@@ -255,18 +262,18 @@ it('answers with reasons, never an error, when a teacher hides every word of a p
         ->and(Games::start($this->class, ['mechanic' => 'build_sentence', 'pack' => 'fruit', 'level' => 'sentences'])->pack)->toBe('fruit');
 });
 
-it('offers every mechanic of every level in every pack of the teacher', function (): void {
+it('offers every mechanic of every level in every pack of the teacher that lists the level\'s unit', function (): void {
     addTeacherWord($this->teacher, 'pomidor');
     hideBuiltIn($this->teacher, 'fruit', 'alma');
     $content = app(ContentRepository::class);
     $expected = 0;
 
     foreach ($content->levels() as $level) {
-        $expected += count($level->mechanics) * count($content->packs());
+        $expected += count($level->mechanics) * count(array_filter($content->packs(), static fn ($pack): bool => $pack->lists($level->unit)));
     }
 
-    expect(Playable::options($this->teacher, GameSetupData::learned($this->class)))->toHaveCount($expected)
-        ->and(array_filter(GameSetupOptions::forClass($this->class)['options'], static fn (array $option): bool => ! $option['startable']))->toBe([]);
+    expect(Playable::options($this->teacher, GameSetupData::learned(GamePlayers::forClass($this->class))))->toHaveCount($expected)
+        ->and(array_filter(GameSetupOptions::for(GamePlayers::forClass($this->class))['options'], static fn (array $option): bool => ! $option['startable']))->toBe([]);
 });
 
 describe('only my words', function (): void {
@@ -299,16 +306,16 @@ describe('only my words', function (): void {
     });
 
     it('offers the choice only where teacher words play, with the reason it cannot start', function (): void {
-        expect(optionFor($this->class, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null])
-            ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['own'])->toBe(['startable' => true, 'reason' => null])
+        expect(optionFor($this->class, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null, 'code' => null])
+            ->and(optionFor($this->class, 'build_syllable', 'fruit', 'syllables-closed')['own'])->toBe(['startable' => true, 'reason' => null, 'code' => null])
             // Ay, Or, El: three open syllables, find shows four.
-            ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['own'])->toBe(['startable' => false, 'reason' => Playable::message('too_few_syllables', ['count' => 4, 'found' => 3])])
+            ->and(optionFor($this->class, 'find', 'fruit', 'syllables-open')['own'])->toBe(['startable' => false, 'reason' => Playable::message('too_few_syllables', ['count' => 4, 'found' => 3]), 'code' => 'too_few_syllables'])
             // The teacher's words play in every pack.
-            ->and(optionFor($this->class, 'find', 'animals', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null])
+            ->and(optionFor($this->class, 'find', 'animals', 'words-short')['own'])->toBe(['startable' => true, 'reason' => null, 'code' => null])
             ->and(optionFor($this->class, 'find', 'fruit', 'letters')['own'])->toBeNull()
             ->and(optionFor($this->class, 'build_word', 'fruit', 'words-short')['own'])->toBeNull()
             ->and(optionFor($this->class, 'build_sentence', 'fruit', 'sentences')['own'])->toBeNull()
-            ->and(optionFor($this->otherClass, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => false, 'reason' => Playable::message('no_own_words')]);
+            ->and(optionFor($this->otherClass, 'find', 'fruit', 'words-short')['own'])->toBe(['startable' => false, 'reason' => Playable::message('no_own_words'), 'code' => 'no_own_words']);
     });
 
     it('refuses own words where they do not play, or are missing or too few', function (): void {

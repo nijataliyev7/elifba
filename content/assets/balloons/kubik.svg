@@ -1,11 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- kubik: a toy block with a circle, a triangle and a square on its faces. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="12,22 36,34 36,62 12,50" fill="#EA5A47"/>
-    <polygon points="30.7,45.4 30.5,47.3 29.8,48.8 28.8,49.9 27.4,50.5 25.7,50.4 24,49.8 22.3,48.7 20.6,47.1 19.2,45.2 18.2,43 17.5,40.8 17.3,38.6 17.5,36.7 18.2,35.2 19.2,34.1 20.6,33.5 22.3,33.6 24,34.2 25.7,35.3 27.4,36.9 28.8,38.8 29.8,41 30.5,43.2" fill="#FCEA2B" stroke-width="1.5"/>
-    <polygon points="36,34 60,22 60,50 36,62" fill="#61B2E4"/>
-    <polygon points="48,33.6 55.2,46.2 40.8,53.4" fill="#FCEA2B" stroke-width="1.5"/>
-    <polygon points="12,22 36,34 60,22 36,10" fill="#FCEA2B"/>
-    <polygon points="24,22 36,28 48,22 36,16" fill="#EA5A47" stroke-width="1.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- kubik: a toy block with a shape on each side. Elifba own art, MIT. -->
+<g clip-path="url(#kubik_clip1)">
+<path d="M16.01 3.4L28.19 9.3Q28.2 9.3 28.19 9.3L16.01 15.2Q16 15.2 15.99 15.2L3.81 9.3Q3.8 9.3 3.81 9.3L15.99 3.4Q16 3.4 16.01 3.4Z" fill="url(#kubik_fill2)"/>
+<path d="M16.01 3.4L28.19 9.3Q28.2 9.3 28.19 9.3L16.01 15.2Q16 15.2 15.99 15.2L3.81 9.3Q3.8 9.3 3.81 9.3L15.99 3.4Q16 3.4 16.01 3.4Z" fill="url(#kubik_fill3)"/>
+<path d="M3.81 9.3L15.99 15.2Q16 15.2 16 15.21L16 29.69Q16 29.7 15.99 29.7L3.81 23.8Q3.8 23.8 3.8 23.79L3.8 9.31Q3.8 9.3 3.81 9.3Z" fill="url(#kubik_fill4)"/>
+<path d="M3.81 9.3L15.99 15.2Q16 15.2 16 15.21L16 29.69Q16 29.7 15.99 29.7L3.81 23.8Q3.8 23.8 3.8 23.79L3.8 9.31Q3.8 9.3 3.81 9.3Z" fill="url(#kubik_fill5)"/>
+<path d="M16.01 15.2L28.19 9.3Q28.2 9.3 28.2 9.31L28.2 23.79Q28.2 23.8 28.19 23.8L16.01 29.7Q16 29.7 16 29.69L16 15.21Q16 15.2 16.01 15.2Z" fill="url(#kubik_fill6)"/>
+<path d="M16.01 15.2L28.19 9.3Q28.2 9.3 28.2 9.31L28.2 23.79Q28.2 23.8 28.19 23.8L16.01 29.7Q16 29.7 16 29.69L16 15.21Q16 15.2 16.01 15.2Z" fill="url(#kubik_fill7)"/>
+</g>
+<g filter="url(#kubik_blur03)"><path d="M4.8 9.3L16 4.2L27.2 9.3L16 5.4Z" fill="#FFFDE0" fill-opacity="0.5"/></g>
+<path d="M11.36 8.83L15.02 7.06Q16 6.59 16.98 7.06L20.64 8.83Q21.61 9.3 20.64 9.77L16.98 11.54Q16 12.01 15.02 11.54L11.36 9.77Q10.39 9.3 11.36 8.83Z" fill="url(#kubik_fill8)"/>
+<path d="M11.36 8.83L15.02 7.06Q16 6.59 16.98 7.06L20.64 8.83Q21.61 9.3 20.64 9.77L16.98 11.54Q16 12.01 15.02 11.54L11.36 9.77Q10.39 9.3 11.36 8.83Z" fill="url(#kubik_fill9)"/>
+<g filter="url(#kubik_blur03)"><ellipse cx="14.2" cy="8.4" rx="1.6" ry="0.6" fill="#FFFFFF" fill-opacity="0.55" transform="rotate(-25 14.2 8.4)"/></g>
+<path d="M13.32 21.15C13.32 23.33 11.73 24.45 9.9 23.56C8.07 22.68 6.48 20.02 6.48 17.85C6.48 15.67 8.07 14.55 9.9 15.44C11.73 16.33 13.32 18.98 13.32 21.15Z" fill="url(#kubik_fill10)"/>
+<path d="M13.32 21.15C13.32 23.33 11.73 24.45 9.9 23.56C8.07 22.68 6.48 20.02 6.48 17.85C6.48 15.67 8.07 14.55 9.9 15.44C11.73 16.33 13.32 18.98 13.32 21.15Z" fill="url(#kubik_fill11)"/>
+<g filter="url(#kubik_blur03)"><ellipse cx="8.6" cy="15.6" rx="0.7" ry="1.4" fill="#FFFFFF" fill-opacity="0.6" transform="rotate(-20 8.6 15.6)"/></g>
+<path d="M22.59 15.93L25.52 20.89Q26 21.67 25.03 22.14L19.17 24.98Q18.2 25.45 18.68 24.2L21.61 16.4Q22.1 15.15 22.59 15.93Z" fill="url(#kubik_fill12)"/>
+<path d="M22.59 15.93L25.52 20.89Q26 21.67 25.03 22.14L19.17 24.98Q18.2 25.45 18.68 24.2L21.61 16.4Q22.1 15.15 22.59 15.93Z" fill="url(#kubik_fill13)"/>
+<defs>
+<clipPath id="kubik_clip1"><path d="M17.44 4.1L26.76 8.6Q28.2 9.3 28.2 10.9L28.2 22.2Q28.2 23.8 26.76 24.5L17.44 29Q16 29.7 14.56 29L5.24 24.5Q3.8 23.8 3.8 22.2L3.8 10.9Q3.8 9.3 5.24 8.6L14.56 4.1Q16 3.4 17.44 4.1Z" /></clipPath>
+<radialGradient id="kubik_fill2" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="kubik_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.35"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="kubik_fill4" cx="0.25" cy="0.2" r="0.95"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="kubik_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.55"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="kubik_fill6" cx="0.2" cy="0.15" r="1"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="kubik_fill7" cx="0.8" cy="1" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.75"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<filter id="kubik_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<radialGradient id="kubik_fill8" cx="0.4" cy="0.2" r="0.8"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="kubik_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.4"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="kubik_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="kubik_fill11" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.5"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="kubik_fill12" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="kubik_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

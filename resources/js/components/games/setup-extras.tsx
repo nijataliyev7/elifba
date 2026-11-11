@@ -1,0 +1,240 @@
+import { Link } from '@inertiajs/react';
+import { ChevronDown } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
+import { SetupLabel, SetupRowButton } from '@/components/games/setup-tiles';
+import InputError from '@/components/input-error';
+import { AddWordDialog } from '@/components/words/add-word-dialog';
+import { useTranslation } from '@/hooks/use-translation';
+import { roundSteps } from '@/lib/setup-choices';
+import { cn } from '@/lib/utils';
+import { index as wordsIndex } from '@/routes/words';
+import type { Letter, SetupRefusal } from '@/types';
+
+type Props = {
+    /** The values beside «Əlavə», joined. */
+    summary: string;
+    rounds: { min: number; max: number };
+    roundCount: number;
+    onRounds: (count: number) => void;
+    /** The letter case, or null at a level that does not read. */
+    letterCase: 'upper' | 'lower' | null;
+    letterCases: ('upper' | 'lower')[];
+    onLetterCase: (letterCase: 'upper' | 'lower') => void;
+    letters: Letter[];
+    /** The chosen letters at the letter level, or null elsewhere. */
+    asked: Set<string> | null;
+    onAsked: (asked: Set<string>) => void;
+    /** `option.own` of the chosen game. */
+    own: SetupRefusal | null;
+    ownWords: boolean;
+    onOwnWords: (on: boolean) => void;
+    /** The teacher area: the words page and adding a word are offered when own words cannot start. */
+    teacher: boolean;
+    wordMaxLength: number;
+    errors: Record<string, string | undefined>;
+};
+
+/** The fields of «Əlavə»: it opens by itself when the server refuses one of them. */
+const FIELDS = ['rounds', 'letter_case', 'letters', 'own_words'];
+
+/**
+ * «Əlavə» (docs/frontend.md rule 13): closed by default, its values beside
+ * the button. Inside: the rounds, the letter case at a reading level, the
+ * letters at the letter level and, where the server offers it, whether to
+ * play only the owner's own words.
+ */
+export function SetupExtras({
+    summary,
+    rounds,
+    roundCount,
+    onRounds,
+    letterCase,
+    letterCases,
+    onLetterCase,
+    letters,
+    asked,
+    onAsked,
+    own,
+    ownWords,
+    onOwnWords,
+    teacher,
+    wordMaxLength,
+    errors,
+}: Props) {
+    const { t } = useTranslation();
+    const id = useId();
+    const [open, setOpen] = useState(false);
+    const lettersError =
+        errors.letters ??
+        Object.entries(errors).find(([key]) => key.startsWith('letters.'))?.[1];
+    const refused =
+        FIELDS.some((field) => errors[field] !== undefined) ||
+        lettersError !== undefined;
+
+    useEffect(() => {
+        if (refused) {
+            setOpen(true);
+        }
+    }, [refused]);
+
+    const toggle = (letter: string) => {
+        const next = new Set(asked);
+
+        if (next.has(letter)) {
+            next.delete(letter);
+        } else {
+            next.add(letter);
+        }
+
+        onAsked(next);
+    };
+
+    return (
+        <section className="grid gap-4">
+            <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={id}
+                onClick={() => setOpen(!open)}
+                className="flex min-h-13 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-2 text-left transition-colors outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+                <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-semibold">
+                        {t('games.setup.extra')}
+                    </span>
+                    <span className="truncate text-sm text-muted-foreground">
+                        {summary}
+                    </span>
+                </span>
+                <ChevronDown
+                    aria-hidden
+                    className={cn(
+                        'size-5 shrink-0 text-muted-foreground transition-transform',
+                        open && 'rotate-180',
+                    )}
+                />
+            </button>
+
+            <div id={id} hidden={!open} className="grid gap-6 px-1">
+                <fieldset className="grid gap-1">
+                    <SetupLabel>{t('games.setup.rounds')}</SetupLabel>
+                    <div className="flex flex-wrap gap-2">
+                        {roundSteps(rounds, roundCount).map((count) => (
+                            <SetupRowButton
+                                key={count}
+                                chosen={count === roundCount}
+                                className="tabular-nums"
+                                onClick={() => onRounds(count)}
+                            >
+                                {count}
+                            </SetupRowButton>
+                        ))}
+                    </div>
+                    <InputError message={errors.rounds} />
+                </fieldset>
+
+                {letterCase !== null && (
+                    <fieldset className="grid gap-1">
+                        <SetupLabel>{t('games.setup.letter_case')}</SetupLabel>
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                            {letterCases.map((item) => (
+                                <SetupRowButton
+                                    key={item}
+                                    chosen={item === letterCase}
+                                    className="flex-col gap-0 py-2"
+                                    onClick={() => onLetterCase(item)}
+                                >
+                                    <span
+                                        lang="az"
+                                        className="font-board text-lg leading-tight tracking-wider"
+                                    >
+                                        {letters
+                                            .slice(0, 3)
+                                            .map((letter) => letter[item])
+                                            .join(' ')}
+                                    </span>
+                                    <span>
+                                        {t(`games.setup.letter_cases.${item}`)}
+                                    </span>
+                                </SetupRowButton>
+                            ))}
+                        </div>
+                        <InputError message={errors.letter_case} />
+                    </fieldset>
+                )}
+
+                {asked !== null && letterCase !== null && (
+                    <fieldset className="grid gap-1">
+                        <SetupLabel>{t('games.setup.letters')}</SetupLabel>
+                        <div className="flex flex-wrap gap-2">
+                            <SetupRowButton
+                                chosen={asked.size === 0}
+                                onClick={() => onAsked(new Set())}
+                            >
+                                {t('games.setup.letters_all', {
+                                    count: letters.length,
+                                })}
+                            </SetupRowButton>
+                            {letters.map((letter) => (
+                                <SetupRowButton
+                                    key={letter.lower}
+                                    lang="az"
+                                    chosen={asked.has(letter.lower)}
+                                    className="font-board text-lg"
+                                    onClick={() => toggle(letter.lower)}
+                                >
+                                    {letter[letterCase]}
+                                </SetupRowButton>
+                            ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {t('games.setup.letters_hint')}
+                        </p>
+                        <InputError message={lettersError} />
+                    </fieldset>
+                )}
+
+                {own !== null && (own.startable || teacher) && (
+                    <fieldset className="grid gap-1">
+                        <SetupLabel>{t('games.setup.words')}</SetupLabel>
+                        {own.startable ? (
+                            <div className="flex flex-wrap gap-2">
+                                {[true, false].map((item) => (
+                                    <SetupRowButton
+                                        key={String(item)}
+                                        chosen={item === ownWords}
+                                        onClick={() => onOwnWords(item)}
+                                    >
+                                        {t(
+                                            item
+                                                ? 'games.setup.words_own'
+                                                : 'games.setup.words_all',
+                                        )}
+                                    </SetupRowButton>
+                                ))}
+                            </div>
+                        ) : own.code === 'no_own_words' ? (
+                            <p className="text-sm text-muted-foreground">
+                                {own.reason}{' '}
+                                <Link
+                                    href={wordsIndex()}
+                                    className="font-medium text-foreground underline underline-offset-4"
+                                >
+                                    {t('nav.words')}
+                                </Link>
+                            </p>
+                        ) : (
+                            <div className="grid justify-items-start gap-2">
+                                <p className="text-sm text-muted-foreground">
+                                    {own.reason}
+                                </p>
+                                <AddWordDialog maxLength={wordMaxLength} />
+                            </div>
+                        )}
+                        <InputError message={errors.own_words} />
+                    </fieldset>
+                )}
+            </div>
+        </section>
+    );
+}

@@ -40,6 +40,24 @@ describe('answerItemIds', () => {
         expect([...answerItemIds(tut, ['c', 'a', 'c'])]).toEqual([]);
     });
 
+    it('marks the picture of a picture round and the number of a count round (R5)', () => {
+        const picture = fixture('find-picture');
+        const count = fixture('count');
+        const answer = count.items.find((item) =>
+            answerItemIds(count, []).has(item.id),
+        );
+
+        expect([...answerItemIds(picture, [])]).toEqual(['b']);
+        expect(picture.items.find((item) => item.id === 'b')?.text).toBe(
+            'pişik',
+        );
+        expect([...answerItemIds(picture, ['b'])]).toEqual([]);
+        expect(answer?.text).toBe(String(count.prompt.count));
+        // A wrong number stays: the answer is still marked after a miss.
+        expect([...answerItemIds(count, [])]).toEqual(['c']);
+        expect([...answerItemIds(count, ['c'])]).toEqual([]);
+    });
+
     it('marks nothing in a pop round, where every item is an answer', () => {
         const round = fixture('pop-word');
 

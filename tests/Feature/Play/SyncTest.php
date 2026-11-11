@@ -177,6 +177,33 @@ describe('hits', function (): void {
         expect([$ranked[0]->student->id, $ranked[0]->points, $ranked[0]->place])->toBe([$this->aysel->id, 3, 1]);
     });
 
+    it('gives a count round its points: a wrong number is a miss, N solves it with one point less', function (): void {
+        Event::fake([RoundSolved::class]);
+        $game = Games::start($this->class, ['mechanic' => 'count', 'pack' => 'fruit', 'level' => 'numbers-5']);
+        $round = Games::round($game);
+        $answer = Games::target($round);
+        $wrong = Games::decoy($round);
+        $n = $round->payload['prompt']['count'];
+
+        $results = results(sync($game, [
+            Games::hit($round, $wrong, $this->aysel->id),
+            Games::hit($round, $answer, $this->aysel->id),
+        ]));
+
+        expect(collect($round->payload['items'])->firstWhere('id', $answer)['text'] ?? null)->toBe((string) $n)
+            ->and(array_map(static fn (array $result): array => [$result['status'], $result['round_solved'], $result['points']], $results))->toBe([
+                ['miss', false, null],
+                ['correct', true, 2],
+            ])
+            ->and($round->fresh()?->misses)->toBe(1)
+            ->and($round->fresh()?->points)->toBe(2)
+            ->and(GameAnswer::query()->where('correct', false)->sole()->content_key)->toStartWith('number:');
+
+        Event::assertDispatched(RoundSolved::class, fn (RoundSolved $event): bool => $event->roundId === $round->id
+            && $event->studentId === $this->aysel->id
+            && $event->points === 2);
+    });
+
     it('stores the points of a whole-class round but credits no one', function (): void {
         $round = Games::round($this->game);
 

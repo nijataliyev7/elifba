@@ -1,0 +1,31 @@
+{
+    "key": "numbers",
+    "version": 6,
+    "title": { "az": "Rəqəmlər", "en": "Numbers" },
+    "units": ["number"],
+    "style": {
+        "item": "bubble",
+        "slot": "frame",
+        "effect": "burst",
+        "cover": "fluent/2B50.svg",
+        "backdrop": "numbers/tepeler.svg",
+        "palette": ["#3B82C4", "#E85D4A", "#5DB075", "#9B5DE5"],
+        "sounds": {
+            "hit": "sounds/pop.mp3",
+            "miss": "sounds/pluck-down.mp3",
+            "solved": "sounds/bells.mp3"
+        }
+    },
+    "words": [
+        { "text": "ulduz", "image": "fluent/2B50.svg" },
+        { "text": "ürək", "image": "fluent/2764.svg" },
+        { "text": "top", "image": "fluent/26BD.svg" },
+        { "text": "gül", "image": "fluent/1F33C.svg" },
+        { "text": "balıq", "image": "fluent/1F41F.svg" },
+        { "text": "kəpənək", "image": "fluent/1F98B.svg" },
+        { "text": "yarpaq", "image": "numbers/yarpaq.svg" },
+        { "text": "göbələk", "image": "fluent/1F344.svg" },
+        { "text": "bulud", "image": "fluent/2601.svg" },
+        { "text": "şar", "image": "fluent/1F388.svg" }
+    ]
+}

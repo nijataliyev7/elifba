@@ -10,8 +10,18 @@ export type User = {
     [key: string]: unknown;
 };
 
+/**
+ * A role an account holds (`App\Enums\Role`, architecture §1 "Accounts and
+ * roles"). It names an area; the page translates it and never shows it as is.
+ */
+export type Role = 'teacher' | 'parent';
+
 export type Auth = {
     user: User;
+    /** The roles the account holds; empty before the role choice. */
+    roles: Role[];
+    /** The area whose navigation the page shows; null before the role choice. */
+    area: Role | null;
 };
 
 export type TwoFactorSetupData = {

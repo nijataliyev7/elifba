@@ -1,26 +1,101 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- şəkərbura: the half-moon Novruz pastry with a twisted rim and pinched pattern. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9.5,50 A2.6,2.6 0 0 1 10.61,43.63 A2.6,2.6 0 0 1 12.96,38.24 A2.6,2.6 0 0 1 16.34,33.84 A2.6,2.6 0 0 1 20.53,30.41 A2.6,2.6 0 0 1 25.35,27.96 A2.6,2.6 0 0 1 30.57,26.49 A2.6,2.6 0 0 1 36,26 A2.6,2.6 0 0 1 41.43,26.49 A2.6,2.6 0 0 1 46.65,27.96 A2.6,2.6 0 0 1 51.47,30.41 A2.6,2.6 0 0 1 55.66,33.84 A2.6,2.6 0 0 1 59.04,38.24 A2.6,2.6 0 0 1 61.39,43.63 A2.6,2.6 0 0 1 62.5,50 C51,56 21,56 9.5,50 Z" fill="#FCEA2B"/>
-    <path d="M14.5,48.5 C16.5,28 55.5,28 57.5,48.5" fill="none" stroke="#F1B31C" stroke-width="3"/>
-    <path d="M13.21,43.09 L17.55,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M19.38,45.94 L17.55,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M16.21,36.76 L20.74,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M21.1,41.48 L20.74,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M20.88,31.97 L25.14,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M24.14,37.93 L25.14,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M26.66,28.83 L30.37,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M28.24,35.44 L30.37,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M33.04,27.31 L36,30.75" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M32.96,34.11 L36,30.75" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M39.6,27.39 L41.63,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M37.86,33.96 L41.63,31.44" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M45.98,29.06 L46.86,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M42.55,34.93 L46.86,33.51" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M51.78,32.45 L51.26,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M46.73,37.01 L51.26,36.96" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M56.42,37.71 L54.45,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M50.15,40.34 L54.45,41.79" fill="none" stroke="#E27022" stroke-width="1.8"/>
-    <path d="M9.5,50 A2.6,2.6 0 0 1 10.61,43.63 A2.6,2.6 0 0 1 12.96,38.24 A2.6,2.6 0 0 1 16.34,33.84 A2.6,2.6 0 0 1 20.53,30.41 A2.6,2.6 0 0 1 25.35,27.96 A2.6,2.6 0 0 1 30.57,26.49 A2.6,2.6 0 0 1 36,26 A2.6,2.6 0 0 1 41.43,26.49 A2.6,2.6 0 0 1 46.65,27.96 A2.6,2.6 0 0 1 51.47,30.41 A2.6,2.6 0 0 1 55.66,33.84 A2.6,2.6 0 0 1 59.04,38.24 A2.6,2.6 0 0 1 61.39,43.63 A2.6,2.6 0 0 1 62.5,50 C51,56 21,56 9.5,50 Z" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- şəkərbura: a half-moon pastry, its edge pinched into a rope, its top patterned. Elifba own art, MIT. -->
+<path d="M2.4 23A13.6 13.6 0 0 1 29.6 23Q29.6 25.6 27 25.6L5 25.6Q2.4 25.6 2.4 23Z" fill="url(#sekerbura_fill1)"/>
+<path d="M2.4 23A13.6 13.6 0 0 1 29.6 23Q29.6 25.6 27 25.6L5 25.6Q2.4 25.6 2.4 23Z" fill="url(#sekerbura_fill2)"/>
+<ellipse cx="3.5" cy="23" rx="1.45" ry="0.8" fill="url(#sekerbura_fill3)" transform="rotate(305 3.5 23)"/>
+<ellipse cx="3.5" cy="23" rx="1.45" ry="0.8" fill="url(#sekerbura_fill4)" transform="rotate(305 3.5 23)"/>
+<ellipse cx="3.69" cy="20.83" rx="1.45" ry="0.8" fill="url(#sekerbura_fill5)" transform="rotate(315 3.69 20.83)"/>
+<ellipse cx="3.69" cy="20.83" rx="1.45" ry="0.8" fill="url(#sekerbura_fill6)" transform="rotate(315 3.69 20.83)"/>
+<ellipse cx="4.25" cy="18.72" rx="1.45" ry="0.8" fill="url(#sekerbura_fill7)" transform="rotate(325 4.25 18.72)"/>
+<ellipse cx="4.25" cy="18.72" rx="1.45" ry="0.8" fill="url(#sekerbura_fill8)" transform="rotate(325 4.25 18.72)"/>
+<ellipse cx="5.17" cy="16.75" rx="1.45" ry="0.8" fill="url(#sekerbura_fill9)" transform="rotate(335 5.17 16.75)"/>
+<ellipse cx="5.17" cy="16.75" rx="1.45" ry="0.8" fill="url(#sekerbura_fill10)" transform="rotate(335 5.17 16.75)"/>
+<ellipse cx="6.42" cy="14.97" rx="1.45" ry="0.8" fill="url(#sekerbura_fill11)" transform="rotate(345 6.42 14.97)"/>
+<ellipse cx="6.42" cy="14.97" rx="1.45" ry="0.8" fill="url(#sekerbura_fill12)" transform="rotate(345 6.42 14.97)"/>
+<ellipse cx="7.97" cy="13.42" rx="1.45" ry="0.8" fill="url(#sekerbura_fill13)" transform="rotate(355 7.97 13.42)"/>
+<ellipse cx="7.97" cy="13.42" rx="1.45" ry="0.8" fill="url(#sekerbura_fill14)" transform="rotate(355 7.97 13.42)"/>
+<ellipse cx="9.75" cy="12.17" rx="1.45" ry="0.8" fill="url(#sekerbura_fill15)" transform="rotate(365 9.75 12.17)"/>
+<ellipse cx="9.75" cy="12.17" rx="1.45" ry="0.8" fill="url(#sekerbura_fill16)" transform="rotate(365 9.75 12.17)"/>
+<ellipse cx="11.72" cy="11.25" rx="1.45" ry="0.8" fill="url(#sekerbura_fill17)" transform="rotate(375 11.72 11.25)"/>
+<ellipse cx="11.72" cy="11.25" rx="1.45" ry="0.8" fill="url(#sekerbura_fill18)" transform="rotate(375 11.72 11.25)"/>
+<ellipse cx="13.83" cy="10.69" rx="1.45" ry="0.8" fill="url(#sekerbura_fill19)" transform="rotate(385 13.83 10.69)"/>
+<ellipse cx="13.83" cy="10.69" rx="1.45" ry="0.8" fill="url(#sekerbura_fill20)" transform="rotate(385 13.83 10.69)"/>
+<ellipse cx="16" cy="10.5" rx="1.45" ry="0.8" fill="url(#sekerbura_fill21)" transform="rotate(395 16 10.5)"/>
+<ellipse cx="16" cy="10.5" rx="1.45" ry="0.8" fill="url(#sekerbura_fill22)" transform="rotate(395 16 10.5)"/>
+<ellipse cx="18.17" cy="10.69" rx="1.45" ry="0.8" fill="url(#sekerbura_fill23)" transform="rotate(405 18.17 10.69)"/>
+<ellipse cx="18.17" cy="10.69" rx="1.45" ry="0.8" fill="url(#sekerbura_fill24)" transform="rotate(405 18.17 10.69)"/>
+<ellipse cx="20.28" cy="11.25" rx="1.45" ry="0.8" fill="url(#sekerbura_fill25)" transform="rotate(415 20.28 11.25)"/>
+<ellipse cx="20.28" cy="11.25" rx="1.45" ry="0.8" fill="url(#sekerbura_fill26)" transform="rotate(415 20.28 11.25)"/>
+<ellipse cx="22.25" cy="12.17" rx="1.45" ry="0.8" fill="url(#sekerbura_fill27)" transform="rotate(425 22.25 12.17)"/>
+<ellipse cx="22.25" cy="12.17" rx="1.45" ry="0.8" fill="url(#sekerbura_fill28)" transform="rotate(425 22.25 12.17)"/>
+<ellipse cx="24.03" cy="13.42" rx="1.45" ry="0.8" fill="url(#sekerbura_fill29)" transform="rotate(435 24.03 13.42)"/>
+<ellipse cx="24.03" cy="13.42" rx="1.45" ry="0.8" fill="url(#sekerbura_fill30)" transform="rotate(435 24.03 13.42)"/>
+<ellipse cx="25.58" cy="14.97" rx="1.45" ry="0.8" fill="url(#sekerbura_fill31)" transform="rotate(445 25.58 14.97)"/>
+<ellipse cx="25.58" cy="14.97" rx="1.45" ry="0.8" fill="url(#sekerbura_fill32)" transform="rotate(445 25.58 14.97)"/>
+<ellipse cx="26.83" cy="16.75" rx="1.45" ry="0.8" fill="url(#sekerbura_fill33)" transform="rotate(455 26.83 16.75)"/>
+<ellipse cx="26.83" cy="16.75" rx="1.45" ry="0.8" fill="url(#sekerbura_fill34)" transform="rotate(455 26.83 16.75)"/>
+<ellipse cx="27.75" cy="18.72" rx="1.45" ry="0.8" fill="url(#sekerbura_fill35)" transform="rotate(465 27.75 18.72)"/>
+<ellipse cx="27.75" cy="18.72" rx="1.45" ry="0.8" fill="url(#sekerbura_fill36)" transform="rotate(465 27.75 18.72)"/>
+<ellipse cx="28.31" cy="20.83" rx="1.45" ry="0.8" fill="url(#sekerbura_fill37)" transform="rotate(475 28.31 20.83)"/>
+<ellipse cx="28.31" cy="20.83" rx="1.45" ry="0.8" fill="url(#sekerbura_fill38)" transform="rotate(475 28.31 20.83)"/>
+<ellipse cx="28.5" cy="23" rx="1.45" ry="0.8" fill="url(#sekerbura_fill39)" transform="rotate(485 28.5 23)"/>
+<ellipse cx="28.5" cy="23" rx="1.45" ry="0.8" fill="url(#sekerbura_fill40)" transform="rotate(485 28.5 23)"/>
+<path d="M6.6 20.43L8.12 21.61L6.29 22.2" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M8.05 17.37L9.07 19L7.15 18.93" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M10.45 14.99L10.86 16.87L9.08 16.15" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M13.53 13.58L13.26 15.48L11.84 14.19" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M16.9 13.3L16 15L15.1 13.3" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M20.16 14.19L18.74 15.48L18.47 13.58" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M22.92 16.15L21.14 16.87L21.55 14.99" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M24.85 18.93L22.93 19L23.95 17.37" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M25.71 22.2L23.88 21.61L25.4 20.43" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M10.67 20.32L12.01 21.7L10.11 22.03" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M13.26 17.7L13.53 19.6L11.8 18.76" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M16.9 17.1L16 18.8L15.1 17.1" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M20.2 18.76L18.47 19.6L18.74 17.7" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M21.89 22.03L19.99 21.7L21.33 20.32" stroke="#C9873F" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<g filter="url(#sekerbura_blur05)"><ellipse cx="8.6" cy="15.4" rx="2.4" ry="0.9" fill="#FFFFFF" fill-opacity="0.6" transform="rotate(-40 8.6 15.4)"/></g>
+<defs>
+<radialGradient id="sekerbura_fill1" cx="0.35" cy="0.3" r="0.85"><stop stop-color="#FFEB9D"/><stop offset="0.5" stop-color="#F3BC6D"/><stop offset="1" stop-color="#CC944D"/></radialGradient>
+<radialGradient id="sekerbura_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#CC944D" stop-opacity="0.55"/><stop offset="0.9" stop-color="#CC944D" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill5" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill9" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill13" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill14" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill15" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill16" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill17" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill18" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill19" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill20" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill21" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill22" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill23" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill24" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill25" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill26" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill27" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill28" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill29" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill30" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill31" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill32" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill33" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill34" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill35" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill36" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill37" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill38" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="sekerbura_fill39" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="sekerbura_fill40" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.3"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<filter id="sekerbura_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+</defs>
 </svg>

@@ -1,17 +1,19 @@
 {
     "key": "cities",
-    "version": 3,
+    "version": 8,
     "title": { "az": "Şəhərlərimiz", "en": "Our cities" },
+    "units": ["letter", "syllable", "word", "sentence"],
     "style": {
         "item": "card",
         "slot": "frame",
         "effect": "sparkle",
+        "cover": "cities/baki.svg",
         "backdrop": "cities/qiz-qalasi.svg",
         "palette": ["#3B82C4", "#2BA6A0", "#F6C445"],
         "sounds": {
             "hit": "sounds/chime.mp3",
-            "miss": "sounds/bong.mp3",
-            "solved": "sounds/success.mp3"
+            "miss": "sounds/pluck-down.mp3",
+            "solved": "sounds/bells.mp3"
         }
     },
     "words": [

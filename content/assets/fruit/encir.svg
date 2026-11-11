@@ -1,22 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- əncir: a purple fig and a cut half with pink flesh. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M24,14 L24,9" fill="none"/>
-    <path d="M24,14 C21,20 11,26 11,38 C11,47 18,51 24,51 C30,51 37,47 37,38 C37,26 27,20 24,14 Z" fill="#8967AA"/>
-    <path d="M17,24 C16,30 17,36 20,40" fill="none" stroke="#B399C8" stroke-width="2.5"/>
-    <path d="M47,24 C44,30 34,36 34,48 C34,57 41,61 47,61 C53,61 60,57 60,48 C60,36 50,30 47,24 Z" fill="#8967AA"/>
-    <path d="M47,27.5 C44.5,32 36.5,37 36.5,47 C36.5,55 41.5,58 47,58 C52.5,58 57.5,55 57.5,47 C57.5,37 49.5,32 47,27.5 Z" fill="#FFFFFF" stroke="none"/>
-    <path d="M47,31 C45,35 39.5,39 39.5,47 C39.5,53 43,55.5 47,55.5 C51,55.5 54.5,53 54.5,47 C54.5,39 49,35 47,31 Z" fill="#E67A94" stroke="none"/>
-    <ellipse cx="42" cy="46" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="47" cy="43" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="52" cy="46" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="40" cy="52" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="45" cy="50" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="50" cy="51" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="54" cy="53" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="43" cy="56" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="48" cy="55" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <ellipse cx="52" cy="57" rx="0.9" ry="1.3" fill="#FFF" stroke="none"/>
-    <path d="M47,24 C44,30 34,36 34,48 C34,57 41,61 47,61 C53,61 60,57 60,48 C60,36 50,30 47,24 Z" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- əncir: a whole fig and a half that shows its red inside. Elifba own art, MIT. -->
+<path d="M10.4 3.6C11.6 3.6 12.4 4.6 12.8 6.2C13.6 9.2 16 11 18 13.6C19.8 16 20.6 18.4 20.2 21C19.6 25.4 15.8 28.2 11.2 28.2C6.4 28.2 2.6 25.2 2.4 20.6C2.2 17.6 3.6 15 5.6 12.6C7.6 10.2 8.4 8.6 8.6 6.2C8.8 4.6 9.4 3.6 10.4 3.6Z" fill="url(#encir_fill1)"/>
+<path d="M10.4 3.6C11.6 3.6 12.4 4.6 12.8 6.2C13.6 9.2 16 11 18 13.6C19.8 16 20.6 18.4 20.2 21C19.6 25.4 15.8 28.2 11.2 28.2C6.4 28.2 2.6 25.2 2.4 20.6C2.2 17.6 3.6 15 5.6 12.6C7.6 10.2 8.4 8.6 8.6 6.2C8.8 4.6 9.4 3.6 10.4 3.6Z" fill="url(#encir_fill2)"/>
+<path d="M10.5 4C10.6 3 11 2.2 11.8 1.6" stroke="url(#encir_fill3)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#encir_blur05)"><ellipse cx="6.2" cy="16.4" rx="1.6" ry="3.2" fill="#E1D6EF" fill-opacity="0.65" transform="rotate(20 6.2 16.4)"/></g>
+<path d="M23.4 9.8C24.4 9.8 25 10.6 25.4 12C26 14.4 27.6 16 28.8 18.2C30 20.4 30.2 22.6 29.4 24.8C28.2 28 25.4 30 22.2 30C18.6 30 15.6 27.6 15.2 24C14.9 21.4 16 19 17.6 17C19 15.2 20.4 13.8 21.2 12C21.7 10.6 22.4 9.8 23.4 9.8Z" fill="url(#encir_fill4)"/>
+<path d="M23.4 9.8C24.4 9.8 25 10.6 25.4 12C26 14.4 27.6 16 28.8 18.2C30 20.4 30.2 22.6 29.4 24.8C28.2 28 25.4 30 22.2 30C18.6 30 15.6 27.6 15.2 24C14.9 21.4 16 19 17.6 17C19 15.2 20.4 13.8 21.2 12C21.7 10.6 22.4 9.8 23.4 9.8Z" fill="url(#encir_fill5)"/>
+<path d="M23.3 12.4C23.9 14.8 25.6 16.8 26.8 18.8C27.8 20.6 28 22.4 27.4 24.2C26.6 26.6 24.6 28.1 22.3 28.1C19.6 28.1 17.4 26.3 17.1 23.8C16.9 21.8 17.8 20 19.1 18.4C20.6 16.6 22.4 15 23.3 12.4Z" fill="url(#encir_fill6)"/>
+<path d="M23.3 15.4C24.2 17.4 25.6 19 26.2 20.8C26.8 22.6 26.4 24.4 25.2 25.6C24 26.8 22.4 27 21 26.6C19.4 26.1 18.4 24.6 18.6 23C18.8 21.2 20.2 19.8 21.4 18.6C22.4 17.6 23 16.6 23.3 15.4Z" fill="url(#encir_fill7)"/>
+<ellipse cx="21.2" cy="21.4" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 21.2 21.4)"/>
+<ellipse cx="23.4" cy="21" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 23.4 21)"/>
+<ellipse cx="22.2" cy="23.4" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 22.2 23.4)"/>
+<ellipse cx="24.4" cy="23.6" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 24.4 23.6)"/>
+<ellipse cx="20.6" cy="24.4" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 20.6 24.4)"/>
+<ellipse cx="23.2" cy="25.6" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 23.2 25.6)"/>
+<ellipse cx="24.6" cy="19.4" rx="0.5" ry="0.7" fill="#FFE2A6" transform="rotate(25 24.6 19.4)"/>
+<path d="M23.4 10.2C23.6 9.2 24 8.4 24.8 7.8" stroke="url(#encir_fill8)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<radialGradient id="encir_fill1" cx="0.3" cy="0.3" r="0.8"><stop stop-color="#A98BD0"/><stop offset="0.5" stop-color="#7B4FA0"/><stop offset="1" stop-color="#4B2A6C"/></radialGradient>
+<radialGradient id="encir_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#4B2A6C" stop-opacity="0.7"/><stop offset="0.9" stop-color="#4B2A6C" stop-opacity="0"/></radialGradient>
+<linearGradient id="encir_fill3" x1="10.5" y1="4" x2="11.8" y2="1.6" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+<filter id="encir_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="encir_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#A98BD0"/><stop offset="0.5" stop-color="#7B4FA0"/><stop offset="1" stop-color="#4B2A6C"/></radialGradient>
+<radialGradient id="encir_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#4B2A6C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#4B2A6C" stop-opacity="0"/></radialGradient>
+<radialGradient id="encir_fill6" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FFF6E4"/><stop offset="0.5" stop-color="#F6E2C6"/><stop offset="1" stop-color="#D9BC98"/></radialGradient>
+<radialGradient id="encir_fill7" cx="0.4" cy="0.35" r="0.75"><stop stop-color="#FF8496"/><stop offset="0.5" stop-color="#E8405E"/><stop offset="1" stop-color="#A82046"/></radialGradient>
+<linearGradient id="encir_fill8" x1="23.4" y1="10.2" x2="24.8" y2="7.8" gradientUnits="userSpaceOnUse"><stop stop-color="#5A7A22"/><stop offset="1" stop-color="#8FAE4A"/></linearGradient>
+</defs>
 </svg>

@@ -1,24 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- vağzal: a railway station building with a great arched window. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="6" y="26" width="60" height="32" fill="#F4AA41"/>
-    <rect x="4" y="22" width="64" height="5" fill="#E27022"/>
-    <path d="M22,58 L22,34 C22,18 50,18 50,34 L50,58 Z" fill="#92D3F5"/>
-    <path d="M36,21.5 L36,58 M22.5,36 L49.5,36 M27,24.5 L36,36 M45,24.5 L36,36" fill="none" stroke-width="1.5"/>
-    <path d="M22,58 L22,34 C22,14 50,14 50,34 L50,58" fill="none" stroke="#E27022" stroke-width="5"/>
-    <path d="M19.5,58 L19.5,34 C19.5,11 52.5,11 52.5,34 L52.5,58 M24.5,58 L24.5,34 C24.5,18 47.5,18 47.5,34 L47.5,58" fill="none"/>
-    <path d="M9,50 L9,40 C9,35 16,35 16,40 L16,50 Z" fill="#92D3F5"/>
-    <path d="M56,50 L56,40 C56,35 63,35 63,40 L63,50 Z" fill="#92D3F5"/>
-    <rect x="4" y="58" width="64" height="4" fill="#D0CFCE"/>
-    <rect x="7" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="14" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="21" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="28" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="35" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="42" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="49" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="56" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <rect x="63" y="63" width="2.5" height="5" fill="#6A462F" stroke-width="1"/>
-    <path d="M4,64.5 L68,64.5 M4,67 L68,67" fill="none" stroke-width="1.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- vağzal: a railway station building, a train waiting under its great arch. Elifba own art, MIT. -->
+<rect x="1.6" y="12.4" width="28.8" height="15.4" rx="1" fill="url(#vagzal_fill1)"/>
+<rect x="1.6" y="12.4" width="28.8" height="15.4" rx="1" fill="url(#vagzal_fill2)"/>
+<rect x="1" y="10.6" width="30" height="2.6" rx="1.2" fill="url(#vagzal_fill3)"/>
+<rect x="1" y="10.6" width="30" height="2.6" rx="1.2" fill="url(#vagzal_fill4)"/>
+<path d="M3.6 22L3.6 16.6Q3.6 14.6 6 14.6Q8.4 14.6 8.4 16.6L8.4 22Z" fill="url(#vagzal_fill5)"/>
+<path d="M3.6 22L3.6 16.6Q3.6 14.6 6 14.6Q8.4 14.6 8.4 16.6L8.4 22Z" fill="url(#vagzal_fill6)"/>
+<path d="M23.6 22L23.6 16.6Q23.6 14.6 26 14.6Q28.4 14.6 28.4 16.6L28.4 22Z" fill="url(#vagzal_fill7)"/>
+<path d="M23.6 22L23.6 16.6Q23.6 14.6 26 14.6Q28.4 14.6 28.4 16.6L28.4 22Z" fill="url(#vagzal_fill8)"/>
+<path d="M9.6 27.8L9.6 9.4Q9.6 3 16 3Q22.4 3 22.4 9.4L22.4 27.8Z" fill="url(#vagzal_fill9)"/>
+<path d="M9.6 27.8L9.6 9.4Q9.6 3 16 3Q22.4 3 22.4 9.4L22.4 27.8Z" fill="url(#vagzal_fill10)"/>
+<g filter="url(#vagzal_blur04)"><ellipse cx="12" cy="7" rx="0.8" ry="2" fill="#FFF8F0" fill-opacity="0.6" transform="rotate(20 12 7)"/></g>
+<path d="M8.8 9.6Q8.8 2.2 16 2.2Q23.2 2.2 23.2 9.6L22.4 9.6Q22.2 3.6 16 3.6Q9.8 3.6 9.6 9.6Z" fill="url(#vagzal_fill11)"/>
+<path d="M8.8 9.6Q8.8 2.2 16 2.2Q23.2 2.2 23.2 9.6L22.4 9.6Q22.2 3.6 16 3.6Q9.8 3.6 9.6 9.6Z" fill="url(#vagzal_fill12)"/>
+<path d="M11.6 27.8L11.6 11.6Q11.6 6.2 16 6.2Q20.4 6.2 20.4 11.6L20.4 27.8Z" fill="url(#vagzal_fill13)"/>
+<path d="M11.6 27.8L11.6 11.6Q11.6 6.2 16 6.2Q20.4 6.2 20.4 11.6L20.4 27.8Z" fill="url(#vagzal_fill14)"/>
+<g clip-path="url(#vagzal_clip15)">
+<rect x="12.4" y="13.6" width="7.2" height="13.4" rx="2.4" fill="url(#vagzal_fill16)"/>
+<rect x="12.4" y="13.6" width="7.2" height="13.4" rx="2.4" fill="url(#vagzal_fill17)"/>
+<rect x="13.4" y="15.2" width="5.2" height="4" rx="1" fill="url(#vagzal_fill18)"/>
+<rect x="13.4" y="15.2" width="5.2" height="4" rx="1" fill="url(#vagzal_fill19)"/>
+<g filter="url(#vagzal_blur02)"><ellipse cx="14.4" cy="16" rx="0.8" ry="0.4" fill="#E5F7FF" fill-opacity="0.8" transform="rotate(-20 14.4 16)"/></g>
+<circle cx="14.2" cy="22.6" r="0.9" fill="url(#vagzal_fill20)"/>
+<circle cx="17.8" cy="22.6" r="0.9" fill="url(#vagzal_fill21)"/>
+</g>
+<rect x="0.8" y="27" width="30.4" height="3" rx="1.2" fill="url(#vagzal_fill22)"/>
+<rect x="0.8" y="27" width="30.4" height="3" rx="1.2" fill="url(#vagzal_fill23)"/>
+<path d="M12.6 28.4L19.4 28.4" stroke="url(#vagzal_fill24)" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+<defs>
+<radialGradient id="vagzal_fill1" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#FFE4B3"/><stop offset="0.5" stop-color="#FFD19E"/><stop offset="1" stop-color="#D19580"/></radialGradient>
+<radialGradient id="vagzal_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D19580" stop-opacity="0.5"/><stop offset="0.9" stop-color="#D19580" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill3" cx="0.3" cy="0" r="1.1"><stop stop-color="#B27C6D"/><stop offset="0.5" stop-color="#A77060"/><stop offset="1" stop-color="#6E504C"/></radialGradient>
+<radialGradient id="vagzal_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#6E504C" stop-opacity="0.4"/><stop offset="0.9" stop-color="#6E504C" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill5" cx="0.3" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="vagzal_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.4"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill7" cx="0.3" cy="0.1" r="1"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="vagzal_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.4"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill9" cx="0.3" cy="0.15" r="0.9"><stop stop-color="#FFE4B3"/><stop offset="0.5" stop-color="#FFD19E"/><stop offset="1" stop-color="#D19580"/></radialGradient>
+<radialGradient id="vagzal_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#D19580" stop-opacity="0.4"/><stop offset="0.9" stop-color="#D19580" stop-opacity="0"/></radialGradient>
+<filter id="vagzal_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="vagzal_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#B27C6D"/><stop offset="0.5" stop-color="#A77060"/><stop offset="1" stop-color="#6E504C"/></radialGradient>
+<radialGradient id="vagzal_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#6E504C" stop-opacity="0.3"/><stop offset="0.9" stop-color="#6E504C" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill13" cx="0.5" cy="0.1" r="0.9"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="vagzal_fill14" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#33293D" stop-opacity="0.3"/><stop offset="0.9" stop-color="#33293D" stop-opacity="0"/></radialGradient>
+<clipPath id="vagzal_clip15"><path d="M11.6 27.8L11.6 11.6Q11.6 6.2 16 6.2Q20.4 6.2 20.4 11.6L20.4 27.8Z" /></clipPath>
+<radialGradient id="vagzal_fill16" cx="0.3" cy="0.15" r="0.9"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="vagzal_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.5"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="vagzal_fill18" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#5ADFFF"/><stop offset="0.5" stop-color="#53C7FF"/><stop offset="1" stop-color="#3EA2ED"/></radialGradient>
+<radialGradient id="vagzal_fill19" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#3EA2ED" stop-opacity="0.3"/><stop offset="0.9" stop-color="#3EA2ED" stop-opacity="0"/></radialGradient>
+<filter id="vagzal_blur02" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.2"/></filter>
+<radialGradient id="vagzal_fill20" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="vagzal_fill21" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="vagzal_fill22" cx="0.3" cy="0" r="1.2"><stop stop-color="#DAD9DB"/><stop offset="0.5" stop-color="#C2BDC9"/><stop offset="1" stop-color="#988EA1"/></radialGradient>
+<radialGradient id="vagzal_fill23" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#988EA1" stop-opacity="0.5"/><stop offset="0.9" stop-color="#988EA1" stop-opacity="0"/></radialGradient>
+<linearGradient id="vagzal_fill24" x1="12.6" y1="28.4" x2="19.4" y2="28.4" gradientUnits="userSpaceOnUse"><stop stop-color="#352A41"/><stop offset="1" stop-color="#4F435B"/></linearGradient>
+</defs>
 </svg>

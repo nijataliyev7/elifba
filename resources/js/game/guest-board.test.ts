@@ -85,6 +85,7 @@ function props(game: string): BoardProps {
             points: [],
         },
         schoolClass: { id: 'c', name: '1A' },
+        child: null,
         pack: {
             key: 'balloons',
             title: 'Şarlar',
@@ -94,12 +95,19 @@ function props(game: string): BoardProps {
                 effect: 'burst',
                 palette: ['#ff0000'],
                 backdrop: null,
-                sounds: { hit: null, miss: null, solved: null },
+                sounds: {
+                    hit: null,
+                    miss: null,
+                    solved: null,
+                    arrive: null,
+                    leave: null,
+                },
                 figures: [],
             },
             pictures: {},
         },
         students: [],
+        voice: { prompt: true, praise: [], retry: [] },
     };
 }
 

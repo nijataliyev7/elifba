@@ -3,7 +3,9 @@
 namespace Tests\Support;
 
 use App\Domain\Classroom\Models\SchoolClass;
+use App\Domain\Family\Models\Child;
 use App\Domain\Play\Actions\StartGame;
+use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
@@ -19,21 +21,27 @@ final class Games
 {
     /**
      * A five-round "find the letter" game with the balloons pack, unless the
-     * setup says otherwise.
+     * setup says otherwise, for a class or (a home game) for a child.
      *
      * @param  array<string, mixed>  $setup
      */
-    public static function start(SchoolClass $class, array $setup = [], int $seed = 1): GameSession
+    public static function start(SchoolClass|Child $for, array $setup = [], int $seed = 1): GameSession
     {
+        $players = self::players($for);
         $data = GameSetupData::validate([
             'mechanic' => 'find',
             'pack' => 'balloons',
             'level' => 'letters',
             'rounds' => 5,
             ...$setup,
-        ], $class);
+        ], $players);
 
-        return app(StartGame::class)->handle($class, $data, $seed);
+        return app(StartGame::class)->handle($players, $data, $seed);
+    }
+
+    public static function players(SchoolClass|Child $for): GamePlayers
+    {
+        return $for instanceof Child ? GamePlayers::forChild($for) : GamePlayers::forClass($for);
     }
 
     /**

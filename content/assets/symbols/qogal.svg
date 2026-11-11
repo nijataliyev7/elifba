@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- qoğal: a round layered Novruz pastry. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M8,34 L8,42 A28,15 0 0 0 64,42 L64,34 Z" fill="#E27022"/>
-    <ellipse cx="36" cy="34" rx="28" ry="15" fill="#F1B31C"/>
-    <path d="M36,33 C38,33 39,35 37,36 C34,37.5 31,35 33,32.5 C35.5,29.5 41,30 42,34 C43,38.5 37,41 32,39.5 C26,37.5 26,30.5 32,28 C38,25.5 47,28 47.5,34" fill="none" stroke="#E27022" stroke-width="2"/>
-    <circle cx="24" cy="30" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="28" cy="25" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="45" cy="26" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="50" cy="31" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="22" cy="36" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="49" cy="38" r="0.9" fill="#000" stroke="none"/>
-    <circle cx="40" cy="24" r="0.9" fill="#000" stroke="none"/>
-    <path d="M8,34 L8,42 A28,15 0 0 0 64,42 L64,34" fill="none"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- qoğal: a round layered pastry, a spiral on its golden top. Elifba own art, MIT. -->
+<path d="M1.8 15.2L1.8 19.8A14.2 8.6 0 0 0 30.2 19.8L30.2 15.2Z" fill="url(#qogal_fill1)"/>
+<path d="M1.8 15.2L1.8 19.8A14.2 8.6 0 0 0 30.2 19.8L30.2 15.2Z" fill="url(#qogal_fill2)"/>
+<ellipse cx="16" cy="15.2" rx="14.2" ry="9" fill="url(#qogal_fill3)"/>
+<ellipse cx="16" cy="15.2" rx="14.2" ry="9" fill="url(#qogal_fill4)"/>
+<path d="M17 15.2L17.09 15.35L17.13 15.52L17.09 15.7L16.98 15.89L16.79 16.07L16.53 16.23L16.19 16.35L15.8 16.42L15.36 16.44L14.91 16.4L14.46 16.28L14.05 16.1L13.69 15.85L13.41 15.55L13.23 15.2L13.18 14.82L13.26 14.43L13.48 14.04L13.83 13.67L14.32 13.36L14.93 13.11L15.62 12.94L16.39 12.86L17.18 12.89L17.97 13.03L18.72 13.29L19.38 13.64L19.93 14.09L20.32 14.62L20.53 15.2L20.55 15.81L20.36 16.43L19.95 17.02L19.35 17.56L18.56 18.01L17.62 18.36L16.56 18.58L15.43 18.65L14.27 18.57L13.14 18.33L12.1 17.95L11.19 17.42L10.46 16.76L9.95 16.01L9.7 15.2L9.72 14.35L10.03 13.52L10.62 12.72L11.47 12.01L12.56 11.42L13.83 10.98L15.26 10.71L16.76 10.64L18.27 10.76L19.74 11.1L21.08 11.62L22.24 12.33L23.15 13.18L23.78 14.15L24.07 15.2L24.01 16.28L23.58 17.34L22.81 18.34L21.71 19.22L20.33 19.95L18.71 20.49L16.93 20.8L15.06 20.88L13.18 20.7L11.38 20.27L9.74 19.61L8.33 18.73L7.23 17.67L6.5 16.48L6.17 15.2L6.27 13.89L6.8 12.6L7.76 11.41L9.1 10.35L10.79 9.48L12.74 8.85L14.89 8.48L17.13 8.41L19.37 8.63L21.51 9.16L23.45 9.96L25.1 11.01L26.38 12.27L27.23 13.69L27.6 15.2" stroke="#D9962C" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<g filter="url(#qogal_blur05)"><ellipse cx="9.4" cy="10.6" rx="3" ry="1" fill="#FFFFFF" fill-opacity="0.7" transform="rotate(-20 9.4 10.6)"/></g>
+<defs>
+<radialGradient id="qogal_fill1" cx="0.3" cy="0.1" r="1"><stop stop-color="#F6D898"/><stop offset="0.5" stop-color="#E39A5F"/><stop offset="1" stop-color="#D07B3B"/></radialGradient>
+<radialGradient id="qogal_fill2" cx="0.8" cy="1" r="0.7"><stop stop-color="#D07B3B" stop-opacity="0.6"/><stop offset="0.9" stop-color="#D07B3B" stop-opacity="0"/></radialGradient>
+<radialGradient id="qogal_fill3" cx="0.35" cy="0.3" r="0.8"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="qogal_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.4"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="qogal_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+</defs>
 </svg>

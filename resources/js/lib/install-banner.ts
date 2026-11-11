@@ -32,8 +32,8 @@ export const DISMISSED_KEY = 'elifba.install-banner.dismissed-at';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * The teacher's own pages: the welcome page, the auth pages and the teacher
- * shell. Never the board (`games/board`, `lovhe`), the remote
+ * An account's own pages: the welcome page, the auth pages and the shell of
+ * either area (teacher or parent, architecture §1 "Accounts and roles"). Never the board (`games/board`, `lovhe`), the remote
  * (`games/remote`, `pult/*`) or the podium, which is made for the projector;
  * an unknown page shows nothing until it is listed here.
  */
@@ -44,6 +44,7 @@ const PAGES = [
     /^games\/setup$/,
     /^rankings\//,
     /^words\//,
+    /^children\//,
     /^settings\//,
 ];
 

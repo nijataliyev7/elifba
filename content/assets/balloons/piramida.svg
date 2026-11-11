@@ -1,14 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- piramida: a stacking toy, coloured rings on a pole, smallest on top. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="33" y="10" width="6" height="52" rx="3" fill="#A57939"/>
-    <rect x="10" y="57" width="52" height="8" rx="4" fill="#A57939"/>
-    <rect x="13" y="49" width="46" height="8" rx="4" fill="#EA5A47"/>
-    <rect x="16" y="41.8" width="40" height="8" rx="4" fill="#F4AA41"/>
-    <rect x="19" y="34.6" width="34" height="8" rx="4" fill="#FCEA2B"/>
-    <rect x="22" y="27.4" width="28" height="8" rx="4" fill="#B1CC33"/>
-    <rect x="25" y="20.2" width="22" height="8" rx="4" fill="#61B2E4"/>
-    <rect x="28" y="13" width="16" height="8" rx="4" fill="#8967AA"/>
-    <circle cx="36" cy="10" r="5.5" fill="#EA5A47"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- piramida: a stacking toy, coloured rings on a wooden base with a ball on top. Elifba own art, MIT. -->
+<rect x="6.4" y="26.2" width="19.2" height="3.6" rx="1.6" fill="url(#piramida_fill1)"/>
+<rect x="6.4" y="26.2" width="19.2" height="3.6" rx="1.6" fill="url(#piramida_fill2)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="10" cy="27.1" rx="2.6" ry="0.5" fill="#F6EDE7" fill-opacity="0.6"/></g>
+<rect x="4.8" y="22.8" width="22.4" height="3.9" rx="1.95" fill="url(#piramida_fill3)"/>
+<rect x="4.8" y="22.8" width="22.4" height="3.9" rx="1.95" fill="url(#piramida_fill4)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="11.07" cy="23.85" rx="3.58" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<rect x="6.2" y="19.25" width="19.6" height="3.9" rx="1.95" fill="url(#piramida_fill5)"/>
+<rect x="6.2" y="19.25" width="19.6" height="3.9" rx="1.95" fill="url(#piramida_fill6)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="11.69" cy="20.3" rx="3.14" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<rect x="7.6" y="15.7" width="16.8" height="3.9" rx="1.95" fill="url(#piramida_fill7)"/>
+<rect x="7.6" y="15.7" width="16.8" height="3.9" rx="1.95" fill="url(#piramida_fill8)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="12.3" cy="16.75" rx="2.69" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<rect x="9" y="12.15" width="14" height="3.9" rx="1.95" fill="url(#piramida_fill9)"/>
+<rect x="9" y="12.15" width="14" height="3.9" rx="1.95" fill="url(#piramida_fill10)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="12.92" cy="13.2" rx="2.24" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<rect x="10.4" y="8.6" width="11.2" height="3.9" rx="1.95" fill="url(#piramida_fill11)"/>
+<rect x="10.4" y="8.6" width="11.2" height="3.9" rx="1.95" fill="url(#piramida_fill12)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="13.54" cy="9.65" rx="1.79" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<rect x="11.7" y="5.05" width="8.6" height="3.9" rx="1.95" fill="url(#piramida_fill13)"/>
+<rect x="11.7" y="5.05" width="8.6" height="3.9" rx="1.95" fill="url(#piramida_fill14)"/>
+<g filter="url(#piramida_blur03)"><ellipse cx="14.11" cy="6.1" rx="1.38" ry="0.45" fill="#FFFFFF" fill-opacity="0.7"/></g>
+<circle cx="16" cy="5.2" r="3" fill="url(#piramida_fill15)"/>
+<circle cx="16" cy="5.2" r="3" fill="url(#piramida_fill16)"/>
+<g filter="url(#piramida_blur035)"><ellipse cx="14.8" cy="4" rx="1" ry="0.6" fill="#FDE3E6" fill-opacity="0.75" transform="rotate(-35 14.8 4)"/></g>
+<defs>
+<radialGradient id="piramida_fill1" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="piramida_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+<filter id="piramida_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<radialGradient id="piramida_fill3" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="piramida_fill4" cx="0.85" cy="1" r="0.7"><stop stop-color="#B22945" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill5" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#FFA35F"/><stop offset="0.5" stop-color="#FF7E51"/><stop offset="1" stop-color="#EE534A"/></radialGradient>
+<radialGradient id="piramida_fill6" cx="0.85" cy="1" r="0.7"><stop stop-color="#EE534A" stop-opacity="0.6"/><stop offset="0.9" stop-color="#EE534A" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill7" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="piramida_fill8" cx="0.85" cy="1" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill9" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="piramida_fill10" cx="0.85" cy="1" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.6"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill11" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#62A5E9"/><stop offset="0.5" stop-color="#4DA0DA"/><stop offset="1" stop-color="#3557C3"/></radialGradient>
+<radialGradient id="piramida_fill12" cx="0.85" cy="1" r="0.7"><stop stop-color="#3557C3" stop-opacity="0.6"/><stop offset="0.9" stop-color="#3557C3" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill13" cx="0.3" cy="0.15" r="0.95"><stop stop-color="#A087D8"/><stop offset="0.5" stop-color="#8971BD"/><stop offset="1" stop-color="#7047B7"/></radialGradient>
+<radialGradient id="piramida_fill14" cx="0.85" cy="1" r="0.7"><stop stop-color="#7047B7" stop-opacity="0.6"/><stop offset="0.9" stop-color="#7047B7" stop-opacity="0"/></radialGradient>
+<radialGradient id="piramida_fill15" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="piramida_fill16" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.6"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="piramida_blur035" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.35"/></filter>
+</defs>
 </svg>

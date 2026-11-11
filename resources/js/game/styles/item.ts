@@ -10,7 +10,11 @@
  */
 import Phaser from 'phaser';
 import { textOn } from '../palette';
+import { rgba, tones } from './fluent';
 import type { ItemDrawing, ItemView } from './types';
+
+/** What `textOn()` gives for a dark ground. */
+const WHITE_TEXT = '#FFFFFF';
 
 /** Characters that reach above and below Latin letters in Azerbaijani text. */
 const MEASURE = '|ÉİĞŞÇÖÜƏqgyp';
@@ -34,7 +38,9 @@ export function hex(colour: number): string {
 
 /**
  * An item's text, bold, readable on `ground`, at most `room` wide: long
- * words shrink to fit, letters stay big.
+ * words shrink to fit, letters stay big. White letters on a lit surface
+ * (`styles/fluent.ts`) sit on a soft shade of the ground's own deep tone,
+ * never an outline, so they stay clear where the light falls.
  */
 export function itemLabel(
     scene: Phaser.Scene,
@@ -43,16 +49,28 @@ export function itemLabel(
     ground: number,
     room: number,
 ): Phaser.GameObjects.Text {
+    const color = textOn(hex(ground));
     const label = scene.add.text(0, 0, text, {
         fontFamily: 'Andika',
         fontStyle: 'bold',
         fontSize: `${Math.round(size)}px`,
-        color: textOn(hex(ground)),
+        color,
         testString: MEASURE,
         padding: { x: 8, y: 12 },
     });
 
     label.setOrigin(0.5);
+
+    if (color === WHITE_TEXT) {
+        label.setShadow(
+            0,
+            Math.max(2, size * 0.025),
+            rgba(tones(ground).deep, 0.45),
+            Math.max(4, size * 0.06),
+            false,
+            true,
+        );
+    }
 
     if (label.width > room) {
         label.setScale(room / label.width);

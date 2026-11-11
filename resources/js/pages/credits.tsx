@@ -3,8 +3,7 @@ import AppLogoIcon from '@/components/app-logo-icon';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
-import { home, login } from '@/routes';
-import { index as classes } from '@/routes/classes';
+import { home, login, start } from '@/routes';
 
 /** One entry of `content/credits.json` (`CreditData::toArray()`). */
 type Credit = {
@@ -20,14 +19,6 @@ type Credit = {
 
 type Props = {
     credits: Credit[];
-    /** OpenMoji's part (`CreditsDocument::openMoji()`); null when unused. */
-    openmoji: {
-        /** OpenMoji's attribution sentence, verbatim and never translated. */
-        attribution: string;
-        url: string;
-        license_url: string;
-        changed: { files: string[]; changes: string }[];
-    } | null;
 };
 
 const linkClass = 'underline underline-offset-4 break-all';
@@ -37,7 +28,7 @@ const linkClass = 'underline underline-offset-4 break-all';
  * (docs/architecture.md §8): public, in every interface language, from the
  * same `content/credits.json` as `CREDITS.md`.
  */
-export default function Credits({ credits, openmoji }: Props) {
+export default function Credits({ credits }: Props) {
     const { auth, name } = usePage().props;
     const { t } = useTranslation();
 
@@ -57,8 +48,15 @@ export default function Credits({ credits, openmoji }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                         <LanguageSwitcher />
                         <Button asChild variant="outline" size="sm">
-                            <Link href={auth.user ? classes() : login()}>
-                                {auth.user ? t('nav.classes') : t('nav.log_in')}
+                            {/* A signed-in account goes home by role (architecture §1 "Accounts and roles"). */}
+                            <Link href={auth.user ? start() : login()}>
+                                {auth.user
+                                    ? t(
+                                          auth.area === 'parent'
+                                              ? 'nav.children'
+                                              : 'nav.classes',
+                                      )
+                                    : t('nav.log_in')}
                             </Link>
                         </Button>
                     </div>
@@ -82,52 +80,6 @@ export default function Credits({ credits, openmoji }: Props) {
                             {t('credits.licenses.body')}
                         </p>
                     </section>
-
-                    {openmoji && (
-                        <section className="space-y-3" data-test="openmoji">
-                            <h2 className="text-xl font-semibold">
-                                {t('credits.openmoji.title')}
-                            </h2>
-                            <p className="leading-relaxed">
-                                {t('credits.openmoji.description')}
-                            </p>
-                            <blockquote
-                                lang="en"
-                                className="rounded-lg bg-muted p-4 leading-relaxed"
-                            >
-                                {openmoji.attribution}{' '}
-                                <a href={openmoji.url} className={linkClass}>
-                                    {openmoji.url}
-                                </a>{' '}
-                                ·{' '}
-                                <a
-                                    href={openmoji.license_url}
-                                    className={linkClass}
-                                >
-                                    {openmoji.license_url}
-                                </a>
-                            </blockquote>
-                            <div className="space-y-1">
-                                <h3 className="font-medium">
-                                    {t('credits.openmoji.changed')}
-                                </h3>
-                                {openmoji.changed.length === 0 ? (
-                                    <p className="text-muted-foreground">
-                                        {t('credits.openmoji.unchanged')}
-                                    </p>
-                                ) : (
-                                    <ul className="list-disc space-y-1 pl-5">
-                                        {openmoji.changed.map((changed) => (
-                                            <li key={changed.files.join()}>
-                                                <Files files={changed.files} />:{' '}
-                                                {changed.changes}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </section>
-                    )}
 
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold">

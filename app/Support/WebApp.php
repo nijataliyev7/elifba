@@ -34,8 +34,8 @@ final class WebApp
 
     /**
      * The manifest. The id stays `/` so the installed app keeps its identity
-     * if the start page ever moves; the start page is the classes, where a
-     * signed-in teacher lands (a guest is sent on to the login).
+     * if the start page ever moves; the start page is `/start`, which lands a
+     * signed-in account by role (a guest is sent on to the login).
      *
      * @return array<string, mixed>
      */
@@ -51,7 +51,7 @@ final class WebApp
             'description' => __('welcome.meta.description', [], $locale),
             'lang' => $locale,
             'dir' => 'ltr',
-            'start_url' => route('classes.index', absolute: false),
+            'start_url' => route('start', absolute: false),
             'scope' => '/',
             'display' => 'standalone',
             'theme_color' => self::THEME_COLOR,

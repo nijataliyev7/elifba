@@ -30,8 +30,8 @@ final readonly class PopRoundBuilder extends AnyRoundBuilder
         return array_map(static fn (RoundItemData $item): string => $item->id, $items);
     }
 
-    protected function prompt(PromptTemplateData $template, RoundItemData $target): PromptData
+    protected function prompt(PromptTemplateData $template, RoundItemData $target, ?string $audio): PromptData
     {
-        return new PromptData(text: $template->text, show: null, image: null, audio: null, tail: null);
+        return new PromptData(text: $template->text, show: null, image: null, count: null, audio: $audio, tail: null);
     }
 }

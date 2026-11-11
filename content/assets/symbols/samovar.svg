@@ -1,17 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- samovar: a brass samovar with a teapot on top. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M30,13 C30,8 42,8 42,13 L44,13 L48,10 L46,16 L42,18 L30,18 Z" fill="#FFF"/>
-    <rect x="34" y="5.5" width="4" height="3" rx="1" fill="#61B2E4"/>
-    <path d="M30,13 L42,13" fill="none" stroke="#61B2E4" stroke-width="1.5"/>
-    <path d="M26,18 L46,18 L44,23 L28,23 Z" fill="#E27022"/>
-    <path d="M14,30 C10,30 10,38 14,38 M58,30 C62,30 62,38 58,38" fill="none" stroke="#3F3F3F" stroke-width="3"/>
-    <path d="M26,23 L46,23 C56,27 58,34 57,42 C56,49 52,53 46,55 L26,55 C20,53 16,49 15,42 C14,34 16,27 26,23 Z" fill="#F1B31C"/>
-    <path d="M15.6,36 L56.4,36" fill="none" stroke="#E27022" stroke-width="3"/>
-    <path d="M15,42 C14,34 16,27 26,23 L46,23 C56,27 58,34 57,42" fill="none"/>
-    <path d="M55.6,45 L61,46 L62,51 L59.5,51 L58.6,48.5 L55,48.5 Z" fill="#E27022"/>
-    <circle cx="58.5" cy="43.5" r="1.8" fill="#3F3F3F"/>
-    <path d="M28,55 L44,55 L42,59 L30,59 Z" fill="#E27022"/>
-    <path d="M24,59 L48,59 L52,65 L20,65 Z" fill="#F1B31C"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- samovar: a brass samovar with its tap, a teapot on top. Elifba own art, MIT. -->
+<path d="M8 14.4C4.6 14.4 4.2 19 7 19.6" stroke="#554A63" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24 14.4C27.4 14.4 27.8 19 25 19.6" stroke="#554A63" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.2 29.8L21.8 29.8Q22.6 29.8 22.15 29.14L20.85 27.26Q20.4 26.6 19.6 26.6L12.4 26.6Q11.6 26.6 11.15 27.26L9.85 29.14Q9.4 29.8 10.2 29.8Z" fill="url(#samovar_fill1)"/>
+<path d="M10.2 29.8L21.8 29.8Q22.6 29.8 22.15 29.14L20.85 27.26Q20.4 26.6 19.6 26.6L12.4 26.6Q11.6 26.6 11.15 27.26L9.85 29.14Q9.4 29.8 10.2 29.8Z" fill="url(#samovar_fill2)"/>
+<rect x="13.4" y="24.4" width="5.2" height="2.8" rx="0.6" fill="url(#samovar_fill3)"/>
+<rect x="13.4" y="24.4" width="5.2" height="2.8" rx="0.6" fill="url(#samovar_fill4)"/>
+<path d="M10.6 11.6C7.8 12.4 6.6 15.6 7 18.8C7.4 22.2 9.6 24.8 12.4 25.4L19.6 25.4C22.4 24.8 24.6 22.2 25 18.8C25.4 15.6 24.2 12.4 21.4 11.6Z" fill="url(#samovar_fill5)"/>
+<path d="M10.6 11.6C7.8 12.4 6.6 15.6 7 18.8C7.4 22.2 9.6 24.8 12.4 25.4L19.6 25.4C22.4 24.8 24.6 22.2 25 18.8C25.4 15.6 24.2 12.4 21.4 11.6Z" fill="url(#samovar_fill6)"/>
+<g filter="url(#samovar_blur05)"><ellipse cx="10.4" cy="15.4" rx="1.2" ry="2.6" fill="#FEF7E4" fill-opacity="0.8" transform="rotate(15 10.4 15.4)"/></g>
+<path d="M7.4 19.4Q16 21.6 24.6 19.4" stroke="#C79738" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+<rect x="11.4" y="9.4" width="9.2" height="2.8" rx="1" fill="url(#samovar_fill7)"/>
+<rect x="11.4" y="9.4" width="9.2" height="2.8" rx="1" fill="url(#samovar_fill8)"/>
+<path d="M22.6 21.2L26.6 21.2" stroke="url(#samovar_fill9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.6 21.2L26.6 23.4" stroke="url(#samovar_fill10)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="25" cy="20" r="0.9" fill="url(#samovar_fill11)"/>
+<path d="M12.6 6.6C10.6 6.4 10.6 3.8 12.6 4" stroke="#E8E8E9" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.4 6.4L22.4 3.8Q22.8 3.6 22.6 4.2L20 7.6Z" fill="url(#samovar_fill12)"/>
+<path d="M19.4 6.4L22.4 3.8Q22.8 3.6 22.6 4.2L20 7.6Z" fill="url(#samovar_fill13)"/>
+<ellipse cx="16" cy="6.4" rx="4" ry="3" fill="url(#samovar_fill14)"/>
+<ellipse cx="16" cy="6.4" rx="4" ry="3" fill="url(#samovar_fill15)"/>
+<g filter="url(#samovar_blur025)"><ellipse cx="14.4" cy="5.2" rx="0.9" ry="0.5" fill="#FAF8FC" fill-opacity="0.8" transform="rotate(-30 14.4 5.2)"/></g>
+<ellipse cx="17.2" cy="7" rx="1.2" ry="0.9" fill="#F24756" fill-opacity="0.85"/>
+<circle cx="16" cy="3.2" r="0.9" fill="url(#samovar_fill16)"/>
+<circle cx="16" cy="3.2" r="0.9" fill="url(#samovar_fill17)"/>
+<defs>
+<radialGradient id="samovar_fill1" cx="0.3" cy="0.1" r="1"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="samovar_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="samovar_fill3" cx="0.2" cy="0.1" r="1"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="samovar_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<radialGradient id="samovar_fill5" cx="0.3" cy="0.25" r="0.85"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="samovar_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.6"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<filter id="samovar_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="samovar_fill7" cx="0.3" cy="0.1" r="1"><stop stop-color="#FFF246"/><stop offset="0.5" stop-color="#F8CA4D"/><stop offset="1" stop-color="#C79738"/></radialGradient>
+<radialGradient id="samovar_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#C79738" stop-opacity="0.5"/><stop offset="0.9" stop-color="#C79738" stop-opacity="0"/></radialGradient>
+<linearGradient id="samovar_fill9" x1="22.6" y1="21.2" x2="26.6" y2="21.2" gradientUnits="userSpaceOnUse"><stop stop-color="#C79738"/><stop offset="1" stop-color="#F8CA4D"/></linearGradient>
+<linearGradient id="samovar_fill10" x1="26.6" y1="23.4" x2="26.6" y2="21.2" gradientUnits="userSpaceOnUse"><stop stop-color="#C79738"/><stop offset="1" stop-color="#F8CA4D"/></linearGradient>
+<radialGradient id="samovar_fill11" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6A6571"/><stop offset="0.5" stop-color="#554A63"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<radialGradient id="samovar_fill12" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FAF5FF"/><stop offset="0.5" stop-color="#DBCEED"/><stop offset="1" stop-color="#ACA9B3"/></radialGradient>
+<radialGradient id="samovar_fill13" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#ACA9B3" stop-opacity="0.4"/><stop offset="0.9" stop-color="#ACA9B3" stop-opacity="0"/></radialGradient>
+<radialGradient id="samovar_fill14" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FAF5FF"/><stop offset="0.5" stop-color="#DBCEED"/><stop offset="1" stop-color="#ACA9B3"/></radialGradient>
+<radialGradient id="samovar_fill15" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#ACA9B3" stop-opacity="0.5"/><stop offset="0.9" stop-color="#ACA9B3" stop-opacity="0"/></radialGradient>
+<filter id="samovar_blur025" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.25"/></filter>
+<radialGradient id="samovar_fill16" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FAF5FF"/><stop offset="0.5" stop-color="#DBCEED"/><stop offset="1" stop-color="#ACA9B3"/></radialGradient>
+<radialGradient id="samovar_fill17" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#ACA9B3" stop-opacity="0.3"/><stop offset="0.9" stop-color="#ACA9B3" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

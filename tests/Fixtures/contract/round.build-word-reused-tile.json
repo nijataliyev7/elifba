@@ -9,7 +9,8 @@
     "prompt": {
         "text": "Sözü hecalardan yığ!",
         "show": null,
-        "image": "http://localhost/content/openmoji/1F475.svg?v=2",
+        "image": "http://localhost/content/fluent/1F475.svg?v=2",
+        "count": null,
         "audio": null,
         "tail": null
     },

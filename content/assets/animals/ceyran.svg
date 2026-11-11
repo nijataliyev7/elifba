@@ -1,27 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- ceyran: a goitered gazelle with a sandy back, a white belly and black curved horns. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21,42 L18,52 L21,62" fill="none" stroke-width="4.5"/>
-    <path d="M21,42 L18,52 L21,62" fill="none" stroke="#E27022" stroke-width="1.5"/>
-    <path d="M27,42 L25,52 L28,62" fill="none" stroke-width="4.5"/>
-    <path d="M27,42 L25,52 L28,62" fill="none" stroke="#F4AA41" stroke-width="1.5"/>
-    <path d="M44,42 L45,52 L43,62" fill="none" stroke-width="4.5"/>
-    <path d="M44,42 L45,52 L43,62" fill="none" stroke="#E27022" stroke-width="1.5"/>
-    <path d="M49,42 L50,52 L50,62" fill="none" stroke-width="4.5"/>
-    <path d="M49,42 L50,52 L50,62" fill="none" stroke="#F4AA41" stroke-width="1.5"/>
-    <path d="M19.5,63 L22.5,63" fill="none" stroke-width="3"/>
-    <path d="M26.5,63 L29.5,63" fill="none" stroke-width="3"/>
-    <path d="M41.5,63 L44.5,63" fill="none" stroke-width="3"/>
-    <path d="M48.5,63 L51.5,63" fill="none" stroke-width="3"/>
-    <path d="M16,36 C16,30 22,28 30,28 L46,28 C50,28 52,30 53,32 L55,36 C55,40 52,44 48,44 L22,44 C18,44 16,40 16,36 Z" fill="#F4AA41"/>
-    <path d="M20,40 C26,38 40,38 50,40 C50,42 49,44 48,44 L22,44 C21,44 20.5,42 20,40 Z" fill="#FFF" stroke="none"/>
-    <path d="M16,36 C16,30 22,28 30,28 L46,28 C50,28 52,30 53,32 L55,36 C55,40 52,44 48,44 L22,44 C18,44 16,40 16,36 Z" fill="none"/>
-    <path d="M16,33 C14,31 13,29 14,26" fill="none" stroke-width="2"/>
-    <path d="M49,31 C50,24 52,18 54,15 L60,17 C58,22 56,28 55,34 Z" fill="#F4AA41"/>
-    <path d="M54,15 C55,12 59,11 61,12 L66,18 C66,20 64,21 62,20 L58,19 Z" fill="#F4AA41"/>
-    <path d="M56,13 C54,8 55,4 58,3 M59,12 C59,7 61,4 64,4" fill="none" stroke-width="2.5"/>
-    <path d="M54,14 L51,11 L55,12 Z" fill="#F4AA41" stroke-width="1.5"/>
-    <circle cx="59.5" cy="15" r="1.2" fill="#000" stroke="none"/>
-    <path d="M58,17 L65,19.5" fill="none" stroke="#FFF" stroke-width="1.2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- ceyran: a goitered gazelle standing, seen from the side. Elifba own art, MIT. -->
+<path d="M13.8 19L14.4 24.4L14.2 29.2" stroke="#965C3C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M23.6 19.4L25 24.4L24.2 29.2" stroke="#965C3C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.2 28.8L14.2 29.7" stroke="#4E3730" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24.2 28.8L24.2 29.7" stroke="#4E3730" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.6 12C27.8 12.2 28.4 13.4 28 15C27.8 15.8 27 16 26.6 15.4Z" fill="url(#ceyran_fill1)"/>
+<path d="M11.4 18.4L11.8 24L11.2 29.2" stroke="#DDA062" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 18.6L23.4 24L22.4 29.2" stroke="#DDA062" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.4 18.4L11.8 24L11.2 29.2" stroke="url(#ceyran_fill2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 18.6L23.4 24L22.4 29.2" stroke="url(#ceyran_fill3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.2 28.6L11.2 29.8" stroke="#4E3730" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.4 28.6L22.4 29.8" stroke="#4E3730" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 14.6C10 12 13.4 11 17.6 11.2C21 11.4 24.8 10.6 26.6 12.4C28.4 14.2 28 17.8 26.2 19.6C25 20.8 23.4 21 22 20.6C20 20 18 19.4 15.6 19.8C13.6 20.2 11.6 20.6 10.4 19.6C8.8 18.4 8.2 16.4 9 14.6Z" fill="url(#ceyran_fill4)"/>
+<path d="M9 14.6C10 12 13.4 11 17.6 11.2C21 11.4 24.8 10.6 26.6 12.4C28.4 14.2 28 17.8 26.2 19.6C25 20.8 23.4 21 22 20.6C20 20 18 19.4 15.6 19.8C13.6 20.2 11.6 20.6 10.4 19.6C8.8 18.4 8.2 16.4 9 14.6Z" fill="url(#ceyran_fill5)"/>
+<path d="M9 14.6C10 12 13.4 11 17.6 11.2C21 11.4 24.8 10.6 26.6 12.4C28.4 14.2 28 17.8 26.2 19.6C25 20.8 23.4 21 22 20.6C20 20 18 19.4 15.6 19.8C13.6 20.2 11.6 20.6 10.4 19.6C8.8 18.4 8.2 16.4 9 14.6Z" fill="url(#ceyran_fill6)"/>
+<path d="M25.4 11.8C27 12.2 28 13.6 27.8 15.6C27.6 17 26.8 18.2 25.8 18.4C25.2 16.4 24.8 14 25.4 11.8Z" fill="url(#ceyran_fill7)"/>
+<path d="M9.6 15.4C8 13 7 10.4 6.8 8C6.6 6.4 8.2 5.4 9.6 6C10.6 6.6 11 8 11.4 9.4C11.8 11 12.8 12.6 13.8 13.4Z" fill="url(#ceyran_fill8)"/>
+<path d="M9.6 15.4C8 13 7 10.4 6.8 8C6.6 6.4 8.2 5.4 9.6 6C10.6 6.6 11 8 11.4 9.4C11.8 11 12.8 12.6 13.8 13.4Z" fill="url(#ceyran_fill9)"/>
+<path d="M7.8 9.6C8.2 11.4 8.8 13.2 9.8 14.8L9 15.2C8 13.6 7.4 11.8 7.2 10Z" fill="url(#ceyran_fill10)"/>
+<path d="M8.4 5.4C8.2 3.6 8.8 2 10.4 1.8C10.8 1.6 10.6 2.4 10.2 3" stroke="#4E3730" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 5.4C9.3 3.6 9.9 2 11.5 1.8C11.9 1.6 11.7 2.4 11.3 3" stroke="#4E3730" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.4 5.2C8 4.4 10 5 10.4 6.6C10.8 8 10 9.2 8.6 9.4C7.4 9.6 5.4 10.4 3.8 10.6C2.8 10.8 2.2 10 2.6 9.2C3.4 7.6 4.6 6 6.4 5.2Z" fill="url(#ceyran_fill11)"/>
+<path d="M6.4 5.2C8 4.4 10 5 10.4 6.6C10.8 8 10 9.2 8.6 9.4C7.4 9.6 5.4 10.4 3.8 10.6C2.8 10.8 2.2 10 2.6 9.2C3.4 7.6 4.6 6 6.4 5.2Z" fill="url(#ceyran_fill12)"/>
+<path d="M4 9.2C5.4 8.6 6.6 7.6 7.4 6.4" stroke="#FFF6E8" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>
+<path d="M9.4 5.4C10.66 6.23 12.05 5.4 12.8 3.2C10.49 2.98 9.16 3.91 9.4 5.4Z" fill="url(#ceyran_fill13)"/>
+<ellipse cx="2.9" cy="9.7" rx="0.6" ry="0.5" fill="#4E3730"/>
+<circle cx="7.6" cy="6.8" r="0.85" fill="#3A234A"/>
+<circle cx="7.3" cy="6.5" r="0.34" fill="#FFFFFF"/>
+<g filter="url(#ceyran_blur05)"><ellipse cx="15.6" cy="12.8" rx="3.4" ry="1" fill="#FFF4E0" fill-opacity="0.6" transform="rotate(-3 15.6 12.8)"/></g>
+<defs>
+<radialGradient id="ceyran_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#6E4B3A"/><stop offset="0.5" stop-color="#4E3730"/><stop offset="1" stop-color="#33293D"/></radialGradient>
+<linearGradient id="ceyran_fill2" x1="11" y1="18" x2="11" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></linearGradient>
+<linearGradient id="ceyran_fill3" x1="22" y1="18" x2="22" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></linearGradient>
+<radialGradient id="ceyran_fill4" cx="0.3" cy="0.2" r="0.85"><stop stop-color="#F7CF97"/><stop offset="0.5" stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></radialGradient>
+<radialGradient id="ceyran_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#A9643A" stop-opacity="0.55"/><stop offset="0.9" stop-color="#A9643A" stop-opacity="0"/></radialGradient>
+<linearGradient id="ceyran_fill6" x1="0" y1="0" x2="0" y2="1"><stop offset="0.7" stop-color="#FFF8EE" stop-opacity="0"/><stop offset="0.95" stop-color="#FFF8EE" stop-opacity="0.9"/></linearGradient>
+<radialGradient id="ceyran_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#FBF1E4"/><stop offset="1" stop-color="#E2CDB6"/></radialGradient>
+<radialGradient id="ceyran_fill8" cx="0.3" cy="0.25" r="0.9"><stop stop-color="#F7CF97"/><stop offset="0.5" stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></radialGradient>
+<radialGradient id="ceyran_fill9" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#A9643A" stop-opacity="0.45"/><stop offset="0.9" stop-color="#A9643A" stop-opacity="0"/></radialGradient>
+<radialGradient id="ceyran_fill10" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#FBF1E4"/><stop offset="1" stop-color="#E2CDB6"/></radialGradient>
+<radialGradient id="ceyran_fill11" cx="0.35" cy="0.25" r="0.85"><stop stop-color="#F7CF97"/><stop offset="0.5" stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></radialGradient>
+<radialGradient id="ceyran_fill12" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#A9643A" stop-opacity="0.45"/><stop offset="0.9" stop-color="#A9643A" stop-opacity="0"/></radialGradient>
+<radialGradient id="ceyran_fill13" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#F7CF97"/><stop offset="0.5" stop-color="#DDA062"/><stop offset="1" stop-color="#A9643A"/></radialGradient>
+<filter id="ceyran_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+</defs>
 </svg>

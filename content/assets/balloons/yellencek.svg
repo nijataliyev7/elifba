@@ -1,14 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- yelləncək: a swing, a seat on two ropes under a frame. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M15,13 L7,64" fill="none" stroke="#000" stroke-width="7"/>
-    <path d="M15,13 L7,64" fill="none" stroke="#E27022" stroke-width="3"/>
-    <path d="M57,13 L65,64" fill="none" stroke="#000" stroke-width="7"/>
-    <path d="M57,13 L65,64" fill="none" stroke="#E27022" stroke-width="3"/>
-    <rect x="9" y="9" width="54" height="7" rx="3.5" fill="#E27022"/>
-    <path d="M26,16 L26,49 M46,16 L46,49" fill="none"/>
-    <rect x="21" y="48" width="30" height="6" rx="3" fill="#61B2E4"/>
-    <circle cx="26" cy="17.5" r="1.6" fill="#FFF" stroke-width="1.2"/>
-    <circle cx="46" cy="17.5" r="1.6" fill="#FFF" stroke-width="1.2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- yelləncək: a swing, a seat hanging on two ropes from a frame. Elifba own art, MIT. -->
+<path d="M7.3 5.2L7.7 5.2Q8.8 5.2 8.66 6.29L5.84 28.71Q5.7 29.8 4.6 29.8L4.2 29.8Q3.1 29.8 3.24 28.71L6.06 6.29Q6.2 5.2 7.3 5.2Z" fill="url(#yellencek_fill1)"/>
+<path d="M7.3 5.2L7.7 5.2Q8.8 5.2 8.66 6.29L5.84 28.71Q5.7 29.8 4.6 29.8L4.2 29.8Q3.1 29.8 3.24 28.71L6.06 6.29Q6.2 5.2 7.3 5.2Z" fill="url(#yellencek_fill2)"/>
+<path d="M24.3 5.2L24.7 5.2Q25.8 5.2 25.94 6.29L28.76 28.71Q28.9 29.8 27.8 29.8L27.4 29.8Q26.3 29.8 26.16 28.71L23.34 6.29Q23.2 5.2 24.3 5.2Z" fill="url(#yellencek_fill3)"/>
+<path d="M24.3 5.2L24.7 5.2Q25.8 5.2 25.94 6.29L28.76 28.71Q28.9 29.8 27.8 29.8L27.4 29.8Q26.3 29.8 26.16 28.71L23.34 6.29Q23.2 5.2 24.3 5.2Z" fill="url(#yellencek_fill4)"/>
+<rect x="2.6" y="3.4" width="26.8" height="3" rx="1.5" fill="url(#yellencek_fill5)"/>
+<rect x="2.6" y="3.4" width="26.8" height="3" rx="1.5" fill="url(#yellencek_fill6)"/>
+<g filter="url(#yellencek_blur03)"><ellipse cx="8" cy="4.2" rx="3.4" ry="0.45" fill="#FDE3E6" fill-opacity="0.7"/></g>
+<path d="M11.2 6.4L11.2 21" stroke="url(#yellencek_fill7)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20.8 6.4L20.8 21" stroke="url(#yellencek_fill8)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="8.6" y="20.4" width="14.8" height="3" rx="1.3" fill="url(#yellencek_fill9)"/>
+<rect x="8.6" y="20.4" width="14.8" height="3" rx="1.3" fill="url(#yellencek_fill10)"/>
+<g filter="url(#yellencek_blur03)"><ellipse cx="12" cy="21.2" rx="2.4" ry="0.45" fill="#F6EDE7" fill-opacity="0.7"/></g>
+<defs>
+<radialGradient id="yellencek_fill1" cx="0.3" cy="0.1" r="1"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="yellencek_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="yellencek_fill3" cx="0.3" cy="0.1" r="1"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="yellencek_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.7"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<radialGradient id="yellencek_fill5" cx="0.25" cy="0.2" r="0.9"><stop stop-color="#FF6180"/><stop offset="0.5" stop-color="#F24756"/><stop offset="1" stop-color="#B22945"/></radialGradient>
+<radialGradient id="yellencek_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B22945" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B22945" stop-opacity="0"/></radialGradient>
+<filter id="yellencek_blur03" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.3"/></filter>
+<linearGradient id="yellencek_fill7" x1="11.2" y1="21" x2="11.2" y2="6.4" gradientUnits="userSpaceOnUse"><stop stop-color="#988EA1"/><stop offset="1" stop-color="#C2BDC9"/></linearGradient>
+<linearGradient id="yellencek_fill8" x1="20.8" y1="21" x2="20.8" y2="6.4" gradientUnits="userSpaceOnUse"><stop stop-color="#988EA1"/><stop offset="1" stop-color="#C2BDC9"/></linearGradient>
+<radialGradient id="yellencek_fill9" cx="0.3" cy="0.2" r="0.8"><stop stop-color="#E8A66F"/><stop offset="0.5" stop-color="#C48462"/><stop offset="1" stop-color="#5F4341"/></radialGradient>
+<radialGradient id="yellencek_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#5F4341" stop-opacity="0.6"/><stop offset="0.9" stop-color="#5F4341" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

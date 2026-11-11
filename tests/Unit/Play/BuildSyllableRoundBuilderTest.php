@@ -10,6 +10,7 @@ use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Enums\SolutionOrder;
 use App\Domain\Play\Support\Mechanics\BuildSyllableRoundBuilder;
 use Tests\Support\BuildRounds;
+use Tests\Support\Voice;
 
 /*
  * `build_syllable` rounds from the real content (docs/architecture.md §2,
@@ -17,6 +18,10 @@ use Tests\Support\BuildRounds;
  * letter tiles, one decoy letter from the confusables first, seeded, made
  * of learned letters only, cased on the server.
  */
+
+// Which clips are made is content: no clip here, so prompt.audio is null;
+// tests/Feature/Play/PromptVoiceTest checks it with clips.
+beforeEach(fn () => Voice::none($this->app));
 
 /**
  * @param  list<string>|null  $learned

@@ -1,19 +1,25 @@
 import { Link, usePage } from '@inertiajs/react';
-import { navAreas } from '@/components/app/nav-areas';
+import { useNavAreas } from '@/components/app/nav-areas';
 import { useTranslation } from '@/hooks/use-translation';
 import { activeArea } from '@/lib/nav-active';
 import { cn } from '@/lib/utils';
 
 /**
- * The bottom tab bar between the teacher shell's areas, below `lg`
- * (docs/frontend.md §1). Each tab opens its area's first page; the open
+ * The bottom tab bar between the shell's areas, below `lg`
+ * (docs/frontend.md §1): the navigation of the page's area (teacher or
+ * parent, architecture §1 "Accounts and roles"). Each tab opens its area's first page; the open
  * area is marked. The shell pads its content by the bar's height and the
  * safe area (`AppSidebarLayout`), so nothing hides under the bar.
  */
 export function BottomNav() {
     const { url } = usePage();
     const { t } = useTranslation();
+    const navAreas = useNavAreas();
     const current = activeArea(navAreas, url);
+
+    if (navAreas.length === 0) {
+        return null;
+    }
 
     return (
         <nav

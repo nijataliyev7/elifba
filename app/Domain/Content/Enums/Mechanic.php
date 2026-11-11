@@ -29,6 +29,12 @@ enum Mechanic: string
     case BuildSentence = 'build_sentence';
 
     /**
+     * «Say» (R5, ADR 012): the prompt shows one picture of the pack N times;
+     * the items are numbers, and the one that says N solves the round.
+     */
+    case Count = 'count';
+
+    /**
      * The units a level may combine this mechanic with.
      *
      * @return list<Unit>
@@ -36,10 +42,11 @@ enum Mechanic: string
     public function units(): array
     {
         return match ($this) {
-            self::Find, self::Pop => [Unit::Letter, Unit::Syllable, Unit::Word],
+            self::Find, self::Pop => [Unit::Letter, Unit::Syllable, Unit::Word, Unit::Picture, Unit::Number],
             self::BuildSyllable => [Unit::Syllable],
             self::BuildWord => [Unit::Word],
             self::BuildSentence => [Unit::Sentence],
+            self::Count => [Unit::Number],
         };
     }
 
@@ -51,12 +58,12 @@ enum Mechanic: string
     /**
      * Whether a round is solved by putting tiles into slots in order (and so
      * adds the level's `decoys`), rather than by hitting the level's `items`
-     * in any order (`find`, `pop`), which have no slots.
+     * in any order (`find`, `pop`, `count`), which have no slots.
      */
     public function builds(): bool
     {
         return match ($this) {
-            self::Find, self::Pop => false,
+            self::Find, self::Pop, self::Count => false,
             self::BuildSyllable, self::BuildWord, self::BuildSentence => true,
         };
     }

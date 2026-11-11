@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
@@ -17,9 +18,10 @@ use Inertia\Response;
 
 /**
  * The welcome page (docs/frontend.md rule 10): what Elifba is, for a teacher
- * who opens a shared link. Its facts come from the content and the code,
- * never from text retyped in `lang/` or TSX. Public; a signed-in teacher
- * sees the same page with other actions.
+ * who opens a shared link, and after the teacher's story what it gives a
+ * parent at home (R7). Its facts come from the content and the code, never
+ * from text retyped in `lang/` or TSX. Public; a signed-in account sees the
+ * same page with other actions.
  */
 final class WelcomeController extends Controller
 {
@@ -40,6 +42,12 @@ final class WelcomeController extends Controller
                 'title' => $pack->title->in($locale),
                 'palette' => $pack->style->palette,
             ], $content->packs())),
+            // The packs a child who cannot read yet plays (R5, R6): those
+            // that list a unit nobody reads, in the packs' order.
+            'picturePacks' => array_keys(array_filter(
+                $content->packs(),
+                static fn (PackData $pack): bool => array_any($pack->units, static fn (Unit $unit): bool => ! $unit->reads()),
+            )),
             'letters' => array_map(
                 static fn (string $letter): array => ['lower' => $letter, 'upper' => Az::upper($letter)],
                 Alphabet::letters(),

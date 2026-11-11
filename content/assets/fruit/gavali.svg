@@ -1,13 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- gavalı: two purple plums with a leaf. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M33,22 C33,17 35,13 38,10" fill="none"/>
-    <path d="M36,14 Q46.1,19 55,12 Q44.9,7 36,14 Z" fill="#5C9E31"/><path d="M36,14 L51.2,12.4" fill="none" stroke-width="1.5"/>
-    <ellipse cx="25" cy="44" rx="13" ry="16" fill="#8967AA"/>
-    <path d="M25,28 C20,38 20,50 24,59" fill="none" stroke-width="1.5"/>
-    <path d="M32,33 C35,36 36,39 36,42" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <ellipse cx="45" cy="42" rx="14" ry="18" fill="#8967AA"/>
-    <path d="M45,24 C40,36 40,48 44,59" fill="none" stroke-width="1.5"/>
-    <path d="M53,29 C56,32 57,35 57,38" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- gavalı: two plums with a stalk and a leaf. Elifba own art, MIT. -->
+<path d="M13.8 9.6C13.8 7.4 14.4 5.4 15.8 3.8" stroke="url(#gavali_fill1)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.4 4.6C17.32 6.73 21.44 5.79 25.8 3C20.56 0.09 16.49 1.27 15.4 4.6Z" fill="url(#gavali_fill2)"/>
+<path d="M15.4 4.6C17.32 6.73 21.44 5.79 25.8 3C20.56 0.09 16.49 1.27 15.4 4.6Z" fill="url(#gavali_fill3)"/>
+<path d="M16.02 4.5Q20.48 3.01 24.55 3.19" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M21.4 8.4C26.4 8.4 29.6 12.8 29.6 18.4C29.6 24 26 27.8 21.4 27.8C16.8 27.8 13.2 24 13.2 18.4C13.2 12.8 16.4 8.4 21.4 8.4Z" fill="url(#gavali_fill4)"/>
+<path d="M21.4 8.4C26.4 8.4 29.6 12.8 29.6 18.4C29.6 24 26 27.8 21.4 27.8C16.8 27.8 13.2 24 13.2 18.4C13.2 12.8 16.4 8.4 21.4 8.4Z" fill="url(#gavali_fill5)"/>
+<path d="M21.6 9.4C19.8 12.6 19.4 17 20.4 21.4" stroke="#3C1670" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4"/>
+<path d="M12 9.2C17.2 9.2 20.6 13.8 20.6 19.6C20.6 25.4 16.8 29.8 12 29.8C7.2 29.8 3.4 25.4 3.4 19.6C3.4 13.8 6.8 9.2 12 9.2Z" fill="url(#gavali_fill6)"/>
+<path d="M12 9.2C17.2 9.2 20.6 13.8 20.6 19.6C20.6 25.4 16.8 29.8 12 29.8C7.2 29.8 3.4 25.4 3.4 19.6C3.4 13.8 6.8 9.2 12 9.2Z" fill="url(#gavali_fill7)"/>
+<path d="M12.2 10.2C10.2 13.6 9.8 18.4 11 23" stroke="#3C1670" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4"/>
+<g filter="url(#gavali_blur05)"><ellipse cx="7.4" cy="14.8" rx="1.5" ry="2.8" fill="#E2DBF4" fill-opacity="0.75" transform="rotate(20 7.4 14.8)"/></g>
+<g filter="url(#gavali_blur04)"><ellipse cx="25.4" cy="13.2" rx="1" ry="1.8" fill="#E2DBF4" fill-opacity="0.5" transform="rotate(20 25.4 13.2)"/></g>
+<defs>
+<linearGradient id="gavali_fill1" x1="13.8" y1="9.6" x2="15.8" y2="3.8" gradientUnits="userSpaceOnUse"><stop stop-color="#6E4B2A"/><stop offset="1" stop-color="#8B6A3E"/></linearGradient>
+<radialGradient id="gavali_fill2" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="gavali_fill3" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<radialGradient id="gavali_fill4" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#9F86DA"/><stop offset="0.5" stop-color="#6F49B8"/><stop offset="1" stop-color="#461A82"/></radialGradient>
+<radialGradient id="gavali_fill5" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#461A82" stop-opacity="0.6"/><stop offset="0.9" stop-color="#461A82" stop-opacity="0"/></radialGradient>
+<radialGradient id="gavali_fill6" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#9F86DA"/><stop offset="0.5" stop-color="#6F49B8"/><stop offset="1" stop-color="#461A82"/></radialGradient>
+<radialGradient id="gavali_fill7" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#461A82" stop-opacity="0.7"/><stop offset="0.9" stop-color="#461A82" stop-opacity="0"/></radialGradient>
+<filter id="gavali_blur05" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<filter id="gavali_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+</defs>
 </svg>

@@ -1,0 +1,49 @@
+{
+    "id": "01JC8Z6V8Q4B2X5N7M9P3R6T1B",
+    "index": 0,
+    "total": 10,
+    "mechanic": "find",
+    "unit": "number",
+    "pack": "fruit",
+    "level": "numbers-10",
+    "prompt": {
+        "text": "«7» rəqəmini tap!",
+        "show": "7",
+        "image": null,
+        "count": null,
+        "audio": null,
+        "tail": null
+    },
+    "items": [
+        {
+            "id": "a",
+            "text": "8",
+            "image": null,
+            "content_key": "number:8"
+        },
+        {
+            "id": "b",
+            "text": "6",
+            "image": null,
+            "content_key": "number:6"
+        },
+        {
+            "id": "c",
+            "text": "7",
+            "image": null,
+            "content_key": "number:7"
+        },
+        {
+            "id": "d",
+            "text": "9",
+            "image": null,
+            "content_key": "number:9"
+        }
+    ],
+    "slots": 0,
+    "solution": {
+        "order": "any",
+        "item_ids": ["c"]
+    },
+    "effect": "burst"
+}

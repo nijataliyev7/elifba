@@ -1,17 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
-  <!-- fındıq: two hazelnuts and a green husk. Elifba own art, MIT. -->
-  <g stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20,46 L10,40 L15,36 L8,30 L16,28 L13,21 L21,23 L22,15 L28,21 L33,14 L35,24 L30,40 Z" fill="#B1CC33"/>
-    <path d="M16,28 L24,34 M21,23 L27,32" fill="none" stroke-width="1.5"/>
-    <path d="M27,29.0 C31.0,33.0 40.0,39.0 40.0,49.0 C40.0,57.0 33.0,60.0 27,60.0 C21.0,60.0 14.0,57.0 14.0,49.0 C14.0,39.0 23.0,33.0 27,29.0 Z" fill="#A57939"/>
-    <path d="M30.0,33.0 C37.0,39.0 39.0,45 38.0,51.0" fill="#6A462F" stroke="none"/>
-    <path d="M27,29.0 C31.0,33.0 40.0,39.0 40.0,49.0 C40.0,57.0 33.0,60.0 27,60.0 C21.0,60.0 14.0,57.0 14.0,49.0 C14.0,39.0 23.0,33.0 27,29.0 Z" fill="none"/>
-    <path d="M14.4,52.0 C21.0,48.0 33.0,48.0 39.6,52.0 C37.0,59.0 32.0,60.0 27,60.0 C22.0,60.0 17.0,59.0 14.4,52.0 Z" fill="#F1B31C"/>
-    <path d="M19.0,44.0 C19.0,40.0 21.0,36.0 24.0,34.0" fill="none" stroke="#FFF" stroke-width="2.5"/>
-    <path d="M48,31.0 C52.0,35.0 61.0,41.0 61.0,51.0 C61.0,59.0 54.0,62.0 48,62.0 C42.0,62.0 35.0,59.0 35.0,51.0 C35.0,41.0 44.0,35.0 48,31.0 Z" fill="#A57939"/>
-    <path d="M51.0,35.0 C58.0,41.0 60.0,47 59.0,53.0" fill="#6A462F" stroke="none"/>
-    <path d="M48,31.0 C52.0,35.0 61.0,41.0 61.0,51.0 C61.0,59.0 54.0,62.0 48,62.0 C42.0,62.0 35.0,59.0 35.0,51.0 C35.0,41.0 44.0,35.0 48,31.0 Z" fill="none"/>
-    <path d="M35.4,54.0 C42.0,50.0 54.0,50.0 60.6,54.0 C58.0,61.0 53.0,62.0 48,62.0 C43.0,62.0 38.0,61.0 35.4,54.0 Z" fill="#F1B31C"/>
-    <path d="M40.0,46.0 C40.0,42.0 42.0,38.0 45.0,36.0" fill="none" stroke="#FFF" stroke-width="2.5"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- fındıq: two hazelnuts and a hazel leaf. Elifba own art, MIT. -->
+<path d="M15.6 9.6C19.82 12.43 24.54 9.2 27.8 2.2C19.06 0.17 14.57 3.78 15.6 9.6Z" fill="url(#findiq_fill1)"/>
+<path d="M15.6 9.6C19.82 12.43 24.54 9.2 27.8 2.2C19.06 0.17 14.57 3.78 15.6 9.6Z" fill="url(#findiq_fill2)"/>
+<path d="M16.33 9.16Q21.18 5.04 26.34 3.09" stroke="#E0FFA4" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7"/>
+<path d="M21.6 10.4C23.2 10.4 28.4 15.4 28.4 22C28.4 27 25.2 29.8 21.6 29.8C18 29.8 14.8 27 14.8 22C14.8 15.4 20 10.4 21.6 10.4Z" fill="url(#findiq_fill3)"/>
+<path d="M21.6 10.4C23.2 10.4 28.4 15.4 28.4 22C28.4 27 25.2 29.8 21.6 29.8C18 29.8 14.8 27 14.8 22C14.8 15.4 20 10.4 21.6 10.4Z" fill="url(#findiq_fill4)"/>
+<path d="M15.6 25.9Q21.6 28 27.6 25.9C26.6 28.8 24.4 29.8 21.6 29.8C18.8 29.8 16.6 28.8 15.6 25.9Z" fill="url(#findiq_fill5)"/>
+<path d="M15.6 25.9Q21.6 28 27.6 25.9C26.6 28.8 24.4 29.8 21.6 29.8C18.8 29.8 16.6 28.8 15.6 25.9Z" fill="url(#findiq_fill6)"/>
+<path d="M19.2 14.4C18.2 18.4 18.4 21.4 19 24" stroke="#8A4A24" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4"/>
+<g filter="url(#findiq_blur04)"><ellipse cx="18.6" cy="16" rx="1.2" ry="2.2" fill="#FFE3C6" fill-opacity="0.75" transform="rotate(20 18.6 16)"/></g>
+<circle cx="21.6" cy="10.8" r="0.7" fill="#5F3A20"/>
+<path d="M10.6 9C12.2 9 17.4 14 17.4 20.6C17.4 25.6 14.2 28.4 10.6 28.4C7 28.4 3.8 25.6 3.8 20.6C3.8 14 9 9 10.6 9Z" fill="url(#findiq_fill7)"/>
+<path d="M10.6 9C12.2 9 17.4 14 17.4 20.6C17.4 25.6 14.2 28.4 10.6 28.4C7 28.4 3.8 25.6 3.8 20.6C3.8 14 9 9 10.6 9Z" fill="url(#findiq_fill8)"/>
+<path d="M4.6 24.5Q10.6 26.6 16.6 24.5C15.6 27.4 13.4 28.4 10.6 28.4C7.8 28.4 5.6 27.4 4.6 24.5Z" fill="url(#findiq_fill9)"/>
+<path d="M4.6 24.5Q10.6 26.6 16.6 24.5C15.6 27.4 13.4 28.4 10.6 28.4C7.8 28.4 5.6 27.4 4.6 24.5Z" fill="url(#findiq_fill10)"/>
+<path d="M8.2 13C7.2 17 7.4 20 8 22.6" stroke="#8A4A24" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4"/>
+<g filter="url(#findiq_blur04)"><ellipse cx="7.6" cy="14.6" rx="1.2" ry="2.2" fill="#FFE3C6" fill-opacity="0.75" transform="rotate(20 7.6 14.6)"/></g>
+<circle cx="10.6" cy="9.4" r="0.7" fill="#5F3A20"/>
+<defs>
+<radialGradient id="findiq_fill1" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#CFFF73"/><stop offset="0.5" stop-color="#96C860"/><stop offset="1" stop-color="#74A41C"/></radialGradient>
+<radialGradient id="findiq_fill2" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#74A41C" stop-opacity="0.55"/><stop offset="0.9" stop-color="#74A41C" stop-opacity="0"/></radialGradient>
+<radialGradient id="findiq_fill3" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E19A5E"/><stop offset="0.5" stop-color="#AD6330"/><stop offset="1" stop-color="#6B3420"/></radialGradient>
+<radialGradient id="findiq_fill4" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#6B3420" stop-opacity="0.6"/><stop offset="0.9" stop-color="#6B3420" stop-opacity="0"/></radialGradient>
+<radialGradient id="findiq_fill5" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#F6E2C2"/><stop offset="0.5" stop-color="#E2C196"/><stop offset="1" stop-color="#B48A5E"/></radialGradient>
+<radialGradient id="findiq_fill6" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B48A5E" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B48A5E" stop-opacity="0"/></radialGradient>
+<filter id="findiq_blur04" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.4"/></filter>
+<radialGradient id="findiq_fill7" cx="0.3" cy="0.25" r="0.8"><stop stop-color="#E19A5E"/><stop offset="0.5" stop-color="#AD6330"/><stop offset="1" stop-color="#6B3420"/></radialGradient>
+<radialGradient id="findiq_fill8" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#6B3420" stop-opacity="0.6"/><stop offset="0.9" stop-color="#6B3420" stop-opacity="0"/></radialGradient>
+<radialGradient id="findiq_fill9" cx="0.3" cy="0.2" r="0.9"><stop stop-color="#F6E2C2"/><stop offset="0.5" stop-color="#E2C196"/><stop offset="1" stop-color="#B48A5E"/></radialGradient>
+<radialGradient id="findiq_fill10" cx="0.85" cy="0.9" r="0.7"><stop stop-color="#B48A5E" stop-opacity="0.5"/><stop offset="0.9" stop-color="#B48A5E" stop-opacity="0"/></radialGradient>
+</defs>
 </svg>

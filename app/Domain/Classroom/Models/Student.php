@@ -3,7 +3,7 @@
 namespace App\Domain\Classroom\Models;
 
 use App\Domain\Classroom\Policies\StudentPolicy;
-use App\Models\Concerns\BelongsToTeacher;
+use App\Models\Concerns\BelongsToOwner;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\StudentFactory;
@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * A child in a class: a display name and an avatar, nothing more
  * (docs/architecture.md §1, §7). The display name never goes into a log, an
  * exception, a broadcast or a URL; log the id. `{student}` binds only the
- * current teacher's students (`BelongsToTeacher`), and under `{class}` only
+ * current teacher's students (`BelongsToOwner`), and under `{class}` only
  * that class's (`scopeBindings()`).
  *
  * @property string $id
@@ -40,13 +40,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Student extends Model
 {
     /** @use HasFactory<StudentFactory> */
-    use BelongsToTeacher, HasFactory, HasUlids;
+    use BelongsToOwner, HasFactory, HasUlids;
 
     /**
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    public static function whereTeacher(Builder $query, User $teacher): Builder
+    public static function whereOwner(Builder $query, User $teacher): Builder
     {
         return $query->whereIn(
             $query->qualifyColumn('school_class_id'),

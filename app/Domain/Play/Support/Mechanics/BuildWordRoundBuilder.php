@@ -75,7 +75,7 @@ final readonly class BuildWordRoundBuilder extends BuildRoundBuilder
         return [$decoys];
     }
 
-    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template): PromptData
+    protected function prompt(string $target, PackData $pack, LetterCase $case, PromptTemplateData $template, ?string $audio): PromptData
     {
         $image = self::word($target, $pack)->image ?? throw new LogicException('A build_word target has no picture.');
 
@@ -83,7 +83,8 @@ final readonly class BuildWordRoundBuilder extends BuildRoundBuilder
             text: $template->text,
             show: null,
             image: ContentAssets::url($image, $pack->version),
-            audio: null,
+            count: null,
+            audio: $audio,
             tail: null,
         );
     }

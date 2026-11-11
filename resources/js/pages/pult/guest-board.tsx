@@ -6,15 +6,22 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
+import { playersLabel } from '@/lib/game-players';
+import { mechanicName } from '@/lib/setup-choices';
 import { pult } from '@/routes';
 import { update } from '@/routes/guest-boards/game';
 import { claim } from '@/routes/pult';
 import type { GuestBoardChoicesProps } from '@/types';
 
+/** A class or a parent's child to start a new game for. */
+type Players = { field: 'class' | 'child'; id: string; name: string };
+
 /**
- * What a guest board shows, chosen on the teacher's phone
- * (docs/architecture.md §4, "Guest board"): one of the teacher's live games,
- * or a new one set up with the same form as the setup page. For an open
+ * What a guest board shows, chosen on the owner's phone
+ * (docs/architecture.md §4, "Guest board"; docs/frontend.md rule 13): one
+ * of the account's live games, named as the setup names them, or a new one
+ * — «Kim oynayır?» (a child or a class, ADR 011), then the setup page's
+ * form with «Lövhədə başla» in its bottom bar. For an open
  * board (`/pult/{code}`) it claims the board; for a board the teacher
  * claimed (`/guest-boards/{board}/game`) it sends the next game without a
  * new code. Either way the phone then opens the game's remote.
@@ -24,13 +31,31 @@ export default function PultGuestBoard({
     board,
     games,
     classes,
+    children,
     setup,
 }: GuestBoardChoicesProps) {
     const { t } = useTranslation();
     const target =
         code !== null ? claim.form(code) : update.form(board?.id ?? '');
-    const [classId, setClassId] = useState(classes[0]?.id ?? null);
-    const chosen = classId === null ? undefined : setup.classes[classId];
+    const choices: Players[] = [
+        ...children.map((child): Players => ({
+            field: 'child',
+            id: child.id,
+            name: child.display_name,
+        })),
+        ...classes.map((item): Players => ({
+            field: 'class',
+            id: item.id,
+            name: item.name,
+        })),
+    ];
+    const [players, setPlayers] = useState<Players | null>(choices[0] ?? null);
+    const chosen =
+        players === null
+            ? undefined
+            : players.field === 'child'
+              ? setup.children[players.id]
+              : setup.classes[players.id];
     const title =
         code !== null
             ? t('pult.guest_board.title')
@@ -93,18 +118,31 @@ export default function PultGuestBoard({
                                     >
                                         <span className="min-w-0 flex-1">
                                             <span className="block truncate font-semibold">
-                                                {t('games.board.class', {
-                                                    name: game.schoolClass.name,
-                                                })}
+                                                {t(
+                                                    playersLabel(game).key,
+                                                    playersLabel(game).values,
+                                                )}
                                             </span>
                                             <span className="block truncate text-sm text-muted-foreground">
-                                                {t(
-                                                    `games.mechanics.${game.mechanic}`,
-                                                )}
-                                                {' · '}
-                                                {t(
-                                                    `pult.status.${game.status}`,
-                                                )}
+                                                {[
+                                                    t(
+                                                        'games.setup.summary.game',
+                                                        {
+                                                            level: game.level
+                                                                .title,
+                                                            mechanic: t(
+                                                                mechanicName(
+                                                                    game.mechanic,
+                                                                    game.level
+                                                                        .unit,
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ),
+                                                    t(
+                                                        `pult.status.${game.status}`,
+                                                    ),
+                                                ].join(' · ')}
                                             </span>
                                         </span>
                                         {processing ? (
@@ -123,33 +161,33 @@ export default function PultGuestBoard({
                     ))}
                 </section>
 
-                <section className="flex flex-col gap-4 pb-8">
+                <section className="flex flex-col gap-6">
                     <h2 className="font-semibold">
                         {t('pult.guest_board.new_game')}
                     </h2>
 
-                    {classes.length === 0 ? (
+                    {choices.length === 0 ? (
                         <p className="text-muted-foreground">
                             {t('pult.guest_board.no_classes')}
                         </p>
                     ) : (
                         <fieldset className="grid gap-2">
-                            <legend className="mb-2 text-sm font-medium">
-                                {t('pult.guest_board.class')}
+                            <legend className="mb-2 text-base font-semibold">
+                                {t('pult.guest_board.players')}
                             </legend>
                             <div className="flex flex-wrap gap-2">
-                                {classes.map((item) => (
+                                {choices.map((item) => (
                                     <Button
                                         key={item.id}
                                         type="button"
                                         variant={
-                                            item.id === classId
+                                            item.id === players?.id
                                                 ? 'default'
                                                 : 'outline'
                                         }
-                                        aria-pressed={item.id === classId}
+                                        aria-pressed={item.id === players?.id}
                                         className="h-11 max-w-full"
-                                        onClick={() => setClassId(item.id)}
+                                        onClick={() => setPlayers(item)}
                                     >
                                         <span className="truncate">
                                             {item.name}
@@ -160,18 +198,18 @@ export default function PultGuestBoard({
                         </fieldset>
                     )}
 
-                    {classId !== null && chosen !== undefined && (
+                    {players !== null && chosen !== undefined && (
                         <GameSetupForm
-                            key={classId}
+                            key={players.id}
                             packs={setup.packs}
                             levels={setup.levels}
                             letterCases={setup.letterCases}
                             rounds={setup.rounds}
                             wordMaxLength={setup.wordMaxLength}
-                            options={chosen.options}
-                            letters={chosen.letters}
+                            {...chosen}
                             form={target}
-                            hidden={{ class: classId }}
+                            hidden={{ [players.field]: players.id }}
+                            home={players.field === 'child'}
                             submitLabel={t('pult.guest_board.start')}
                         />
                     )}

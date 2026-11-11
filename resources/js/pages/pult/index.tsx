@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
+import { playersLabel } from '@/lib/game-players';
 import { pult } from '@/routes';
 import { remote } from '@/routes/games';
 
@@ -13,7 +14,9 @@ type LiveGame = {
     id: string;
     status: 'live' | 'paused';
     mechanic: string;
-    schoolClass: { id: string; name: string };
+    /** A class's game, or a parent's child's home game (exactly one). */
+    schoolClass: { id: string; name: string } | null;
+    child: { id: string; display_name: string } | null;
 };
 
 type Props = { games: LiveGame[] };
@@ -87,9 +90,10 @@ export default function PultIndex({ games }: Props) {
                         >
                             <span className="min-w-0 flex-1">
                                 <span className="block truncate font-semibold">
-                                    {t('games.board.class', {
-                                        name: game.schoolClass.name,
-                                    })}
+                                    {t(
+                                        playersLabel(game).key,
+                                        playersLabel(game).values,
+                                    )}
                                 </span>
                                 <span className="block truncate text-sm text-muted-foreground">
                                     {t(`games.mechanics.${game.mechanic}`)}

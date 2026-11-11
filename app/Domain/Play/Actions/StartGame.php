@@ -2,8 +2,8 @@
 
 namespace App\Domain\Play\Actions;
 
-use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Content\Support\TeacherPacks;
+use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Models\GameRound;
@@ -14,15 +14,17 @@ use Random\Engine\Mt19937;
 use Random\Randomizer;
 
 /**
- * Starts a game for a class (docs/architecture.md §2): builds every round
- * from the pack as the class's teacher plays it (`TeacherPacks`: the
- * built-in words they have not hidden, then their own words; only their own
- * words when `$setup->own_words`) with a seeded
- * generator (`Random\Randomizer` on `Mt19937($seed)`, so a seed always gives
- * the same rounds) and stores the game, `live`, with its round snapshots in
- * one transaction. The game belongs to the class's teacher. `$setup` has
- * passed `GameSetupData::rules()` for this class, which asked about the
- * same pack.
+ * Starts a game for a class or for a parent's child (docs/architecture.md
+ * §2, ADR 011): builds every round from the pack as the game's owner plays
+ * it (`TeacherPacks`: the built-in words they have not hidden, then their
+ * own words; only their own words when `$setup->own_words`) and the learned
+ * letters of the class or the child, with a seeded generator
+ * (`Random\Randomizer` on `Mt19937($seed)`, so a seed always gives the same
+ * rounds) and stores the game, `live`, with its round snapshots in one
+ * transaction. The game belongs to the class's teacher or the child's
+ * parent; it and each round store exactly one of the class and the child
+ * (`GamePlayers::columns()`). `$setup` has passed `GameSetupData::rules()`
+ * for the same players, which asked about the same pack.
  */
 final readonly class StartGame
 {
@@ -33,14 +35,15 @@ final readonly class StartGame
 
     public function __construct(private TeacherPacks $packs) {}
 
-    public function handle(SchoolClass $class, GameSetupData $setup, ?int $seed = null): GameSession
+    public function handle(GamePlayers $players, GameSetupData $setup, ?int $seed = null): GameSession
     {
         $seed ??= random_int(1, self::MAX_SEED);
-        $pack = $this->packs->pack($class->teacher, $setup->pack, $setup->own_words);
+        $pack = $this->packs->pack($players->owner, $setup->pack, $setup->own_words);
         $rounds = Playable::builder($setup->mechanic)
-            ->build($setup, $pack, GameSetupData::learned($class), new Randomizer(new Mt19937($seed)));
+            ->build($setup, $pack, $players->learned(), new Randomizer(new Mt19937($seed)));
+        $columns = $players->columns();
 
-        return DB::transaction(function () use ($class, $setup, $seed, $pack, $rounds): GameSession {
+        return DB::transaction(function () use ($players, $columns, $setup, $seed, $pack, $rounds): GameSession {
             $now = now();
             $game = new GameSession([
                 'mechanic' => $setup->mechanic,
@@ -54,8 +57,8 @@ final readonly class StartGame
                 'started_at' => $now,
                 'last_activity_at' => $now,
             ]);
-            $game->user_id = $class->user_id;
-            $game->schoolClass()->associate($class);
+            $game->user_id = $players->owner->id;
+            $game->forceFill($columns);
             $game->save();
 
             foreach ($rounds as $round) {
@@ -68,7 +71,7 @@ final readonly class StartGame
                     'points' => 0,
                 ]);
                 $row->game_session_id = $game->id;
-                $row->school_class_id = $class->id;
+                $row->forceFill($columns);
                 $row->save();
             }
 

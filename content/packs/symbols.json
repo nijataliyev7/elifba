@@ -1,16 +1,18 @@
 {
     "key": "symbols",
-    "version": 3,
+    "version": 8,
     "title": { "az": "Milli rəmzlər", "en": "National symbols" },
+    "units": ["letter", "syllable", "word", "sentence"],
     "style": {
         "item": "card",
         "slot": "frame",
         "effect": "sparkle",
+        "cover": "symbols/bayraq.svg",
         "palette": ["#00B5E2", "#EF3340", "#509E2F"],
         "sounds": {
             "hit": "sounds/chime.mp3",
-            "miss": "sounds/bong.mp3",
-            "solved": "sounds/success.mp3"
+            "miss": "sounds/pluck-down.mp3",
+            "solved": "sounds/bells.mp3"
         }
     },
     "words": [

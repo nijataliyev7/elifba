@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { Effect } from '../contract';
-import { BUILD_LAYOUTS } from '../scenes/layouts';
+import { Unit } from '../contract';
+import {
+    BUILD_LAYOUTS,
+    COUNT_LAYOUT,
+    COUNT_MAX,
+    countPictures,
+} from '../scenes/layouts';
 import {
     EFFECTS,
     ITEM_STYLES,
@@ -8,6 +14,7 @@ import {
     effect,
     itemStyle,
     slotStyle,
+    styleOfUnit,
 } from './registry';
 import { FIGURE_TEXT } from './figure';
 import { frameGeometry } from './slot-frame';
@@ -213,6 +220,85 @@ describe('the styles registry', () => {
             }
         }
     });
+
+    it('draws the picture style, and every round of the picture unit in it whatever the pack names (R5)', () => {
+        expect(itemStyle('picture')).toBe(ITEM_STYLES.picture);
+
+        for (const pack of Object.values(ITEM_STYLES)) {
+            for (const unit of Unit.options) {
+                expect(styleOfUnit(unit, pack), unit).toBe(
+                    unit === 'picture' ? ITEM_STYLES.picture : pack,
+                );
+            }
+        }
+
+        // Fewer, larger tiles: two pictures are wider than two cards.
+        expect(ITEM_STYLES.picture.layout(2).width).toBeGreaterThan(
+            ITEM_STYLES.card.layout(2).width,
+        );
+    });
+
+    it('fits ten pictures in the question band, in rows of five that never overlap', () => {
+        const band = COUNT_LAYOUT.question;
+        let size = 0;
+
+        for (let count = 1; count <= COUNT_MAX; count++) {
+            const layout = countPictures(count);
+
+            // More apples never look smaller.
+            size ||= layout.size;
+            expect(layout.size, `${count}`).toBe(size);
+            expect(layout.spots, `${count}`).toHaveLength(count);
+            expect(new Set(layout.spots.map((spot) => spot.y)).size).toBe(
+                count > 5 ? 2 : 1,
+            );
+
+            for (const [index, spot] of layout.spots.entries()) {
+                expect(spot.x - size / 2).toBeGreaterThanOrEqual(0);
+                expect(spot.x + size / 2).toBeLessThanOrEqual(1920);
+                expect(spot.y - size / 2).toBeGreaterThanOrEqual(band.top);
+                expect(spot.y + size / 2).toBeLessThanOrEqual(band.bottom);
+
+                for (const other of layout.spots.slice(0, index)) {
+                    const apart =
+                        Math.abs(spot.x - other.x) > size ||
+                        Math.abs(spot.y - other.y) > size;
+
+                    expect(apart, `${count}: ${index}`).toBe(true);
+                }
+            }
+        }
+
+        expect(size).toBeGreaterThan(150);
+        // A ten-frame: 7 is a full row and two under its first two.
+        const seven = countPictures(7).spots;
+
+        expect(seven[5].x).toBe(seven[0].x);
+        expect(seven[6].x).toBe(seven[1].x);
+        expect(band.bottom).toBeLessThanOrEqual(COUNT_LAYOUT.items.top);
+    });
+
+    it.each(Object.entries(ITEM_STYLES))(
+        '%s lays out a count round’s numbers in their band, under the question',
+        (_, style) => {
+            const band = COUNT_LAYOUT.items;
+
+            for (const count of [2, 3, 4]) {
+                const { width, height, spots } = style.layout(count, band);
+
+                expect(width).toBeGreaterThan(150);
+
+                for (const spot of spots) {
+                    expect(spot.y - height / 2).toBeGreaterThanOrEqual(
+                        band.top,
+                    );
+                    expect(spot.y + height / 2).toBeLessThanOrEqual(
+                        band.bottom,
+                    );
+                }
+            }
+        },
+    );
 
     it('fits the slot train, a wagon per slot behind the locomotive, on the board', () => {
         for (const [mechanic, { slots: band }] of builds) {
