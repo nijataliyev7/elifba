@@ -14,6 +14,7 @@ import {
     GuestBoardClient,
     guestBoardHttp,
     PLAYING_POLL_MS,
+    releasesScreen,
     WAITING_POLL_MS,
 } from './guest-board';
 import type { BoardAuth } from './http';
@@ -324,6 +325,8 @@ describe('what the board shows', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         expect(client.getView().props).toBe(next);
+        // Between games the board stays claimed, so it keeps the screen.
+        expect(releasesScreen(client.getView().phase)).toBe(false);
     });
 
     it('takes a game that is gone off the board', async () => {
@@ -537,5 +540,14 @@ describe('guestBoardHttp', () => {
         await expect(http.close(BOARD_A, auth)).resolves.toBe(true);
         await expect(http.close(BOARD_A, auth)).resolves.toBe(false);
         expect(calls[0].init.method).toBe('DELETE');
+    });
+});
+
+describe('the guest board and the screen', () => {
+    it('gives the screen back once no board is claimed, never between games', () => {
+        expect(releasesScreen('closed')).toBe(true);
+        expect(releasesScreen('waiting')).toBe(true);
+        expect(releasesScreen('claimed')).toBe(false);
+        expect(releasesScreen('opening')).toBe(false);
     });
 });

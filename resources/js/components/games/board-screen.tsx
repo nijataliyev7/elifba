@@ -8,6 +8,7 @@ import {
     SkipForward,
     Smartphone,
     Square,
+    VolumeOff,
     X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -19,7 +20,7 @@ import { BoardStudents } from '@/components/games/board-students';
 import type { GuestBoardActionsProps } from '@/components/games/guest-board-actions';
 import { GuestBoardActions } from '@/components/games/guest-board-actions';
 import { PairingCard } from '@/components/games/pairing-card';
-import { studentAvatars } from '@/components/games/student-grid';
+import { StudentGrid, studentAvatars } from '@/components/games/student-grid';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +38,7 @@ import type { BoardView, TabChannel } from '@/game/board';
 import { BoardController } from '@/game/board';
 import { BoardBridge } from '@/game/bridge';
 import { Mechanic } from '@/game/contract';
+import { deviceStorage, readMuted, writeMuted } from '@/game/mute';
 import type { Pairing } from '@/game/contract';
 import type { BoardAuth } from '@/game/http';
 import { boardHttp, issueJoinCode } from '@/game/http';
@@ -51,10 +53,15 @@ import { lockLandscape, useFullscreen } from '@/hooks/use-fullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from '@/hooks/use-translation';
 import { useWakeLock } from '@/hooks/use-wake-lock';
-import { pairingOnLoad, playersHome, playersLabel } from '@/lib/game-players';
+import {
+    asksWhoPlays,
+    pairingOnLoad,
+    playersHome,
+    playersLabel,
+} from '@/lib/game-players';
 import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
-import type { BoardProps } from '@/types';
+import type { BoardProps, BoardStudent } from '@/types';
 
 /**
  * A guest board's own parts on the board (`/lovhe`, §4): whose board it is,
@@ -88,7 +95,11 @@ type Props = BoardProps & {
  * both sides render it.
  *
  * «Başla» enters full screen, unlocks audio and takes a wake lock, all
- * inside the click, as browsers require.
+ * inside the click, as browsers require. In a class game with students it
+ * first asks «Kim oynayır?»: the tap on a choice is that click (§4 "Board
+ * without a phone"). «Səssiz» silences the board on this device, before
+ * «Başla» too (§4 "Board in the browser"). The page around this board
+ * gives the screen back when it is left (`useReleaseScreenOnLeave`).
  *
  * The teacher's phone drives it over the game's channel (`live.ts`). On a
  * teacher board the pairing card shows the code until a phone says hello,
@@ -136,6 +147,10 @@ export function BoardScreen({
     const label = playersLabel({ schoolClass, child });
     const home = playersHome({ schoolClass, child });
     const pairsOnLoad = pairingOnLoad({ schoolClass, child });
+    const asksWho = asksWhoPlays({ schoolClass, child }, students);
+    const [asking, setAsking] = useState(false);
+    const [muted, setMuted] = useState(() => readMuted(deviceStorage()));
+    const mutedNow = useRef(muted);
 
     useEffect(() => forceLightTheme(), []);
 
@@ -233,6 +248,8 @@ export function BoardScreen({
 
                     mounted = ready;
                     stage.current = ready;
+                    // The stage mounts after the page: silent from its start.
+                    ready.setMuted(mutedNow.current);
                     setStageState('ready');
                 })
                 .catch(() => {
@@ -259,6 +276,19 @@ export function BoardScreen({
         figures,
         pictures,
     ]);
+
+    // A toggle while the stage is still loading reaches it through the ref.
+    useEffect(() => {
+        mutedNow.current = muted;
+        stage.current?.setMuted(muted);
+    }, [muted, stageState]);
+
+    const toggleMuted = () => {
+        const next = !muted;
+
+        setMuted(next);
+        writeMuted(deviceStorage(), next);
+    };
 
     // The link to the phone: Echo loads on this page only. A game that
     // was already over when the page opened has no channel to join, and a
@@ -340,6 +370,16 @@ export function BoardScreen({
         controller?.start();
     };
 
+    // «Başla» / «Davam et»: a class with students says who plays first.
+    const pressStart = () => (asksWho ? setAsking(true) : begin());
+
+    // The tap on a choice is the gesture `begin()` needs.
+    const chooseAndBegin = (studentId: string | null) => {
+        controller?.setStudent(studentId);
+        setAsking(false);
+        begin();
+    };
+
     const playing = view.phase === 'playing';
     const live = playing && view.status === 'live';
     const paused = playing && view.status === 'paused';
@@ -366,11 +406,13 @@ export function BoardScreen({
                         round={playing ? view.round : null}
                         accent={colours.accent}
                         onRepeat={
-                            voice.prompt ? () => bridge.repeatPrompt() : null
+                            voice.prompt && !muted
+                                ? () => bridge.repeatPrompt()
+                                : null
                         }
                     />
 
-                    <div className="flex shrink-0 flex-col items-end gap-3 max-lg:flex-row max-lg:items-center max-lg:gap-2 max-sm:justify-end">
+                    <div className="flex shrink-0 flex-col items-end gap-3 max-lg:flex-row max-lg:items-center max-lg:gap-2 max-sm:flex-wrap max-sm:justify-end">
                         {playing && view.round !== null && (
                             <p className="text-lg font-semibold tabular-nums max-lg:mr-auto max-lg:text-sm max-lg:whitespace-nowrap">
                                 {t('games.board.round', {
@@ -416,6 +458,11 @@ export function BoardScreen({
                                         </Label>
                                     </Button>
                                 )}
+                            <MuteToggle
+                                muted={muted}
+                                onToggle={toggleMuted}
+                                header
+                            />
                             <Button
                                 type="button"
                                 variant="outline"
@@ -597,7 +644,7 @@ export function BoardScreen({
                                     size="lg"
                                     className="h-20 rounded-2xl px-14 text-3xl max-lg:h-14 max-lg:px-8 max-lg:text-xl"
                                     style={{ backgroundColor: colours.accent }}
-                                    onClick={begin}
+                                    onClick={pressStart}
                                     autoFocus
                                 >
                                     <Play className="size-8 max-lg:size-6" />
@@ -616,22 +663,31 @@ export function BoardScreen({
                                         : t('games.board.loading')}
                                 </p>
                             )}
-                            {guest === undefined &&
-                                link !== null &&
-                                view.phase === 'ready' &&
-                                !pairingShown && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="lg"
-                                        className="max-lg:h-11"
-                                        onClick={() => link.showPairing()}
-                                        data-test="open-pairing"
-                                    >
-                                        <Smartphone />
-                                        {t('games.board.pairing.open')}
-                                    </Button>
-                                )}
+                            {view.phase === 'ready' && (
+                                <div className="flex flex-wrap justify-center gap-3 max-lg:gap-2">
+                                    {guest === undefined &&
+                                        link !== null &&
+                                        !pairingShown && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="lg"
+                                                className="max-lg:h-11"
+                                                onClick={() =>
+                                                    link.showPairing()
+                                                }
+                                                data-test="open-pairing"
+                                            >
+                                                <Smartphone />
+                                                {t('games.board.pairing.open')}
+                                            </Button>
+                                        )}
+                                    <MuteToggle
+                                        muted={muted}
+                                        onToggle={toggleMuted}
+                                    />
+                                </div>
+                            )}
                             <RotateHint />
                         </div>
                         {view.phase === 'ready' && pairingShown && (
@@ -645,6 +701,17 @@ export function BoardScreen({
                             <GuestBoardActions {...guest} />
                         )}
                     </Curtain>
+                )}
+
+                {child === null && (
+                    <WhoPlays
+                        open={asking && view.phase === 'ready'}
+                        students={students}
+                        studentId={view.studentId}
+                        accent={colours.accent}
+                        onOpenChange={setAsking}
+                        onChoose={chooseAndBegin}
+                    />
                 )}
 
                 {view.phase === 'finished' && (
@@ -800,6 +867,89 @@ function EndGame({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+/**
+ * «Kim oynayır?» (§4 "Board without a phone"): «Bütün sinif» or a student,
+ * the current choice marked. A tap chooses and starts the game; closing
+ * starts nothing.
+ */
+function WhoPlays({
+    open,
+    students,
+    studentId,
+    accent,
+    onOpenChange,
+    onChoose,
+}: {
+    open: boolean;
+    students: BoardStudent[];
+    studentId: string | null;
+    accent: string;
+    onOpenChange: (open: boolean) => void;
+    onChoose: (studentId: string | null) => void;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent
+                className="max-h-[90svh] overflow-y-auto sm:max-w-3xl"
+                data-test="who-plays"
+            >
+                <DialogHeader>
+                    <DialogTitle>
+                        {t('games.board.who_plays.title')}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {t('games.board.who_plays.description')}
+                    </DialogDescription>
+                </DialogHeader>
+                <StudentGrid
+                    students={students}
+                    studentId={studentId}
+                    accent={accent}
+                    onChoose={onChoose}
+                />
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+/**
+ * The board's silent mode: one label and a crossed-out speaker in both
+ * states, filled while silent, so it is never taken for the prompt's 🔊
+ * (docs/frontend.md §4). In the header it is a 44px icon below `lg`.
+ */
+function MuteToggle({
+    muted,
+    onToggle,
+    header = false,
+}: {
+    muted: boolean;
+    onToggle: () => void;
+    header?: boolean;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <Button
+            type="button"
+            variant={muted ? 'default' : 'outline'}
+            size="lg"
+            className={header ? ICON_BELOW_LG : 'max-lg:h-11'}
+            aria-pressed={muted}
+            onClick={onToggle}
+            data-test="mute"
+        >
+            <VolumeOff />
+            {header ? (
+                <Label>{t('games.board.mute')}</Label>
+            ) : (
+                t('games.board.mute')
+            )}
+        </Button>
     );
 }
 

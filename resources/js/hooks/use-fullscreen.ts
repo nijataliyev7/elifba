@@ -1,4 +1,5 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import type { Timers } from '@/game/outbox';
 
 function subscribe(callback: () => void): () => void {
     document.addEventListener('fullscreenchange', callback);
@@ -70,4 +71,105 @@ export function lockLandscape(): void {
     }
 
     orientation.lock('landscape').catch(() => {});
+}
+
+/**
+ * What `releaseScreen()` touches: the page's full screen and the screen's
+ * orientation lock. Either may be missing (a server render, an iPhone, an
+ * old browser); tests pass fakes.
+ */
+export type ScreenParts = {
+    document?: {
+        readonly fullscreenElement: object | null;
+        exitFullscreen?: () => Promise<void> | void;
+    };
+    orientation?: { unlock?: () => void };
+};
+
+function currentScreen(): ScreenParts {
+    return {
+        document: typeof document === 'undefined' ? undefined : document,
+        orientation:
+            typeof screen === 'undefined' ? undefined : screen.orientation,
+    };
+}
+
+/**
+ * Gives the screen back when the board is left (architecture §4 "Board in
+ * the browser"): unlocks the orientation, so a phone turns upright again,
+ * and leaves full screen if the page is in it. A missing API, a refusal or
+ * a rejected promise is ignored; nothing here needs a user gesture.
+ */
+export function releaseScreen(parts: ScreenParts = currentScreen()): void {
+    const { document: page, orientation } = parts;
+
+    try {
+        orientation?.unlock?.();
+    } catch {
+        // Never locked, or the browser cannot unlock: nothing to give back.
+    }
+
+    if (
+        page === undefined ||
+        page.fullscreenElement === null ||
+        typeof page.exitFullscreen !== 'function'
+    ) {
+        return;
+    }
+
+    try {
+        void Promise.resolve(page.exitFullscreen()).catch(() => {});
+    } catch {
+        // Refused: the page stays as it is.
+    }
+}
+
+const defaultTimers: Timers = {
+    set: (callback, ms) => setTimeout(callback, ms),
+    clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+};
+
+/**
+ * When a board page that left really is gone. `leave()` releases a tick
+ * later, and `hold()` — a board page mounting in that tick — cancels it:
+ * React's development double mount (mount, unmount, mount) releases
+ * nothing, and neither does one board page following another.
+ */
+export function screenRelease(
+    release: () => void,
+    timers: Timers = defaultTimers,
+): { hold: () => void; leave: () => void } {
+    let pending: unknown = null;
+
+    const cancel = () => {
+        if (pending !== null) {
+            timers.clear(pending);
+            pending = null;
+        }
+    };
+
+    return {
+        hold: cancel,
+        leave: () => {
+            cancel();
+            pending = timers.set(() => {
+                pending = null;
+                release();
+            }, 0);
+        },
+    };
+}
+
+const boardPages = screenRelease(() => releaseScreen());
+
+/**
+ * A board page holds the screen while it is mounted and releases it once
+ * it is left (`games/board`, and `lovhe` across all its games).
+ */
+export function useReleaseScreenOnLeave(): void {
+    useEffect(() => {
+        boardPages.hold();
+
+        return () => boardPages.leave();
+    }, []);
 }

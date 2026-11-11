@@ -17,9 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import type { BoardController } from '@/game/board';
 import type { GuestBoardView } from '@/game/guest-board';
-import { GuestBoardClient, guestBoardHttp } from '@/game/guest-board';
+import {
+    GuestBoardClient,
+    guestBoardHttp,
+    releasesScreen,
+} from '@/game/guest-board';
 import type { StorageLike } from '@/game/outbox';
 import { forceLightTheme } from '@/hooks/use-appearance';
+import { releaseScreen, useReleaseScreenOnLeave } from '@/hooks/use-fullscreen';
 import { useTranslation } from '@/hooks/use-translation';
 
 /** How long the next game waits for the old board's outbox (one `/sync`). */
@@ -33,6 +38,8 @@ const SETTLE_MS = 5000;
  * (`BoardScreen`) with the board's bearer. After a game it shows the result
  * and waits for the next one, without a new code. The bearer lives only in
  * this tab (`GuestBoardClient`): a reload continues, a new tab starts over.
+ * The screen (full screen, the landscape lock) stays through all its games
+ * and is given back when the page is left or no board is claimed any more.
  */
 export default function Lovhe() {
     const { t } = useTranslation();
@@ -42,6 +49,17 @@ export default function Lovhe() {
     const [mount, setMount] = useState(0);
 
     useEffect(() => forceLightTheme(), []);
+
+    useReleaseScreenOnLeave();
+
+    // Closed here or from the phone, or «Mənim deyil»: never between games.
+    const released = releasesScreen(view.phase);
+
+    useEffect(() => {
+        if (released) {
+            releaseScreen();
+        }
+    }, [released]);
 
     // Deferred a tick so React's development double mount never opens two boards.
     useEffect(() => {

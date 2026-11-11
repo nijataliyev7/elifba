@@ -78,6 +78,17 @@ export type GuestBoardPhase =
     /** «Lövhəni bağla» on this computer: nothing is kept. */
     | 'closed';
 
+/**
+ * Whether the guest board gives the screen back (full screen, the
+ * orientation lock; architecture §4 "Board in the browser"): once no board
+ * is claimed — closed on this computer, «Mənim deyil», or closed from the
+ * phone, which shows a new code — but never between a teacher's games,
+ * which all happen while the board is claimed.
+ */
+export function releasesScreen(phase: GuestBoardPhase): boolean {
+    return phase === 'closed' || phase === 'waiting';
+}
+
 export type GuestBoardNotice = 'open_failed' | 'close_failed';
 
 export type GuestBoardView = {

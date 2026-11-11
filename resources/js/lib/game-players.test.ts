@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+    asksWhoPlays,
     pairingOnLoad,
     playersHome,
     playersLabel,
@@ -46,5 +47,14 @@ describe('game players', () => {
     it('does not open the pairing card on a home board', () => {
         expect(pairingOnLoad(forClass)).toBe(true);
         expect(pairingOnLoad(forChild)).toBe(false);
+    });
+
+    it('asks who plays only in a class game with students', () => {
+        const students = [{ id: '01JSTUDENT' }];
+
+        expect(asksWhoPlays(forClass, students)).toBe(true);
+        expect(asksWhoPlays(forClass, [])).toBe(false);
+        expect(asksWhoPlays(forChild, [])).toBe(false);
+        expect(asksWhoPlays(forChild, students)).toBe(false);
     });
 });

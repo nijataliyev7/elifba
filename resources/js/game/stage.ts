@@ -63,6 +63,12 @@ export type StageOptions = {
 export type Stage = {
     /** Resumes audio inside a user gesture («Başla»). */
     unlockAudio: () => void;
+    /**
+     * The board's silent mode (§4 "Board in the browser"): Phaser's master
+     * mute, so the pack's effects, prompts and praise go quiet at once and
+     * whatever plays later starts silent.
+     */
+    setMuted: (muted: boolean) => void;
     destroy: () => void;
 };
 
@@ -155,6 +161,9 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
                             ) {
                                 sound.unlock();
                             }
+                        },
+                        setMuted: (muted) => {
+                            game.sound.mute = muted;
                         },
                         destroy: () => game.destroy(true),
                     }),

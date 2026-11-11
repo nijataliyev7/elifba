@@ -62,3 +62,16 @@ export function playersNewGame(players: GamePlayers): RouteDefinition<'get'> {
 export function pairingOnLoad(players: GamePlayers): boolean {
     return players.child === null;
 }
+
+/**
+ * Whether «Başla» or «Davam et» first asks «Kim oynayır?» (architecture §4
+ * "Board without a phone"): a class game with at least one active student
+ * does; a home game (the child is always at the board) and a class without
+ * students start at once.
+ */
+export function asksWhoPlays(
+    players: GamePlayers,
+    students: readonly unknown[],
+): boolean {
+    return players.child === null && students.length > 0;
+}
