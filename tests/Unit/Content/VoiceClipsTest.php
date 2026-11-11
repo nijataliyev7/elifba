@@ -25,6 +25,7 @@ function voiceWith(array $change = []): VoiceClips
         $change['version'] ?? $voice->version,
         $change['settings'] ?? $voice->settings,
         $voice->styles,
+        $voice->letters,
         $voice->numbers,
         $change['respell'] ?? $voice->respell,
         $voice->praise,
@@ -41,10 +42,12 @@ function promptLine(Mechanic $mechanic, Unit $unit, ?string $target, ?string $pa
     return voiceWith()->prompt($content->prompt($mechanic, $unit), $target, $pack === null ? null : $content->pack($pack));
 }
 
-it('says what the adult would read: the prompt without « », a letter by its name, a number by its name', function (Mechanic $mechanic, Unit $unit, ?string $target, ?string $pack, string $text): void {
+it('says what the adult would read: the prompt without « », a letter as its sound, a number by its name', function (Mechanic $mechanic, Unit $unit, ?string $target, ?string $pack, string $text): void {
     expect(promptLine($mechanic, $unit, $target, $pack)?->text)->toBe($text);
 })->with([
-    'a letter by its name' => [Mechanic::Find, Unit::Letter, 'letter:b', null, '[playful] Be hərfini tap!'],
+    'a consonant as its sound, with ı' => [Mechanic::Find, Unit::Letter, 'letter:b', null, '[playful] Bı hərfini tap!'],
+    'r as rı, never er' => [Mechanic::Find, Unit::Letter, 'letter:r', null, '[playful] Rı hərfini tap!'],
+    'a vowel as itself' => [Mechanic::Find, Unit::Letter, 'letter:i', null, '[playful] İ hərfini tap!'],
     'ə' => [Mechanic::Find, Unit::Letter, 'letter:ə', null, '[playful] Ə hərfini tap!'],
     'a syllable as written' => [Mechanic::Find, Unit::Syllable, 'syllable:ğa', 'fruit', '[playful] Ğa hecasını tap!'],
     'build a syllable' => [Mechanic::BuildSyllable, Unit::Syllable, 'syllable:ba', 'fruit', '[playful] Ba hecasını qur!'],

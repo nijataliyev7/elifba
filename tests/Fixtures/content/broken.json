@@ -898,5 +898,15 @@
         "file": "voice.json",
         "set": { "context.previous": "«Salam»" },
         "problem": "voice.json: context.previous must be Azerbaijani text"
+    },
+    "voice: a letter the voice cannot say": {
+        "file": "voice.json",
+        "unset": ["spoken.letters.r"],
+        "problem": "voice.json: spoken.letters needs `r`"
+    },
+    "voice: a letter said in capitals": {
+        "file": "voice.json",
+        "set": { "spoken.letters.r": "ER" },
+        "problem": "voice.json: spoken.letters.r must say the letter in lowercase letters"
     }
 }

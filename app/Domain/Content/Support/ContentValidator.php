@@ -174,7 +174,7 @@ final class ContentValidator
     private ?array $templates = null;
 
     /**
-     * @param  bool  $voiceClipsRequired  false for `content:voice`, which makes the praise and retry clips this would require and prunes the clips of another voice
+     * @param  bool  $voiceClipsRequired  false for `content:voice`, which makes what this would require (the praise and retry clips, a deleted clip), lists what is made and prunes the clips of another voice
      */
     public function __construct(
         private readonly string $root,
@@ -658,7 +658,7 @@ final class ContentValidator
     /**
      * The board's voice (§3 "Voice", ADR 015). `voice.json`: the voice and
      * its settings, an audio tag for every template of `prompts.json` and no
-     * other, a name for every number a level may use, respellings, the
+     * other, how every letter is said, a name for every number a level may use, respellings, the
      * context the provider gets around each phrase, the praise and retry
      * phrases and the credits entry the clips get.
      * `voice-clips.json`: every clip is a file of `assets/voice` named by the
@@ -713,9 +713,17 @@ final class ContentValidator
             $this->voiceStyle($style, $file, "styles.{$group}");
         }
 
-        $spoken = $this->object($data['spoken'], $file, 'spoken', ['numbers', 'respell']);
+        $spoken = $this->object($data['spoken'], $file, 'spoken', ['letters', 'numbers', 'respell']);
 
         if ($spoken !== null) {
+            $letters = $this->object($spoken['letters'], $file, 'spoken.letters', Alphabet::letters());
+
+            foreach ($letters ?? [] as $letter => $said) {
+                if (! is_string($said) || preg_match('/^\p{Ll}+$/u', $said) !== 1 || ! $this->lettersAndSigns($said)) {
+                    $this->problem($file, "spoken.letters.{$letter} must say the letter in lowercase letters, like \"rı\"");
+                }
+            }
+
             // JSON keys "1"…"10" come back as whole numbers.
             $names = is_array($spoken['numbers']) ? $spoken['numbers'] : [];
             $numbers = range(self::MIN_NUMBER, self::MAX_NUMBER);
@@ -794,7 +802,7 @@ final class ContentValidator
             return;
         }
 
-        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: array{text: string, style: string}, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
+        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: array{text: string, style: string}, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
         $voice = new VoiceClips(VoiceData::fromArray([...$data, 'clips' => $clips]));
         $file = ContentRepository::VOICE_CLIPS;
 
@@ -845,7 +853,7 @@ final class ContentValidator
 
             if (preg_match('/^[0-9a-f]{'.VoiceClips::HASH_LENGTH.'}$/', $hash) !== 1) {
                 $this->problem($file, "clips.{$hash} must be a hash of ".VoiceClips::HASH_LENGTH.' lowercase hex digits');
-            } elseif (! self::exists("{$this->root}/assets/".VoiceClips::path($hash))) {
+            } elseif ($this->voiceClipsRequired && ! self::exists("{$this->root}/assets/".VoiceClips::path($hash))) {
                 $this->problem($file, "clips.{$hash}: {$this->contentFolder()}/assets/".VoiceClips::path($hash).' does not exist');
             }
 
@@ -854,7 +862,9 @@ final class ContentValidator
             }
         }
 
-        foreach (is_dir($folder) ? (scandir($folder) ?: []) : [] as $name) {
+        // `content:voice` lists what is made and makes what was deleted (a
+        // run stopped half way, a bad clip deleted to be made again).
+        foreach (is_dir($folder) && $this->voiceClipsRequired ? (scandir($folder) ?: []) : [] as $name) {
             if (str_starts_with($name, '.')) {
                 continue;
             }

@@ -6,7 +6,7 @@ namespace App\Domain\Content\Data;
  * `content/voice.json` with the clip list of `content/voice-clips.json`
  * (docs/architecture.md §3 "Voice", ADR 015). The first is written by hand:
  * the voice, the audio tag of each prompt template (`find.picture` →
- * `playful`), the spoken form of numbers, respellings, the context the
+ * `playful`), how letters and numbers are said, respellings, the context the
  * provider gets around each phrase, the praise and retry phrases and the
  * credits entry the clips get. The second is written by
  * `php artisan content:voice`: every clip under `content/assets/voice`, by
@@ -17,7 +17,7 @@ namespace App\Domain\Content\Data;
  *     version: int,
  *     voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int},
  *     styles: array<string, string>,
- *     spoken: array{numbers: array<string, string>, respell: array<string, string>},
+ *     spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>},
  *     context: array{previous: string, next: string},
  *     praise: list<array{text: string, style: string}>,
  *     retry: array{text: string, style: string},
@@ -29,6 +29,7 @@ final readonly class VoiceData
 {
     /**
      * @param  array<string, string>  $styles  `{mechanic}.{unit}` → audio tag, without brackets
+     * @param  array<string, string>  $letters  a lowercase letter → how the voice says it (`r` → `rı`)
      * @param  array<int, string>  $numbers  a number → its Azerbaijani name
      * @param  array<string, string>  $respell  a phrase → the text the voice is given for it instead
      * @param  list<VoicePhraseData>  $praise
@@ -39,6 +40,7 @@ final readonly class VoiceData
         public int $version,
         public VoiceSettingsData $settings,
         public array $styles,
+        public array $letters,
         public array $numbers,
         public array $respell,
         public array $praise,
@@ -62,6 +64,7 @@ final readonly class VoiceData
             version: $data['version'],
             settings: VoiceSettingsData::fromArray($data['voice'], $data['context']),
             styles: $data['styles'],
+            letters: $data['spoken']['letters'],
             numbers: $numbers,
             respell: $data['spoken']['respell'],
             praise: array_map(VoicePhraseData::fromArray(...), $data['praise']),

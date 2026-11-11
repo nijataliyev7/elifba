@@ -26,6 +26,40 @@
         "count.number": "curious"
     },
     "spoken": {
+        "letters": {
+            "a": "a",
+            "b": "bı",
+            "c": "cı",
+            "ç": "çı",
+            "d": "dı",
+            "e": "e",
+            "ə": "ə",
+            "f": "fı",
+            "g": "ge",
+            "ğ": "ğı",
+            "h": "hı",
+            "x": "xı",
+            "ı": "ı",
+            "i": "i",
+            "j": "jı",
+            "k": "kı",
+            "q": "qı",
+            "l": "lı",
+            "m": "mı",
+            "n": "nı",
+            "o": "o",
+            "ö": "ö",
+            "p": "pı",
+            "r": "rı",
+            "s": "sı",
+            "ş": "şı",
+            "t": "tı",
+            "u": "u",
+            "ü": "ü",
+            "v": "vı",
+            "y": "yı",
+            "z": "zı"
+        },
         "numbers": {
             "1": "bir",
             "2": "iki",
@@ -38,7 +72,10 @@
             "9": "doqquz",
             "10": "on"
         },
-        "respell": {}
+        "respell": {
+            "I hərfini tap!": "ıı hərfini tap!",
+            "Ğı hərfini tap!": "ğğı hərfini tap!"
+        }
     },
     "context": {
         "previous": "Salam, uşaqlar! Bu gün birlikdə oynayırıq. Şəkillərə yaxşı baxın və düzgün cavabı tapın.",

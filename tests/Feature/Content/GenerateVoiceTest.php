@@ -249,3 +249,23 @@ it('lists the account\'s voices when voice.json has no voice id yet', function (
 
     Http::assertSent(static fn (Request $request): bool => $request->method() === 'GET' && $request->header('xi-api-key') === [VOICE_KEY]);
 });
+
+it('makes again a clip whose file was deleted, and lists a file a stopped run left unlisted', function (): void {
+    fakeElevenLabs();
+    $clips = listedClips($this->root);
+    // A bad praise clip deleted to be made again.
+    $redo = array_key_first($clips);
+    File::delete($this->root.'/assets/'.VoiceClips::path((string) $redo));
+    // A clip made by a run stopped with Ctrl-C, before it wrote the list.
+    $line = array_values(array_filter(voiceClips()->needed(app(ContentRepository::class)), static fn (VoiceLineData $line): bool => $line->group === 'find.number'))[0];
+    File::put($this->root.'/assets/'.VoiceClips::path($line->hash), 'MADE-BEFORE');
+
+    $this->artisan('content:voice', ['--force' => true, '--only' => 'praise,retry,find.number'])->assertSuccessful();
+
+    expect(listedClips($this->root))->toHaveKeys([(string) $redo, $line->hash])
+        ->and(file_get_contents($this->root.'/assets/'.VoiceClips::path($line->hash)))->toBe('MADE-BEFORE')
+        ->and((new ContentValidator($this->root))->validate())->toBe([]);
+
+    // One request for the deleted clip and four for the numbers not made yet.
+    Http::assertSentCount(5);
+});

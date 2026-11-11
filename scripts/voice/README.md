@@ -31,7 +31,7 @@ The clips under `content/assets/voice/` are the board's voice (docs/architecture
 
 3. Make the rest: `php artisan content:voice`. A run that stops half way keeps what it made: after an error from the API (a network error, a quota) it lists the files at once; after Ctrl-C the next run lists them. Either way the next run makes only the rest.
 
-4. Listen to every new clip. For a bad one, either delete its file (`content/assets/voice/{hash}.mp3`; the page shows the hash) and run the command again for another take, or give the phrase a respelling in `voice.json` (`spoken.respell`: the phrase → the text the voice is given). A respelling changes the text, so the clip gets a new hash and the old one is left over.
+4. Listen to every new clip. For a bad one, either delete its file (`content/assets/voice/{hash}.mp3`; the page shows the hash) and run the command again for another take, or give the phrase a respelling in `voice.json` (`spoken.respell`: the phrase → the text the voice is given; «Ğı hərfini tap!» is sent as «ğğı hərfini tap!», which the voice says as «ğı»). To choose among takes, make a few in the scratch folder with the same settings and copy the one you like to `content/assets/voice/{hash}.mp3`: the next run (or `--prune`) lists it. A respelling changes the text, so the clip gets a new hash and the old one is left over.
 
 5. Remove the clips nothing needs any more (a respelled phrase, a word that left a pack, a changed setting): `php artisan content:voice --prune`. Nothing else ever deletes a clip.
 
@@ -39,7 +39,7 @@ The clips under `content/assets/voice/` are the board's voice (docs/architecture
 
 ## What a clip is
 
-- **The text.** What the adult would read: the prompt without « », a capital first letter, a letter by its name (`Be hərfini tap!`), a number by its name in `voice.json` (`Beş rəqəmini tap!`), a word as the pack writes it. Always the whole phrase, never a word stitched to a template. The provider gets it after the template's audio tag from `voice.json`'s `styles`: `[playful] Dovşan hansıdır?`.
+- **The text.** What the adult would read: the prompt without « », a capital first letter, a letter as its sound from `spoken.letters` (`Bı hərfini tap!`, `Rı hərfini tap!`), a number by its name in `voice.json` (`Beş rəqəmini tap!`), a word as the pack writes it. Always the whole phrase, never a word stitched to a template. The provider gets it after the template's audio tag from `voice.json`'s `styles`: `[playful] Dovşan hansıdır?`.
 - **The context.** Around every phrase the provider is also given `voice.json`'s `context` (`previous_text`, `next_text`): Azerbaijani sentences it never says and does not bill. A phrase as short as «Pişik hansıdır?» sent alone came out with a Turkish accent; with the context it is Azerbaijani (the owner compared five variants by ear, November 2026).
 - **The name.** The first 16 hex digits of the SHA-256 of the provider, the model, the voice id, the language, Stability, Similarity, the context and that text. Change any of them in `voice.json` and every clip needs making again: the old files stay until `--prune`, and `content:validate` fails on them until then.
 - **The sound.** ElevenLabs' `mp3_44100_128`, trimmed of silence at both ends, levelled to −16 LUFS (EBU R128) with a limiter at −1.5 dBFS, mono MP3 at 64 kb/s without tags (`VoiceLeveler`). The constants are at the top of `app/Domain/Content/Support/VoiceLeveler.php`; changing them changes no hash, so re-level existing clips by deleting and remaking them.

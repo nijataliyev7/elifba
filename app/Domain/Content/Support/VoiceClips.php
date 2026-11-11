@@ -18,9 +18,9 @@ use App\Domain\Language\Support\Az;
  * prompt says aloud, the hash that names its clip and the clip's URL.
  *
  * A clip says what the adult would read: the prompt without « », its first
- * letter a capital, `{x}` said as an adult says it — a letter by its name
- * (`be`), a number by its Azerbaijani name (`beş`), a syllable or a word as
- * written. The provider is given that phrase (or its respelling) after the
+ * letter a capital, `{x}` said as an adult says it — a letter as a first
+ * grade says its sound (`spoken.letters`: `bı`, `rı`, `a`), a number by its
+ * Azerbaijani name (`beş`), a syllable or a word as written. The provider is given that phrase (or its respelling) after the
  * template's audio tag: `[playful] Dovşan hansıdır?`. The hash of that text
  * with the voice, the model, the language and the settings names the file
  * (`voice/{hash}.mp3`), with the context the provider gets around it, so
@@ -190,7 +190,7 @@ final readonly class VoiceClips
         [$unit, $value] = explode(':', $target, 2) + [1 => ''];
 
         return match (Unit::tryFrom($unit)) {
-            Unit::Letter => Alphabet::name($value),
+            Unit::Letter => $this->voice->letters[$value] ?? Alphabet::name($value),
             Unit::Number => $this->voice->numbers[(int) $value] ?? null,
             Unit::Word, Unit::Picture => $pack?->word($value)->text ?? $value,
             default => $value,

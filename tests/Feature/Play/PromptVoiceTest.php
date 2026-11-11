@@ -90,11 +90,11 @@ it('says the target a find round names, and only the instruction in pop', functi
     expect(array_unique(array_column($pop, 'audio')))->toBe([clipOf('pop.picture', 'Hər şəklin adını de və vur!')]);
 });
 
-it('says a letter by its name whatever the letter case', function (): void {
+it('says a letter as its sound whatever the letter case', function (): void {
     Voice::made($this->app);
 
     foreach (prompts(['mechanic' => 'find', 'level' => 'letters', 'letter_case' => 'upper', 'letters' => ['b', 'ə']]) as $prompt) {
-        expect($prompt['audio'])->toBe(clipOf('find.letter', $prompt['show'] === 'B' ? 'Be hərfini tap!' : 'Ə hərfini tap!'));
+        expect($prompt['audio'])->toBe(clipOf('find.letter', $prompt['show'] === 'B' ? 'Bı hərfini tap!' : 'Ə hərfini tap!'));
     }
 });
 

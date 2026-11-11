@@ -36,6 +36,7 @@ final class Voice
             $voice->version,
             $voice->settings,
             $voice->styles,
+            $voice->letters,
             $voice->numbers,
             $voice->respell,
             $voice->praise,
