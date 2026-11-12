@@ -1,7 +1,8 @@
 {
     "key": "symbols",
-    "version": 8,
+    "version": 9,
     "title": { "az": "Milli rəmzlər", "en": "National symbols" },
+    "with": { "az": "Milli rəmzlərlə", "en": "with national symbols" },
     "units": ["letter", "syllable", "word", "sentence"],
     "style": {
         "item": "card",

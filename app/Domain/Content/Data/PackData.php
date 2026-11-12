@@ -11,7 +11,10 @@ use App\Domain\Language\Support\Az;
  * record it and asset URLs carry it. `units` (R5, ADR 012) are the units
  * it has content for: a level is offered with the pack only when the pack
  * lists the level's unit. A pack without the reading units has no
- * sentences.
+ * sentences. `with` is the title as a game's card names it (2026-11-13,
+ * docs/frontend.md rule 13): in Azerbaijani the title in the instrumental
+ * case, written out («Qatarla»), in English the phrase after a verb ("with
+ * the train").
  */
 final readonly class PackData
 {
@@ -24,6 +27,7 @@ final readonly class PackData
         public string $key,
         public int $version,
         public TitleData $title,
+        public TitleData $with,
         public array $units,
         public PackStyleData $style,
         public array $words,
@@ -31,7 +35,7 @@ final readonly class PackData
     ) {}
 
     /**
-     * @param  array{key: string, version: int, title: array{az: string, en: string}, units: list<string>, style: array{item: string, slot: string, effect: string, cover: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences?: list<array{id: string, text: string}>}  $data
+     * @param  array{key: string, version: int, title: array{az: string, en: string}, with: array{az: string, en: string}, units: list<string>, style: array{item: string, slot: string, effect: string, cover: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences?: list<array{id: string, text: string}>}  $data
      */
     public static function fromArray(array $data): self
     {
@@ -39,6 +43,7 @@ final readonly class PackData
             key: $data['key'],
             version: $data['version'],
             title: TitleData::fromArray($data['title']),
+            with: TitleData::fromArray($data['with']),
             units: array_map(Unit::from(...), $data['units']),
             style: PackStyleData::fromArray($data['style']),
             words: array_map(WordData::fromArray(...), $data['words']),
@@ -56,7 +61,7 @@ final readonly class PackData
      */
     public function withWords(array $words): self
     {
-        return new self($this->key, $this->version, $this->title, $this->units, $this->style, $words, $this->sentences);
+        return new self($this->key, $this->version, $this->title, $this->with, $this->units, $this->style, $words, $this->sentences);
     }
 
     /**

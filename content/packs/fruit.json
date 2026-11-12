@@ -1,7 +1,8 @@
 {
     "key": "fruit",
-    "version": 10,
+    "version": 11,
     "title": { "az": "Meyvələr", "en": "Fruit" },
+    "with": { "az": "Meyvələrlə", "en": "with fruit" },
     "units": ["letter", "syllable", "word", "sentence", "picture", "number"],
     "style": {
         "item": "fruit",

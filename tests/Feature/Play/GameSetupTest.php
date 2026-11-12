@@ -60,6 +60,8 @@ describe('the setup page', function (): void {
                     'title' => 'Şarlar',
                     // The theme's picture: one of its words' (`style.cover`).
                     'cover' => ContentAssets::url('fluent/1F388.svg', $content->pack('balloons')->version),
+                    // The card's scene is drawn in the pack's palette (rule 13).
+                    'palette' => ['#E85D4A', '#F6C445', '#3B82C4', '#5DB075', '#9B5DE5'],
                 ])
                 ->has('levels', count($content->levels()))
                 ->where('levels.0', ['key' => 'letters', 'title' => 'Hərflər', 'unit' => 'letter', 'mechanics' => ['pop', 'find'], 'hint' => 'lövhədə 4 hərf'])

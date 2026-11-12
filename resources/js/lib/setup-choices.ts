@@ -1,5 +1,10 @@
 import type {
+    Letter,
+    RememberedSetup,
+    SetupCard,
+    SetupGame,
     SetupLevel,
+    SetupMode,
     SetupOption,
     SetupPack,
     SetupRefusal,
@@ -7,13 +12,15 @@ import type {
 } from '@/types';
 
 /*
- * The game setup's choosing logic (docs/frontend.md rule 13), as pure
- * functions: the form only renders what these return. The adult answers
- * three questions in order — the unit and its level, the mechanic, the
- * theme — and a question filters only the questions after it. What can
- * start is always the server's answer (`options[].startable`, the check
- * `GameSetupData::rules()` makes); this module orders it, picks defaults,
- * keeps what still starts after a change and says why a choice is locked.
+ * The game catalog's choosing logic (docs/frontend.md rule 13), as pure
+ * functions: the components only render what these return. «Yeni oyun» is
+ * a catalog of ready games: one card per theme and game, on one shelf per
+ * unit, filtered by the mode («Asan»: `pop`; «Normal»: the rest). A card
+ * covers every level of its unit that lists its mechanic; its game page
+ * chooses the level and «Əlavə». What can start is always the server's
+ * answer (`options[].startable`, the check `GameSetupData::rules()` makes);
+ * this module orders it, says why a card is locked and opens a game page
+ * with the remembered choices that still apply.
  */
 
 /** The units a child reads (`Unit::reads()`); the others (pictures, numbers) are played without reading. */
@@ -26,7 +33,7 @@ const READING_UNITS: readonly string[] = [
 
 /**
  * The reasons that mean "learn more letters" (`games.setup.errors.*`): a
- * locked unit or level then says «Daha çox hərf lazımdır» and links to the
+ * locked card or level then says «Daha çox hərf lazımdır» and links to the
  * learned letters.
  */
 const LETTER_SHORTAGES: readonly string[] = [
@@ -53,74 +60,37 @@ export function mechanicName(mechanic: string, unit: string | null): string {
         : `games.mechanics.${mechanic}`;
 }
 
-/** The key of the line under a mechanic: what the child does. */
-export function mechanicHint(mechanic: string, unit: string | null): string {
-    return mechanic === 'pop' && !readsUnit(unit)
-        ? 'games.setup.mechanic_hints.pop_say'
-        : `games.setup.mechanic_hints.${mechanic}`;
-}
-
-export type GroupKey = 'reading' | 'pictures';
-
 /** Whether a choice can start, and if not the server's reason and its code. */
 export type Status = SetupRefusal;
 
-export type LevelChoice = Status & { level: SetupLevel };
+/** One level of a card, with whether it starts with this card's game and pack. */
+export type CardLevel = Status & { level: SetupLevel; option: SetupOption };
 
-export type UnitChoice = Status & { unit: SetupUnit; levels: LevelChoice[] };
-
-export type UnitGroup = { key: GroupKey; units: UnitChoice[] };
-
-export type MechanicChoice = Status & { mechanic: string };
-
-export type PackChoice = Status & { pack: SetupPack; drawable: boolean };
-
-/** The server's offer, indexed once per page. */
-export type Catalog = {
-    packs: readonly SetupPack[];
-    levels: readonly SetupLevel[];
-    /** A home game (ADR 011): the units played without reading come first. */
-    home: boolean;
-    option: (
-        level: string,
-        mechanic: string,
-        pack: string,
-    ) => SetupOption | undefined;
+/** A card as the catalog shows it: the server's card with its game, theme, levels and status. */
+export type CatalogCard = Status & {
+    /** `unit.mechanic.pack`, unique on the page. */
+    id: string;
+    card: SetupCard;
+    game: SetupGame;
+    pack: SetupPack;
+    /** False when the board cannot draw this game in this theme yet («Tezliklə»). */
+    drawable: boolean;
+    /** The levels of its unit that list its mechanic, in the content's order. */
+    levels: CardLevel[];
 };
 
-export function setupCatalog(
-    packs: readonly SetupPack[],
-    levels: readonly SetupLevel[],
-    options: readonly SetupOption[],
-    home: boolean,
-): Catalog {
-    const index = new Map(
-        options.map((option) => [
-            `${option.level}|${option.mechanic}|${option.pack}`,
-            option,
-        ]),
-    );
+/** One shelf: the cards of one unit in the chosen mode. */
+export type Shelf = { unit: SetupUnit; cards: CatalogCard[] };
 
-    return {
-        packs,
-        levels,
-        home,
-        option: (level, mechanic, pack) =>
-            index.get(`${level}|${mechanic}|${pack}`),
-    };
-}
+/** A text to show: a translation key with its values, or the server's own text. */
+export type Line =
+    | { key: string; values?: Record<string, number | string> }
+    | { text: string };
 
 const STARTABLE: Status = { startable: true, reason: null, code: null };
 
-/**
- * One status for several options in the content's order: startable when
- * any is; otherwise the first one's reason.
- */
-function statusOf(statuses: readonly Status[]): Status | null {
-    if (statuses.length === 0) {
-        return null;
-    }
-
+/** Startable when any is; otherwise the first one's reason. */
+function statusOf(statuses: readonly [Status, ...Status[]]): Status {
     if (statuses.some((status) => status.startable)) {
         return STARTABLE;
     }
@@ -130,132 +100,6 @@ function statusOf(statuses: readonly Status[]): Status | null {
     return { startable: false, reason, code };
 }
 
-function definedOnly<T>(items: (T | undefined)[]): T[] {
-    return items.filter((item): item is T => item !== undefined);
-}
-
-/** A level's options, by mechanic in the level's order, then by pack in the content's order. */
-function levelOptions(
-    catalog: Catalog,
-    level: SetupLevel,
-    mechanic?: string,
-): SetupOption[] {
-    return (mechanic === undefined ? level.mechanics : [mechanic]).flatMap(
-        (item) =>
-            definedOnly(
-                catalog.packs.map((pack) =>
-                    catalog.option(level.key, item, pack.key),
-                ),
-            ),
-    );
-}
-
-function findLevel(catalog: Catalog, key: string): SetupLevel | undefined {
-    return catalog.levels.find((level) => level.key === key);
-}
-
-/** The levels of a unit that have an option, in the content's order. */
-export function levelChoices(catalog: Catalog, unit: string): LevelChoice[] {
-    return definedOnly(
-        catalog.levels
-            .filter((level) => level.unit === unit)
-            .map((level) => {
-                const status = statusOf(levelOptions(catalog, level));
-
-                return status === null ? undefined : { ...status, level };
-            }),
-    );
-}
-
-/**
- * The units in two groups, «Oxu» and «Oxumadan»: reading first for a
- * class, the others first at home; within a group, the content's order.
- * A unit shows when one of its levels has an option. A unit that cannot
- * start anywhere carries its first level's reason.
- */
-export function unitGroups(catalog: Catalog): UnitGroup[] {
-    const units = [
-        ...new Set(catalog.levels.map((level) => level.unit)),
-    ].flatMap((unit): UnitChoice[] => {
-        const levels = levelChoices(catalog, unit);
-        const status = statusOf(levels);
-
-        return status === null ? [] : [{ ...status, unit, levels }];
-    });
-    const order: GroupKey[] = catalog.home
-        ? ['pictures', 'reading']
-        : ['reading', 'pictures'];
-
-    return order
-        .map((key) => ({
-            key,
-            units: units.filter(
-                (choice) => readsUnit(choice.unit) === (key === 'reading'),
-            ),
-        }))
-        .filter((group) => group.units.length > 0);
-}
-
-/** The mechanics of a level that have an option, in the level's order; a locked one carries its first theme's reason. */
-export function mechanicChoices(
-    catalog: Catalog,
-    levelKey: string,
-): MechanicChoice[] {
-    const level = findLevel(catalog, levelKey);
-
-    if (level === undefined) {
-        return [];
-    }
-
-    return level.mechanics.flatMap((mechanic) => {
-        const status = statusOf(levelOptions(catalog, level, mechanic));
-
-        return status === null ? [] : [{ ...status, mechanic }];
-    });
-}
-
-/** The themes that have an option for this level and mechanic, in the content's order. */
-export function packChoices(
-    catalog: Catalog,
-    levelKey: string,
-    mechanic: string,
-): PackChoice[] {
-    return catalog.packs.flatMap((pack) => {
-        const option = catalog.option(levelKey, mechanic, pack.key);
-
-        return option === undefined
-            ? []
-            : [
-                  {
-                      pack,
-                      drawable: option.drawable,
-                      startable: option.startable,
-                      reason: option.reason,
-                      code: option.code,
-                  },
-              ];
-    });
-}
-
-/** The answers to the three questions. */
-export type Choice = {
-    unit: SetupUnit;
-    level: string;
-    mechanic: string;
-    pack: string;
-};
-
-/** A choice the adult had picked that a change replaced: the old key and the new one. */
-export type Replacement = { from: string; to: string };
-
-export type ChoiceState = {
-    choice: Choice;
-    /** Whether the adult picked the mechanic and the theme (not the form's default). */
-    picked: { mechanic: boolean; pack: boolean };
-    /** What the last change replaced of the adult's picks, shown until the next choice. */
-    replaced: { mechanic: Replacement | null; pack: Replacement | null };
-};
-
 function firstStartable<T extends Status>(
     choices: readonly T[],
 ): T | undefined {
@@ -263,171 +107,268 @@ function firstStartable<T extends Status>(
 }
 
 /**
- * Fills the choices after the level: the mechanic (`mechanic`, which the
- * adult picked when `mechanicPicked`) and the theme stay when they can
- * still start, and are replaced by the first that can otherwise. A
- * replaced pick of the adult's is reported; a replaced choice is gone and
- * never comes back by itself.
+ * The server's cards with what the catalog needs of each: its game, its
+ * theme, its levels (each with its option) and its status — startable when
+ * one of its levels is, else its first level's reason. A card without a
+ * game, a theme or an option is dropped.
  */
-function settle(
-    catalog: Catalog,
-    state: ChoiceState,
-    next: { unit: SetupUnit; level: string; mechanic: string },
-    mechanicPicked: boolean,
-): ChoiceState {
-    const mechanics = mechanicChoices(catalog, next.level);
-    const keepMechanic = mechanics.some(
-        (item) => item.mechanic === next.mechanic && item.startable,
+export function catalogCards(
+    setup: {
+        packs: readonly SetupPack[];
+        levels: readonly SetupLevel[];
+        games: readonly SetupGame[];
+    },
+    players: {
+        cards: readonly SetupCard[];
+        options: readonly SetupOption[];
+    },
+): CatalogCard[] {
+    const options = new Map(
+        players.options.map((option) => [
+            `${option.level}|${option.mechanic}|${option.pack}`,
+            option,
+        ]),
     );
-    const mechanic = keepMechanic
-        ? next.mechanic
-        : (firstStartable(mechanics)?.mechanic ?? next.mechanic);
-    const packs = packChoices(catalog, next.level, mechanic);
-    const keepPack = packs.some(
-        (item) => item.pack.key === state.choice.pack && item.startable,
-    );
-    const pack = keepPack
-        ? state.choice.pack
-        : (firstStartable(packs)?.pack.key ?? state.choice.pack);
 
-    return {
-        choice: { unit: next.unit, level: next.level, mechanic, pack },
-        picked: {
-            mechanic: keepMechanic && mechanicPicked,
-            pack: keepPack && state.picked.pack,
-        },
-        replaced: {
-            mechanic:
-                !keepMechanic && mechanicPicked
-                    ? { from: next.mechanic, to: mechanic }
-                    : null,
-            pack:
-                !keepPack && state.picked.pack
-                    ? { from: state.choice.pack, to: pack }
-                    : null,
-        },
-    };
+    return players.cards.flatMap((card): CatalogCard[] => {
+        const game = setup.games.find(
+            (item) =>
+                item.unit === card.unit && item.mechanic === card.mechanic,
+        );
+        const pack = setup.packs.find((item) => item.key === card.pack);
+        const levels = setup.levels.flatMap((level): CardLevel[] => {
+            const option =
+                level.unit === card.unit &&
+                level.mechanics.includes(card.mechanic)
+                    ? options.get(`${level.key}|${card.mechanic}|${card.pack}`)
+                    : undefined;
+
+            return option === undefined
+                ? []
+                : [
+                      {
+                          level,
+                          option,
+                          startable: option.startable,
+                          reason: option.reason,
+                          code: option.code,
+                      },
+                  ];
+        });
+
+        const [first, ...rest] = levels;
+
+        if (game === undefined || pack === undefined || first === undefined) {
+            return [];
+        }
+
+        return [
+            {
+                ...statusOf([first, ...rest]),
+                id: `${card.unit}.${card.mechanic}.${card.pack}`,
+                card,
+                game,
+                pack,
+                drawable: first.option.drawable,
+                levels,
+            },
+        ];
+    });
 }
 
 /**
- * The page's opening choice: the first unit, in the page's group order,
- * with a level that can start; its first such level; that level's first
- * mechanic that can start; the first theme that can start with them. Null
- * when nothing can start at all.
+ * The shelves of a mode: one per unit with a card in it, the reading units
+ * first for a class and the picture and number units first at home, each
+ * group in the content's order. Within a shelf, the game order (the level's
+ * mechanics, `pop` first), then the packs' order, every card that can
+ * start before every locked one.
  */
-export function initialState(catalog: Catalog): ChoiceState | null {
-    const unit = unitGroups(catalog)
-        .flatMap((group) => group.units)
-        .find((item) => item.startable);
-    const level = unit === undefined ? undefined : firstStartable(unit.levels);
+export function shelves(
+    cards: readonly CatalogCard[],
+    mode: SetupMode,
+    home: boolean,
+): Shelf[] {
+    const shown = cards.filter((card) => card.game.mode === mode);
+    const units = [...new Set(shown.map((card) => card.card.unit))];
+    const order = [
+        ...units.filter((unit) => readsUnit(unit) !== home),
+        ...units.filter((unit) => readsUnit(unit) === home),
+    ];
 
-    if (unit === undefined || level === undefined) {
+    return order.map((unit) => {
+        const own = shown.filter((card) => card.card.unit === unit);
+
+        return {
+            unit,
+            cards: [
+                ...own.filter((card) => card.startable),
+                ...own.filter((card) => !card.startable),
+            ],
+        };
+    });
+}
+
+/** «Hazır oyun»: the first card that can start, in page order. */
+export function readyCard(
+    shelvesShown: readonly Shelf[],
+): CatalogCard | undefined {
+    return shelvesShown
+        .flatMap((shelf) => shelf.cards)
+        .find((card) => card.startable);
+}
+
+/** Whether any game at all can start, in either mode. */
+export function anyStartable(cards: readonly CatalogCard[]): boolean {
+    return cards.some((card) => card.startable);
+}
+
+/**
+ * The muted line under a card's name: «:count səviyyə» when more than one
+ * of its levels can start, else that level's hint; on a locked card
+ * «Tezliklə» when the board cannot draw it, «Daha çox hərf lazımdır» for a
+ * learned-letters shortage, else the server's reason.
+ */
+export function cardLine(card: CatalogCard): Line {
+    if (!card.startable) {
+        return lockedLine(card);
+    }
+
+    const startable = card.levels.filter((level) => level.startable);
+
+    return startable.length > 1
+        ? {
+              key: 'games.setup.level_count',
+              values: { count: startable.length },
+          }
+        : { text: startable[0].level.hint };
+}
+
+/** What a locked card or level says in a line. */
+export function lockedLine(status: Status & { drawable?: boolean }): Line {
+    if (status.drawable === false) {
+        return { key: 'games.setup.coming_soon' };
+    }
+
+    return isLettersShortage(status.code)
+        ? { key: 'games.setup.locked.letters' }
+        : { text: status.reason ?? '' };
+}
+
+/** What a game page sends, besides its card: the level and «Əlavə». */
+export type GameChoice = {
+    level: string;
+    letterCase: 'upper' | 'lower';
+    /** The letters asked for at the letter level (lowercase); empty = all. */
+    letters: string[];
+    /** «Yalnız mənim sözlərim» as chosen; it plays only where it can start. */
+    ownWords: boolean;
+};
+
+/** The server's default case: capitals at the letter level, as written otherwise. */
+function defaultCase(unit: SetupUnit): 'upper' | 'lower' {
+    return unit === 'letter' ? 'upper' : 'lower';
+}
+
+/**
+ * A card's level on opening: the remembered level of its unit when it can
+ * start with this card, else the first that can; undefined when none can.
+ */
+export function defaultLevel(
+    card: CatalogCard,
+    remembered: RememberedSetup,
+): CardLevel | undefined {
+    const wanted = remembered.levels[card.card.unit];
+
+    return (
+        card.levels.find(
+            (level) => level.startable && level.level.key === wanted,
+        ) ?? firstStartable(card.levels)
+    );
+}
+
+/**
+ * A game page as it opens: the default level; the remembered letter case
+ * of its unit, else the server's default; the remembered letters still
+ * learned (the server drops them below two) at the letter level; the
+ * remembered «Yalnız mənim sözlərim», else on. Null for a locked card.
+ */
+export function openGame(
+    card: CatalogCard,
+    remembered: RememberedSetup,
+    learned: readonly Letter[],
+): GameChoice | null {
+    const level = defaultLevel(card, remembered);
+
+    if (level === undefined) {
         return null;
     }
 
-    const mechanic = firstStartable(mechanicChoices(catalog, level.level.key));
-    const pack =
-        mechanic === undefined
-            ? undefined
-            : firstStartable(
-                  packChoices(catalog, level.level.key, mechanic.mechanic),
-              );
-
-    if (mechanic === undefined || pack === undefined) {
-        return null;
-    }
+    const unit = card.card.unit;
+    const letters =
+        unit === 'letter'
+            ? (remembered.letters ?? []).filter((letter) =>
+                  learned.some((item) => item.lower === letter),
+              )
+            : [];
 
     return {
-        choice: {
-            unit: unit.unit,
-            level: level.level.key,
-            mechanic: mechanic.mechanic,
-            pack: pack.pack.key,
-        },
-        picked: { mechanic: false, pack: false },
-        replaced: { mechanic: null, pack: null },
+        level: level.level.key,
+        letterCase: remembered.letterCases[unit] ?? defaultCase(unit),
+        letters: letters.length >= 2 ? letters : [],
+        ownWords: remembered.ownWords ?? true,
     };
 }
 
-/** A unit: its first level that can start. A locked unit is never chosen; the chosen one again changes nothing. */
-export function chooseUnit(
-    catalog: Catalog,
-    state: ChoiceState,
-    unit: SetupUnit,
-): ChoiceState {
-    const level = firstStartable(levelChoices(catalog, unit));
-
-    if (level === undefined || unit === state.choice.unit) {
-        return state;
-    }
-
-    return settle(
-        catalog,
-        state,
-        { unit, level: level.level.key, mechanic: state.choice.mechanic },
-        state.picked.mechanic,
-    );
+/** The card's level a choice names. */
+export function chosenLevel(
+    card: CatalogCard,
+    choice: GameChoice,
+): CardLevel | undefined {
+    return card.levels.find((level) => level.level.key === choice.level);
 }
 
-/** A level of the chosen unit; the mechanic and the theme stay where they still start. */
+/** Another level of the card; a locked one is never chosen. */
 export function chooseLevel(
-    catalog: Catalog,
-    state: ChoiceState,
-    levelKey: string,
-): ChoiceState {
-    const level = levelChoices(catalog, state.choice.unit).find(
-        (item) => item.level.key === levelKey,
-    );
+    card: CatalogCard,
+    choice: GameChoice,
+    key: string,
+): GameChoice {
+    const level = card.levels.find((item) => item.level.key === key);
 
-    if (level === undefined || !level.startable) {
-        return state;
-    }
+    return level === undefined || !level.startable
+        ? choice
+        : { ...choice, level: key };
+}
 
-    return settle(
-        catalog,
-        state,
-        { ...state.choice, level: levelKey },
-        state.picked.mechanic,
+/** Whether only the owner's words play: chosen, and startable at the chosen level. */
+export function playsOwnWords(card: CatalogCard, choice: GameChoice): boolean {
+    return (
+        choice.ownWords &&
+        chosenLevel(card, choice)?.option.own?.startable === true
     );
 }
 
-/** A mechanic of the chosen level; the theme stays where it still starts. */
-export function chooseMechanic(
-    catalog: Catalog,
-    state: ChoiceState,
-    mechanic: string,
-): ChoiceState {
-    const item = mechanicChoices(catalog, state.choice.level).find(
-        (choice) => choice.mechanic === mechanic,
-    );
-
-    if (item === undefined || !item.startable) {
-        return state;
-    }
-
-    return settle(catalog, state, { ...state.choice, mechanic }, true);
-}
-
-/** A theme that can start with the level and the mechanic. */
-export function choosePack(
-    catalog: Catalog,
-    state: ChoiceState,
-    pack: string,
-): ChoiceState {
-    const item = packChoices(
-        catalog,
-        state.choice.level,
-        state.choice.mechanic,
-    ).find((choice) => choice.pack.key === pack);
-
-    if (item === undefined || !item.startable) {
-        return state;
-    }
+/**
+ * What the game page posts (`GameSetupData::rules()`): the card's
+ * mechanic and pack, the level, the letter case where the unit reads, the
+ * letters asked for at the letter level and `own_words` when only the
+ * owner's words play. No `rounds`: the server's default.
+ */
+export function postedFields(
+    card: CatalogCard,
+    choice: GameChoice,
+): Record<string, string | string[]> {
+    const unit = card.card.unit;
 
     return {
-        choice: { ...state.choice, pack },
-        picked: { ...state.picked, pack: true },
-        replaced: { mechanic: null, pack: null },
+        mechanic: card.card.mechanic,
+        pack: card.card.pack,
+        level: choice.level,
+        ...(readsUnit(unit) ? { letter_case: choice.letterCase } : {}),
+        ...(unit === 'letter' && choice.letters.length > 0
+            ? { letters: choice.letters }
+            : {}),
+        ...(playsOwnWords(card, choice) ? { own_words: '1' } : {}),
     };
 }
 
@@ -440,6 +381,18 @@ export type Extras = {
     /** Whether only the owner's words play; null where it is not offered or cannot start. */
     ownWords: boolean | null;
 };
+
+/** A game page's extras, for its summaries. */
+export function gameExtras(card: CatalogCard, choice: GameChoice): Extras {
+    const unit = card.card.unit;
+    const own = chosenLevel(card, choice)?.option.own ?? null;
+
+    return {
+        letterCase: readsUnit(unit) ? choice.letterCase : null,
+        letters: unit === 'letter' ? choice.letters.length : null,
+        ownWords: own?.startable === true ? playsOwnWords(card, choice) : null,
+    };
+}
 
 export type Fragment = { key: string; values?: Record<string, number> };
 
@@ -475,9 +428,9 @@ export function extrasSummary(extras: Extras): Fragment[] {
 }
 
 /**
- * The start bar's second line after the theme: the letter case where it
- * applies, the chosen letters when there are some, and «yalnız
- * mənim sözlərim» when on.
+ * The summary after the level's title, on a game page's start bar and on
+ * «Hazır oyun»: the letter case where it applies, the chosen letters when
+ * there are some, and «yalnız mənim sözlərim» when on.
  */
 export function startSummary(extras: Extras): Fragment[] {
     return extrasSummary(extras).filter(

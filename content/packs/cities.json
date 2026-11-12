@@ -1,7 +1,8 @@
 {
     "key": "cities",
-    "version": 8,
+    "version": 9,
     "title": { "az": "Şəhərlərimiz", "en": "Our cities" },
+    "with": { "az": "Şəhərlərimizlə", "en": "with our cities" },
     "units": ["letter", "syllable", "word", "sentence"],
     "style": {
         "item": "card",

@@ -1,7 +1,8 @@
 {
     "key": "numbers",
-    "version": 6,
+    "version": 7,
     "title": { "az": "Rəqəmlər", "en": "Numbers" },
+    "with": { "az": "Rəqəmlərlə", "en": "with numbers" },
     "units": ["number"],
     "style": {
         "item": "bubble",

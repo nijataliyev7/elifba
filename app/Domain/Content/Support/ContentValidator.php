@@ -1216,7 +1216,7 @@ final class ContentValidator
     {
         $file = "packs/{$key}.json";
         $before = count($this->problems);
-        $pack = $this->object($this->read($file), $file, '', ['key', 'version', 'title', 'units', 'style', 'words'], ['sentences']);
+        $pack = $this->object($this->read($file), $file, '', ['key', 'version', 'title', 'with', 'units', 'style', 'words'], ['sentences']);
 
         if ($pack === null) {
             return;
@@ -1237,6 +1237,7 @@ final class ContentValidator
         }
 
         $this->title($pack['title'], $file, 'title');
+        $this->with($pack['with'], $pack['title'], $file);
         $units = $this->units($pack['units'], $file);
         $reads = $units !== null && array_filter($units, static fn (Unit $unit): bool => $unit->reads()) !== [];
         $this->style($pack['style'], $file, $levels);
@@ -1263,7 +1264,7 @@ final class ContentValidator
             return;
         }
 
-        /** @var array{key: string, version: int, title: array{az: string, en: string}, units: list<string>, style: array{item: string, slot: string, effect: string, cover: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences?: list<array{id: string, text: string}>} $pack */
+        /** @var array{key: string, version: int, title: array{az: string, en: string}, with: array{az: string, en: string}, units: list<string>, style: array{item: string, slot: string, effect: string, cover: string, backdrop?: string, palette: list<string>, sounds?: array<'hit'|'miss'|'solved', string>, figures?: list<string>}, words: list<array{text: string, image?: string, syllables?: list<string>}>, sentences?: list<array{id: string, text: string}>} $pack */
         $this->fitsLevels(PackData::fromArray($pack), $levels, $file);
     }
 
@@ -1842,6 +1843,35 @@ final class ContentValidator
         }
 
         return $cases;
+    }
+
+    /**
+     * A pack's `with` (§3 "With"): the title as a game's card names it, in
+     * both interface languages, neither empty, the Azerbaijani one a title
+     * (letters and the title's signs) that starts with the pack's own
+     * Azerbaijani title — the title in the instrumental case, written out.
+     */
+    private function with(mixed $with, mixed $title, string $file): void
+    {
+        $with = $this->object($with, $file, 'with', ['az', 'en']);
+
+        if ($with === null) {
+            return;
+        }
+
+        $az = $this->string($with['az'], $file, 'with.az');
+        $this->string($with['en'], $file, 'with.en');
+        $own = is_array($title) && is_string($title['az'] ?? null) ? $title['az'] : null;
+
+        if ($az === null) {
+            return;
+        }
+
+        if (! $this->lettersAndSigns($az, self::TITLE_SIGNS)) {
+            $this->problem($file, "with.az \"{$az}\" may hold only alphabet letters, digits, spaces and . , : ! ? « » -");
+        } elseif ($own !== null && ! str_starts_with($az, $own)) {
+            $this->problem($file, "with.az \"{$az}\" must start with the title \"{$own}\"");
+        }
     }
 
     /**

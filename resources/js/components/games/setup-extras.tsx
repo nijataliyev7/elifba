@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Lock } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useEffect, useId, useState } from 'react';
-import { SetupLabel, SetupRowButton } from '@/components/games/setup-tiles';
 import InputError from '@/components/input-error';
 import { AddWordDialog } from '@/components/words/add-word-dialog';
 import { useTranslation } from '@/hooks/use-translation';
@@ -20,7 +20,7 @@ type Props = {
     /** The chosen letters at the letter level, or null elsewhere. */
     asked: Set<string> | null;
     onAsked: (asked: Set<string>) => void;
-    /** `option.own` of the chosen game. */
+    /** `option.own` of the game at its chosen level. */
     own: SetupRefusal | null;
     ownWords: boolean;
     onOwnWords: (on: boolean) => void;
@@ -30,16 +30,68 @@ type Props = {
     errors: Record<string, string | undefined>;
 };
 
+/** A sub-question's label inside «Əlavə» or a game page. */
+export function SetupLabel({ children }: { children: ReactNode }) {
+    return (
+        <legend className="mb-2 text-sm font-medium text-muted-foreground">
+            {children}
+        </legend>
+    );
+}
+
+/**
+ * A row button: chosen is the `default` look, the others `outline`; at
+ * least 44px, with `aria-pressed`. A locked one is dashed with a lock,
+ * `aria-disabled` but focusable, and never chosen.
+ */
+export function SetupRowButton({
+    chosen,
+    locked = false,
+    children,
+    className,
+    onClick,
+    lang,
+}: {
+    chosen: boolean;
+    locked?: boolean;
+    children: ReactNode;
+    className?: string;
+    onClick?: () => void;
+    lang?: string;
+}) {
+    return (
+        <button
+            type="button"
+            lang={lang}
+            aria-pressed={chosen}
+            aria-disabled={locked || undefined}
+            onClick={onClick}
+            className={cn(
+                'inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                chosen
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : locked
+                      ? 'cursor-default border-dashed bg-transparent text-muted-foreground'
+                      : 'bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+                className,
+            )}
+        >
+            {children}
+            {locked && <Lock aria-hidden className="size-3.5 shrink-0" />}
+        </button>
+    );
+}
+
 /** The fields of «Əlavə»: it opens by itself when the server refuses one of them. */
 const FIELDS = ['letter_case', 'letters', 'own_words'];
 
 /**
- * «Əlavə» (docs/frontend.md rule 13): closed by default, its values beside
- * the button. Inside: the letter case at a reading level, the letters at
- * the letter level and, where the server offers it, whether to play only
- * the owner's own words. A level with none of them (a picture or number
- * level) has no «Əlavə». The round count is the board's, under «Başla»
- * (architecture §4 "Round count").
+ * «Əlavə» on a game page (docs/frontend.md rule 13): closed by default,
+ * its values beside the button. Inside: the letter case at a reading
+ * level, the letters at the letter level and, where the server offers it,
+ * whether to play only the owner's own words. A game whose unit does not
+ * read (pictures, numbers) has no «Əlavə». The round count is the board's,
+ * under «Başla» (architecture §4 "Round count").
  */
 export function SetupExtras({
     summary,

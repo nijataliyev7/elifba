@@ -1,7 +1,8 @@
 {
     "key": "train",
-    "version": 9,
+    "version": 10,
     "title": { "az": "Qatar", "en": "Train" },
+    "with": { "az": "Qatarla", "en": "with the train" },
     "units": ["letter", "syllable", "word", "sentence"],
     "style": {
         "item": "wagon",

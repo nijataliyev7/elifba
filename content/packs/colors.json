@@ -1,7 +1,8 @@
 {
     "key": "colors",
-    "version": 6,
+    "version": 7,
     "title": { "az": "Rənglər", "en": "Colours" },
+    "with": { "az": "Rənglərlə", "en": "with colours" },
     "units": ["picture"],
     "style": {
         "item": "picture",

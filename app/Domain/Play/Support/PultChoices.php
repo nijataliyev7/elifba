@@ -14,8 +14,8 @@ use App\Models\User;
  * What the owner's phone chooses from (docs/architecture.md §4): the
  * account's live and paused games (`/pult`) and, for a guest board
  * (`/pult/{code}` and `/guest-boards/{board}/game`), also a teacher's active
- * classes and a parent's children (ADR 011), each with its setup form — the
- * same form and the same check as the setup page (`GameSetupOptions`).
+ * classes and a parent's children (ADR 011), each with its own catalog — the
+ * same catalog and the same check as the setup page (`GameSetupOptions`).
  * Class names, the account's own children's names and game data only:
  * never a student's name.
  *
@@ -23,8 +23,9 @@ use App\Models\User;
  *
  * @phpstan-type LiveGameArray array{id: string, status: string, mechanic: string, level: array{title: string, unit: string|null}, schoolClass: array{id: string, name: string}|null, child: array{id: string, display_name: string}|null, started_at: string}
  * @phpstan-type GuestBoardSetupArray array{
- *     packs: list<array{key: string, title: string, cover: string}>,
+ *     packs: list<array{key: string, title: string, cover: string, palette: list<string>}>,
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>, hint: string}>,
+ *     games: list<array{unit: string, mechanic: string, mode: string, name: string, hint: string}>,
  *     letterCases: list<string>,
  *     wordMaxLength: int,
  *     classes: array<string, PlayersSetupArray>,

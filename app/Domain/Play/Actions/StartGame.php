@@ -11,6 +11,7 @@ use App\Domain\Play\Enums\GameSessionStatus;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
 use App\Domain\Play\Support\Playable;
+use App\Domain\Play\Support\SetupMemory;
 use Illuminate\Support\Facades\DB;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
@@ -25,7 +26,9 @@ use Random\Randomizer;
  * rounds) and stores the game, `live`, with its round snapshots in one
  * transaction, with the rest of its setup (the letters asked for and
  * `own_words`), so its rounds can be built again (`ChangeRoundCount`,
- * `ReplayGame`). The game belongs to the class's teacher or the child's
+ * `ReplayGame`), and keeps that setup for the class or the child's next
+ * «Yeni oyun» (`SetupMemory::remember()`, §2 "Remembered setup"; a replay
+ * remembers the same). The game belongs to the class's teacher or the child's
  * parent; it and each round store exactly one of the class and the child
  * (`GamePlayers::columns()`). `$setup` has passed `GameSetupData::rules()`
  * for the same players, which asked about the same pack.
@@ -65,6 +68,7 @@ final readonly class StartGame
             $game->save();
 
             $this->storeRounds($game, $players, $rounds);
+            SetupMemory::remember($players, $setup);
 
             return $game;
         });

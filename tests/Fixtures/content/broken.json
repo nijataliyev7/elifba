@@ -242,6 +242,21 @@
         "set": { "words.3.text": "n\u04d9n\u04d9" },
         "problem": "packs/sample.json: words[3].text \"n\u04d9n\u04d9\" is not normalized (U+04D9)"
     },
+    "packs: no with": {
+        "file": "packs/sample.json",
+        "unset": ["with"],
+        "problem": "packs/sample.json: the file needs `with`"
+    },
+    "packs: an empty with in English": {
+        "file": "packs/sample.json",
+        "set": { "with.en": "" },
+        "problem": "packs/sample.json: with.en must be a non-empty string"
+    },
+    "packs: a with that is not the title in the instrumental case": {
+        "file": "packs/sample.json",
+        "set": { "with.az": "Qatarla" },
+        "problem": "packs/sample.json: with.az \"Qatarla\" must start with the title \"Nümunə\""
+    },
     "packs: the reversed \u01dd in a title": {
         "file": "packs/sample.json",
         "set": { "title.az": "Nümun\u01dd" },

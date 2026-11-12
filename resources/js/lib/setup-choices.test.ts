@@ -1,33 +1,47 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+    anyStartable,
+    cardLine,
+    catalogCards,
     chooseLevel,
-    chooseMechanic,
-    choosePack,
-    chooseUnit,
+    defaultLevel,
     extrasSummary,
-    initialState,
+    gameExtras,
     isLettersShortage,
-    levelChoices,
-    mechanicChoices,
+    lockedLine,
     mechanicName,
-    packChoices,
-    setupCatalog,
+    openGame,
+    postedFields,
+    readyCard,
+    shelves,
     startSummary,
-    unitGroups,
 } from '@/lib/setup-choices';
-import type { SetupLevel, SetupOption, SetupPack } from '@/types';
+import type { CatalogCard, GameChoice } from '@/lib/setup-choices';
+import type {
+    Letter,
+    RememberedSetup,
+    SetupCard,
+    SetupGame,
+    SetupLevel,
+    SetupOption,
+    SetupPack,
+    SetupRefusal,
+} from '@/types';
 
 /*
- * The game setup's choosing logic (docs/frontend.md rule 13): the order of
- * the units, the defaults, which later choices survive a change and the
- * reason a locked choice shows. The data is shaped like the server's
- * (`GameSetupOptions`), with made-up keys.
+ * The game catalog's choosing logic (docs/frontend.md rule 13): which
+ * cards a mode shows and in what order, «Hazır oyun» for a class and at
+ * home, a card's levels and the level it opens with, the remembered
+ * choices that still apply, the reason a locked card shows and what a game
+ * page posts. The data is shaped like the server's (`GameSetupOptions`),
+ * with made-up keys.
  */
 
 const packs: SetupPack[] = ['animals', 'cities', 'train'].map((key) => ({
     key,
     title: key.toUpperCase(),
     cover: `/content/${key}.svg`,
+    palette: ['#3B82C4', '#E85D4A', '#F6C445'],
 }));
 
 const level = (
@@ -45,34 +59,68 @@ const levels: SetupLevel[] = [
     level('numbers-5', 'number', ['pop', 'find', 'count']),
 ];
 
-const refused = (code: string) => ({
+/** The games in catalog order, as `shared()` sends them. */
+const games: SetupGame[] = levels
+    .flatMap((item) =>
+        item.mechanics.map((mechanic) => ({
+            unit: item.unit,
+            mechanic,
+            mode: mechanic === 'pop' ? ('easy' as const) : ('normal' as const),
+            name: `${item.unit} ${mechanic}`,
+            hint: `${mechanic} hint`,
+        })),
+    )
+    .filter(
+        (game, index, all) =>
+            all.findIndex(
+                (other) =>
+                    other.unit === game.unit &&
+                    other.mechanic === game.mechanic,
+            ) === index,
+    );
+
+/** Cities lists no picture or number unit. */
+const lists = (unit: string, pack: string): boolean =>
+    pack !== 'cities' || ['letter', 'syllable', 'sentence'].includes(unit);
+
+const refused = (code: string): SetupRefusal => ({
     startable: false,
     reason: `reason ${code}`,
     code,
 });
 
-/** Every option of `levels` × `packs` (cities lists no picture or number unit), startable unless `locked` says otherwise. */
+/**
+ * Every option of `levels` × `packs` the packs list, startable unless
+ * `locked` (by `level|mechanic|pack`, `level|mechanic` or `level`) gives a
+ * code; `own` by the same keys.
+ */
 function options(
     locked: Record<string, string> = {},
-    skip: (level: string, pack: string) => boolean = (key, pack) =>
-        pack === 'cities' && ['pictures', 'numbers-5'].includes(key),
+    own: Record<string, SetupRefusal> = {},
 ): SetupOption[] {
     return levels.flatMap((item) =>
         item.mechanics.flatMap((mechanic) =>
             packs
-                .filter((pack) => !skip(item.key, pack.key))
+                .filter((pack) => lists(item.unit, pack.key))
                 .map((pack): SetupOption => {
-                    const code =
-                        locked[`${item.key}|${mechanic}|${pack.key}`] ??
-                        locked[`${item.key}|${mechanic}`] ??
-                        locked[item.key];
+                    const keys = [
+                        `${item.key}|${mechanic}|${pack.key}`,
+                        `${item.key}|${mechanic}`,
+                        item.key,
+                    ];
+                    const code = keys
+                        .map((key) => locked[key])
+                        .find((value) => value !== undefined);
 
                     return {
                         level: item.key,
                         mechanic,
                         pack: pack.key,
                         drawable: code !== 'not_playable',
-                        own: null,
+                        own:
+                            keys
+                                .map((key) => own[key])
+                                .find((value) => value !== undefined) ?? null,
                         ...(code === undefined
                             ? { startable: true, reason: null, code: null }
                             : refused(code)),
@@ -82,352 +130,457 @@ function options(
     );
 }
 
-const catalog = (
-    home = false,
-    locked: Record<string, string> = {},
-    skip?: (level: string, pack: string) => boolean,
-) => setupCatalog(packs, levels, options(locked, skip), home);
+/** One card per game and listing pack, games first, as `for()` sends them. */
+const cards: SetupCard[] = games.flatMap((game) =>
+    packs
+        .filter((pack) => lists(game.unit, pack.key))
+        .map((pack) => ({
+            pack: pack.key,
+            unit: game.unit,
+            mechanic: game.mechanic,
+            title: `${pack.key} ${game.mechanic}`,
+            sample: [],
+        })),
+);
 
-function started(home = false, locked: Record<string, string> = {}) {
-    const items = catalog(home, locked);
-    const state = initialState(items);
-
-    if (state === null) {
-        throw new Error('nothing can start');
-    }
-
-    return { items, state };
+function catalog(locked: Record<string, string> = {}, own = {}) {
+    return catalogCards(
+        { packs, levels, games },
+        { cards, options: options(locked, own) },
+    );
 }
 
-describe('unitGroups', () => {
-    it('lists «Oxu» first for a class and «Oxumadan» first at home, units in the content order', () => {
-        const summary = (home: boolean) =>
-            unitGroups(catalog(home)).map((group) => [
-                group.key,
-                group.units.map((unit) => unit.unit),
-            ]);
+function card(all: CatalogCard[], id: string): CatalogCard {
+    const found = all.find((item) => item.id === id);
 
-        expect(summary(false)).toEqual([
-            ['reading', ['letter', 'syllable', 'sentence']],
-            ['pictures', ['picture', 'number']],
+    if (found === undefined) {
+        throw new Error(`No card ${id}`);
+    }
+
+    return found;
+}
+
+const remembered = (
+    changes: Partial<RememberedSetup> = {},
+): RememberedSetup => ({
+    mode: 'normal',
+    levels: {},
+    letterCases: {},
+    letters: null,
+    ownWords: null,
+    ...changes,
+});
+
+const learned: Letter[] = ['a', 'b', 'ə', 'i'].map((lower) => ({
+    lower,
+    upper: lower === 'i' ? 'İ' : lower.toUpperCase(),
+}));
+
+const ids = (all: { cards: CatalogCard[] }[]) =>
+    all.map((shelf) => shelf.cards.map((item) => item.id));
+
+describe('catalogCards', () => {
+    it('joins each card to its game, its theme and the levels that list its mechanic', () => {
+        const all = catalog();
+        const syllables = card(all, 'syllable.find.train');
+
+        expect(all).toHaveLength(cards.length);
+        expect(syllables.game.name).toBe('syllable find');
+        expect(syllables.pack.title).toBe('TRAIN');
+        expect(syllables.levels.map((item) => item.level.key)).toEqual([
+            'syllables-open',
+            'syllables-closed',
         ]);
-        expect(summary(true)).toEqual([
-            ['pictures', ['picture', 'number']],
-            ['reading', ['letter', 'syllable', 'sentence']],
-        ]);
+        expect(card(all, 'number.count.animals').levels).toHaveLength(1);
+        expect(syllables.startable).toBe(true);
     });
 
-    it('hides a unit with no option at all', () => {
-        const groups = unitGroups(
-            catalog(false, {}, (key) => key === 'sentences'),
-        );
-
-        expect(groups[0].units.map((unit) => unit.unit)).toEqual([
-            'letter',
-            'syllable',
-        ]);
-    });
-
-    it("gives a unit that cannot start its first level's, first mechanic's, first theme's reason", () => {
-        const items = catalog(false, {
-            'syllables-open|pop|animals': 'too_few_syllables',
-            'syllables-open': 'not_playable',
-            'syllables-closed': 'too_few_words',
+    it("locks a card only when none of its levels can start, with its first level's reason", () => {
+        const all = catalog({
+            'syllables-open|find': 'too_few_syllables',
+            'syllables-closed|find|train': 'too_few_words',
         });
-        const syllable = unitGroups(items)[0].units[1];
 
-        expect(syllable).toMatchObject({
-            unit: 'syllable',
+        expect(card(all, 'syllable.find.animals').startable).toBe(true);
+        expect(card(all, 'syllable.find.train')).toMatchObject({
             startable: false,
             reason: 'reason too_few_syllables',
             code: 'too_few_syllables',
         });
-        expect(isLettersShortage(syllable.code)).toBe(true);
-        expect(isLettersShortage('not_playable')).toBe(false);
-        expect(isLettersShortage(null)).toBe(false);
     });
 
-    it('keeps a unit open when one of its levels can start', () => {
-        const items = catalog(false, {
-            'syllables-closed': 'too_few_syllables',
-        });
+    it('drops a card the server sent without an option', () => {
+        const all = catalogCards(
+            { packs, levels, games },
+            {
+                cards: [
+                    ...cards,
+                    {
+                        pack: 'cities',
+                        unit: 'picture',
+                        mechanic: 'find',
+                        title: 'x',
+                        sample: [],
+                    },
+                ],
+                options: options(),
+            },
+        );
 
-        expect(unitGroups(items)[0].units[1].startable).toBe(true);
+        expect(all.map((item) => item.id)).not.toContain('picture.find.cities');
+    });
+});
+
+describe('shelves', () => {
+    it('shows only the pop games in «Asan» and every other game in «Normal»', () => {
+        const easy = shelves(catalog(), 'easy', false);
+        const normal = shelves(catalog(), 'normal', false);
+
         expect(
-            levelChoices(items, 'syllable').map((choice) => [
-                choice.level.key,
-                choice.startable,
-                choice.code,
-            ]),
-        ).toEqual([
-            ['syllables-open', true, null],
-            ['syllables-closed', false, 'too_few_syllables'],
+            new Set(
+                easy.flatMap((shelf) =>
+                    shelf.cards.map((item) => item.card.mechanic),
+                ),
+            ),
+        ).toEqual(new Set(['pop']));
+        expect(
+            normal
+                .flatMap((shelf) => shelf.cards)
+                .some((item) => item.card.mechanic === 'pop'),
+        ).toBe(false);
+        // A sentence has no pop: no shelf in «Asan».
+        expect(easy.map((shelf) => shelf.unit)).toEqual([
+            'letter',
+            'syllable',
+            'picture',
+            'number',
+        ]);
+        expect(normal.map((shelf) => shelf.unit)).toEqual([
+            'letter',
+            'syllable',
+            'sentence',
+            'picture',
+            'number',
         ]);
     });
-});
 
-describe('mechanicChoices and packChoices', () => {
-    it("list a level's mechanics in the level's order and its themes in the content's order", () => {
-        const items = catalog();
-
+    it('puts the picture and number shelves first at home', () => {
         expect(
-            mechanicChoices(items, 'numbers-5').map((item) => item.mechanic),
-        ).toEqual(['pop', 'find', 'count']);
-        expect(
-            packChoices(items, 'pictures', 'find').map((item) => item.pack.key),
-        ).toEqual(['animals', 'train']);
-        expect(
-            packChoices(items, 'letters', 'find').map((item) => item.pack.key),
-        ).toEqual(['animals', 'cities', 'train']);
+            shelves(catalog(), 'normal', true).map((shelf) => shelf.unit),
+        ).toEqual(['picture', 'number', 'letter', 'syllable', 'sentence']);
     });
 
-    it("carry the server's reason when locked", () => {
-        const items = catalog(false, {
-            'letters|find|animals': 'not_playable',
-            'letters|find|cities': 'too_few_letters',
-            'letters|find|train': 'too_few_letters',
+    it('orders a shelf by game, then pack, every card that can start first', () => {
+        const all = catalog({
+            'syllables-open|build_syllable|animals': 'x',
+            'syllables-closed|build_syllable|animals': 'x',
         });
+        const syllable = shelves(all, 'normal', false).find(
+            (shelf) => shelf.unit === 'syllable',
+        );
 
-        expect(mechanicChoices(items, 'letters')[1]).toEqual({
-            mechanic: 'find',
-            startable: false,
-            reason: 'reason not_playable',
-            code: 'not_playable',
-        });
-        expect(packChoices(items, 'letters', 'find')[0]).toMatchObject({
-            drawable: false,
-            startable: false,
-            reason: 'reason not_playable',
-        });
+        expect(syllable?.cards.map((item) => item.id)).toEqual([
+            'syllable.find.animals',
+            'syllable.find.cities',
+            'syllable.find.train',
+            'syllable.build_syllable.cities',
+            'syllable.build_syllable.train',
+            'syllable.build_syllable.animals',
+        ]);
+    });
+
+    it('drops a shelf with no card in the mode', () => {
+        expect(ids(shelves(catalog(), 'easy', false))).not.toContainEqual([]);
     });
 });
 
-describe('initialState', () => {
-    it('opens a class on the first reading game that can start', () => {
-        expect(started().state.choice).toEqual({
-            unit: 'letter',
-            level: 'letters',
-            mechanic: 'pop',
-            pack: 'animals',
-        });
+describe('«Hazır oyun»', () => {
+    it('is the first card that can start, in page order: a reading game for a class, a picture game at home', () => {
+        expect(readyCard(shelves(catalog(), 'normal', false))?.id).toBe(
+            'letter.find.animals',
+        );
+        expect(readyCard(shelves(catalog(), 'easy', false))?.id).toBe(
+            'letter.pop.animals',
+        );
+        expect(readyCard(shelves(catalog(), 'easy', true))?.id).toBe(
+            'picture.pop.animals',
+        );
     });
 
-    it('opens a home game on the first picture game', () => {
-        expect(started(true).state.choice).toEqual({
-            unit: 'picture',
-            level: 'pictures',
-            mechanic: 'pop',
-            pack: 'animals',
-        });
+    it('skips what cannot start', () => {
+        const all = catalog({ letters: 'too_few_letters' });
+
+        expect(readyCard(shelves(all, 'normal', false))?.id).toBe(
+            'syllable.find.animals',
+        );
     });
 
-    it('never opens on a locked choice', () => {
-        const { state } = started(false, {
-            letters: 'too_few_letters',
-            'syllables-open': 'too_few_syllables',
-            'syllables-closed|pop': 'too_few_syllables',
-            'syllables-closed|find|animals': 'too_few_syllables',
-        });
-
-        expect(state.choice).toEqual({
-            unit: 'syllable',
-            level: 'syllables-closed',
-            mechanic: 'find',
-            pack: 'cities',
-        });
-        expect(state.picked).toEqual({ mechanic: false, pack: false });
-    });
-
-    it('is null when nothing can start', () => {
-        const locked = Object.fromEntries(
+    it('is none, and the catalog says so, when nothing can start at all', () => {
+        const everything = Object.fromEntries(
             levels.map((item) => [item.key, 'too_few_letters']),
         );
+        const all = catalog(everything);
 
-        expect(initialState(catalog(false, locked))).toBeNull();
+        expect(readyCard(shelves(all, 'easy', false))).toBeUndefined();
+        expect(anyStartable(all)).toBe(false);
+        expect(anyStartable(catalog({ letters: 'too_few_letters' }))).toBe(
+            true,
+        );
     });
 });
 
-describe('a change filters only the later questions', () => {
-    it('keeps the earlier choices when a later one changes', () => {
-        const { items, state } = started();
-        const level = chooseLevel(
-            items,
-            chooseUnit(items, state, 'syllable'),
+describe('cardLine and lockedLine', () => {
+    it("counts the levels that can start, or gives the one level's hint", () => {
+        const all = catalog({
+            'syllables-closed|find|train': 'too_few_syllables',
+        });
+
+        expect(cardLine(card(all, 'syllable.find.animals'))).toEqual({
+            key: 'games.setup.level_count',
+            values: { count: 2 },
+        });
+        expect(cardLine(card(all, 'syllable.find.train'))).toEqual({
+            text: 'syllables-open hint',
+        });
+        expect(cardLine(card(all, 'letter.find.train'))).toEqual({
+            text: 'letters hint',
+        });
+    });
+
+    it('says «Daha çox hərf lazımdır» for a learned-letters shortage, else the reason, or «Tezliklə»', () => {
+        const all = catalog({
+            letters: 'too_few_letters',
+            'sentences|build_sentence|train': 'no_own_words',
+            'sentences|build_sentence|cities': 'not_playable',
+        });
+
+        expect(cardLine(card(all, 'letter.find.animals'))).toEqual({
+            key: 'games.setup.locked.letters',
+        });
+        expect(cardLine(card(all, 'sentence.build_sentence.train'))).toEqual({
+            text: 'reason no_own_words',
+        });
+        expect(cardLine(card(all, 'sentence.build_sentence.cities'))).toEqual({
+            key: 'games.setup.coming_soon',
+        });
+        expect(lockedLine(refused('too_few_sentences'))).toEqual({
+            key: 'games.setup.locked.letters',
+        });
+        expect(isLettersShortage('too_few_words')).toBe(true);
+        expect(isLettersShortage('pack_level')).toBe(false);
+        expect(isLettersShortage(null)).toBe(false);
+    });
+});
+
+describe('a game page', () => {
+    it('opens at the remembered level when it can start with this card, else at the first that can', () => {
+        const all = catalog({
+            'syllables-closed|find|train': 'too_few_syllables',
+        });
+        const memory = remembered({ levels: { syllable: 'syllables-closed' } });
+
+        expect(
+            defaultLevel(card(all, 'syllable.find.animals'), memory)?.level.key,
+        ).toBe('syllables-closed');
+        expect(
+            defaultLevel(card(all, 'syllable.find.train'), memory)?.level.key,
+        ).toBe('syllables-open');
+        expect(
+            defaultLevel(card(all, 'syllable.find.cities'), remembered())?.level
+                .key,
+        ).toBe('syllables-open');
+    });
+
+    it('opens with the remembered case, else capitals for letters and as written otherwise', () => {
+        const all = catalog();
+
+        expect(
+            openGame(card(all, 'letter.find.train'), remembered(), learned),
+        ).toEqual({
+            level: 'letters',
+            letterCase: 'upper',
+            letters: [],
+            ownWords: true,
+        });
+        expect(
+            openGame(card(all, 'syllable.find.train'), remembered(), learned)
+                ?.letterCase,
+        ).toBe('lower');
+        expect(
+            openGame(
+                card(all, 'syllable.find.train'),
+                remembered({ letterCases: { syllable: 'upper' } }),
+                learned,
+            )?.letterCase,
+        ).toBe('upper');
+    });
+
+    it('keeps remembered letters only at the letter level, while two are still learned', () => {
+        const all = catalog();
+        const memory = remembered({ letters: ['a', 'ə', 'z'] });
+
+        expect(
+            openGame(card(all, 'letter.find.train'), memory, learned)?.letters,
+        ).toEqual(['a', 'ə']);
+        expect(
+            openGame(
+                card(all, 'letter.find.train'),
+                remembered({ letters: ['a', 'z'] }),
+                learned,
+            )?.letters,
+        ).toEqual([]);
+        expect(
+            openGame(card(all, 'syllable.find.train'), memory, learned)
+                ?.letters,
+        ).toEqual([]);
+    });
+
+    it('does not open a locked card', () => {
+        expect(
+            openGame(
+                card(
+                    catalog({ letters: 'too_few_letters' }),
+                    'letter.find.train',
+                ),
+                remembered(),
+                learned,
+            ),
+        ).toBeNull();
+    });
+
+    it('chooses another level that can start, never a locked one', () => {
+        const all = catalog({
+            'syllables-closed|find|train': 'too_few_syllables',
+        });
+        const animals = card(all, 'syllable.find.animals');
+        const train = card(all, 'syllable.find.train');
+        const choice = openGame(animals, remembered(), learned) as GameChoice;
+
+        expect(chooseLevel(animals, choice, 'syllables-closed').level).toBe(
             'syllables-closed',
         );
-        const mechanic = chooseMechanic(items, level, 'build_syllable');
-        const pack = choosePack(items, mechanic, 'train');
-
-        expect(mechanic.choice.level).toBe('syllables-closed');
-        expect(mechanic.choice.unit).toBe('syllable');
-        expect(pack.choice).toEqual({
-            unit: 'syllable',
-            level: 'syllables-closed',
-            mechanic: 'build_syllable',
-            pack: 'train',
-        });
-    });
-
-    it('keeps the mechanic and the theme across levels that play them', () => {
-        const { items, state } = started();
-        const picked = choosePack(
-            items,
-            chooseMechanic(items, state, 'find'),
-            'cities',
-        );
-        const next = chooseUnit(items, picked, 'syllable');
-
-        expect(next.choice).toEqual({
-            unit: 'syllable',
-            level: 'syllables-open',
-            mechanic: 'find',
-            pack: 'cities',
-        });
-        expect(next.replaced).toEqual({ mechanic: null, pack: null });
-        expect(next.picked).toEqual({ mechanic: true, pack: true });
-    });
-
-    it("replaces the adult's picks that cannot start with the first that can, and says so", () => {
-        const { items, state } = started();
-        const picked = choosePack(
-            items,
-            chooseMechanic(items, chooseUnit(items, state, 'number'), 'count'),
-            'train',
-        );
-        const pictures = chooseUnit(
-            items,
-            choosePack(items, picked, 'animals'),
-            'picture',
-        );
-
-        expect(pictures.choice).toMatchObject({
-            level: 'pictures',
-            mechanic: 'pop',
-            pack: 'animals',
-        });
-        expect(pictures.replaced).toEqual({
-            mechanic: { from: 'count', to: 'pop' },
-            pack: null,
-        });
-
-        const cities = chooseUnit(
-            items,
-            choosePack(items, chooseUnit(items, state, 'syllable'), 'cities'),
-            'picture',
-        );
-
-        expect(cities.choice.pack).toBe('animals');
-        expect(cities.replaced.pack).toEqual({ from: 'cities', to: 'animals' });
-    });
-
-    it('says nothing when it replaces a default, and clears the line at the next choice', () => {
-        const { items, state } = started(false, {
-            'syllables-open|pop': 'too_few_syllables',
-        });
-        const syllables = chooseUnit(items, state, 'syllable');
-
-        expect(syllables.choice.mechanic).toBe('find');
-        expect(syllables.replaced).toEqual({ mechanic: null, pack: null });
-
-        const replaced = chooseUnit(
-            items,
-            chooseMechanic(items, chooseUnit(items, state, 'number'), 'count'),
-            'letter',
-        );
-
-        expect(replaced.replaced.mechanic).not.toBeNull();
-        expect(choosePack(items, replaced, 'cities').replaced).toEqual({
-            mechanic: null,
-            pack: null,
-        });
-    });
-
-    it('forgets a replaced choice: it never comes back by itself', () => {
-        const { items, state } = started();
-        const count = chooseMechanic(
-            items,
-            chooseUnit(items, state, 'number'),
-            'count',
-        );
-        const back = chooseUnit(
-            items,
-            chooseUnit(items, count, 'picture'),
-            'number',
-        );
-
-        expect(back.choice.mechanic).toBe('pop');
-        expect(back.picked.mechanic).toBe(false);
-    });
-
-    it('never chooses a locked unit, level, mechanic or theme', () => {
-        const { items, state } = started(false, {
-            sentences: 'too_few_sentences',
-            'syllables-closed': 'too_few_syllables',
-            'letters|find': 'too_few_letters',
-            'letters|pop|cities': 'not_playable',
-        });
-
-        expect(chooseUnit(items, state, 'sentence')).toBe(state);
-        expect(chooseMechanic(items, state, 'find')).toBe(state);
-        expect(choosePack(items, state, 'cities')).toBe(state);
-
-        const syllables = chooseUnit(items, state, 'syllable');
-
-        expect(chooseLevel(items, syllables, 'syllables-closed')).toBe(
-            syllables,
-        );
-        expect(chooseUnit(items, syllables, 'syllable')).toBe(syllables);
+        expect(chooseLevel(train, choice, 'syllables-closed')).toBe(choice);
+        expect(chooseLevel(train, choice, 'missing')).toBe(choice);
     });
 });
 
-describe('names and summaries', () => {
-    it('names pop «De və vur» where nothing is read', () => {
-        expect(mechanicName('pop', 'picture')).toBe('games.mechanics.pop_say');
-        expect(mechanicName('pop', 'number')).toBe('games.mechanics.pop_say');
-        expect(mechanicName('pop', 'letter')).toBe('games.mechanics.pop');
-        expect(mechanicName('count', 'number')).toBe('games.mechanics.count');
+describe('postedFields', () => {
+    const own = { startable: true, reason: null, code: null };
+
+    it("posts the card's game and theme, the level and the letter case where the unit reads", () => {
+        const all = catalog();
+        const letters = card(all, 'letter.find.cities');
+        const choice = openGame(letters, remembered(), learned) as GameChoice;
+
+        expect(postedFields(letters, choice)).toEqual({
+            mechanic: 'find',
+            pack: 'cities',
+            level: 'letters',
+            letter_case: 'upper',
+        });
+        expect(
+            postedFields(letters, { ...choice, letters: ['a', 'ə'] }),
+        ).toEqual({
+            mechanic: 'find',
+            pack: 'cities',
+            level: 'letters',
+            letter_case: 'upper',
+            letters: ['a', 'ə'],
+        });
     });
 
-    it('names every extra that applies beside «Əlavə», and only the chosen ones in the start bar (never the round count)', () => {
-        const letters = {
-            letterCase: 'upper' as const,
-            letters: 0,
-            ownWords: null,
-        };
-
-        expect(extrasSummary(letters)).toEqual([
-            { key: 'games.setup.summary.upper' },
-            { key: 'games.setup.summary.all_letters' },
-        ]);
-        expect(startSummary(letters)).toEqual([
-            { key: 'games.setup.summary.upper' },
-        ]);
-        expect(startSummary({ ...letters, letters: 3 })).toContainEqual({
-            key: 'games.setup.summary.letters',
-            values: { count: 3 },
-        });
-
-        const words = {
-            letterCase: 'lower' as const,
-            letters: null,
+    it('posts no letter case, letters or own words where nothing is read', () => {
+        const all = catalog();
+        const count = card(all, 'number.count.animals');
+        const choice: GameChoice = {
+            level: 'numbers-5',
+            letterCase: 'upper',
+            letters: ['a', 'b'],
             ownWords: true,
         };
 
-        expect(startSummary(words).map((item) => item.key)).toEqual([
-            'games.setup.summary.lower',
-            'games.setup.summary.own_words',
+        expect(postedFields(count, choice)).toEqual({
+            mechanic: 'count',
+            pack: 'animals',
+            level: 'numbers-5',
+        });
+        expect(
+            postedFields(card(all, 'picture.pop.animals'), {
+                ...choice,
+                level: 'pictures',
+            }),
+        ).toEqual({
+            mechanic: 'pop',
+            pack: 'animals',
+            level: 'pictures',
+        });
+    });
+
+    it('posts own words only where they can start at the chosen level, on unless the owner chose otherwise', () => {
+        const all = catalog(
+            {},
+            {
+                'syllables-open|find': own,
+                'syllables-closed|find': refused('too_few_syllables'),
+            },
+        );
+        const syllables = card(all, 'syllable.find.train');
+        const choice = openGame(syllables, remembered(), learned) as GameChoice;
+
+        expect(postedFields(syllables, choice).own_words).toBe('1');
+        expect(
+            postedFields(syllables, { ...choice, ownWords: false }).own_words,
+        ).toBeUndefined();
+        expect(
+            postedFields(syllables, { ...choice, level: 'syllables-closed' })
+                .own_words,
+        ).toBeUndefined();
+        expect(
+            openGame(syllables, remembered({ ownWords: false }), learned)
+                ?.ownWords,
+        ).toBe(false);
+    });
+
+    it('summarises the extras that apply', () => {
+        const all = catalog({}, { 'syllables-open|find': own });
+        const syllables = card(all, 'syllable.find.train');
+        const choice = openGame(syllables, remembered(), learned) as GameChoice;
+        const extras = gameExtras(syllables, choice);
+
+        expect(extras).toEqual({
+            letterCase: 'lower',
+            letters: null,
+            ownWords: true,
+        });
+        expect(startSummary(extras)).toEqual([
+            { key: 'games.setup.summary.lower' },
+            { key: 'games.setup.summary.own_words' },
         ]);
         expect(
-            extrasSummary({ ...words, ownWords: false }).map(
-                (item) => item.key,
+            extrasSummary(
+                gameExtras(card(all, 'letter.find.train'), {
+                    ...choice,
+                    level: 'letters',
+                    letterCase: 'upper',
+                }),
             ),
-        ).toContain('games.setup.summary.all_words');
+        ).toEqual([
+            { key: 'games.setup.summary.upper' },
+            { key: 'games.setup.summary.all_letters' },
+        ]);
         expect(
-            startSummary({
-                letterCase: null,
-                letters: null,
-                ownWords: null,
+            gameExtras(card(all, 'number.count.animals'), {
+                ...choice,
+                level: 'numbers-5',
             }),
-        ).toEqual([]);
+        ).toEqual({ letterCase: null, letters: null, ownWords: null });
+    });
+});
+
+describe('mechanicName', () => {
+    it('reads «De və vur» for pop where nothing is read', () => {
+        expect(mechanicName('pop', 'picture')).toBe('games.mechanics.pop_say');
+        expect(mechanicName('pop', 'letter')).toBe('games.mechanics.pop');
+        expect(mechanicName('find', 'number')).toBe('games.mechanics.find');
     });
 });

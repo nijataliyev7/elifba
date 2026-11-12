@@ -1,7 +1,7 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { ChevronLeft, MonitorUp } from 'lucide-react';
 import { useState } from 'react';
-import { GameSetupForm } from '@/components/games/game-setup-form';
+import { GameCatalog } from '@/components/games/game-catalog';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -9,6 +9,8 @@ import { useTranslation } from '@/hooks/use-translation';
 import { playersLabel } from '@/lib/game-players';
 import { mechanicName } from '@/lib/setup-choices';
 import { pult } from '@/routes';
+import { mode as childMode } from '@/routes/children/games';
+import { mode as classMode } from '@/routes/classes/games';
 import { update } from '@/routes/guest-boards/game';
 import { claim } from '@/routes/pult';
 import type { GuestBoardChoicesProps } from '@/types';
@@ -21,7 +23,7 @@ type Players = { field: 'class' | 'child'; id: string; name: string };
  * (docs/architecture.md §4, "Guest board"; docs/frontend.md rule 13): one
  * of the account's live games, named as the setup names them, or a new one
  * — «Kim oynayır?» (a child or a class, ADR 011), then the setup page's
- * form with «Lövhədə başla» in its bottom bar. For an open
+ * catalog for them, with «Lövhədə başla». For an open
  * board (`/pult/{code}`) it claims the board; for a board the teacher
  * claimed (`/guest-boards/{board}/game`) it sends the next game without a
  * new code. Either way the phone then opens the game's remote.
@@ -199,16 +201,24 @@ export default function PultGuestBoard({
                     )}
 
                     {players !== null && chosen !== undefined && (
-                        <GameSetupForm
+                        <GameCatalog
                             key={players.id}
                             packs={setup.packs}
                             levels={setup.levels}
+                            games={setup.games}
                             letterCases={setup.letterCases}
                             wordMaxLength={setup.wordMaxLength}
                             {...chosen}
                             form={target}
+                            modeUrl={
+                                players.field === 'child'
+                                    ? childMode.url(players.id)
+                                    : classMode.url(players.id)
+                            }
                             hidden={{ [players.field]: players.id }}
                             home={players.field === 'child'}
+                            name={players.name}
+                            bleed="-mx-4 px-4 scroll-px-4"
                             submitLabel={t('pult.guest_board.start')}
                         />
                     )}

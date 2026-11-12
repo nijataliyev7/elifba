@@ -1,24 +1,25 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { GameSetupForm } from '@/components/games/game-setup-form';
+import { GameCatalog } from '@/components/games/game-catalog';
 import { useTranslation } from '@/hooks/use-translation';
-import { playersLabel } from '@/lib/game-players';
 import { index as classesIndex, show as showClass } from '@/routes/classes';
 import {
     create as createClassGame,
+    mode as classMode,
     store as storeClassGame,
 } from '@/routes/classes/games';
 import { index as childrenIndex, show as showChild } from '@/routes/children';
 import {
     create as createChildGame,
+    mode as childMode,
     store as storeChildGame,
 } from '@/routes/children/games';
 import type { GameSetupProps } from '@/types';
 
 /**
- * The game setup (docs/architecture.md §2, "Game setup"; docs/frontend.md
- * rule 13) for a class or for a parent's child (ADR 011): the shared setup
- * form (`GameSetupForm`), sent to `StartGame`; a started game opens on the
- * board. «Dəyiş» in the form leads to the learned letters on the class's
+ * «Yeni oyun» (docs/architecture.md §2, "Game setup"; docs/frontend.md
+ * rule 13) for a class or for a parent's child (ADR 011): the catalog of
+ * ready games (`GameCatalog`), started through `StartGame`; a started game
+ * opens on the board. «Dəyiş» leads to the learned letters on the class's
  * or the child's page.
  */
 export default function GameSetup({
@@ -61,8 +62,8 @@ export default function GameSetup({
         <>
             <Head title={t('games.setup.title')} />
 
-            <div className="mx-auto flex w-full max-w-[1072px] flex-col gap-6 p-4 md:p-6">
-                <h1 className="text-2xl font-semibold tracking-tight">
+            <div className="mx-auto flex w-full max-w-[1072px] flex-col gap-3 p-4 md:p-6">
+                <h1 className="text-2xl font-bold tracking-tight">
                     {child !== null
                         ? t('games.setup.child_title', {
                               name: child.display_name,
@@ -70,18 +71,20 @@ export default function GameSetup({
                         : t('games.setup.title')}
                 </h1>
 
-                <GameSetupForm
+                <GameCatalog
                     {...setup}
                     home={child !== null}
-                    page
-                    players={t(
-                        playersLabel({ schoolClass, child }).key,
-                        playersLabel({ schoolClass, child }).values,
-                    )}
+                    name={child?.display_name ?? schoolClass?.name ?? ''}
+                    bleed="-mx-4 px-4 scroll-px-4 md:-mx-6 md:px-6 md:scroll-px-6"
                     lettersHref={
                         child !== null
                             ? `${showChild.url(child.id)}#learned-letters`
                             : `${showClass.url(schoolClass?.id ?? '')}#learned-letters`
+                    }
+                    modeUrl={
+                        child !== null
+                            ? childMode.url(child.id)
+                            : classMode.url(schoolClass?.id ?? '')
                     }
                     form={
                         child !== null

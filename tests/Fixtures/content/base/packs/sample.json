@@ -2,6 +2,7 @@
     "key": "sample",
     "version": 1,
     "title": { "az": "Nümunə", "en": "Sample" },
+    "with": { "az": "Nümunə ilə", "en": "with the sample" },
     "units": ["letter", "syllable", "word", "sentence", "picture", "number"],
     "style": {
         "item": "card",

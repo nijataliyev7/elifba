@@ -111,6 +111,7 @@ function isolationCases(): array
         'DELETE classes/{class}/students/{student}/archive' => ['classes.students.restore', static fn (array $w): array => ['class' => $w['classA']->id, 'student' => $w['archivedStudentA']->id], $none],
         'GET classes/{class}/games/create' => ['classes.games.create', $classA, $none],
         'POST classes/{class}/games' => ['classes.games.store', $classA, static fn (array $w): array => ['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'rounds' => 5]],
+        'PUT classes/{class}/games/mode' => ['classes.games.mode', $classA, static fn (array $w): array => ['mode' => 'easy']],
         'GET games/{game}/board' => ['games.board', $gameA, $none],
         'POST games/{game}/board/claim' => ['games.board.claim', $gameA, $none],
         'GET games/{game}/state' => ['games.state', $gameA, $none],
@@ -135,6 +136,7 @@ function isolationCases(): array
         'PUT children/{child}/learned-letters' => ['children.learned-letters.update', $childA, static fn (array $w): array => ['letters' => ['a', 'b', 'ə']]],
         'GET children/{child}/games/create' => ['children.games.create', $childA, $none],
         'POST children/{child}/games' => ['children.games.store', $childA, static fn (array $w): array => ['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'rounds' => 5]],
+        'PUT children/{child}/games/mode' => ['children.games.mode', $childA, static fn (array $w): array => ['mode' => 'normal']],
     ];
 }
 
@@ -181,6 +183,7 @@ function isolationSnapshot(): array
         'custom_words' => $rows('custom_words'),
         'hidden_words' => $rows('hidden_words'),
         'children' => $rows('children'),
+        'setup_choices' => $rows('setup_choices'),
     ];
 }
 

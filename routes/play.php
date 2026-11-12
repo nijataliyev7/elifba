@@ -3,6 +3,7 @@
 use App\Enums\Role;
 use App\Http\Controllers\Play\BoardController;
 use App\Http\Controllers\Play\GameController;
+use App\Http\Controllers\Play\GameModeController;
 use App\Http\Controllers\Play\GameReplayController;
 use App\Http\Controllers\Play\GameRoundsController;
 use App\Http\Controllers\Play\GameStateController;
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Tea
     Route::post('classes/{class}/games', [GameController::class, 'store'])
         ->can('update', 'class')
         ->name('classes.games.store');
+    // «Asan» or «Normal» on «Yeni oyun», kept for the class.
+    Route::put('classes/{class}/games/mode', [GameModeController::class, 'update'])
+        ->can('update', 'class')
+        ->name('classes.games.mode');
 });
 
 // A child's home game: the parent area.
@@ -59,6 +64,11 @@ Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Par
         ->whereUlid('child')
         ->can('update', 'child')
         ->name('children.games.store');
+    // «Asan» or «Normal» on «Yeni oyun», kept for the child.
+    Route::put('children/{child}/games/mode', [GameModeController::class, 'updateForChild'])
+        ->whereUlid('child')
+        ->can('update', 'child')
+        ->name('children.games.mode');
 });
 
 // The board, the remote and pairing: an account's web session, either role.

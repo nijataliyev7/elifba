@@ -9,13 +9,17 @@ import type { Letter } from './classroom';
 /**
  * A pack on the setup page; titles in the interface language. `cover` is
  * the URL of the picture that stands for it (`style.cover`, one of its
- * words' pictures).
+ * words' pictures); a card's scene is drawn in its `palette`.
  */
 export type SetupPack = {
     key: string;
     title: string;
     cover: string;
+    palette: string[];
 };
+
+/** «Asan» (`pop` only) or «Normal» (every game where the board asks). */
+export type SetupMode = 'easy' | 'normal';
 
 export type SetupUnit =
     | 'letter'
@@ -62,27 +66,68 @@ export type SetupOption = SetupRefusal & {
     own: SetupRefusal | null;
 };
 
-/** What the setup form needs for one class or child (`GameSetupOptions::for()`). */
+/**
+ * A game some level offers, in catalog order: its mode, its name
+ * («Heca qur») and what the child does, in the interface language.
+ */
+export type SetupGame = {
+    unit: SetupUnit;
+    mechanic: string;
+    mode: SetupMode;
+    name: string;
+    hint: string;
+};
+
+/**
+ * A pack and a game the content offers it for: the card's name, built by
+ * the server («Qatarla cümlə qur»), and at most three strings its scene
+ * shows as the board would (none at a picture level or when it cannot start).
+ */
+export type SetupCard = {
+    pack: string;
+    unit: SetupUnit;
+    mechanic: string;
+    title: string;
+    sample: string[];
+};
+
+/** What the class or the child chose last (`SetupMemory::recall()`), only what still applies. */
+export type RememberedSetup = {
+    mode: SetupMode;
+    /** Unit → the level last started. */
+    levels: Partial<Record<SetupUnit, string>>;
+    /** Reading unit → the letter case last started. */
+    letterCases: Partial<Record<SetupUnit, 'upper' | 'lower'>>;
+    /** The letters last asked for at the letter level, still learned; null = all. */
+    letters: string[] | null;
+    /** The last «Yalnız mənim sözlərim»; null = never chosen. */
+    ownWords: boolean | null;
+};
+
+/** What the catalog needs for one class or child (`GameSetupOptions::for()`). */
 export type PlayersSetup = {
     options: SetupOption[];
+    cards: SetupCard[];
     /** The learned letters, for the letter level's choice and the letter case. */
     letters: Letter[];
     /** True when the learned letters are all 32. */
     allLetters: boolean;
+    remembered: RememberedSetup;
 };
 
 /** What every setup shares (`GameSetupOptions::shared()`). */
 export type SharedSetup = {
     packs: SetupPack[];
     levels: SetupLevel[];
+    games: SetupGame[];
     letterCases: ('upper' | 'lower')[];
-    /** The longest teacher word, for adding one from the form. */
+    /** The longest teacher word, for adding one from «Əlavə». */
     wordMaxLength: number;
 };
 
 /**
  * `games/setup`: a class's game or a parent's child's home game (exactly one
- * of `schoolClass` and `child`, ADR 011), with the same form and rules.
+ * of `schoolClass` and `child`, ADR 011), with the same catalog and rules.
  */
 export type GameSetupProps = SharedSetup &
     PlayersSetup & {
