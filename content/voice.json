@@ -102,6 +102,19 @@
         { "text": "Narahat olma, bir də sına!", "style": "warmly" },
         { "text": "Yox, bu deyil, bir də bax!", "style": "warmly" }
     ],
+    "greeting": { "text": "Salam!", "style": "excited" },
+    "finish": { "text": "Əla oynadın!", "style": "excited" },
+    "finish_class": { "text": "Əla oynadınız!", "style": "excited" },
+    "names": {
+        "style": "excited",
+        "credit": {
+            "title": "The board's voice: the first names of Elifba's name list, in Azerbaijani",
+            "author": "Elifba contributors",
+            "source": "https://elevenlabs.io/docs/overview/capabilities/text-to-speech/eleven-v4",
+            "license": "MIT",
+            "changes": "A synthetic voice, not a person's recording: made with ElevenLabs Eleven v4 (eleven_v4, language az) in the Voice Library voice «Nigar – Ad Read» under a paid plan, in {month}, one clip per name of content/names.json (our own list, seeded from Wikidata, CC0); trimmed and levelled with ffmpeg"
+        }
+    },
     "credit": {
         "title": "The board's voice: every prompt, the praise and the retry phrase, in Azerbaijani",
         "author": "Elifba contributors",

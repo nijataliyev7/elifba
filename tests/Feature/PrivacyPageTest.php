@@ -86,3 +86,18 @@ it('has the section for parents in both languages', function (?string $locale, s
     'az' => [null, 'Evdə: valideynlər və uşaqları', 'yalnız ad (soyadsız)', 'Sinif valideynləri üçün qeyd', 'valideynlərin'],
     'en' => ['en', 'At home: parents and their children', 'a first name only (no surname)', 'A note for a class\'s parents', 'parents'],
 ]);
+
+it('says what the board says aloud, a name only from the built-in list and sent nowhere, in both languages', function (?string $locale, string $title, string $list, string $note): void {
+    $request = $locale === null ? $this : $this->withSession(['locale' => $locale]);
+
+    $request->get(route('privacy'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('translations', fn ($translations): bool => $translations['privacy.voice.title'] === $title
+                && str_contains($translations['privacy.voice.body'], $list)
+                // The note a teacher copies for a class's parents says it too.
+                && str_contains($translations['privacy.parents.note'], $note)));
+})->with([
+    'az' => [null, 'Lövhənin səsi', 'hazır ad lüğətindədirsə', 'ad heç yerə göndərilmir'],
+    'en' => ['en', "The board's voice", 'built-in name list', 'the name is sent nowhere'],
+]);

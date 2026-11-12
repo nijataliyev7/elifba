@@ -29,7 +29,10 @@ use App\Domain\Language\Support\Az;
  *
  * `needed()` lists every clip built-in content can ask for; the round
  * builders ask through `Play\Support\PromptVoice`, which never asks for a
- * teacher word. No name and no row from the database reach this class.
+ * teacher word. No row from the database reaches this class. A first name
+ * of the built-in list (ADR 016) is a line made here too (`line()`, through
+ * `NameVoices`), but it is listed apart (`VoiceData::$names`), its file
+ * lives outside `content/assets` and `url()` never gives it one.
  */
 final readonly class VoiceClips
 {
@@ -108,12 +111,41 @@ final readonly class VoiceClips
     }
 
     /**
+     * «Salam!», said before a home game's child's name (ADR 016 decision 7).
+     */
+    public function greeting(): VoiceLineData
+    {
+        return $this->line(VoiceLineData::GREETING, $this->voice->greeting->text, $this->voice->greeting->style);
+    }
+
+    /**
+     * «Əla oynadın!», at the end of a game one player played.
+     */
+    public function finish(): VoiceLineData
+    {
+        return $this->line(VoiceLineData::FINISH, $this->voice->finish->text, $this->voice->finish->style);
+    }
+
+    /**
+     * «Əla oynadınız!», at the end of a game the class played.
+     */
+    public function finishClass(): VoiceLineData
+    {
+        return $this->line(VoiceLineData::FINISH_CLASS, $this->voice->finishClass->text, $this->voice->finishClass->style);
+    }
+
+    /**
      * The clip's URL when it has been made (`voice-clips.json` lists it),
      * versioned like every content URL; null otherwise, and the board is
-     * silent for it.
+     * silent for it. Never for a name: its hash can be computed from the
+     * public list, so a URL with it would carry the name (ADR 016).
      */
     public function url(VoiceLineData $line): ?string
     {
+        if ($line->isName()) {
+            return null;
+        }
+
         return isset($this->voice->clips[$line->hash]) ? ContentAssets::url(self::path($line->hash), $this->voice->version) : null;
     }
 
@@ -147,13 +179,15 @@ final readonly class VoiceClips
     }
 
     /**
-     * Every clip built-in content can ask for, by hash, in the order of
-     * `prompts.json`, then praise and retry: each template with every item a
+     * Every clip built-in content can ask for under `content/assets/voice`,
+     * by hash, in the order of `prompts.json`, then praise, retry, the
+     * greeting and the two end phrases: each template with every item a
      * level of its unit and mechanic gives in any pack that lists the unit,
      * with all 32 letters learned (learned letters and hidden words only
      * ever take items away). `build_syllable` builds syllables of two or
      * more letters (`BuildSyllableRoundBuilder`); a `count` round counts the
-     * pictured words of a pack that lists `number`.
+     * pictured words of a pack that lists `number`. The names of the list
+     * are `NameVoices::needed()`.
      *
      * @return array<string, VoiceLineData>
      */
@@ -178,7 +212,7 @@ final readonly class VoiceClips
             }
         }
 
-        foreach ([...$this->praise(), ...$this->retry()] as $line) {
+        foreach ([...$this->praise(), ...$this->retry(), $this->greeting(), $this->finish(), $this->finishClass()] as $line) {
             $add($line);
         }
 
@@ -200,7 +234,11 @@ final readonly class VoiceClips
         };
     }
 
-    private function line(string $group, string $phrase, string $style): VoiceLineData
+    /**
+     * A clip of `$phrase` in this voice: the tag, then the phrase or its
+     * respelling, hashed.
+     */
+    public function line(string $group, string $phrase, string $style): VoiceLineData
     {
         $text = "[{$style}] ".($this->voice->respell[$phrase] ?? $phrase);
 

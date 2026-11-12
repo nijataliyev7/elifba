@@ -265,6 +265,46 @@ export function boardHttp(
 }
 
 /**
+ * The clip of a player's first name (§3 "Voice", ADR 016 decision 8): the
+ * `name_audio` path of the board's props, `/games/{game}/players/{player}/voice`
+ * — ids only, never a name or a hash — fetched with the board's own
+ * headers (a guest board's bearer in `Authorization`) and never cached.
+ * Null when there is none: a 404 here means "no clip", not a board that
+ * lost its game, so `onRefused` hears only a 401.
+ */
+export async function nameClip(
+    url: string,
+    auth: BoardAuth = SESSION_AUTH,
+): Promise<ArrayBuffer | null> {
+    let response: Response;
+
+    try {
+        response = await fetch(url, {
+            method: 'GET',
+            headers: { ...authHeaders(auth), Accept: 'audio/mpeg' },
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
+    } catch {
+        return null;
+    }
+
+    if (auth.kind === 'bearer' && response.status === 401) {
+        auth.onRefused?.(401);
+    }
+
+    if (!response.ok) {
+        return null;
+    }
+
+    try {
+        return await response.arrayBuffer();
+    } catch {
+        return null;
+    }
+}
+
+/**
  * The teacher board's pairing card: `POST /games/{game}/join-code` keeps a
  * code that is still valid and replaces an expired one (§4, "Pairing").
  */

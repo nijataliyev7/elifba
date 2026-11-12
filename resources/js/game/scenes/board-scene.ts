@@ -17,9 +17,10 @@ import type { Round, RoundProgress, Unit } from '../contract';
 import type { Figure, Pictures } from '../figures';
 import { chooseFigures, figureKey } from '../figures';
 import { FIGURE_RASTER } from '../styles/figure';
+import type { NameClips } from '../name-voice';
 import type { ItemStyle, SlotStyle } from '../styles/types';
-import type { BoardVoice } from '../voice';
-import { VoiceCues } from '../voice';
+import type { BoardVoice, VoiceLine, VoicePlayers } from '../voice';
+import { NAME_GAP_MS, VoiceCues } from '../voice';
 
 export const BOARD_WIDTH = 1920;
 export const BOARD_HEIGHT = 1080;
@@ -55,6 +56,10 @@ export type SceneOptions = {
     sounds: BoardSounds;
     /** What the board says besides the sound effects (§3 "Voice"). */
     voice: BoardVoice;
+    /** Who may be at the board, for the names the voice says (ADR 016). */
+    players: VoicePlayers;
+    /** The players' name clips, fetched by ids (`name-voice.ts`); null where the page cannot decode audio. */
+    names: NameClips | null;
     /** The pack's figures (`pack.style.figures`), for `animal` and `fruit` items; empty for the rest. */
     figures: Figure[];
     /** The pictures that show a content key (`pack.pictures`), for the same items. */
@@ -69,15 +74,41 @@ const FALLBACK_COLOUR = 0x3b82c4;
 const MOTION_SOUNDS = ['arrive', 'leave'] as const;
 
 /**
- * How the voice waits for a free channel (§3 "Voice"): a prompt or praise
- * waits for the clip being said; the retry phrase is said only into
- * silence; 🔊 cuts in.
+ * How the voice waits for a free channel (§3 "Voice"): a prompt, praise,
+ * the greeting or the end waits for the line being said; the retry phrase
+ * is said only into silence; 🔊 cuts in.
  */
 type VoiceTurn = 'queue' | 'idle' | 'now';
+
+/** One clip on the voice's channel: a content file, or a player's name (`name-voice.ts`). */
+type Clip = { url: string } | { player: string };
+
+/** A line being said: a name and a phrase, `NAME_GAP_MS` apart. */
+type Utterance = {
+    /** The clips still to say after the one being said. */
+    rest: Clip[];
+    /** The clip being said, or said last in the pause after it. */
+    clip: Clip | null;
+    /** Its sound; null while it loads or in the pause after it. */
+    sound: Phaser.Sound.BaseSound | null;
+    state: 'loading' | 'playing' | 'gap';
+};
 
 /** The voice's texture-cache keys, apart from the pack's sound keys. */
 function voiceKey(url: string): string {
     return `voice:${url}`;
+}
+
+/** A name clip's cache key: the player's id, never the name. */
+function nameKey(playerId: string): string {
+    return `name:${playerId}`;
+}
+
+/** A line's clips: the name, when there is one, then the phrase. */
+function clipsOf(line: VoiceLine): Clip[] {
+    const phrase: Clip = { url: line.phrase };
+
+    return line.name === null ? [phrase] : [{ player: line.name.id }, phrase];
 }
 
 /** The clip a miss or solved sound is followed by starts this long after it ends. */
@@ -86,17 +117,19 @@ const VOICE_GAP_MS = 80;
 export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
     private disconnect: (() => void) | null = null;
     private readonly cues: VoiceCues;
-    /** The clip being said (or loading to be said), and the one waiting for it. */
-    private speaking: Phaser.Sound.BaseSound | 'loading' | null = null;
-    private waiting: string | null = null;
-    private readonly loading = new Map<string, (() => void)[]>();
+    /** The line being said, and the one waiting for it. */
+    private speaking: Utterance | null = null;
+    private waiting: Clip[] | null = null;
+    private readonly loading = new Map<string, ((ok: boolean) => void)[]>();
+    /** The game ended on this board: the canvas stands frozen under the result. */
+    private over = false;
 
     constructor(
         key: string,
         protected readonly options: SceneOptions,
     ) {
         super({ key });
-        this.cues = new VoiceCues(options.voice);
+        this.cues = new VoiceCues(options.voice, options.players);
     }
 
     preload(): void {
@@ -108,6 +141,11 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
         for (const url of this.cues.phrases()) {
             this.load.audio(voiceKey(url), url);
+        }
+
+        // A home game's child is at the board from the start.
+        for (const player of this.cues.namesUpFront()) {
+            this.options.names?.load(player);
         }
 
         // Pictures behind items are SVGs with only a size of their own
@@ -147,8 +185,81 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         const url = this.cues.repeat(this.currentRound());
 
         if (url !== null) {
-            this.say(url, 'now');
+            this.say([{ url }], 'now');
         }
+    }
+
+    /**
+     * A turn starts (ADR 016 decision 6): the count of its solved rounds
+     * starts again and the player's name clip is fetched; on «Başla» with
+     * nothing answered a home game is greeted before its first prompt,
+     * which waits for the greeting.
+     */
+    startTurn(studentId: string | null, fresh: boolean): void {
+        const named = this.cues.turn(studentId);
+
+        if (named !== null) {
+            this.options.names?.load(named);
+        }
+
+        const greeting = this.cues.greeting(fresh);
+
+        if (greeting !== null) {
+            this.say(clipsOf(greeting), 'queue');
+        }
+    }
+
+    /**
+     * The game ended under play (ADR 016 decision 7). The board froze under
+     * the result a moment ago; the voice goes on: the clip being said ends,
+     * the rest of its line and a prompt waiting give way, and the end is
+     * said. When that clip is the name the end begins with (a praise that
+     * began «Abbas!»), the end's phrase follows it, so the name is said once.
+     */
+    gameOver(solved: number): void {
+        const end = this.cues.finished(solved);
+        const current = this.speaking;
+        let line = end === null ? null : clipsOf(end);
+
+        this.over = true;
+        this.waiting = null;
+
+        if (current !== null) {
+            const [first, ...after] = line ?? [];
+            const sameName =
+                current.clip !== null &&
+                'player' in current.clip &&
+                first !== undefined &&
+                'player' in first &&
+                first.player === current.clip.player;
+
+            current.rest = sameName ? after : [];
+
+            if (sameName) {
+                line = null;
+            }
+
+            if (current.state !== 'gap') {
+                current.sound?.resume();
+            } else if (current.rest.length > 0) {
+                // The pause stood on the frozen scene clock: begin it again.
+                this.after(NAME_GAP_MS, () => this.sayNext(current));
+            } else {
+                this.speaking = null;
+            }
+        }
+
+        if (line !== null) {
+            this.say(line, 'queue');
+        }
+    }
+
+    /**
+     * The device's silent mode («Səssiz»): the stage mutes what plays; the
+     * voice starts nothing new meanwhile.
+     */
+    setMuted(muted: boolean): void {
+        this.cues.mute(muted);
     }
 
     setPaused(paused: boolean): void {
@@ -175,12 +286,15 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             }
         }
 
-        // The voice stops mid-word and goes on from there.
-        if (this.speaking !== null && this.speaking !== 'loading') {
+        // The voice stops mid-word and goes on from there; the pause
+        // before a name waits on the scene clock.
+        const sound = this.speaking?.sound;
+
+        if (sound) {
             if (paused) {
-                this.speaking.pause();
+                sound.pause();
             } else {
-                this.speaking.resume();
+                sound.resume();
             }
         }
     }
@@ -300,7 +414,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
                 .find((sound) => sound.isPlaying || sound.isPaused);
             const say = () => {
                 if (this.currentRound()?.id === round.id) {
-                    this.say(url, 'queue');
+                    this.say([{ url }], 'queue');
                 }
             };
 
@@ -312,14 +426,17 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         });
     }
 
-    /** Praise once the `solved` sound, played `delay` ms from now, is over. */
+    /**
+     * Praise once the `solved` sound, played `delay` ms from now, is over,
+     * with the player's name after it when it is due.
+     */
     protected sayPraiseAfter(delay: number): void {
-        const url = this.cues.solved();
+        const line = this.cues.solved();
 
-        if (url !== null) {
+        if (line !== null) {
             this.time.delayedCall(
                 delay + this.lengthOf('solved') + VOICE_GAP_MS,
-                () => this.say(url, 'queue'),
+                () => this.say(clipsOf(line), 'queue'),
             );
         }
     }
@@ -330,7 +447,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
         if (url !== null) {
             this.time.delayedCall(this.lengthOf('miss') + VOICE_GAP_MS, () =>
-                this.say(url, 'idle'),
+                this.say([{ url }], 'idle'),
             );
         }
     }
@@ -355,33 +472,83 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             : 0;
     }
 
-    /** The voice's one channel (`VoiceTurn`). */
-    private say(url: string, turn: VoiceTurn): void {
+    /** The voice's one channel (`VoiceTurn`): a line at a time, in order. */
+    private say(line: Clip[], turn: VoiceTurn): void {
         if (turn === 'now') {
             this.hush();
         } else if (this.speaking !== null) {
             if (turn === 'queue') {
-                this.waiting = url;
+                this.waiting = line;
             }
 
             return;
         }
 
-        this.speaking = 'loading';
-        this.loadVoice(url, () => {
-            if (this.speaking !== 'loading' || !this.sys.isActive()) {
+        const utterance: Utterance = {
+            rest: [...line],
+            clip: null,
+            sound: null,
+            state: 'loading',
+        };
+
+        this.speaking = utterance;
+        this.sayNext(utterance);
+    }
+
+    /** Says the next clip of a line, or frees the channel for the line waiting. */
+    private sayNext(utterance: Utterance): void {
+        if (this.speaking !== utterance) {
+            return;
+        }
+
+        const clip = utterance.rest.shift();
+
+        if (clip === undefined) {
+            this.speaking = null;
+            this.sayWaiting();
+
+            return;
+        }
+
+        utterance.state = 'loading';
+        utterance.clip = clip;
+        utterance.sound = null;
+        this.loadClip(clip, utterance.rest, (key) => {
+            if (this.speaking !== utterance || !this.sys.isActive()) {
                 return;
             }
 
-            const sound = this.sound.add(voiceKey(url));
+            // A name not fetched yet is left out and the phrase is said
+            // alone; a phrase that cannot be said ends its line, so a name
+            // is never said without its phrase.
+            if (key === null) {
+                if ('url' in clip) {
+                    utterance.rest = [];
+                }
 
-            this.speaking = sound;
+                this.sayNext(utterance);
+
+                return;
+            }
+
+            const sound = this.sound.add(key);
+
+            utterance.sound = sound;
+            utterance.state = 'playing';
             sound.once(Phaser.Sound.Events.COMPLETE, () => {
                 sound.destroy();
 
-                if (this.speaking === sound) {
-                    this.speaking = null;
-                    this.sayWaiting();
+                if (this.speaking !== utterance) {
+                    return;
+                }
+
+                utterance.sound = null;
+
+                if (utterance.rest.length === 0) {
+                    this.sayNext(utterance);
+                } else {
+                    utterance.state = 'gap';
+                    this.after(NAME_GAP_MS, () => this.sayNext(utterance));
                 }
             });
             sound.play();
@@ -398,11 +565,13 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         }
     }
 
-    /** Stops the clip being said and forgets the one waiting. */
+    /** Stops the line being said and forgets the one waiting. */
     private hush(): void {
-        if (this.speaking !== null && this.speaking !== 'loading') {
-            this.speaking.stop();
-            this.speaking.destroy();
+        const sound = this.speaking?.sound;
+
+        if (sound) {
+            sound.stop();
+            sound.destroy();
         }
 
         this.speaking = null;
@@ -410,14 +579,77 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
     }
 
     /**
-     * Loads a clip once, then calls `ready`; a clip that fails to load is
-     * never said (and keeps the channel busy no longer).
+     * Runs `callback` `ms` from now: on the scene clock while the game is
+     * on, so it waits while the board is paused; once the game is over the
+     * board stands frozen under the result, and the page's clock runs it.
      */
-    private loadVoice(url: string, ready: () => void): void {
+    private after(ms: number, callback: () => void): void {
+        if (!this.over) {
+            this.time.delayedCall(ms, callback);
+
+            return;
+        }
+
+        setTimeout(() => {
+            if (this.sys.isActive()) {
+                callback();
+            }
+        }, ms);
+    }
+
+    /**
+     * The cache key of a clip ready to say, or null: a content file loads
+     * once; a name is said only when its clip has been fetched and, said
+     * first, when the phrase after it (in `rest`) has loaded.
+     */
+    private loadClip(
+        clip: Clip,
+        rest: Clip[],
+        ready: (key: string | null) => void,
+    ): void {
+        if ('url' in clip) {
+            this.loadVoice(clip.url, (ok) =>
+                ready(ok ? voiceKey(clip.url) : null),
+            );
+
+            return;
+        }
+
+        const key = nameKey(clip.player);
+
+        if (!this.cache.audio.exists(key)) {
+            const decoded = this.options.names?.get(clip.player) ?? null;
+
+            if (decoded === null) {
+                ready(null);
+
+                return;
+            }
+
+            this.cache.audio.add(key, decoded);
+        }
+
+        // A name said first waits until its phrase is there to follow it.
+        const phrase = rest.find((next) => 'url' in next);
+
+        if (phrase === undefined || !('url' in phrase)) {
+            ready(key);
+
+            return;
+        }
+
+        this.loadVoice(phrase.url, (ok) => ready(ok ? key : null));
+    }
+
+    /**
+     * Loads a clip once, then calls `done` with whether it loaded; a clip
+     * that fails to load is never said.
+     */
+    private loadVoice(url: string, done: (ok: boolean) => void): void {
         const key = voiceKey(url);
 
         if (this.cache.audio.exists(key)) {
-            ready();
+            done(true);
 
             return;
         }
@@ -425,7 +657,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         const waiting = this.loading.get(key);
 
         if (waiting !== undefined) {
-            waiting.push(ready);
+            waiting.push(done);
 
             return;
         }
@@ -437,13 +669,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             this.load.off(loaded, onLoaded);
             this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR, onError);
             this.loading.delete(key);
-
-            if (ok) {
-                callbacks.forEach((callback) => callback());
-            } else if (this.speaking === 'loading') {
-                this.speaking = null;
-                this.sayWaiting();
-            }
+            callbacks.forEach((callback) => callback(ok));
         };
         const onLoaded = () => finish(true);
         const onError = (file: Phaser.Loader.File) => {
@@ -452,7 +678,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             }
         };
 
-        this.loading.set(key, [ready]);
+        this.loading.set(key, [done]);
         this.load.on(loaded, onLoaded);
         this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, onError);
         this.load.audio(key, url);

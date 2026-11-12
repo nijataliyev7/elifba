@@ -11,6 +11,8 @@ export type ChildRow = {
     /** Key from `content/avatars.json`. */
     avatar: string;
     stars_today: number;
+    /** Whether the board says the name aloud (ADR 016), null while the account says no name. */
+    has_voice: boolean | null;
 };
 
 /** The child on their own page. */
@@ -20,6 +22,10 @@ export type Child = {
     avatar: string;
     /** Lowercase letters the child has learned, in alphabet order. */
     learned_letters: string[];
+    /** Whether the board says the name aloud (ADR 016), null while the account says no name. */
+    has_voice: boolean | null;
+    /** The name as the list spells a first name typed otherwise («Lale» → «Lalə»), or null. */
+    voice_spelling: string | null;
 };
 
 /** A child's stars (`ChildStarsData`): the last seven Baku days, oldest first. */

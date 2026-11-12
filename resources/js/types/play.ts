@@ -1,3 +1,4 @@
+import type { BoardVoice } from '@/game/voice';
 import type { Letter } from './classroom';
 
 /*
@@ -90,11 +91,17 @@ export type GameSetupProps = SharedSetup &
         child: { id: string; display_name: string } | null;
     };
 
-/** A student for "who is at the board"; the avatar URL is null when the key has no picture. */
+/**
+ * A student for "who is at the board"; the avatar URL is null when the key
+ * has no picture. `name_audio` is where the board fetches the clip of the
+ * first name (`/games/{game}/players/{player}/voice`, ids only; ADR 016),
+ * null when the board does not say the name.
+ */
 export type BoardStudent = {
     id: string;
     display_name: string;
     avatar: { key: string; url: string | null };
+    name_audio: string | null;
 };
 
 /** The child at the board of a home game; `stars` is their total before this game. */
@@ -157,14 +164,11 @@ export type BoardProps = {
     students: BoardStudent[];
     /**
      * What the board says besides each round's `prompt.audio` (§3 "Voice",
-     * `BoardVoice`, PHP): whether it says prompts at all, and the praise
-     * and retry clips (empty when the owner turned praise off).
+     * `BoardVoice`, PHP): whether it says prompts at all, the praise and
+     * retry clips (empty when the owner turned praise off), whether it says
+     * names, and the greeting and end phrases (null with praise off).
      */
-    voice: {
-        prompt: boolean;
-        praise: string[];
-        retry: string[];
-    };
+    voice: BoardVoice;
 };
 
 /** `/games/{game}/board`: the board's props and the teacher's own choice (Settings → Oyun). */

@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Tests\Support\Games;
 use Tests\Support\GuestBoards;
+use Tests\Support\NameClips;
 
 /*
  * A guest board's bearer reaches only the game its board shows
- * (docs/architecture.md §4): the board routes (claim, state, sync, status)
- * of that one game, its own board (poll, close) and that game's channel.
+ * (docs/architecture.md §4): the board routes (claim, state, sync, status,
+ * a player's voice, ADR 016) of that one game, its own board (poll, close) and that game's channel.
  * Every other route of the app answers the bearer exactly as it answers a
  * visitor with no credentials — or 404 where a board route does not find
  * the game. A new route is covered the day it is added.
@@ -32,6 +33,7 @@ const BEARER_ROUTES = [
     'games.state',
     'games.sync',
     'games.status.update',
+    'games.players.voice',
     'guest-boards.show',
     'guest-boards.destroy',
 ];
@@ -45,6 +47,8 @@ const BEARER_ROUTES = [
  */
 function bearerWorld(): array
 {
+    // The student's and the child's names have clips (ADR 016).
+    NameClips::fake(['Aysel', 'Firuzə']);
     $teacher = User::factory()->teacherAndParent()->create();
     $class = SchoolClass::factory()->for($teacher, 'teacher')->create();
     $child = Child::factory()->for($teacher, 'parent')->create(['display_name' => 'Firuzə']);
@@ -79,6 +83,7 @@ function bearerUri(RoutingRoute $route, array $world, GameSession $game): string
         'child' => $world['child']->id,
         'game' => $game->id,
         'board' => $world['board']->id,
+        'player' => $world['student']->id,
         'code' => '123456',
     ];
 
@@ -186,6 +191,23 @@ it('finds no other game for the bearer: claim, state, sync and status answer 404
     'sync' => ['games.sync', 'POST'],
     'status' => ['games.status.update', 'PATCH'],
 ]);
+
+it('reaches only the name clips of the players of the game its board shows', function (): void {
+    $world = bearerWorld();
+    $bearer = GuestBoards::bearer($world['token']);
+    $before = bearerSnapshot();
+    $voice = fn (string $game, string $player) => $this->get(route('games.players.voice', ['game' => $world[$game]->id, 'player' => $player]), $bearer);
+
+    $voice('shown', $world['student']->id)->assertOk()->assertHeader('Content-Type', 'audio/mpeg');
+    // The account's child plays no class game; the child's home game and the
+    // teacher's other games are not this board's.
+    $voice('shown', $world['child']->id)->assertNotFound();
+    $voice('home', $world['child']->id)->assertNotFound();
+    $voice('other', $world['student']->id)->assertNotFound();
+    $voice('foreign', $world['student']->id)->assertNotFound();
+
+    expect(bearerSnapshot())->toBe($before);
+});
 
 it('loses the game when the phone sends another one to the board', function (): void {
     $world = bearerWorld();

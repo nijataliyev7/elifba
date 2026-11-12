@@ -225,7 +225,7 @@
     "credits: a file outside the credited folders": {
         "file": "credits.json",
         "set": { "credits.0.files.0": "LICENSE" },
-        "problem": "credits.json: credits[0].files \"LICENSE\" must be under content/assets/ or resources/fonts/"
+        "problem": "credits.json: credits[0].files \"LICENSE\" must be under content/assets/ or content/voice-names/ or resources/fonts/"
     },
     "credits: a source that is not https": {
         "file": "credits.json",
@@ -908,5 +908,182 @@
         "file": "voice.json",
         "set": { "spoken.letters.r": "ER" },
         "problem": "voice.json: spoken.letters.r must say the letter in lowercase letters"
+    },
+    "names: no list": {
+        "file": "names.json",
+        "delete": ["names.json"],
+        "problem": "names.json: is missing"
+    },
+    "names: a version below 1": {
+        "file": "names.json",
+        "set": { "version": 0 },
+        "problem": "names.json: version must be a whole number from 1"
+    },
+    "names: no source": {
+        "file": "names.json",
+        "set": { "sources": [] },
+        "problem": "names.json: sources must be a non-empty list of non-empty strings"
+    },
+    "names: a source that is no https URL": {
+        "file": "names.json",
+        "set": { "sources": ["http://query.wikidata.org/"] },
+        "problem": "names.json: sources[0] must be an https:// URL"
+    },
+    "names: no name": {
+        "file": "names.json",
+        "set": { "names": [] },
+        "problem": "names.json: names must be a non-empty list of non-empty strings"
+    },
+    "names: a letter outside the alphabet": {
+        "file": "names.json",
+        "set": { "names.6": "Zəhwa" },
+        "problem": "names.json: names[6] \"Zəhwa\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: the apostrophe of the old spelling": {
+        "file": "names.json",
+        "set": { "names.6": "Zə'hra" },
+        "problem": "names.json: names[6] \"Zə'hra\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: a hyphenated name": {
+        "file": "names.json",
+        "set": { "names.6": "Zəhra-Nur" },
+        "problem": "names.json: names[6] \"Zəhra-Nur\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: two words": {
+        "file": "names.json",
+        "set": { "names.6": "Zəhra Nur" },
+        "problem": "names.json: names[6] \"Zəhra Nur\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: one letter": {
+        "file": "names.json",
+        "set": { "names.6": "Z" },
+        "problem": "names.json: names[6] \"Z\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: more than 24 letters": {
+        "file": "names.json",
+        "set": { "names.6": "Zəhrazəhrazəhrazəhrazəhra" },
+        "problem": "names.json: names[6] \"Zəhrazəhrazəhrazəhrazəhra\" must be one word of 2–24 letters of the alphabet"
+    },
+    "names: a name in lowercase": {
+        "file": "names.json",
+        "set": { "names.6": "zəhra" },
+        "problem": "names.json: names[6] \"zəhra\" must be written \"Zəhra\""
+    },
+    "names: a capital İ inside a name": {
+        "file": "names.json",
+        "set": { "names.4": "İlkİn" },
+        "problem": "names.json: names[4] \"İlkİn\" must be written \"İlkin\""
+    },
+    "names: a name in capitals": {
+        "file": "names.json",
+        "set": { "names.5": "NİHAT" },
+        "problem": "names.json: names[5] \"NİHAT\" must be written \"Nihat\""
+    },
+    "names: a name twice": {
+        "file": "names.json",
+        "set": { "names": ["Aysel", "Əli", "Əli", "Nihat"] },
+        "problem": "names.json: names[2] \"Əli\" is already names[1]"
+    },
+    "names: out of Azerbaijani order": {
+        "file": "names.json",
+        "set": { "names": ["Aysel", "Hüseyn", "Əli", "Nihat"] },
+        "problem": "names.json: names must be in Azerbaijani alphabetical order: names[1] \"Hüseyn\" belongs elsewhere (\"Əli\" comes there)"
+    },
+    "names: a Cyrillic ә": {
+        "file": "names.json",
+        "set": { "names.6": "Zәhra" },
+        "problem": "names.json: names[6] \"Zәhra\" is not normalized (U+04D9)"
+    },
+    "voice: no greeting": {
+        "file": "voice.json",
+        "unset": ["greeting"],
+        "problem": "voice.json: the file needs `greeting`"
+    },
+    "voice: an end phrase in quotes": {
+        "file": "voice.json",
+        "set": { "finish.text": "«Əla oynadın»!" },
+        "problem": "voice.json: finish.text \"«Əla oynadın»!\" may hold only alphabet letters"
+    },
+    "voice: an end phrase without its final mark": {
+        "file": "voice.json",
+        "set": { "finish_class.text": "Əla oynadınız" },
+        "problem": "voice.json: finish_class.text \"Əla oynadınız\" may hold only alphabet letters, spaces and . , ! ? - and must end with . ! or ?"
+    },
+    "voice: a greeting tag in brackets": {
+        "file": "voice.json",
+        "set": { "greeting.style": "[cheerfully]" },
+        "problem": "voice.json: greeting.style must be an audio tag in lowercase English words"
+    },
+    "voice: a greeting that is a praise phrase": {
+        "file": "voice.json",
+        "set": { "greeting.text": "Əla!" },
+        "problem": "voice.json: a phrase is listed twice among praise, retry, greeting, finish and finish_class"
+    },
+    "voice: no tag for the names": {
+        "file": "voice.json",
+        "unset": ["names.style"],
+        "problem": "voice.json: names needs `style`"
+    },
+    "voice: a names tag in capitals": {
+        "file": "voice.json",
+        "set": { "names.style": "Excited" },
+        "problem": "voice.json: names.style must be an audio tag in lowercase English words"
+    },
+    "voice: a names credit that does not say when": {
+        "file": "voice.json",
+        "set": { "names.credit.changes": "Made with ElevenLabs." },
+        "problem": "voice.json: names.credit.changes must say when the clips were made with {month}"
+    },
+    "voice: a names credit without an https source": {
+        "file": "voice.json",
+        "set": { "names.credit.source": "elevenlabs.io" },
+        "problem": "voice.json: names.credit.source must be an https:// URL"
+    },
+    "voice: a names credit under a license not allowed": {
+        "file": "voice.json",
+        "set": { "names.credit.license": "proprietary" },
+        "problem": "voice.json: names.credit.license must be one of"
+    },
+    "voice clips: no list of name clips": {
+        "file": "voice-clips.json",
+        "unset": ["names"],
+        "problem": "voice-clips.json: the file needs `names`"
+    },
+    "voice clips: name clips as a list": {
+        "file": "voice-clips.json",
+        "set": { "names": ["[excited] Nihat!"] },
+        "problem": "voice-clips.json: names must be an object"
+    },
+    "voice clips: a name clip without a file": {
+        "file": "voice-clips.json",
+        "set": { "names.752d0ef3936dd661": "[excited] Aysel!" },
+        "problem": "voice-clips.json: names.752d0ef3936dd661: content/voice-names/752d0ef3936dd661.mp3 does not exist"
+    },
+    "voice clips: a name clip listed with another text": {
+        "file": "voice-clips.json",
+        "set": { "names.f66bf3c65feb9853": "[excited] Nihad!" },
+        "problem": "voice-clips.json: names.f66bf3c65feb9853 is not the clip of a name of names.json in the voice of voice.json (\"[excited] Nihad!\")"
+    },
+    "voice clips: a name clip under content/assets": {
+        "file": "voice-clips.json",
+        "set": { "names.f66bf3c65feb9853": "[excited] Nihat!" },
+        "write": { "assets/voice/f66bf3c65feb9853.mp3": "" },
+        "problem": "voice-clips.json: content/assets/voice/f66bf3c65feb9853.mp3 is no clip of clips"
+    },
+    "voice clips: a file in voice-names that is no name clip": {
+        "file": "voice-clips.json",
+        "write": { "voice-names/aaaaaaaaaaaaaaaa.mp3": "" },
+        "problem": "voice-clips.json: content/voice-names/aaaaaaaaaaaaaaaa.mp3 is no clip of names"
+    },
+    "voice clips: a name clip of a name off the list": {
+        "file": "voice-clips.json",
+        "set": { "names.0320aa0d819b1e83": "[excited] Ramin!" },
+        "write": { "voice-names/0320aa0d819b1e83.mp3": "" },
+        "problem": "voice-clips.json: names.0320aa0d819b1e83 is not the clip of a name of names.json in the voice of voice.json (\"[excited] Ramin!\")"
+    },
+    "voice clips: a name clip that is no hash": {
+        "file": "voice-clips.json",
+        "set": { "names.nihat": "[excited] Nihat!" },
+        "problem": "voice-clips.json: names.nihat must be a hash of 16 lowercase hex digits"
     }
 }

@@ -243,15 +243,20 @@ function fakeServer(progress: RoundProgress[] = [], rounds: Round[] = ROUNDS) {
 
 function recordingScene() {
     const log: string[] = [];
+    /** What the voice heard (§3 "Voice"): turns and the game's end. */
+    const voice: string[] = [];
     const scene: BridgeScene = {
         showRound: (shown) => log.push(`show:${shown.id}`),
         applyHit: (effect: HitEffect) =>
             log.push(`hit:${effect.itemId}:${effect.status}`),
         setPaused: (paused) => log.push(paused ? 'pause' : 'play'),
         repeatPrompt: () => log.push('repeat'),
+        startTurn: (studentId, fresh) =>
+            voice.push(`turn:${studentId ?? 'class'}${fresh ? ':fresh' : ''}`),
+        gameOver: (solved) => voice.push(`over:${solved}`),
     };
 
-    return { scene, log };
+    return { scene, log, voice };
 }
 
 let ids = 0;
@@ -266,7 +271,7 @@ function setup(
     const server = overrides.server ?? fakeServer();
     const timers = manualTimers();
     const bridge = new BoardBridge();
-    const { scene, log } = recordingScene();
+    const { scene, log, voice } = recordingScene();
 
     bridge.connect(scene);
     // Connecting replays the pause state; the tests watch what follows.
@@ -286,7 +291,7 @@ function setup(
         ...overrides,
     });
 
-    return { controller, storage, server, timers, bridge, log };
+    return { controller, storage, server, timers, bridge, log, voice };
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -601,6 +606,8 @@ describe('a sequence round with a reused tile', () => {
             applyHit: () => {},
             setPaused: () => {},
             repeatPrompt: () => {},
+            startTurn: () => {},
+            gameOver: () => {},
         });
         await controller.load();
         controller.start();
@@ -645,6 +652,97 @@ describe('who is at the board', () => {
         storage.setItem(boardStorageKey(GAME, 'student'), 'gone');
 
         expect(setup({ storage }).controller.getView().studentId).toBeNull();
+    });
+});
+
+/*
+ * The voice's turns (§3 "Voice", ADR 016 decision 6): «Başla» starts one
+ * (fresh when nothing is answered, for a home game's greeting), and so
+ * does every change of the student at the board during play — from the
+ * board, «Növbəti» or the phone; a game that ends under play says its end.
+ */
+describe('turns of the voice', () => {
+    it('starts a turn on «Başla», fresh only with nothing answered', async () => {
+        const { controller, voice } = setup();
+
+        await controller.load();
+        controller.setStudent('s2');
+        expect(voice).toEqual([]);
+
+        controller.start();
+        expect(voice).toEqual(['turn:s2:fresh']);
+
+        const resumed = fakeServer([
+            {
+                round_id: 'round-0',
+                hit_item_ids: ['b'],
+                misses: 0,
+                solved: true,
+                skipped: false,
+            },
+        ]);
+        const again = setup({ server: resumed });
+
+        await again.controller.load();
+        again.controller.start();
+        expect(again.voice).toEqual(['turn:class']);
+    });
+
+    it('starts a new turn whenever another student comes to the board during play, never for the same one', async () => {
+        const { controller, voice } = setup();
+
+        await controller.load();
+        controller.start();
+        controller.setStudent('s1');
+        controller.setStudent('s1');
+        controller.nextStudent();
+        controller.setStudent(null);
+
+        expect(voice).toEqual([
+            'turn:class:fresh',
+            'turn:s1',
+            'turn:s2',
+            'turn:class',
+        ]);
+    });
+
+    it('says the end with the solved rounds once the last round is over, and not for a game opened finished', async () => {
+        const { controller, bridge, timers, voice } = setup();
+
+        await controller.load();
+        controller.start();
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        timers.fire(1600);
+        controller.skip();
+        bridge.itemTouched({ roundId: 'round-2', itemId: 'd' });
+        timers.fire(1600);
+
+        expect(controller.getView().phase).toBe('finished');
+        expect(voice).toEqual(['turn:class:fresh', 'over:2']);
+
+        const done = fakeServer(
+            ROUNDS.map((r) => ({
+                round_id: r.id,
+                hit_item_ids: [r.solution.item_ids[0]],
+                misses: 0,
+                solved: true,
+                skipped: false,
+            })),
+        );
+        const opened = setup({ server: done });
+
+        await opened.controller.load();
+        expect(opened.controller.getView().phase).toBe('finished');
+        expect(opened.voice).toEqual([]);
+    });
+
+    it('says the end when the game is ended under play', async () => {
+        const { controller, voice } = setup();
+
+        await controller.load();
+        controller.start();
+        expect(await controller.end()).toBe(true);
+        expect(voice).toEqual(['turn:class:fresh', 'over:0']);
     });
 });
 

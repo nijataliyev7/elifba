@@ -9,9 +9,11 @@ use Inertia\Response;
 
 /**
  * The privacy notice (docs/architecture.md §7): what is stored, why, for how
- * long, how to delete it, who operates this instance, a section for parents
- * who play with their own children at home (§7 "Parents and their
- * children", ADR 013) and the note a teacher copies for a class's parents.
+ * long, how to delete it, what the board says aloud (a first name only from
+ * the built-in name list, sent nowhere; ADR 016), who operates this
+ * instance, a section for parents who play with their own children at home
+ * (§7 "Parents and their children", ADR 013) and the note a teacher copies
+ * for a class's parents.
  * Public, in every interface language.
  */
 final class PrivacyController extends Controller

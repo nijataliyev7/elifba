@@ -6,6 +6,7 @@ use App\Domain\Content\Support\Avatars;
 use App\Domain\Language\Support\Alphabet;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\NameClips;
 
 /*
  * The classes page and the class page: create, rename, archive, restore,
@@ -123,6 +124,53 @@ describe('the class page', function (): void {
                 ->where('avatars', Avatars::all())
                 ->where('avatars.0', ['key' => 'panda', 'url' => url('content/avatars/panda.svg')])
                 ->where('limits', ['paste_length' => 10000, 'names' => 50]));
+    });
+
+    it('marks the active students whose name the board says, from the name and the list only', function (): void {
+        NameClips::fake(['Əli', 'Aysel'], ['Zəhra']);
+        $class = ownClass($this->teacher);
+        Student::factory()->for($class)->create(['display_name' => 'Əli M.', 'position' => 1]);
+        Student::factory()->for($class)->create(['display_name' => 'Zəhra', 'position' => 2]);
+        Student::factory()->for($class)->create(['display_name' => 'Ayşən-Nur', 'position' => 3]);
+        Student::factory()->for($class)->archived()->create(['display_name' => 'Aysel']);
+
+        $this->get(route('classes.show', $class))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('students.0.has_voice', true)
+                // Listed without a clip yet, and a hyphenated name: shown, not said.
+                ->where('students.1.has_voice', false)
+                ->where('students.2.has_voice', false)
+                // Archived students are not at the board.
+                ->where('archivedStudents.0', fn ($student): bool => ! $student->has('has_voice')));
+
+        // Names or praise off: the account says no name, so no mark either way.
+        foreach ([['names' => false], ['praise' => false]] as $choice) {
+            $this->teacher->forceFill(['board_voice' => $choice])->save();
+
+            $this->get(route('classes.show', $class))
+                ->assertInertia(fn (Assert $page) => $page->where('students.0.has_voice', null)->where('students.1.has_voice', null));
+        }
+    });
+
+    it('offers the list\'s spelling of a name typed without the Azerbaijani letters', function (): void {
+        NameClips::fake(['Lalə', 'Aysel']);
+        $class = ownClass($this->teacher);
+        Student::factory()->for($class)->create(['display_name' => 'Lale M.', 'position' => 1]);
+        Student::factory()->for($class)->create(['display_name' => 'Aysel', 'position' => 2]);
+        Student::factory()->for($class)->create(['display_name' => 'Ramin', 'position' => 3]);
+
+        $this->get(route('classes.show', $class))
+            ->assertInertia(fn (Assert $page) => $page
+                // The board says «Lalə!» either way; the page offers the spelling it shows.
+                ->where('students.0.has_voice', true)
+                ->where('students.0.voice_spelling', 'Lalə M.')
+                ->where('students.1.voice_spelling', null)
+                ->where('students.2.voice_spelling', null));
+
+        $this->teacher->forceFill(['board_voice' => ['names' => false]])->save();
+
+        $this->get(route('classes.show', $class))
+            ->assertInertia(fn (Assert $page) => $page->where('students.0.voice_spelling', null));
     });
 
     it('shows an archived class, marked as archived', function (): void {

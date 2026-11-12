@@ -84,6 +84,19 @@
         }
     ],
     "retry": [{ "text": "Bir də cəhd et!", "style": "warmly" }],
+    "greeting": { "text": "Salam!", "style": "cheerfully" },
+    "finish": { "text": "Əla oynadın!", "style": "excited" },
+    "finish_class": { "text": "Əla oynadınız!", "style": "excited" },
+    "names": {
+        "style": "excited",
+        "credit": {
+            "title": "Sample name clips",
+            "author": "Elifba contributors",
+            "source": "https://elevenlabs.io/docs/overview/capabilities/text-to-speech/eleven-v4",
+            "license": "MIT",
+            "changes": "Made with a fixture voice in {month}"
+        }
+    },
     "credit": {
         "title": "The board's voice: every prompt, the praise and the retry phrase, in Azerbaijani",
         "author": "Elifba contributors",

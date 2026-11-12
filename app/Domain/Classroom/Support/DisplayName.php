@@ -4,6 +4,7 @@ namespace App\Domain\Classroom\Support;
 
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
+use App\Domain\Language\Support\PersonName;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -16,6 +17,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
  * A parent's child has a first name only (§7 "Parents and their children",
  * ADR 013): `new DisplayName(initial: false, …)` refuses the initial, and any
  * word of one letter, which is an initial without its dot.
+ *
+ * Neither keeps a surname (§7 "Minimum data"): a name with a sure surname
+ * beside the first name or a patronymic («Nihat Əliyev», «Əliyeva Aysel»,
+ * «Nihat Rəşid oğlu»; `PersonName::hasSurname()`) is refused with its own
+ * message, which names no one, so the teacher or parent writes the first
+ * name alone. A first name of two words («Məhəmməd Əli») and one that ends
+ * like a surname («Xosrov») pass.
  */
 final class DisplayName implements ValidationRule
 {
@@ -28,10 +36,12 @@ final class DisplayName implements ValidationRule
     /**
      * @param  bool  $initial  whether a surname initial may end the name
      * @param  string  $message  the translation key of the refusal
+     * @param  string  $surnameMessage  the translation key of the refusal of a surname
      */
     public function __construct(
         private readonly bool $initial = true,
         private readonly string $message = 'students.errors.invalid_name',
+        private readonly string $surnameMessage = 'students.errors.surname',
     ) {}
 
     /**
@@ -66,6 +76,8 @@ final class DisplayName implements ValidationRule
     {
         if (! is_string($value) || ! self::isValid(Az::normalize($value), $this->initial)) {
             $fail(__($this->message));
+        } elseif (PersonName::hasSurname($value)) {
+            $fail(__($this->surnameMessage));
         }
     }
 }

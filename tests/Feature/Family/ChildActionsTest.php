@@ -130,6 +130,11 @@ it('refuses a surname initial', function (string $name): void {
     'too long' => [str_repeat('a', 41)],
 ]);
 
+it('refuses a surname or a patronymic in a child\'s name, with its own message', function (string $name): void {
+    expect(childErrors(fn () => ChildData::validate(['display_name' => $name])))
+        ->toBe(['display_name' => [__('children.errors.surname')]]);
+})->with(['Nihat Əliyev', 'Əliyeva Aysel', 'Aysel Kamal qızı']);
+
 it('takes a first name of more than one word, and a student\'s rule still takes the initial', function (): void {
     expect(ChildData::validate(['display_name' => 'Məhəmməd  Əli'])->display_name)->toBe('Məhəmməd Əli')
         ->and(ChildData::validate(['display_name' => 'Gül-Ayaz'])->display_name)->toBe('Gül-Ayaz')

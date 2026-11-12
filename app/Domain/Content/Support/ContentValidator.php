@@ -18,6 +18,7 @@ use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Enums\WordProblem;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
+use App\Domain\Language\Support\AzCollator;
 use App\Domain\Language\Support\Syllabifier;
 use BackedEnum;
 use JsonException;
@@ -27,9 +28,9 @@ use SplFileInfo;
 
 /**
  * Checks a content root (docs/architecture.md §3, §8): `alphabet.json`,
- * `avatars.json`, `sounds.json`, `levels.json`, `prompts.json`, `voice.json`
- * with `voice-clips.json`, `credits.json`, `packs/*.json`,
- * `tests/syllables.json` and every file under `assets/`
+ * `avatars.json`, `sounds.json`, `levels.json`, `prompts.json`, `names.json`,
+ * `voice.json` with `voice-clips.json`, `credits.json`, `packs/*.json`,
+ * `tests/syllables.json` and every file under `assets/`, `voice-names/`
  * and `resources/fonts/` (credits; SVG files are also checked for anything
  * that could run or load). `validate()` lists every problem, one line each;
  * an empty list means the content is valid.
@@ -121,6 +122,21 @@ final class ContentValidator
      */
     public const string VOICE_PROVIDER = 'elevenlabs';
 
+    /**
+     * The greeting and the two end phrases of V2 (ADR 016 decision 7) need
+     * a clip, like praise and retry: switched on with the clips V2's paid
+     * month made (2026-11-12), as `WORD_PICTURES_REQUIRED` was when A5 drew
+     * the pictures.
+     */
+    public const bool NAME_PHRASE_CLIPS_REQUIRED = true;
+
+    /**
+     * Letters a first name of `names.json` may have (ADR 016 decision 1).
+     */
+    public const int MIN_NAME_LETTERS = 2;
+
+    public const int MAX_NAME_LETTERS = 24;
+
     private const string KEY = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
     /**
@@ -174,12 +190,22 @@ final class ContentValidator
     private ?array $templates = null;
 
     /**
-     * @param  bool  $voiceClipsRequired  false for `content:voice`, which makes what this would require (the praise and retry clips, a deleted clip), lists what is made and prunes the clips of another voice
+     * The first names of `names.json`, or null when the file has a problem
+     * (then no name clip is checked against it).
+     *
+     * @var list<string>|null
+     */
+    private ?array $names = null;
+
+    /**
+     * @param  bool  $voiceClipsRequired  false for `content:voice`, which makes what this would require (the praise and retry clips, a deleted clip), lists what is made and prunes the clips of another voice or of a name that left the list
+     * @param  bool  $namePhraseClipsRequired  whether the greeting and the end phrases need a clip (`NAME_PHRASE_CLIPS_REQUIRED`)
      */
     public function __construct(
         private readonly string $root,
         private readonly bool $wordPicturesRequired = self::WORD_PICTURES_REQUIRED,
         private readonly bool $voiceClipsRequired = true,
+        private readonly bool $namePhraseClipsRequired = self::NAME_PHRASE_CLIPS_REQUIRED,
     ) {}
 
     /**
@@ -194,6 +220,7 @@ final class ContentValidator
         $this->sounds();
         $levels = $this->levels();
         $this->prompts($levels);
+        $this->names();
         $this->voice();
         $credits = $this->credits();
 
@@ -653,6 +680,76 @@ final class ContentValidator
         }
     }
 
+    // ── names.json ──────────────────────────────────────────────────────
+
+    /**
+     * The built-in name list (§3 "Voice", ADR 016 decision 1): `version`,
+     * `sources`, a non-empty list of https URLs, and `names`, a non-empty
+     * list of first names of 2–24 letters of the alphabet only, each as
+     * `Az::title()` writes it, none twice by `Az::lower()`, in Azerbaijani
+     * order (`AzCollator`), so a duplicate sits beside its twin in a diff.
+     */
+    private function names(): void
+    {
+        $file = ContentRepository::NAMES;
+        $before = count($this->problems);
+        $data = $this->object($this->read($file), $file, '', ['version', 'sources', 'names']);
+
+        if ($data === null) {
+            return;
+        }
+
+        $this->normalized($data, $file);
+
+        if (! is_int($data['version']) || $data['version'] < 1) {
+            $this->problem($file, 'version must be a whole number from 1');
+        }
+
+        foreach ($this->strings($data['sources'], $file, 'sources') ?? [] as $index => $source) {
+            if (! str_starts_with($source, 'https://')) {
+                $this->problem($file, "sources[{$index}] must be an https:// URL");
+            }
+        }
+
+        $names = $this->strings($data['names'], $file, 'names');
+
+        if ($names === null) {
+            return;
+        }
+
+        $seen = [];
+
+        foreach ($names as $index => $name) {
+            $letters = mb_str_split($name);
+
+            if (count($letters) < self::MIN_NAME_LETTERS || count($letters) > self::MAX_NAME_LETTERS || array_filter($letters, static fn (string $letter): bool => ! Alphabet::isLetter($letter)) !== []) {
+                $this->problem($file, "names[{$index}] \"{$name}\" must be one word of ".self::MIN_NAME_LETTERS.'–'.self::MAX_NAME_LETTERS.' letters of the alphabet');
+            } elseif (Az::title($name) !== $name) {
+                $this->problem($file, "names[{$index}] \"{$name}\" must be written \"".Az::title($name).'", a capital first letter and the rest lowercase');
+            }
+
+            $key = Az::lower($name);
+
+            if (isset($seen[$key])) {
+                $this->problem($file, "names[{$index}] \"{$name}\" is already names[{$seen[$key]}]");
+            }
+
+            $seen[$key] ??= $index;
+        }
+
+        foreach (AzCollator::sort($names) as $at => $name) {
+            if ($names[$at] !== $name) {
+                $this->problem($file, "names must be in Azerbaijani alphabetical order: names[{$at}] \"{$names[$at]}\" belongs elsewhere (\"{$name}\" comes there)");
+
+                break;
+            }
+        }
+
+        if (count($this->problems) === $before) {
+            $this->names = $names;
+        }
+    }
+
     // ── voice.json, voice-clips.json ────────────────────────────────────
 
     /**
@@ -670,7 +767,7 @@ final class ContentValidator
     {
         $file = 'voice.json';
         $before = count($this->problems);
-        $data = $this->object($this->read($file), $file, '', ['version', 'voice', 'styles', 'spoken', 'context', 'praise', 'retry', 'credit']);
+        $data = $this->object($this->read($file), $file, '', ['version', 'voice', 'styles', 'spoken', 'context', 'praise', 'retry', 'greeting', 'finish', 'finish_class', 'names', 'credit']);
 
         if ($data === null) {
             return;
@@ -780,30 +877,25 @@ final class ContentValidator
             $phrases[] = $this->voicePhrase($phrase, $file, "retry[{$index}]");
         }
 
+        // The greeting and the end phrases of V2 (ADR 016 decision 7).
+        foreach (['greeting', 'finish', 'finish_class'] as $key) {
+            $phrases[] = $this->voicePhrase($data[$key], $file, $key);
+        }
+
         $texts = array_filter($phrases, is_string(...));
 
         if (count($texts) !== count(array_unique($texts))) {
-            $this->problem($file, 'a praise or retry phrase is listed twice');
+            $this->problem($file, 'a phrase is listed twice among praise, retry, greeting, finish and finish_class');
         }
 
-        $credit = $this->object($data['credit'], $file, 'credit', ['title', 'author', 'source', 'license', 'changes']);
+        $names = $this->object($data['names'], $file, 'names', ['style', 'credit']);
 
-        if ($credit !== null) {
-            $this->string($credit['title'], $file, 'credit.title');
-            $this->string($credit['author'], $file, 'credit.author');
-
-            if (! is_string($credit['source']) || ! str_starts_with($credit['source'], 'https://')) {
-                $this->problem($file, 'credit.source must be an https:// URL');
-            }
-
-            if (! is_string($credit['license']) || License::tryFrom($credit['license']) === null) {
-                $this->problem($file, 'credit.license must be one of '.implode(', ', array_map(static fn (License $license): string => $license->value, License::cases())));
-            }
-
-            if (! is_string($credit['changes']) || ! str_contains($credit['changes'], '{month}')) {
-                $this->problem($file, 'credit.changes must say when the clips were made with {month}');
-            }
+        if ($names !== null) {
+            $this->voiceStyle($names['style'], $file, 'names.style');
+            $this->voiceCredit($names['credit'], $file, 'names.credit');
         }
+
+        $this->voiceCredit($data['credit'], $file, 'credit');
 
         $clips = $this->voiceClips();
 
@@ -811,80 +903,148 @@ final class ContentValidator
             return;
         }
 
-        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: list<array{text: string, style: string}>, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
-        $voice = new VoiceClips(VoiceData::fromArray([...$data, 'clips' => $clips]));
+        /** @var array{version: int, voice: array{provider: string, model: string, voice_id: string, voice_name: string, language: string, stability: float|int, similarity: float|int}, styles: array<string, string>, spoken: array{letters: array<string, string>, numbers: array<string, string>, respell: array<string, string>}, context: array{previous: string, next: string}, praise: list<array{text: string, style: string}>, retry: list<array{text: string, style: string}>, greeting: array{text: string, style: string}, finish: array{text: string, style: string}, finish_class: array{text: string, style: string}, names: array{style: string, credit: array{title: string, author: string, source: string, license: string, changes: string}}, credit: array{title: string, author: string, source: string, license: string, changes: string}} $data */
+        $voice = new VoiceClips(VoiceData::fromArray([...$data, 'clips' => $clips['clips'], 'name_clips' => $clips['names']]));
         $file = ContentRepository::VOICE_CLIPS;
 
-        foreach ($this->voiceClipsRequired ? $clips : [] as $hash => $text) {
+        foreach ($this->voiceClipsRequired ? $clips['clips'] : [] as $hash => $text) {
             if ($voice->hash($text) !== (string) $hash) {
                 $this->problem($file, "clips.{$hash} is not the clip of \"{$text}\" in the voice of voice.json; make it again (php artisan content:voice) and remove the old one (--prune)");
             }
         }
 
-        foreach ($this->voiceClipsRequired ? [...$voice->praise(), ...$voice->retry()] : [] as $line) {
+        $phrases = [
+            ...$voice->praise(),
+            ...$voice->retry(),
+            ...($this->namePhraseClipsRequired ? [$voice->greeting(), $voice->finish(), $voice->finishClass()] : []),
+        ];
+
+        foreach ($this->voiceClipsRequired ? $phrases : [] as $line) {
             if ($voice->url($line) === null) {
                 $this->problem($file, "the {$line->group} phrase \"{$line->phrase}\" has no clip (php artisan content:voice)");
+            }
+        }
+
+        // A name clip is the clip of a listed name in this voice; one whose
+        // name left the list stays until `content:voice --prune`.
+        if (! $this->voiceClipsRequired || $this->names === null) {
+            return;
+        }
+
+        $listed = [];
+
+        foreach ($this->names as $name) {
+            $line = NameVoices::lineIn($voice, $name);
+            $listed[$line->hash] = $line->text;
+        }
+
+        foreach ($clips['names'] as $hash => $text) {
+            if (($listed[(string) $hash] ?? null) !== $text) {
+                $this->problem($file, "names.{$hash} is not the clip of a name of ".ContentRepository::NAMES." in the voice of voice.json (\"{$text}\"); make it again or remove it (php artisan content:voice --prune)");
             }
         }
     }
 
     /**
-     * `voice-clips.json`: hash → text, each hash a file of `assets/voice`,
-     * each file there a listed hash.
+     * A credits entry the clips get (`credit`, `names.credit`): an https
+     * `source`, a license of the allow list and `{month}` in `changes`.
+     */
+    private function voiceCredit(mixed $value, string $file, string $where): void
+    {
+        $credit = $this->object($value, $file, $where, ['title', 'author', 'source', 'license', 'changes']);
+
+        if ($credit === null) {
+            return;
+        }
+
+        $this->string($credit['title'], $file, "{$where}.title");
+        $this->string($credit['author'], $file, "{$where}.author");
+
+        if (! is_string($credit['source']) || ! str_starts_with($credit['source'], 'https://')) {
+            $this->problem($file, "{$where}.source must be an https:// URL");
+        }
+
+        if (! is_string($credit['license']) || License::tryFrom($credit['license']) === null) {
+            $this->problem($file, "{$where}.license must be one of ".implode(', ', array_map(static fn (License $license): string => $license->value, License::cases())));
+        }
+
+        if (! is_string($credit['changes']) || ! str_contains($credit['changes'], '{month}')) {
+            $this->problem($file, "{$where}.changes must say when the clips were made with {month}");
+        }
+    }
+
+    /**
+     * `voice-clips.json`: `clips`, hash → text, each hash a file of
+     * `assets/voice`, each file there a listed hash; `names` the same for
+     * the name clips of `voice-names` (ADR 016).
      *
-     * @return array<string, string>|null the clips, or null when the file has a problem
+     * @return array{clips: array<string, string>, names: array<string, string>}|null the clips, or null when the file has a problem
      */
     private function voiceClips(): ?array
     {
         $file = ContentRepository::VOICE_CLIPS;
         $before = count($this->problems);
-        $data = $this->object($this->read($file), $file, '', ['clips']);
+        $data = $this->object($this->read($file), $file, '', ['clips', 'names']);
 
         if ($data === null) {
             return null;
         }
 
-        $clips = $data['clips'];
+        $clips = $this->clipList($data['clips'], 'clips', 'assets/'.VoiceClips::FOLDER);
+        $names = $this->clipList($data['names'], 'names', NameVoices::FOLDER);
+
+        return $clips === null || $names === null || count($this->problems) !== $before ? null : ['clips' => $clips, 'names' => $names];
+    }
+
+    /**
+     * One list of `voice-clips.json`: hash → text, each hash a file of
+     * `$folder` (under the content root), each file there a listed hash.
+     *
+     * @return array<string, string>|null
+     */
+    private function clipList(mixed $clips, string $key, string $folder): ?array
+    {
+        $file = ContentRepository::VOICE_CLIPS;
 
         // `{}` is an empty list once decoded; a hash of digits only comes back as a whole number.
         if (! is_array($clips) || ($clips !== [] && array_is_list($clips))) {
-            $this->problem($file, 'clips must be an object');
+            $this->problem($file, "{$key} must be an object");
 
             return null;
         }
 
-        $folder = "{$this->root}/assets/".VoiceClips::FOLDER;
         $listed = [];
 
         foreach ($clips as $hash => $text) {
             $hash = (string) $hash;
             $listed[] = $hash;
+            $path = "{$folder}/{$hash}.".VoiceClips::EXTENSION;
 
             if (preg_match('/^[0-9a-f]{'.VoiceClips::HASH_LENGTH.'}$/', $hash) !== 1) {
-                $this->problem($file, "clips.{$hash} must be a hash of ".VoiceClips::HASH_LENGTH.' lowercase hex digits');
-            } elseif ($this->voiceClipsRequired && ! self::exists("{$this->root}/assets/".VoiceClips::path($hash))) {
-                $this->problem($file, "clips.{$hash}: {$this->contentFolder()}/assets/".VoiceClips::path($hash).' does not exist');
+                $this->problem($file, "{$key}.{$hash} must be a hash of ".VoiceClips::HASH_LENGTH.' lowercase hex digits');
+            } elseif ($this->voiceClipsRequired && ! self::exists("{$this->root}/{$path}")) {
+                $this->problem($file, "{$key}.{$hash}: {$this->contentFolder()}/{$path} does not exist");
             }
 
             if (! is_string($text) || $text === '') {
-                $this->problem($file, "clips.{$hash} must be the text the clip was made from");
+                $this->problem($file, "{$key}.{$hash} must be the text the clip was made from");
             }
         }
 
         // `content:voice` lists what is made and makes what was deleted (a
         // run stopped half way, a bad clip deleted to be made again).
-        foreach (is_dir($folder) && $this->voiceClipsRequired ? (scandir($folder) ?: []) : [] as $name) {
+        foreach (is_dir("{$this->root}/{$folder}") && $this->voiceClipsRequired ? (scandir("{$this->root}/{$folder}") ?: []) : [] as $name) {
             if (str_starts_with($name, '.')) {
                 continue;
             }
 
             if (! in_array(pathinfo($name, PATHINFO_FILENAME), $listed, true) || pathinfo($name, PATHINFO_EXTENSION) !== VoiceClips::EXTENSION) {
-                $this->problem($file, "{$this->contentFolder()}/assets/".VoiceClips::FOLDER."/{$name} is no clip of clips");
+                $this->problem($file, "{$this->contentFolder()}/{$folder}/{$name} is no clip of {$key}");
             }
         }
 
         /** @var array<string, string> $clips */
-        return count($this->problems) === $before ? $clips : null;
+        return $clips;
     }
 
     /**
@@ -939,7 +1099,8 @@ final class ContentValidator
         $files = $this->creditedFiles();
         $folders = array_map(static fn (string $folder): string => "{$folder}/", $this->creditedFolders());
         $shareAlikeFolder = $this->contentFolder().'/'.self::SHARE_ALIKE_FOLDER;
-        $voiceFolder = $this->contentFolder().'/assets/'.VoiceClips::FOLDER.'/*';
+        // `content:voice` may run with every clip pruned: it makes them again.
+        $voiceFolders = [$this->contentFolder().'/assets/'.VoiceClips::FOLDER.'/*', $this->contentFolder().'/'.NameVoices::FOLDER.'/*'];
         $licenses = implode(', ', array_map(static fn (License $license): string => $license->value, License::cases()));
 
         foreach ($credits as $index => $credit) {
@@ -973,8 +1134,7 @@ final class ContentValidator
 
                 if ($inside === [] || str_contains($pattern, '..')) {
                     $this->problem($file, "{$where}.files \"{$pattern}\" must be under ".implode(' or ', $folders));
-                } elseif (array_filter($files, static fn (string $path): bool => CreditData::matches($pattern, $path)) === [] && ($this->voiceClipsRequired || $pattern !== $voiceFolder)) {
-                    // `content:voice` may run with every clip pruned: it makes them again.
+                } elseif (array_filter($files, static fn (string $path): bool => CreditData::matches($pattern, $path)) === [] && ($this->voiceClipsRequired || ! in_array($pattern, $voiceFolders, true))) {
                     $this->problem($file, "{$where}.files \"{$pattern}\" matches no file");
                 }
 
@@ -993,7 +1153,7 @@ final class ContentValidator
     }
 
     /**
-     * Every asset and font file needs a credits entry (§8).
+     * Every asset, name clip and font file needs a credits entry (§8).
      *
      * @param  list<CreditData>  $credits
      */
@@ -1011,7 +1171,7 @@ final class ContentValidator
      */
     private function creditedFolders(): array
     {
-        return [$this->contentFolder().'/assets', ...self::CREDITED_FOLDERS];
+        return [$this->contentFolder().'/assets', $this->contentFolder().'/'.NameVoices::FOLDER, ...self::CREDITED_FOLDERS];
     }
 
     /**

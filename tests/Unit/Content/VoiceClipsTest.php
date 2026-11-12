@@ -22,16 +22,22 @@ function voiceWith(array $change = []): VoiceClips
     $voice = app(ContentRepository::class)->voice();
 
     return new VoiceClips(new VoiceData(
-        $change['version'] ?? $voice->version,
-        $change['settings'] ?? $voice->settings,
-        $voice->styles,
-        $voice->letters,
-        $voice->numbers,
-        $change['respell'] ?? $voice->respell,
-        $voice->praise,
-        $voice->retry,
-        $voice->credit,
-        $change['clips'] ?? [],
+        version: $change['version'] ?? $voice->version,
+        settings: $change['settings'] ?? $voice->settings,
+        styles: $voice->styles,
+        letters: $voice->letters,
+        numbers: $voice->numbers,
+        respell: $change['respell'] ?? $voice->respell,
+        praise: $voice->praise,
+        retry: $voice->retry,
+        credit: $voice->credit,
+        clips: $change['clips'] ?? [],
+        greeting: $voice->greeting,
+        finish: $voice->finish,
+        finishClass: $voice->finishClass,
+        nameStyle: $voice->nameStyle,
+        nameCredit: $voice->nameCredit,
+        names: $change['names'] ?? [],
     ));
 }
 
@@ -134,7 +140,13 @@ it('lists every clip built-in content can ask for, once, and no other', function
         ->and($groups['find.number'])->toHaveCount(10)
         ->and($groups['count.number'])->toHaveCount(count(array_unique($counted)))
         ->and($groups['praise'])->toBe(['Doğru cavab!', 'Afərin!', 'Əla!', 'Çox gözəl!', 'Möhtəşəm!', 'Mükəmməl!', 'Bravo!', 'Super!', 'Çox yaxşı!', 'Lap düz!', 'Belə davam et!'])
-        ->and($groups['retry'])->toBe(['Bir də cəhd et!', 'Yenidən yoxla!', 'Tələsmə, yaxşı bax!', 'Sən bacararsan!', 'Narahat olma, bir də sına!', 'Yox, bu deyil, bir də bax!']);
+        ->and($groups['retry'])->toBe(['Bir də cəhd et!', 'Yenidən yoxla!', 'Tələsmə, yaxşı bax!', 'Sən bacararsan!', 'Narahat olma, bir də sına!', 'Yox, bu deyil, bir də bax!'])
+        // The greeting and the two end phrases of V2 (ADR 016 decision 7).
+        ->and($groups['greeting'])->toBe(['Salam!'])
+        ->and($groups['finish'])->toBe(['Əla oynadın!'])
+        ->and($groups['finish_class'])->toBe(['Əla oynadınız!'])
+        // A name of the list is NameVoices', never a clip under content/assets.
+        ->and($groups)->not->toHaveKey('name');
 
     foreach (['pop.letter', 'pop.syllable', 'pop.word', 'pop.picture', 'pop.number', 'build_word.word', 'build_sentence.sentence'] as $instruction) {
         expect($groups[$instruction])->toHaveCount(1, $instruction);
@@ -146,4 +158,21 @@ it('lists every clip built-in content can ask for, once, and no other', function
     }
 
     expect(count($groups['build_syllable.syllable']))->toBeLessThan(count($groups['find.syllable']));
+});
+
+it('says the greeting and the end phrases with their own tags, after praise and retry', function (): void {
+    $voice = voiceWith();
+
+    // «Salam!» in the names' tone, as the owner chose by ear (ADR 016 decision 4).
+    expect($voice->greeting()->text)->toBe('[excited] Salam!')
+        ->and($voice->finish()->text)->toBe('[excited] Əla oynadın!')
+        ->and($voice->finishClass()->text)->toBe('[excited] Əla oynadınız!')
+        ->and(array_slice(array_values(array_map(static fn (VoiceLineData $line): string => $line->group, $voice->needed(app(ContentRepository::class)))), -3))
+        ->toBe([VoiceLineData::GREETING, VoiceLineData::FINISH, VoiceLineData::FINISH_CLASS]);
+});
+
+it('never gives a name a public URL, even when its hash is listed as a clip', function (): void {
+    $line = voiceWith()->line(VoiceLineData::NAME, 'Nihat!', 'excited');
+
+    expect(voiceWith(['clips' => [$line->hash => $line->text], 'names' => [$line->hash => $line->text]])->url($line))->toBeNull();
 });

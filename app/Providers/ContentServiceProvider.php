@@ -8,13 +8,15 @@ use App\Domain\Content\Console\GenerateVoiceCommand;
 use App\Domain\Content\Console\ValidateContentCommand;
 use App\Domain\Content\Console\WriteCreditsCommand;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\NameVoices;
 use App\Domain\Content\Support\VoiceClips;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 /**
  * Built-in content (docs/architecture.md §3, §8): one ContentRepository per
- * request over `content/` with the voice's clips (`VoiceClips`), the
+ * request over `content/` with the voice's clips (`VoiceClips`) and the
+ * name clips of the built-in name list (`NameVoices`, ADR 016), the
  * `content:*` commands (`content:credits` writes CREDITS.md,
  * `content:voice` makes the voice's clips), and `content:cache` /
  * `content:clear` in `optimize` / `optimize:clear`.
@@ -31,6 +33,7 @@ final class ContentServiceProvider extends ServiceProvider
             compiled: $app->runningUnitTests() ? null : $app->bootstrapPath('cache/content.php'),
         ));
         $this->app->bind(VoiceClips::class, static fn (Application $app): VoiceClips => new VoiceClips($app->make(ContentRepository::class)->voice()));
+        $this->app->bind(NameVoices::class, static fn (Application $app): NameVoices => new NameVoices($app->make(ContentRepository::class), $app->make(VoiceClips::class)));
     }
 
     public function boot(): void

@@ -8,6 +8,7 @@ use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
+use App\Domain\Language\Support\PersonName;
 use SensitiveParameter;
 
 /**
@@ -19,29 +20,15 @@ use SensitiveParameter;
  * is normalized, numbering and bullets are stripped, words with digits are
  * dropped, a patronymic ("Rəşid oğlu", "Rəşidovna") is removed, and the order
  * (first name first, or surname first as in school registers) is read from
- * the surname suffixes. Only the first name is kept; a surname initial is
- * added only when two first names collide.
+ * the surname suffixes (`Language\Support\PersonName`, shared with the
+ * display name rule and the board's voice). Only the first name is kept; a
+ * surname initial is added only when two first names collide.
  *
  * The pasted text and its lines are marked `#[SensitiveParameter]` on the
  * entry points and line readers, so a stack trace in a log shows neither.
  */
 final readonly class NameListParser
 {
-    /** The word after a patronymic, also as typed without Azerbaijani letters. */
-    private const PATRONYMIC_WORDS = ['oğlu', 'qızı', 'oglu', 'qizi', 'ogly', 'kızı', 'kyzy'];
-
-    /** A patronymic written the Russian way: "Rəşidovna", "Kamaloviç". */
-    private const PATRONYMIC_SUFFIX = '/.{3,}(?:ovna|evna|oviç|eviç|ovich|evich)$/u';
-
-    /** Surname endings that first names do not have (with at least five letters). */
-    private const SURNAME_SUFFIX = '/(?:ov|ova|ev|eva|oğlu|oglu)$/u';
-
-    /** Surname endings that a few first names share ("Şahzadə"). */
-    private const WEAK_SURNAME_SUFFIX = '/(?:zadə|zade)$/u';
-
-    /** The -lı/-li/-lu/-lü surname suffix ("Kərimli"), told apart from "Əli", "Vəli", "Nazlı" by length and the letter before it. */
-    private const LI_SUFFIX = '/l[ıiuü]$/u';
-
     private const NUMBERING = '/^(?:\(?[№#]?\s?\d+\s?[.)\]:\-–—]*|[\-–—•·*◦▪●○■□►▸➢✓✔+>]+)\s*/u';
 
     private const FIRST = 'first';
@@ -122,7 +109,7 @@ final readonly class NameListParser
             $words[] = $core;
         }
 
-        [$words, $patronymicAtEnd] = $this->withoutPatronymic($words);
+        [$words, $patronymicAtEnd] = PersonName::withoutPatronymic($words);
 
         $names = [];
         $initials = [];
@@ -138,8 +125,8 @@ final readonly class NameListParser
         $order = null;
 
         if (count($names) >= 2) {
-            $first = $this->surnameScore($names[0]);
-            $last = $this->surnameScore($names[count($names) - 1]);
+            $first = PersonName::surnameScore($names[0]);
+            $last = PersonName::surnameScore($names[count($names) - 1]);
 
             $order = match (true) {
                 $first > $last => self::SURNAME,
@@ -148,7 +135,7 @@ final readonly class NameListParser
                 $patronymicAtEnd === false => self::FIRST,
                 default => null,
             };
-        } elseif ($names === [] || $this->surnameScore($names[0]) === 2) {
+        } elseif ($names === [] || PersonName::surnameScore($names[0]) === PersonName::SURE) {
             $invalid = true; // only initials, or only a surname: no first name to keep
         }
 
@@ -177,60 +164,6 @@ final readonly class NameListParser
         }
 
         return $text;
-    }
-
-    /**
-     * Removes one patronymic: "Rəşid oğlu" (two words) or "Rəşidovna" (one).
-     * The second value says whether it ended the line (null: there was none).
-     *
-     * @param  list<string>  $words
-     * @return array{0: list<string>, 1: bool|null}
-     */
-    private function withoutPatronymic(array $words): array
-    {
-        $last = count($words) - 1;
-
-        foreach ($words as $index => $word) {
-            if ($index > 0 && in_array(Az::lower($word), self::PATRONYMIC_WORDS, true)) {
-                array_splice($words, $index - 1, 2);
-
-                return [$words, $index === $last];
-            }
-        }
-
-        foreach ($words as $index => $word) {
-            if ($index > 0 && preg_match(self::PATRONYMIC_SUFFIX, Az::lower($word)) === 1) {
-                array_splice($words, $index, 1);
-
-                return [$words, $index === $last];
-            }
-        }
-
-        return [$words, null];
-    }
-
-    /**
-     * 2 for a sure surname ("Məmmədov", "Əliyeva"), 1 for a likely one
-     * ("Rəsulzadə", "Kərimli"), 0 for a first name ("Əli", "Nazlı").
-     */
-    private function surnameScore(#[SensitiveParameter] string $word): int
-    {
-        $lower = Az::lower($word);
-        $length = mb_strlen($lower);
-
-        if ($length >= 5 && preg_match(self::SURNAME_SUFFIX, $lower) === 1) {
-            return 2;
-        }
-
-        if ($length >= 6 && preg_match(self::WEAK_SURNAME_SUFFIX, $lower) === 1) {
-            return 1;
-        }
-
-        if ($length >= 6 && preg_match(self::LI_SUFFIX, $lower) === 1 && ! Alphabet::isVowel(mb_substr($lower, -3, 1))) {
-            return 1;
-        }
-
-        return 0;
     }
 
     /**

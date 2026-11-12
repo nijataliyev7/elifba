@@ -14,6 +14,7 @@ use App\Domain\Content\Support\Avatars;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
 use App\Domain\Language\Support\AzCollator;
+use App\Domain\Play\Support\PlayerVoice;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -27,7 +28,10 @@ use Inertia\Response;
 /**
  * The teacher's classes and the class page (students, learned letters,
  * settings). Lists reach React already sorted: classes by `AzCollator`,
- * students by their position.
+ * students by their position. An active student's row says whether the
+ * board says the name aloud (`has_voice`, ADR 016 decision 10: null while
+ * the account says no name), and how Elifba's name list spells a name typed
+ * otherwise (`voice_spelling`, «Lale» → «Lalə», null when it is spelled so).
  */
 final class ClassController extends Controller
 {
@@ -56,7 +60,7 @@ final class ClassController extends Controller
         return to_route('classes.show', $class);
     }
 
-    public function show(SchoolClass $class): Response
+    public function show(SchoolClass $class, #[CurrentUser] User $teacher, PlayerVoice $voice): Response
     {
         $students = $class->students()->active()->ordered()->get();
         $archived = AzCollator::sortBy(
@@ -72,7 +76,11 @@ final class ClassController extends Controller
                 'archived' => $class->archived_at !== null,
                 'learned_letters' => $class->learned_letters ?? Alphabet::letters(),
             ],
-            'students' => $students->map($this->studentRow(...))->values()->all(),
+            'students' => $students->map(fn (Student $student): array => [
+                ...$this->studentRow($student),
+                'has_voice' => $voice->says($teacher, $student->display_name),
+                'voice_spelling' => $voice->spelling($teacher, $student->display_name),
+            ])->values()->all(),
             'archivedStudents' => array_map($this->studentRow(...), $archived),
             'alphabet' => array_map(
                 static fn (string $letter): array => ['lower' => $letter, 'upper' => Az::upper($letter)],

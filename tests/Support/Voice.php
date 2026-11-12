@@ -11,8 +11,9 @@ use Illuminate\Contracts\Foundation\Application;
 /**
  * The board's voice as a test needs it (docs/architecture.md §3 "Voice"):
  * the real `voice.json` with a clip list of every clip built-in content
- * needs, or of none, bound in the container in place of the files, so a
- * test does not depend on which clips have been made.
+ * needs (the greeting and the end phrases included), or of none, bound in
+ * the container in place of the files, so a test does not depend on which
+ * clips have been made. Name clips are `NameClips`'.
  */
 final class Voice
 {
@@ -33,16 +34,22 @@ final class Voice
         }
 
         $bound = new VoiceClips(new VoiceData(
-            $voice->version,
-            $voice->settings,
-            $voice->styles,
-            $voice->letters,
-            $voice->numbers,
-            $voice->respell,
-            $voice->praise,
-            $voice->retry,
-            $voice->credit,
-            $clips,
+            version: $voice->version,
+            settings: $voice->settings,
+            styles: $voice->styles,
+            letters: $voice->letters,
+            numbers: $voice->numbers,
+            respell: $voice->respell,
+            praise: $voice->praise,
+            retry: $voice->retry,
+            credit: $voice->credit,
+            clips: $clips,
+            greeting: $voice->greeting,
+            finish: $voice->finish,
+            finishClass: $voice->finishClass,
+            nameStyle: $voice->nameStyle,
+            nameCredit: $voice->nameCredit,
+            names: $voice->names,
         ));
         $app->instance(VoiceClips::class, $bound);
 

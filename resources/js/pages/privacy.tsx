@@ -18,8 +18,20 @@ type Props = {
     operator: { name: string | null; email: string | null };
 };
 
-/** The sections of the notice, in order; each has a title and a body key. */
-const SECTIONS = ['stored', 'not_stored', 'why', 'how_long', 'delete', 'where'];
+/**
+ * The sections of the notice, in order; each has a title and a body key.
+ * `voice` says what the board says aloud, a name from the built-in list
+ * included (ADR 016 decision 12).
+ */
+const SECTIONS = [
+    'stored',
+    'not_stored',
+    'why',
+    'how_long',
+    'delete',
+    'where',
+    'voice',
+];
 
 /** The parts of the section for parents at home, in order (ADR 013). */
 const HOME = ['stored', 'why', 'who', 'not_shared', 'delete', 'how_long'];

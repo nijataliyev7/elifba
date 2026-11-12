@@ -32,10 +32,11 @@ type BoardSounds = {
     options: Record<Moment, SoundOption[]>;
 };
 
-/** What the account's boards say (§3 "Voice", ADR 015); both on by default. */
+/** What the account's boards say (§3 "Voice", ADR 015, ADR 016); all on by default. */
 type BoardVoice = {
     prompt: boolean;
     praise: boolean;
+    names: boolean;
 };
 
 /**
@@ -45,8 +46,9 @@ type BoardVoice = {
  * always works with the phone), the sounds the account's boards play
  * (§3 "Sounds"): for each moment the pack's own or one of
  * `content/sounds.json`, each with a button to hear it here, and what the
- * boards say (§3 "Voice"): the prompt, and the praise with the retry
- * phrase.
+ * boards say (§3 "Voice"): the prompt; the praise with the retry phrase,
+ * the greeting and the end; and a player's first name from Elifba's name
+ * list with them, which needs the praise (ADR 016).
  */
 export default function PlaySettings({
     phoneRemote,
@@ -138,6 +140,7 @@ function VoiceSettings({ voice }: { voice: BoardVoice }) {
     const { t } = useTranslation();
     const [prompt, setPrompt] = useState(voice.prompt);
     const [praise, setPraise] = useState(voice.praise);
+    const [names, setNames] = useState(voice.names);
 
     return (
         <div className="space-y-6">
@@ -165,6 +168,11 @@ function VoiceSettings({ voice }: { voice: BoardVoice }) {
                             name="praise"
                             value={praise ? '1' : '0'}
                         />
+                        <input
+                            type="hidden"
+                            name="names"
+                            value={names ? '1' : '0'}
+                        />
 
                         <VoiceSwitch
                             id="voice_prompt"
@@ -184,6 +192,17 @@ function VoiceSettings({ voice }: { voice: BoardVoice }) {
                         />
                         <InputError message={errors.praise} />
 
+                        {/* Praise governs all the board says besides the prompt: without it no name is said. */}
+                        <VoiceSwitch
+                            id="voice_names"
+                            checked={names && praise}
+                            onChange={setNames}
+                            disabled={!praise}
+                            label={t('settings.play.voice.names')}
+                            hint={t('settings.play.voice.names_hint')}
+                        />
+                        <InputError message={errors.names} />
+
                         <Button disabled={processing}>
                             {processing && <Spinner />}
                             {t('common.save')}
@@ -201,19 +220,22 @@ function VoiceSwitch({
     onChange,
     label,
     hint,
+    disabled = false,
 }: {
     id: string;
     checked: boolean;
     onChange: (checked: boolean) => void;
     label: string;
     hint: string;
+    disabled?: boolean;
 }) {
     return (
-        <div className="flex items-start gap-3">
+        <div className="group flex items-start gap-3" data-disabled={disabled}>
             <Checkbox
                 id={id}
                 className="mt-0.5"
                 checked={checked}
+                disabled={disabled}
                 onCheckedChange={(value) => onChange(value === true)}
                 aria-describedby={`${id}_hint`}
             />

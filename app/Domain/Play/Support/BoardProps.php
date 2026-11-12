@@ -25,7 +25,11 @@ use App\Domain\Play\Models\GameSession;
  * is at the board". A home game (ADR 011, §4 "At home") has no class and no
  * students: `child` is the one at the board, with `stars`, the child's
  * total before this game (the rounds of the child's other games still
- * stored), for the result screen. The rounds come from
+ * stored), for the result screen. Every student and the child carry
+ * `name_audio` (ADR 016): the URL the board fetches the clip of their
+ * first name from, `/games/{game}/players/{player}/voice` — ids only,
+ * never a name or a hash — or null when the board does not say the name
+ * (off the name list, no clip yet, names or praise off; `PlayerVoice`). The rounds come from
  * `GET /games/{game}/state` after the board has claimed the game.
  *
  * A pack whose items stand in front of pictures (`animal`, `fruit`; §2
@@ -41,14 +45,14 @@ use App\Domain\Play\Models\GameSession;
  * picture of its round's words. Both are empty for the other styles.
  *
  * @phpstan-type FigureArray array{url: string, words: list<string>}
- * @phpstan-type StudentArray array{id: string, display_name: string, avatar: array{key: string, url: string|null}}
+ * @phpstan-type StudentArray array{id: string, display_name: string, avatar: array{key: string, url: string|null}, name_audio: string|null}
  *
  * @phpstan-import-type BoardVoiceArray from BoardVoice
  *
  * @phpstan-type BoardPropsArray array{
  *     game: array{id: string, status: string, board_epoch: int, mechanic: string, level: string, letter_case: string, rounds: int, points: object},
  *     schoolClass: array{id: string, name: string}|null,
- *     child: array{id: string, display_name: string, avatar: array{key: string, url: string|null}, stars: int}|null,
+ *     child: array{id: string, display_name: string, avatar: array{key: string, url: string|null}, stars: int, name_audio: string|null}|null,
  *     pack: array{key: string, title: string, style: array{item: string, slot: string, effect: string, palette: list<string>, backdrop: string|null, sounds: array<string, string|null>, figures: list<FigureArray>}, pictures: object},
  *     students: list<StudentArray>,
  *     voice: BoardVoiceArray,
@@ -71,6 +75,7 @@ final class BoardProps
             'url' => isset($avatars[$key]) ? ContentAssets::url($avatars[$key]) : null,
         ];
         $sounds = BoardSounds::of($pack, $game->owner);
+        $voice = app(PlayerVoice::class);
         $rounds = GameRound::query()->where('game_session_id', $game->id)->get(['id', 'solved_at', 'points']);
 
         return [
@@ -95,6 +100,7 @@ final class BoardProps
                 'display_name' => $child->display_name,
                 'avatar' => $avatar($child->avatar),
                 'stars' => self::starsBefore($game, $child->id),
+                'name_audio' => $voice->url($game, $child->id, $child->display_name),
             ],
             'pack' => [
                 'key' => $pack->key,
@@ -116,6 +122,7 @@ final class BoardProps
                     'id' => $student->id,
                     'display_name' => $student->display_name,
                     'avatar' => $avatar($student->avatar),
+                    'name_audio' => $voice->url($game, $student->id, $student->display_name),
                 ])
                 ->all()),
             // Public content files: a guest board's bearer reaches nothing more (§4).

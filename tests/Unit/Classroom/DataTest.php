@@ -57,6 +57,15 @@ it('normalizes a student name before checking it', function (): void {
         ->toHaveKeys(['display_name', 'avatar']);
 });
 
+it('refuses a surname or a patronymic in a student\'s name, with its own message', function (string $name): void {
+    expect(validationErrors(fn () => StudentData::validate(['display_name' => $name, 'avatar' => Avatars::keys()[0]])))
+        ->toBe(['display_name' => [__('students.errors.surname')]]);
+})->with(['Nihat Əliyev', 'Əliyev Nihat', 'Nihat Rəşid oğlu', 'Aysel Məmmədova M.']);
+
+it('keeps a student\'s first name of two words, or one that ends like a surname', function (string $name): void {
+    expect(StudentData::validate(['display_name' => $name, 'avatar' => Avatars::keys()[0]])->display_name)->toBe($name);
+})->with(['Məhəmməd Əli', 'Xosrov', 'Xosrov M.', 'Şahzadə']);
+
 it('validates a confirmed list of names', function (): void {
     $data = AddStudentsData::validate(['names' => [' Əli ', "\u{04D8}ysel"]]);
     $errors = validationErrors(fn () => AddStudentsData::validate(['names' => ['Əli', 'Əli2', '']]));

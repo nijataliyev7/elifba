@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Games;
+use Tests\Support\NameClips;
 
 /*
  * The parent's pages (docs/architecture.md §1, §5 "A child's stars", §7
@@ -70,6 +71,8 @@ function parentPropKeys(array $props): array
 const PARENT_PAGES_NEVER = ['ranking', 'rankings', 'place', 'places', 'podium', 'rank', 'best', 'leader', 'students', 'schoolClass', 'classes'];
 
 it('lists the parent\'s children in their own order with today\'s stars', function (): void {
+    // No name has a clip here: the board's names are another test's.
+    NameClips::fake([]);
     $tural = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Tural', 'avatar' => 'panda']);
     $aysel = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Aysel', 'avatar' => 'rabbit']);
     $nigar = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Nigar', 'avatar' => 'owl']);
@@ -87,9 +90,10 @@ it('lists the parent\'s children in their own order with today\'s stars', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('children/index')
             ->where('children', [
-                ['id' => $nigar->id, 'display_name' => 'Nigar', 'avatar' => 'owl', 'stars_today' => 0],
-                ['id' => $tural->id, 'display_name' => 'Tural', 'avatar' => 'panda', 'stars_today' => 1],
-                ['id' => $aysel->id, 'display_name' => 'Aysel', 'avatar' => 'rabbit', 'stars_today' => 5],
+                // No name clip is made in the test content: the board says none of them (ADR 016).
+                ['id' => $nigar->id, 'display_name' => 'Nigar', 'avatar' => 'owl', 'stars_today' => 0, 'has_voice' => false],
+                ['id' => $tural->id, 'display_name' => 'Tural', 'avatar' => 'panda', 'stars_today' => 1, 'has_voice' => false],
+                ['id' => $aysel->id, 'display_name' => 'Aysel', 'avatar' => 'rabbit', 'stars_today' => 5, 'has_voice' => false],
             ])
             ->where('avatars', Avatars::all())
             ->where('limits', ['max' => 10]));
@@ -114,7 +118,8 @@ it('never sends a total or an order by stars to the list', function (): void {
             $props = $page->toArray()['props'];
 
             foreach ($props['children'] as $child) {
-                expect(array_keys($child))->toBe(['id', 'display_name', 'avatar', 'stars_today']);
+                // `has_voice` is derived from the name and the built-in list, not a field about the child (ADR 016).
+                expect(array_keys($child))->toBe(['id', 'display_name', 'avatar', 'stars_today', 'has_voice']);
             }
 
             expect(array_keys($props))->not->toContain('total', 'stars', 'week')
@@ -151,6 +156,7 @@ it('shows a child\'s stars and seven days', function (): void {
 });
 
 it('sends no field about a child but name, avatar, letters and stars', function (): void {
+    NameClips::fake([]);
     $child = Child::factory()->for($this->parent, 'parent')->create([
         'display_name' => 'Aysel',
         'avatar' => 'rabbit',
@@ -166,6 +172,9 @@ it('sends no field about a child but name, avatar, letters and stars', function 
                     'display_name' => 'Aysel',
                     'avatar' => 'rabbit',
                     'learned_letters' => ['a', 'b', 'ə'],
+                    // No name clip in the test content: the board does not say it (ADR 016).
+                    'has_voice' => false,
+                    'voice_spelling' => null,
                 ])
                 ->has('alphabet', count(Alphabet::letters()))
                 ->has('avatars');
@@ -202,5 +211,35 @@ it('sends no ranking or podium to a page of the parent area', function (): void 
                     ->and($props['schoolClass'] ?? null)->toBeNull()
                     ->and($props['students'] ?? [])->toBe([]);
             });
+    }
+});
+
+it('says whether the board says a child\'s name, from the name and the list only', function (): void {
+    NameClips::fake(['Aysel'], ['Zəhra']);
+    $aysel = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Aysel']);
+    $zehra = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Zəhra']);
+    $other = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Ayşən-Nur']);
+
+    $this->get(route('children.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('children.0.has_voice', true)
+            // Listed but not voiced yet, and a hyphenated name: shown, not said.
+            ->where('children.1.has_voice', false)
+            ->where('children.2.has_voice', false));
+    $this->get(route('children.show', $aysel))->assertInertia(fn (Assert $page) => $page->where('child.has_voice', true));
+    $this->get(route('children.show', $zehra))->assertInertia(fn (Assert $page) => $page->where('child.has_voice', false));
+
+    // Typed without the Azerbaijani letters: said, and the list's spelling offered.
+    NameClips::fake(['Aysel', 'Lalə']);
+    $lale = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Lale']);
+    $this->get(route('children.show', $lale))->assertInertia(fn (Assert $page) => $page->where('child.has_voice', true)->where('child.voice_spelling', 'Lalə'));
+    $this->get(route('children.show', $aysel))->assertInertia(fn (Assert $page) => $page->where('child.voice_spelling', null));
+
+    // Names or praise off: the account says no name, so no mark either way.
+    foreach ([['names' => false], ['praise' => false]] as $choice) {
+        $this->parent->forceFill(['board_voice' => $choice])->save();
+
+        $this->get(route('children.index'))->assertInertia(fn (Assert $page) => $page->where('children.0.has_voice', null)->where('children.1.has_voice', null));
+        $this->get(route('children.show', $other))->assertInertia(fn (Assert $page) => $page->where('child.has_voice', null));
     }
 });

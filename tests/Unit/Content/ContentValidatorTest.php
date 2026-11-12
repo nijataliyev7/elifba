@@ -138,3 +138,43 @@ it('asks for twice as many figures as the fullest round of any level shows', fun
         expect($pack->style->item->hasFigures() ? $figures >= 10 : $figures === 0)->toBeTrue($pack->key);
     }
 });
+
+it('needs a credits entry for a name clip, as for every asset', function (): void {
+    $root = ContentFixture::make(['file' => 'credits.json', 'set' => ['credits.4.files' => ['content/assets/sample/alma.svg']]]);
+
+    expect((new ContentValidator($root))->validate())->toBe(['credits.json: content/voice-names/f66bf3c65feb9853.mp3 has no entry']);
+});
+
+it('lets content:voice run with every name clip pruned or deleted, which it makes again', function (): void {
+    $root = ContentFixture::make(['delete' => ['voice-names/f66bf3c65feb9853.mp3']]);
+
+    expect((new ContentValidator($root, voiceClipsRequired: false))->validate())->toBe([])
+        ->and((new ContentValidator($root))->validate())->not->toBe([]);
+});
+
+it('needs a clip for the greeting and the end phrases since V2\'s paid month made them', function (): void {
+    $phrases = ['d6d4213f48206758', 'e8b1494c24e9dff0', 'd8133988f1d26eea'];
+    $root = ContentFixture::make([
+        'file' => 'voice-clips.json',
+        'unset' => array_map(static fn (string $hash): string => "clips.{$hash}", $phrases),
+        'delete' => array_map(static fn (string $hash): string => "assets/voice/{$hash}.mp3", $phrases),
+    ]);
+
+    expect(ContentValidator::NAME_PHRASE_CLIPS_REQUIRED)->toBeTrue()
+        ->and((new ContentValidator(ContentFixture::make()))->validate())->toBe([])
+        ->and((new ContentValidator($root))->validate())->toBe([
+            'voice-clips.json: the greeting phrase "Salam!" has no clip (php artisan content:voice)',
+            'voice-clips.json: the finish phrase "Əla oynadın!" has no clip (php artisan content:voice)',
+            'voice-clips.json: the finish_class phrase "Əla oynadınız!" has no clip (php artisan content:voice)',
+        ])
+        ->and((new ContentValidator($root, namePhraseClipsRequired: false))->validate())->toBe([]);
+});
+
+it('keeps the clip of a name that left the list until --prune, for content:voice', function (): void {
+    $root = ContentFixture::make(['file' => 'names.json', 'set' => ['names' => ['Aysel', 'Əli']]]);
+
+    expect((new ContentValidator($root, voiceClipsRequired: false))->validate())->toBe([])
+        ->and((new ContentValidator($root))->validate())->toBe([
+            'voice-clips.json: names.f66bf3c65feb9853 is not the clip of a name of names.json in the voice of voice.json ("[excited] Nihat!"); make it again or remove it (php artisan content:voice --prune)',
+        ]);
+});

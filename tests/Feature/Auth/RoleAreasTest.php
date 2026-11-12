@@ -82,6 +82,7 @@ const BOARD_ROUTES = [
     'games.state',
     'games.sync',
     'games.status.update',
+    'games.players.voice',
     'guest-boards.show',
     'guest-boards.destroy',
 ];

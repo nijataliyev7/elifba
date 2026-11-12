@@ -10,10 +10,11 @@ use Tests\Support\Games;
 use Tests\Support\Voice;
 
 /*
- * Settings → Oyun, the voice (docs/architecture.md §3 "Voice", ADR 015):
- * «Tapşırığı səslə de» and «Tərif səsi», both on for a new account, and
- * what the account's boards get from them — whether prompts are said, and
- * the praise and retry clips, or none.
+ * Settings → Oyun, the voice (docs/architecture.md §3 "Voice", ADR 015,
+ * ADR 016): «Tapşırığı səslə de», «Tərif səsi» and «Adı səslə de», all on
+ * for a new account and for one stored before V2, and what the account's
+ * boards get from them — whether prompts are said, the praise and retry
+ * clips, the greeting and end phrases, or none, and whether names are said.
  */
 
 beforeEach(function (): void {
@@ -27,7 +28,7 @@ it('says the prompt and the praise for a new account', function (): void {
     $this->actingAs($this->teacher)->get(route('play-settings.edit'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/play')
-            ->where('voice', ['prompt' => true, 'praise' => true]));
+            ->where('voice', ['prompt' => true, 'praise' => true, 'names' => true]));
 });
 
 it('turns each part off and on again', function (mixed $off, mixed $on): void {
@@ -35,16 +36,20 @@ it('turns each part off and on again', function (mixed $off, mixed $on): void {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('play-settings.edit'));
 
-    expect($this->teacher->refresh()->board_voice)->toBe(['prompt' => false, 'praise' => true]);
+    expect($this->teacher->refresh()->board_voice)->toBe(['prompt' => false, 'praise' => true, 'names' => true]);
 
-    $this->get(route('play-settings.edit'))->assertInertia(fn (Assert $page) => $page->where('voice', ['prompt' => false, 'praise' => true]));
+    $this->get(route('play-settings.edit'))->assertInertia(fn (Assert $page) => $page->where('voice', ['prompt' => false, 'praise' => true, 'names' => true]));
 
-    $this->put(route('play-settings.voice.update'), ['prompt' => $on, 'praise' => $off])->assertSessionHasNoErrors();
+    $this->put(route('play-settings.voice.update'), ['prompt' => $on, 'praise' => $off, 'names' => $on])->assertSessionHasNoErrors();
 
-    expect($this->teacher->refresh()->board_voice)->toBe(['prompt' => true, 'praise' => false]);
+    expect($this->teacher->refresh()->board_voice)->toBe(['prompt' => true, 'praise' => false, 'names' => true]);
 
-    // Both on again is the default: nothing stored.
-    $this->put(route('play-settings.voice.update'), ['prompt' => $on, 'praise' => $on])->assertSessionHasNoErrors();
+    $this->put(route('play-settings.voice.update'), ['prompt' => $on, 'praise' => $on, 'names' => $off])->assertSessionHasNoErrors();
+
+    expect($this->teacher->refresh()->board_voice)->toBe(['prompt' => true, 'praise' => true, 'names' => false]);
+
+    // All on again is the default: nothing stored.
+    $this->put(route('play-settings.voice.update'), ['prompt' => $on, 'praise' => $on, 'names' => $on])->assertSessionHasNoErrors();
 
     expect($this->teacher->refresh()->board_voice)->toBeNull()
         ->and($this->teacher->phone_remote)->toBeTrue()
@@ -54,7 +59,7 @@ it('turns each part off and on again', function (mixed $off, mixed $on): void {
     'JSON booleans' => [false, true],
 ]);
 
-it('refuses anything but two booleans and changes nothing', function (array $body, string $field): void {
+it('refuses anything but booleans and changes nothing', function (array $body, string $field): void {
     $this->teacher->forceFill(['board_voice' => ['prompt' => false, 'praise' => true]])->save();
 
     $this->actingAs($this->teacher)->from(route('play-settings.edit'))
@@ -67,36 +72,75 @@ it('refuses anything but two booleans and changes nothing', function (array $bod
     'no prompt' => [['praise' => '1'], 'prompt'],
     'no praise' => [['prompt' => '1'], 'praise'],
     'a word' => [['prompt' => 'on', 'praise' => '1'], 'prompt'],
+    'a word for names' => [['prompt' => '1', 'praise' => '1', 'names' => 'yes'], 'names'],
 ]);
+
+it('reads an account stored before V2 as saying names, and keeps names on when the form does not send them', function (): void {
+    $this->teacher->forceFill(['board_voice' => ['prompt' => false, 'praise' => true]])->save();
+
+    $this->actingAs($this->teacher)->get(route('play-settings.edit'))
+        ->assertInertia(fn (Assert $page) => $page->where('voice', ['prompt' => false, 'praise' => true, 'names' => true]));
+    $this->get(route('games.board', Games::start($this->class)))
+        ->assertInertia(fn (Assert $page) => $page->where('voice.names', true));
+
+    $this->put(route('play-settings.voice.update'), ['prompt' => '1', 'praise' => '1'])->assertSessionHasNoErrors();
+
+    expect($this->teacher->refresh()->board_voice)->toBeNull();
+});
 
 it('lets a parent choose for the home board, and sends a guest to log in', function (): void {
     $parent = User::factory()->parent()->create();
 
     $this->actingAs($parent)->put(route('play-settings.voice.update'), ['prompt' => '0', 'praise' => '1'])->assertSessionHasNoErrors();
 
-    expect($parent->refresh()->board_voice)->toBe(['prompt' => false, 'praise' => true]);
+    expect($parent->refresh()->board_voice)->toBe(['prompt' => false, 'praise' => true, 'names' => true]);
 
     auth()->logout();
     $this->put(route('play-settings.voice.update'), ['prompt' => '0', 'praise' => '0'])->assertRedirect(route('login'));
 });
 
-it('gives the board the praise and retry clips, and whether it says prompts', function (): void {
+it('gives the board the praise, retry, greeting and end clips, and whether it says prompts and names', function (): void {
     $clips = Voice::made($this->app);
     $praise = array_map($clips->url(...), $clips->praise());
     $retry = array_map($clips->url(...), $clips->retry());
+    $phrases = [
+        'greeting' => $clips->url($clips->greeting()),
+        'finish' => $clips->url($clips->finish()),
+        'finish_class' => $clips->url($clips->finishClass()),
+    ];
 
     $this->actingAs($this->teacher)->get(route('games.board', Games::start($this->class)))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('voice', ['prompt' => true, 'praise' => $praise, 'retry' => $retry]));
+            ->where('voice', ['prompt' => true, 'praise' => $praise, 'retry' => $retry, 'names' => true, ...$phrases]));
 
     expect($praise)->toHaveCount(11)->each->toStartWith(url('/content/voice/'))
-        ->and($retry)->toHaveCount(6)->each->toStartWith(url('/content/voice/'));
+        ->and($retry)->toHaveCount(6)->each->toStartWith(url('/content/voice/'))
+        ->and(array_values($phrases))->each->toStartWith(url('/content/voice/'));
 
-    $this->teacher->forceFill(['board_voice' => ['prompt' => false, 'praise' => false]])->save();
+    // Names off: the phrases stay, no name is said.
+    $this->teacher->forceFill(['board_voice' => ['prompt' => true, 'praise' => true, 'names' => false]])->save();
 
     $this->get(route('games.board', Games::start($this->class)))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('voice', ['prompt' => false, 'praise' => [], 'retry' => []]));
+            ->where('voice', ['prompt' => true, 'praise' => $praise, 'retry' => $retry, 'names' => false, ...$phrases]));
+
+    // Praise off: nothing but the prompt, so no name either, whatever the name switch.
+    $this->teacher->forceFill(['board_voice' => ['prompt' => false, 'praise' => false, 'names' => true]])->save();
+
+    $this->get(route('games.board', Games::start($this->class)))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('voice', ['prompt' => false, 'praise' => [], 'retry' => [], 'names' => false, 'greeting' => null, 'finish' => null, 'finish_class' => null]));
+});
+
+it('says no greeting or end phrase before its clip is made', function (): void {
+    Voice::made($this->app, static fn (VoiceLineData $line): bool => ! in_array($line->group, [VoiceLineData::GREETING, VoiceLineData::FINISH, VoiceLineData::FINISH_CLASS], true));
+
+    $this->actingAs($this->teacher)->get(route('games.board', Games::start($this->class)))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('voice.greeting', null)
+            ->where('voice.finish', null)
+            ->where('voice.finish_class', null)
+            ->where('voice.names', true));
 });
 
 it('leaves out a phrase whose clip is not made', function (): void {
@@ -106,7 +150,7 @@ it('leaves out a phrase whose clip is not made', function (): void {
 
     $this->actingAs($this->teacher)->get(route('games.board', Games::start($this->class)))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('voice', ['prompt' => true, 'praise' => [$clips->url($afarin)], 'retry' => []]));
+            ->where('voice', ['prompt' => true, 'praise' => [$clips->url($afarin)], 'retry' => [], 'names' => true, 'greeting' => null, 'finish' => null, 'finish_class' => null]));
 });
 
 it('follows the game\'s owner on a guest board too', function (): void {

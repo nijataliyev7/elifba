@@ -19,6 +19,7 @@ import {
 } from './guest-board';
 import type { BoardAuth } from './http';
 import type { StorageLike } from './outbox';
+import { SILENT } from './voice';
 
 /*
  * The guest board's tab (docs/architecture.md §4, "Guest board"): the
@@ -108,7 +109,7 @@ function props(game: string): BoardProps {
             pictures: {},
         },
         students: [],
-        voice: { prompt: true, praise: [], retry: [] },
+        voice: { ...SILENT, prompt: true },
     };
 }
 

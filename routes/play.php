@@ -9,6 +9,7 @@ use App\Http\Controllers\Play\GameSyncController;
 use App\Http\Controllers\Play\GuestBoardController;
 use App\Http\Controllers\Play\GuestBoardGameController;
 use App\Http\Controllers\Play\JoinCodeController;
+use App\Http\Controllers\Play\PlayerVoiceController;
 use App\Http\Controllers\Play\PultController;
 use App\Http\Controllers\Play\RemoteController;
 use App\Http\Middleware\ThrottleBoardEvents;
@@ -105,6 +106,12 @@ Route::middleware(['auth:board,web', 'verified'])->group(function () {
     Route::patch('games/{game}/status', GameStatusController::class)
         ->can('play', 'game')
         ->name('games.status.update');
+    // A player's first name in the board's voice (ADR 016): ids only, never
+    // a name or a hash; `{player}` is checked against the game's players.
+    Route::get('games/{game}/players/{player}/voice', PlayerVoiceController::class)
+        ->whereUlid('player')
+        ->can('play', 'game')
+        ->name('games.players.voice');
 
     Route::delete('guest-boards/{board}', [GuestBoardController::class, 'destroy'])
         ->can('close', 'board')

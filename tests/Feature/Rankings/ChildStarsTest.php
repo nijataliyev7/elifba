@@ -8,6 +8,7 @@ use App\Domain\Rankings\Support\ChildStars;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\NameClips;
 
 /*
  * A child's stars (docs/architecture.md §5 "A child's stars", ADR 011):
@@ -65,6 +66,7 @@ it('sums today, the week and all across Baku midnight and Monday', function (): 
 });
 
 it('keeps siblings\' stars apart', function (): void {
+    NameClips::fake([]);
     $this->travelTo(CarbonImmutable::parse('2026-11-11 08:00:00', 'UTC'));
     $sibling = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Tural']);
     $quiet = Child::factory()->for($this->parent, 'parent')->create(['display_name' => 'Nigar']);
@@ -87,9 +89,10 @@ it('keeps siblings\' stars apart', function (): void {
         ->assertInertia(fn (Assert $page) => $page
             ->component('children/index')
             ->where('children', [
-                ['id' => $this->child->id, 'display_name' => 'Firuzə', 'avatar' => $this->child->avatar, 'stars_today' => 3],
-                ['id' => $sibling->id, 'display_name' => 'Tural', 'avatar' => $sibling->avatar, 'stars_today' => 1],
-                ['id' => $quiet->id, 'display_name' => 'Nigar', 'avatar' => $quiet->avatar, 'stars_today' => 0],
+                // `has_voice`: no name clip is made in the test content (ADR 016).
+                ['id' => $this->child->id, 'display_name' => 'Firuzə', 'avatar' => $this->child->avatar, 'stars_today' => 3, 'has_voice' => false],
+                ['id' => $sibling->id, 'display_name' => 'Tural', 'avatar' => $sibling->avatar, 'stars_today' => 1, 'has_voice' => false],
+                ['id' => $quiet->id, 'display_name' => 'Nigar', 'avatar' => $quiet->avatar, 'stars_today' => 0, 'has_voice' => false],
             ]));
 
     // A child's page has only that child's stars.

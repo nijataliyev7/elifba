@@ -18,7 +18,9 @@
  *   `duplicate`, neither played nor queued (§4, "Duplicates"). The rule
  *   lives here because direct touches never pass through `live.ts`.
  * - **Who is at the board** is board state, kept in `sessionStorage`;
- *   null is the whole class (no points).
+ *   null is the whole class (no points). «Başla» and every change of it
+ *   during play start a turn of the voice (`bridge.startTurn`, §3
+ *   "Voice"); a game that ends under play says its end (`bridge.gameOver`).
  * - **Fencing.** A 409 `board_replaced`, or another tab of this browser
  *   claiming the same game, stops this board for good.
  */
@@ -285,6 +287,9 @@ export class BoardController {
         }
 
         this.phase = 'playing';
+        // A turn starts with the game on this board; a home game's
+        // greeting, before the first prompt, only when nothing is answered.
+        this.options.bridge.startTurn(this.studentId, !answered(this.game));
         this.showCurrent();
         this.options.bridge.setPaused(this.status === 'paused');
         this.emit();
@@ -385,11 +390,20 @@ export class BoardController {
     // Who is at the board.
 
     setStudent(studentId: string | null): void {
+        const before = this.studentId;
+
         this.studentId =
             studentId !== null && this.options.studentIds.includes(studentId)
                 ? studentId
                 : null;
         this.writeStudent();
+
+        // Another student at the board during play starts a new turn
+        // («Başla» starts the first); nothing is said for the change.
+        if (this.phase === 'playing' && this.studentId !== before) {
+            this.options.bridge.startTurn(this.studentId, false);
+        }
+
         this.emit();
     }
 
@@ -628,8 +642,16 @@ export class BoardController {
     }
 
     private finish(): void {
+        const played = this.phase === 'playing';
+
         this.phase = 'finished';
         this.options.bridge.setPaused(true);
+
+        // The end is said only when the game ends under play on this board.
+        if (played && this.game !== null) {
+            this.options.bridge.gameOver(tally(this.game).solved);
+        }
+
         this.emit();
         void this.outbox.flush();
     }
@@ -810,11 +832,7 @@ export class BoardController {
                     ? progressOf(game, this.shown.id)
                     : null,
             tally: game === null ? null : tally(game),
-            resumed:
-                game !== null &&
-                Object.values(game.progress).some(
-                    (p) => p.solved || p.skipped || p.hit_item_ids.length > 0,
-                ),
+            resumed: game !== null && answered(game),
             pending: outbox.size,
             retrying: outbox.retrying,
             points: Object.values(this.points).reduce((a, b) => a + b, 0),
@@ -856,6 +874,13 @@ export class BoardController {
             return null;
         }
     }
+}
+
+/** Any round already solved, skipped or hit: «Davam et» rather than «Başla». */
+function answered(game: BoardGame): boolean {
+    return Object.values(game.progress).some(
+        (p) => p.solved || p.skipped || p.hit_item_ids.length > 0,
+    );
 }
 
 function touchKey(touch: ItemTouch): string {

@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Play, Star } from 'lucide-react';
+import { NameVoiceMark } from '@/components/students/name-voice-mark';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
@@ -16,7 +17,8 @@ type Props = {
  * A child on «Uşaqlarım» (architecture §5 "A child's stars"): the avatar,
  * the name and today's stars only, a way to the child's page and «Oyna»,
  * one tap from the game setup. Big enough for a parent holding a phone
- * with a small child on their lap.
+ * with a small child on their lap. A name the board says aloud carries a
+ * small speaker (ADR 016 decision 10).
  */
 export function ChildCard({ child, avatars }: Props) {
     const { t } = useTranslation();
@@ -36,8 +38,11 @@ export function ChildCard({ child, avatars }: Props) {
                     className="size-16 text-2xl"
                 />
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xl font-semibold">
-                        {child.display_name}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                        <span className="min-w-0 truncate text-xl font-semibold">
+                            {child.display_name}
+                        </span>
+                        {child.has_voice === true && <NameVoiceMark />}
                     </span>
                     <span className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Star

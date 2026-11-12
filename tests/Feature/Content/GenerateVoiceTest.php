@@ -1,23 +1,31 @@
 <?php
 
+use App\Domain\Classroom\Models\SchoolClass;
+use App\Domain\Classroom\Models\Student;
+use App\Domain\Content\Actions\GenerateVoiceClips;
 use App\Domain\Content\Data\VoiceLineData;
 use App\Domain\Content\Models\CustomWord;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\ContentValidator;
+use App\Domain\Content\Support\NameVoices;
 use App\Domain\Content\Support\VoiceClips;
+use App\Domain\Family\Models\Child;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Tests\Support\ContentFixture;
 
 /*
- * php artisan content:voice (docs/architecture.md §3 "Voice", ADR 015) on a
- * fixture content root, never on the real content/: ElevenLabs is faked
- * (Http::fake) and so is ffmpeg (Process::fake), so no test makes a real
- * call or pays for a character.
+ * php artisan content:voice (docs/architecture.md §3 "Voice", ADR 015,
+ * ADR 016) on a fixture content root, never on the real content/:
+ * ElevenLabs is faked (Http::fake) and so is ffmpeg (Process::fake), so no
+ * test makes a real call or pays for a character. The fixture's name list
+ * has seven names, Nihat's clip made.
  */
 
 const VOICE_KEY = 'sk_test_never_printed_0123456789';
@@ -39,12 +47,31 @@ function voiceClips(): VoiceClips
     return app(VoiceClips::class);
 }
 
+function nameVoices(): NameVoices
+{
+    return app(NameVoices::class);
+}
+
 /**
  * @return array<string, string>
  */
-function listedClips(string $root): array
+function listedClips(string $root, string $key = 'clips'): array
 {
-    return json_decode((string) file_get_contents($root.'/voice-clips.json'), true, 4, JSON_THROW_ON_ERROR)['clips'];
+    return json_decode((string) file_get_contents($root.'/voice-clips.json'), true, 4, JSON_THROW_ON_ERROR)[$key];
+}
+
+/**
+ * @param  iterable<VoiceLineData>  $lines
+ */
+function charactersOf(iterable $lines): int
+{
+    $characters = 0;
+
+    foreach ($lines as $line) {
+        $characters += mb_strlen($line->text);
+    }
+
+    return $characters;
 }
 
 function fakeElevenLabs(): void
@@ -60,7 +87,7 @@ function fakeElevenLabs(): void
 function withoutClips(string $root): void
 {
     File::deleteDirectory($root.'/assets/voice');
-    File::put($root.'/voice-clips.json', "{\n    \"clips\": {}\n}\n");
+    File::put($root.'/voice-clips.json', json_encode(['clips' => (object) [], 'names' => listedClips($root, 'names')], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n");
     $credits = json_decode((string) file_get_contents($root.'/credits.json'), true, 16, JSON_THROW_ON_ERROR);
     $credits['credits'] = array_values(array_filter($credits['credits'], static fn (array $credit): bool => $credit['files'] !== ['content/assets/voice/*']));
     File::put($root.'/credits.json', json_encode($credits, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
@@ -68,9 +95,9 @@ function withoutClips(string $root): void
 
 it('says in a dry run what it would make and what it sends, and calls nothing', function (): void {
     Http::fake();
-    $needed = voiceClips()->needed(app(ContentRepository::class));
-    $missing = array_filter($needed, fn (VoiceLineData $line): bool => ! is_file($this->root.'/assets/'.VoiceClips::path($line->hash)));
-    $characters = array_sum(array_map(static fn (VoiceLineData $line): int => mb_strlen($line->text), $missing));
+    $needed = app(GenerateVoiceClips::class)->needed();
+    $missing = app(GenerateVoiceClips::class)->missing();
+    $characters = charactersOf($missing);
 
     expect(Artisan::call('content:voice', ['--dry-run' => true]))->toBe(0)
         ->and(Artisan::output())
@@ -83,7 +110,7 @@ it('says in a dry run what it would make and what it sends, and calls nothing', 
 
     Http::assertNothingSent();
     Process::assertNothingRan();
-    expect(listedClips($this->root))->toHaveCount(3);
+    expect(listedClips($this->root))->toHaveCount(6);
 });
 
 it('makes the clips that have no file, levelled, lists them and keeps the ones made', function (): void {
@@ -138,7 +165,7 @@ it('gives the folder its credits entry with the first clip and writes CREDITS.md
     withoutClips($this->root);
     $this->travelTo(now()->setDate(2026, 11, 20));
 
-    $this->artisan('content:voice', ['--force' => true, '--only' => 'praise,retry'])
+    $this->artisan('content:voice', ['--force' => true, '--only' => 'praise,retry,greeting,finish,finish_class'])
         ->expectsOutputToContain('credits.json got the entry for content/assets/voice/*')
         ->assertSuccessful();
 
@@ -190,7 +217,7 @@ it('stops when ElevenLabs refuses, keeps and lists what it made, and prints no k
         ->toContain('ElevenLabs answered 401: This request exceeds your quota.')
         ->toContain('Made 1 clip(s)')
         ->not->toContain(VOICE_KEY)
-        ->and(listedClips($this->root))->toHaveCount(4);
+        ->and(listedClips($this->root))->toHaveCount(7);
 
     Http::assertSentCount(2);
 });
@@ -204,7 +231,7 @@ it('deletes only with --prune the clips nothing needs any more', function (): vo
         File::put($this->root.'/assets/'.VoiceClips::path($hash), 'OLD');
     }
 
-    File::put($this->root.'/voice-clips.json', json_encode(['clips' => [...listedClips($this->root), $orphan => '[playful] Köhnə sözünü tap!', $stale => '[calm] Alma hansıdır?']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    File::put($this->root.'/voice-clips.json', json_encode(['clips' => [...listedClips($this->root), $orphan => '[playful] Köhnə sözünü tap!', $stale => '[calm] Alma hansıdır?'], 'names' => listedClips($this->root, 'names')], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     expect((new ContentValidator($this->root))->validate())->toBe(["voice-clips.json: clips.{$stale} is not the clip of \"[calm] Alma hansıdır?\" in the voice of voice.json; make it again (php artisan content:voice) and remove the old one (--prune)"]);
     fakeElevenLabs();
 
@@ -216,19 +243,127 @@ it('deletes only with --prune the clips nothing needs any more', function (): vo
         ->expectsOutputToContain('Deleted 2 clip(s)')
         ->assertSuccessful();
 
-    expect(listedClips($this->root))->not->toHaveKey($orphan)->not->toHaveKey($stale)->toHaveCount(8)
+    expect(listedClips($this->root))->not->toHaveKey($orphan)->not->toHaveKey($stale)->toHaveCount(11)
         ->and(is_file($this->root.'/assets/'.VoiceClips::path($orphan)))->toBeFalse()
         ->and((new ContentValidator($this->root))->validate())->toBe([]);
 });
 
-it('voices built-in content only, never a teacher word or a name from the database', function (): void {
+it('sends the list\'s names and reads no student or child', function (): void {
     fakeElevenLabs();
-    CustomWord::factory()->create(['user_id' => User::factory()->create()->id, 'text' => 'nigar']);
+    $owner = User::factory()->teacherAndParent()->create();
+    CustomWord::factory()->create(['user_id' => $owner->id, 'text' => 'nigar']);
+    // Names off the list, and a name on it: none of them is read from here.
+    Student::factory()->for(SchoolClass::factory()->for($owner, 'teacher'))->create(['display_name' => 'Gülnarə M.']);
+    Student::factory()->for(SchoolClass::factory()->for($owner, 'teacher'))->create(['display_name' => 'Aysel']);
+    Child::factory()->for($owner, 'parent')->create(['display_name' => 'Firuzə']);
+    $queries = [];
+    DB::listen(static function (QueryExecuted $query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
 
     $this->artisan('content:voice', ['--force' => true])->assertSuccessful();
 
-    Http::assertNotSent(static fn (Request $request): bool => str_contains(mb_strtolower((string) $request['text']), 'nigar'));
-    expect(collect(Http::recorded())->count())->toBe(count(voiceClips()->needed(app(ContentRepository::class))) - 3);
+    $sent = collect(Http::recorded())->map(static fn (array $pair): string => (string) $pair[0]['text']);
+    $names = $sent->filter(static fn (string $text): bool => str_starts_with($text, '[excited] ') && ! str_contains(mb_substr($text, 10), ' '))->values()->all();
+
+    expect($queries)->toBe([])
+        ->and($sent->filter(static fn (string $text): bool => preg_match('/nigar|gülnarə|firuzə/iu', $text) === 1)->all())->toBe([])
+        // Every name of names.json but Nihat, made already: Aysel because she is listed, not because a student bears the name.
+        ->and($names)->toBe(['[excited] Aysel!', '[excited] Əli!', '[excited] Hüseyin!', '[excited] Hüseyn!', '[excited] İlkin!', '[excited] Zəhra!'])
+        // Every clip content needs but the six the fixture has made, and the six names.
+        ->and($sent->count())->toBe(count(voiceClips()->needed(app(ContentRepository::class))) - 6 + 6);
+});
+
+it('makes a name clip under content/voice-names and never under content/assets', function (): void {
+    fakeElevenLabs();
+    $voiceFiles = File::files($this->root.'/assets/voice');
+
+    $this->artisan('content:voice', ['--force' => true, '--only' => 'name', '--limit' => 2, '--review' => $this->root.'/../review.html'])
+        ->expectsOutputToContain('Made 2 clip(s)')
+        ->assertSuccessful();
+
+    $aysel = nameVoices()->line('Aysel');
+    $ali = nameVoices()->line('Əli');
+
+    expect(trim((string) file_get_contents($this->root.'/'.NameVoices::path($aysel->hash))))->toBe('LEVELLED-MP3')
+        ->and(is_file($this->root.'/'.NameVoices::path($ali->hash)))->toBeTrue()
+        ->and(File::files($this->root.'/assets/voice'))->toHaveCount(count($voiceFiles))
+        ->and(is_file($this->root.'/assets/'.VoiceClips::path($aysel->hash)))->toBeFalse()
+        ->and(listedClips($this->root, 'names'))->toBe([
+            $aysel->hash => '[excited] Aysel!',
+            $ali->hash => '[excited] Əli!',
+            nameVoices()->line('Nihat')->hash => '[excited] Nihat!',
+        ])
+        ->and(listedClips($this->root))->toHaveCount(6)
+        ->and(file_get_contents($this->root.'/../review.html'))->toContain('<h2>Names (3)</h2>')->toContain('Aysel!')
+        ->and((new ContentValidator($this->root))->validate())->toBe([]);
+
+    Http::assertSent(static fn (Request $request): bool => $request['text'] === '[excited] Aysel!'
+        && $request['previous_text'] === 'Salam, uşaqlar! Bu gün birlikdə oynayırıq. Şəkillərə yaxşı baxın və düzgün cavabı tapın.');
+    Http::assertSentCount(2);
+});
+
+it('gives the name clips their own credits entry with the first one', function (): void {
+    fakeElevenLabs();
+    File::deleteDirectory($this->root.'/voice-names');
+    File::put($this->root.'/voice-clips.json', json_encode(['clips' => listedClips($this->root), 'names' => (object) []], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    $credits = json_decode((string) file_get_contents($this->root.'/credits.json'), true, 16, JSON_THROW_ON_ERROR);
+    $credits['credits'] = array_values(array_filter($credits['credits'], static fn (array $credit): bool => $credit['files'] !== ['content/voice-names/*']));
+    File::put($this->root.'/credits.json', json_encode($credits, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
+    $this->travelTo(now()->setDate(2026, 12, 3));
+
+    expect(Artisan::call('content:voice', ['--dry-run' => true, '--only' => 'name']))->toBe(0)
+        ->and(Artisan::output())->toContain('gets this entry with the first name clip')->toContain('"content/voice-names/*"');
+
+    $this->artisan('content:voice', ['--force' => true, '--only' => 'name'])
+        ->expectsOutputToContain('credits.json got the entry for content/voice-names/*')
+        ->assertSuccessful();
+
+    $names = array_values(array_filter((new ContentRepository($this->root))->credits(), static fn ($credit): bool => $credit->files === ['content/voice-names/*']));
+
+    expect($names)->toHaveCount(1)
+        ->and($names[0]->license->value)->toBe('MIT')
+        ->and($names[0]->changes)->toContain('December 2026')->not->toContain('{month}')
+        ->and(file_get_contents(dirname($this->root).'/CREDITS.md'))->toContain('content/voice-names/*')
+        ->and(listedClips($this->root, 'names'))->toHaveCount(7)
+        ->and((new ContentValidator($this->root))->validate())->toBe([]);
+});
+
+it('counts the names in a dry run: the clips and the characters a run would send', function (): void {
+    Http::fake();
+    $names = array_filter(app(GenerateVoiceClips::class)->missing(), static fn (VoiceLineData $line): bool => $line->isName());
+
+    expect($names)->toHaveCount(6)
+        ->and(Artisan::call('content:voice', ['--dry-run' => true, '--only' => 'name']))->toBe(0)
+        ->and(Artisan::output())
+        ->toMatch('/\| name\s+\| 7\s+\| 1\s+\| 6\s+\| '.charactersOf($names).'\s+\|/')
+        ->toContain('This run: 6 clip(s), '.charactersOf($names).' characters sent');
+
+    Http::assertNothingSent();
+    Process::assertNothingRan();
+});
+
+it('prunes the clip of a name that left the list', function (): void {
+    fakeElevenLabs();
+    $this->artisan('content:voice', ['--force' => true, '--only' => 'name', '--limit' => 1])->assertSuccessful();
+    $nihat = nameVoices()->line('Nihat');
+    $aysel = nameVoices()->line('Aysel');
+    File::put($this->root.'/names.json', json_encode(['version' => 1, 'sources' => ['https://query.wikidata.org/'], 'names' => ['Aysel', 'Əli']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    $this->app->instance(ContentRepository::class, new ContentRepository($this->root));
+
+    // A run that makes clips keeps it: a clip accepted by ear is deleted only by --prune.
+    $this->artisan('content:voice', ['--dry-run' => true])->assertSuccessful();
+    expect(is_file($this->root.'/'.NameVoices::path($nihat->hash)))->toBeTrue();
+
+    $this->artisan('content:voice', ['--prune' => true])
+        ->expectsOutputToContain('Deleted 1 clip(s)')
+        ->expectsOutputToContain('voice-names/'.$nihat->hash.'.mp3')
+        ->assertSuccessful();
+
+    expect(is_file($this->root.'/'.NameVoices::path($nihat->hash)))->toBeFalse()
+        ->and(listedClips($this->root, 'names'))->toBe([$aysel->hash => '[excited] Aysel!'])
+        ->and(listedClips($this->root))->toHaveCount(6)
+        ->and((new ContentValidator($this->root))->validate())->toBe([]);
 });
 
 it('lists the account\'s voices when voice.json has no voice id yet', function (): void {
@@ -268,4 +403,30 @@ it('makes again a clip whose file was deleted, and lists a file a stopped run le
 
     // One request for the deleted clip and four for the numbers not made yet.
     Http::assertSentCount(5);
+});
+
+it('makes a name that says what a phrase says its own clip, apart from the public one', function (): void {
+    // «Afərin» is a girl's name and a praise phrase: one text, one hash, two files.
+    $voice = json_decode((string) file_get_contents($this->root.'/voice.json'), true, 16, JSON_THROW_ON_ERROR);
+    $voice['praise'][] = ['text' => 'Afərin!', 'style' => 'excited'];
+    File::put($this->root.'/voice.json', json_encode($voice, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $names = json_decode((string) file_get_contents($this->root.'/names.json'), true, 4, JSON_THROW_ON_ERROR);
+    $names['names'] = ['Afərin', 'Aysel', 'Nihat'];
+    File::put($this->root.'/names.json', json_encode($names, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $this->app->instance(ContentRepository::class, new ContentRepository($this->root));
+    fakeElevenLabs();
+    $line = nameVoices()->line('Afərin');
+
+    expect(Artisan::call('content:voice', ['--force' => true, '--only' => 'praise,name']))->toBe(0)
+        ->and(Artisan::output())->toContain('Made 3 clip(s)');
+
+    // The next request reads the clip lists the run wrote.
+    $this->app->instance(ContentRepository::class, new ContentRepository($this->root));
+
+    expect(is_file($this->root.'/assets/'.VoiceClips::path($line->hash)))->toBeTrue()
+        ->and(is_file($this->root.'/'.NameVoices::path($line->hash)))->toBeTrue()
+        ->and(listedClips($this->root))->toHaveKey($line->hash)
+        ->and(listedClips($this->root, 'names'))->toHaveKey($line->hash)
+        ->and(nameVoices()->file('Afərin'))->toBe($this->root.'/'.NameVoices::path($line->hash))
+        ->and((new ContentValidator($this->root))->validate())->toBe([]);
 });

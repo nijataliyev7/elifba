@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Games;
+use Tests\Support\NameClips;
 
 /*
  * The teacher board: its page props, the claim (fencing), the state a
@@ -28,6 +29,8 @@ beforeEach(function (): void {
 
 describe('the board page', function (): void {
     it('carries the game, the pack\'s look with its sounds and the active students in order', function (): void {
+        // No name has a clip here: `name_audio` is PlayerVoiceTest's.
+        NameClips::fake([]);
         $avatar = Avatars::keys()[0];
         $second = Student::factory()->for($this->class)->create(['display_name' => 'Əli', 'avatar' => $avatar, 'position' => 2]);
         $first = Student::factory()->for($this->class)->create(['display_name' => 'Aysel', 'avatar' => 'no-such-avatar', 'position' => 1]);
@@ -73,8 +76,9 @@ describe('the board page', function (): void {
                     'pictures' => [],
                 ])
                 ->where('students', [
-                    ['id' => $first->id, 'display_name' => 'Aysel', 'avatar' => ['key' => 'no-such-avatar', 'url' => null]],
-                    ['id' => $second->id, 'display_name' => 'Əli', 'avatar' => ['key' => $avatar, 'url' => ContentAssets::url(Avatars::images()[$avatar])]],
+                    // No name clip is made in the test content: `name_audio` null (ADR 016, PlayerVoiceTest).
+                    ['id' => $first->id, 'display_name' => 'Aysel', 'avatar' => ['key' => 'no-such-avatar', 'url' => null], 'name_audio' => null],
+                    ['id' => $second->id, 'display_name' => 'Əli', 'avatar' => ['key' => $avatar, 'url' => ContentAssets::url(Avatars::images()[$avatar])], 'name_audio' => null],
                 ]));
     });
 

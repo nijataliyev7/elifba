@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Tests\Support\Games;
+use Tests\Support\NameClips;
 
 /*
  * Isolation (docs/architecture.md §7). Every route with a `{class}`,
@@ -42,6 +43,8 @@ const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word', 'child'];
  */
 function isolationWorld(): array
 {
+    // A's student Aysel and child Aysel have a name the board says (ADR 016).
+    NameClips::fake(['Aysel']);
     $a = User::factory()->teacherAndParent()->create();
     $b = User::factory()->teacherAndParent()->create();
     $childA = Child::factory()->for($a, 'parent')->create(['display_name' => 'Aysel']);
@@ -115,6 +118,8 @@ function isolationCases(): array
             Games::hit(Games::round($w['gameA']), Games::target(Games::round($w['gameA'])), $w['studentA']->id),
         ]]],
         'PATCH games/{game}/status' => ['games.status.update', $gameA, static fn (array $w): array => ['status' => 'paused']],
+        // A player of the game: the student of a class game, the child of a home game.
+        'GET games/{game}/players/{player}/voice' => ['games.players.voice', static fn (array $w): array => ['game' => $w['gameA']->id, 'player' => $w['gameA']->child_id === null ? $w['studentA']->id : $w['childA']->id], $none],
         'POST games/{game}/join-code' => ['games.join-code', $gameA, $none],
         'GET games/{game}/remote' => ['games.remote', $gameA, $none],
         'GET classes/{class}/rankings' => ['classes.rankings', $classA, $none],
@@ -415,7 +420,7 @@ it('lists only the parent\'s own children and their own home games', function ()
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('children/index')
-            ->where('children', [['id' => $world['childB']->id, 'display_name' => 'Nigar', 'avatar' => $world['childB']->avatar, 'stars_today' => 0]]));
+            ->where('children', [['id' => $world['childB']->id, 'display_name' => 'Nigar', 'avatar' => $world['childB']->avatar, 'stars_today' => 0, 'has_voice' => false]]));
 
     $this->actingAs($world['b'])->get(route('pult', ['list' => 1]))
         ->assertInertia(fn ($page) => $page->where('games', fn ($games): bool => ! collect($games)->contains('id', $world['homeGameA']->id)));

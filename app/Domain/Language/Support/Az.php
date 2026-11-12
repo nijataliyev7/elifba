@@ -38,6 +38,17 @@ final class Az
     }
 
     /**
+     * Text as it is typed without the Azerbaijani letters, on a keyboard or
+     * phone that lacks them: lowercase, with ə → e, ı → i, ö → o, ü → u,
+     * ş → s, ç → c, ğ → g. «Lalə» and «Lale» are both «lale», «İlkin» and
+     * «ILKIN» both «ilkin». A key to compare by, never text to show.
+     */
+    public static function plain(string $text): string
+    {
+        return strtr(self::lower($text), ['ə' => 'e', 'ı' => 'i', 'ö' => 'o', 'ü' => 'u', 'ş' => 's', 'ç' => 'c', 'ğ' => 'g']);
+    }
+
+    /**
      * Runs on every name a teacher types and every content string: valid
      * UTF-8, Unicode NFC, look-alikes replaced by the letter (Cyrillic Ә → Ə,
      * Ǝ → Ə, i + combining dot → i), invisible characters (zero-width

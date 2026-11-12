@@ -67,3 +67,12 @@ it('trims, collapses whitespace and drops invisible characters', function (): vo
 it('repairs invalid UTF-8 instead of failing', function (): void {
     expect(Az::normalize("Əli\xC3"))->toBe('Əli?');
 });
+
+it('compares names as they are typed without the Azerbaijani letters', function (): void {
+    expect(Az::plain('Lalə'))->toBe('lale')
+        ->and(Az::plain('Lale'))->toBe('lale')
+        ->and(Az::plain('İlkin'))->toBe(Az::plain('ILKIN'))->toBe('ilkin')
+        ->and(Az::plain('Şükür Çiçək Ağa Gözəl'))->toBe('sukur cicek aga gozel')
+        // a and ə stay apart: «Ali» is not «Əli».
+        ->and(Az::plain('Əli'))->not->toBe(Az::plain('Ali'));
+});

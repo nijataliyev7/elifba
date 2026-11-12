@@ -9,11 +9,12 @@ import type {
     SlotStyle,
     SlotView,
 } from '../styles/types';
+import type { NameClips } from '../name-voice';
 import type { BoardSounds, SceneOptions } from './board-scene';
 import { BuildWordScene } from './build-word';
 import { FindScene } from './find';
-import type { BoardVoice } from '../voice';
-import { SILENT } from '../voice';
+import type { BoardVoice, VoicePlayers } from '../voice';
+import { NAME_GAP_MS, NO_PLAYERS, SILENT } from '../voice';
 
 // The scenes run on a stand-in for Phaser: a scene clock, a sound manager
 // that records what plays, and objects that take any drawing call.
@@ -203,13 +204,16 @@ class FakeClip {
 
     play(): boolean {
         this.said.push(this.url);
-        this.clock.delayedCall(CLIP_MS, () => {
-            if (!this.stopped) {
-                this.done.forEach((run) => run());
-            }
-        });
+        this.clock.delayedCall(CLIP_MS, () => this.complete());
 
         return true;
+    }
+
+    /** It has been said to the end (audio plays on while the scene clock stands). */
+    complete(): void {
+        if (!this.stopped) {
+            this.done.splice(0).forEach((run) => run());
+        }
     }
 
     pause(): boolean {
@@ -333,6 +337,8 @@ function mount<S extends FindScene | BuildWordScene>(
     make: (options: SceneOptions) => S,
     packSounds: BoardSounds,
     voice: BoardVoice = SILENT,
+    players: VoicePlayers = NO_PLAYERS,
+    names: NameClips | null = null,
 ): Board<S> {
     const moves: Moves = { enter: [], leave: [] };
     const style = itemStyle(moves);
@@ -344,6 +350,8 @@ function mount<S extends FindScene | BuildWordScene>(
         palette: [0x3b82c4, 0xe85d4a],
         sounds: packSounds,
         voice,
+        players,
+        names,
         figures: [],
         pictures: {},
         onReady: () => {},
@@ -361,6 +369,7 @@ function mount<S extends FindScene | BuildWordScene>(
             audio: {
                 exists: (key: string) => loaded.has(key),
                 get: () => undefined,
+                add: (key: string) => loaded.add(key),
             },
         },
         load: {
@@ -598,6 +607,10 @@ describe('the voice', () => {
         prompt: true,
         praise: ['/content/voice/praise.mp3'],
         retry: ['/content/voice/retry.mp3'],
+        names: true,
+        greeting: '/content/voice/salam.mp3',
+        finish: '/content/voice/ela-oynadin.mp3',
+        finish_class: '/content/voice/ela-oynadiniz.mp3',
     };
     const find = fixture('find-word', '01JC8Z6V8Q4B2X5N7M9P3R6T0A');
     const rabbit = {
@@ -778,5 +791,285 @@ describe('the voice', () => {
         clock.advance(1);
 
         expect(sounds.said).toEqual(['/content/voice/ba.mp3']);
+    });
+
+    /*
+     * A player's name (ADR 016): before the praise, «Salam!» and the end,
+     * `NAME_GAP_MS` apart, on the same channel; a prompt waits
+     * for the whole line, a name not fetched yet is left out and the phrase
+     * said alone, and the end is said while the board stands still.
+     */
+    describe('a name', () => {
+        const players: VoicePlayers = {
+            child: null,
+            students: [
+                { id: 's1', name_audio: '/games/g1/players/s1/voice' },
+                { id: 's2', name_audio: null },
+            ],
+        };
+        const home: VoicePlayers = {
+            child: { id: 'c1', name_audio: '/games/g1/players/c1/voice' },
+            students: [],
+        };
+
+        /** Name clips that have arrived, by player; what was asked for. */
+        function clips(arrived: string[]) {
+            const asked: string[] = [];
+            const names: NameClips = {
+                load: (player) => asked.push(player.id),
+                get: (id) =>
+                    arrived.includes(id) ? ({} as AudioBuffer) : null,
+                dispose: () => {},
+            };
+
+            return { names, asked };
+        }
+
+        const solve = {
+            roundId: rabbit.id,
+            itemId: 'd',
+            status: 'correct' as const,
+            solved: true,
+        };
+
+        it('comes before the praise after a pause, and the next prompt waits for both', () => {
+            const { names, asked } = clips(['s1']);
+            const { scene, clock, sounds } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                players,
+                names,
+            );
+
+            scene.startTurn('s1', true);
+            expect(asked).toEqual(['s1']);
+
+            scene.showRound(rabbit, open(rabbit));
+            clock.advance(2000);
+            scene.applyHit(solve);
+            // The praise's line: after the solved sound (260 ms, and its length, here none, + 80 ms).
+            clock.advance(340);
+            expect(sounds.said.slice(1)).toEqual(['name:s1']);
+
+            // The next round comes in while the name is said.
+            scene.showRound(next, open(next));
+            clock.advance(1000 + NAME_GAP_MS - 1);
+            expect(sounds.said.slice(1)).toEqual(['name:s1']);
+
+            clock.advance(1);
+            expect(sounds.said.slice(1)).toEqual([
+                'name:s1',
+                '/content/voice/praise.mp3',
+            ]);
+
+            // The prompt, due 850 ms after the round came in, waits for the praise.
+            clock.advance(999);
+            expect(sounds.said).toHaveLength(3);
+
+            clock.advance(1);
+            expect(sounds.said.at(-1)).toBe('/content/voice/cat.mp3');
+        });
+
+        it('leaves out a name whose clip has not arrived, and says the praise alone at once', () => {
+            const { names } = clips([]);
+            const { scene, clock, sounds } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                players,
+                names,
+            );
+
+            scene.startTurn('s1', false);
+            scene.showRound(rabbit, open(rabbit));
+            clock.advance(2000);
+            scene.applyHit(solve);
+            clock.advance(340);
+
+            expect(sounds.said).toEqual([
+                '/content/voice/rabbit.mp3',
+                '/content/voice/praise.mp3',
+            ]);
+
+            clock.advance(5000);
+            expect(sounds.said).toHaveLength(2);
+        });
+
+        it("greets a home game with the child's name and then «Salam!», before its first prompt, which waits", () => {
+            const { names, asked } = clips(['c1']);
+            const { scene, clock, sounds } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                home,
+                names,
+            );
+
+            // The child's clip is fetched with the scene.
+            expect(asked).toEqual(['c1']);
+
+            scene.startTurn(null, true);
+            scene.showRound(rabbit, open(rabbit));
+            expect(sounds.said).toEqual(['name:c1']);
+
+            clock.advance(1000 + NAME_GAP_MS);
+            expect(sounds.said).toEqual([
+                'name:c1',
+                '/content/voice/salam.mp3',
+            ]);
+
+            clock.advance(1000);
+            expect(sounds.said.at(-1)).toBe('/content/voice/rabbit.mp3');
+        });
+
+        it('is cut with its praise by 🔊, which says the prompt at once', () => {
+            const { names } = clips(['s1']);
+            const { scene, clock, sounds } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                players,
+                names,
+            );
+
+            scene.startTurn('s1', false);
+            scene.showRound(rabbit, open(rabbit));
+            clock.advance(2000);
+            scene.applyHit(solve);
+            clock.advance(340 + 500);
+            scene.repeatPrompt();
+            clock.advance(5000);
+
+            expect(sounds.said).toEqual([
+                '/content/voice/rabbit.mp3',
+                'name:s1',
+                '/content/voice/rabbit.mp3',
+            ]);
+        });
+
+        it('ends the game with the name and then the phrase while the board stands still under the result', () => {
+            vi.useFakeTimers();
+
+            try {
+                const { names } = clips(['c1']);
+                const { scene, clock, sounds } = mount(
+                    (options) => new FindScene(options),
+                    BALLOONS,
+                    VOICE,
+                    home,
+                    names,
+                );
+
+                scene.startTurn(null, false);
+                scene.showRound(rabbit, open(rabbit));
+                clock.advance(2000);
+                scene.applyHit(solve);
+                // The board finishes before the praise due after the solved
+                // sound (a real one lasts about as long as the solved
+                // effect): the praise gives way to the end.
+                clock.advance(300);
+                scene.setPaused(true);
+                scene.gameOver(1);
+                clock.advance(5000);
+
+                expect(sounds.said.slice(1)).toEqual(['name:c1']);
+
+                sounds.clips.at(-1)?.complete();
+                vi.advanceTimersByTime(NAME_GAP_MS);
+
+                expect(sounds.said.slice(1)).toEqual([
+                    'name:c1',
+                    '/content/voice/ela-oynadin.mp3',
+                ]);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        it('says the name once when the game ends while a praise is saying it: the end follows it', () => {
+            vi.useFakeTimers();
+
+            try {
+                const { names } = clips(['s1']);
+                const { scene, clock, sounds } = mount(
+                    (options) => new FindScene(options),
+                    BALLOONS,
+                    VOICE,
+                    players,
+                    names,
+                );
+
+                scene.startTurn('s1', false);
+                scene.showRound(rabbit, open(rabbit));
+                clock.advance(2000);
+                scene.applyHit(solve);
+                // The name before the praise is being said when the game ends.
+                clock.advance(340 + 400);
+                scene.setPaused(true);
+                scene.gameOver(1);
+
+                const name = sounds.clips.at(-1);
+
+                expect(name?.isPaused).toBe(false);
+                expect(sounds.said.at(-1)).toBe('name:s1');
+
+                name?.complete();
+                vi.advanceTimersByTime(NAME_GAP_MS);
+
+                expect(sounds.said.slice(1)).toEqual([
+                    'name:s1',
+                    '/content/voice/ela-oynadin.mp3',
+                ]);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        it('lets a praise being said end before the end, which then says the name first', () => {
+            vi.useFakeTimers();
+
+            try {
+                const { names } = clips(['s1']);
+                const { scene, clock, sounds } = mount(
+                    (options) => new FindScene(options),
+                    BALLOONS,
+                    VOICE,
+                    players,
+                    names,
+                );
+                const nextSolve = { ...solve, roundId: next.id };
+
+                scene.startTurn('s1', false);
+                scene.showRound(rabbit, open(rabbit));
+                clock.advance(2000);
+                // The 1st solved round: «Aysel! … Afərin!», then the prompt.
+                scene.applyHit(solve);
+                scene.showRound(next, open(next));
+                clock.advance(4000);
+                // The 2nd: the praise alone, being said when the game ends.
+                scene.applyHit(nextSolve);
+                clock.advance(340 + 400);
+                scene.setPaused(true);
+                scene.gameOver(2);
+
+                expect(sounds.said.slice(-2)).toEqual([
+                    '/content/voice/cat.mp3',
+                    '/content/voice/praise.mp3',
+                ]);
+
+                sounds.clips.at(-1)?.complete();
+                sounds.clips.at(-1)?.complete();
+                vi.advanceTimersByTime(NAME_GAP_MS);
+
+                expect(sounds.said.slice(-3)).toEqual([
+                    '/content/voice/praise.mp3',
+                    'name:s1',
+                    '/content/voice/ela-oynadin.mp3',
+                ]);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
     });
 });

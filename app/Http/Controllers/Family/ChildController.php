@@ -10,6 +10,7 @@ use App\Domain\Family\Data\ChildData;
 use App\Domain\Family\Models\Child;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Language\Support\Az;
+use App\Domain\Play\Support\PlayerVoice;
 use App\Domain\Rankings\Support\ChildStars;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -26,11 +27,16 @@ use Inertia\Response;
  * list is in the parent's own order with each child's stars of today only,
  * never sorted by stars and never with a total beside another child's. A
  * child's page has today, the week, in all and the last seven days. A
- * child's name is never flashed back or put in a URL.
+ * child's name is never flashed back or put in a URL. Both say whether
+ * the board says the child's name aloud (`has_voice`, ADR 016 decision 10:
+ * derived from the name and the built-in list, not a field about the
+ * child; null while the account says no name), and the child's page how
+ * the list spells a name typed otherwise (`voice_spelling`, «Lale» →
+ * «Lalə»), for a one-tap fix.
  */
 final class ChildController extends Controller
 {
-    public function index(#[CurrentUser] User $parent): Response
+    public function index(#[CurrentUser] User $parent, PlayerVoice $voice): Response
     {
         $today = ChildStars::today($parent);
 
@@ -39,6 +45,7 @@ final class ChildController extends Controller
                 ->map(static fn (Child $child): array => [
                     ...self::row($child),
                     'stars_today' => $today[$child->id] ?? 0,
+                    'has_voice' => $voice->says($parent, $child->display_name),
                 ])
                 ->all()),
             'avatars' => Avatars::all(),
@@ -55,12 +62,14 @@ final class ChildController extends Controller
         return to_route('children.show', $child);
     }
 
-    public function show(Child $child): Response
+    public function show(Child $child, #[CurrentUser] User $parent, PlayerVoice $voice): Response
     {
         return Inertia::render('children/show', [
             'child' => [
                 ...self::row($child),
                 'learned_letters' => $child->learned_letters ?? Alphabet::letters(),
+                'has_voice' => $voice->says($parent, $child->display_name),
+                'voice_spelling' => $voice->spelling($parent, $child->display_name),
             ],
             'stars' => ChildStars::of($child)->toArray(),
             'alphabet' => array_map(

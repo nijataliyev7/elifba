@@ -23,10 +23,11 @@ import { BuildSyllableScene } from './scenes/build-syllable';
 import { BuildWordScene } from './scenes/build-word';
 import { CountScene } from './scenes/count';
 import type { Figure, Pictures } from './figures';
+import { NameVoices } from './name-voice';
 import { FindScene } from './scenes/find';
 import { builds } from './scenes/layouts';
 import { itemStyle, slotStyle, styleOfUnit } from './styles/registry';
-import type { BoardVoice } from './voice';
+import type { BoardVoice, VoicePlayers } from './voice';
 
 /**
  * One Phaser scene per mechanic (architecture §4). A `pop` round is a find
@@ -54,6 +55,13 @@ export type StageOptions = {
     sounds: BoardSounds;
     /** What the board says (props `voice`, §3 "Voice"); played on the page's one AudioContext. */
     voice: BoardVoice;
+    /** Who may be at the board, with their `name_audio` (props `child`, `students`; ADR 016). */
+    players: VoicePlayers;
+    /**
+     * Fetches a name's clip by its ids-only path with the board's own
+     * headers (`nameClip()` in `http.ts`): the bytes, or null.
+     */
+    nameClip: (url: string) => Promise<ArrayBuffer | null>;
     /** The pack's figures (`pack.style.figures`), drawn by `animal` and `fruit` items. */
     figures: Figure[];
     /** The pictures that show a content key (`pack.pictures`), for the same items. */
@@ -66,8 +74,8 @@ export type Stage = {
     /**
      * The board's silent mode (§4 "Board in the browser"): the gain Phaser
      * mutes with, in front of everything it plays, so the pack's effects,
-     * prompts and praise go quiet at once and whatever plays later starts
-     * silent.
+     * prompts, praise and names go quiet at once, and the voice starts
+     * nothing new meanwhile.
      */
     setMuted: (muted: boolean) => void;
     destroy: () => void;
@@ -118,8 +126,71 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
     const palette = options.palette
         .map(colour)
         .filter((value): value is number => value !== null);
+    const context = sharedAudioContext();
+    // Name clips are decoded on the page's one context, kept in memory only
+    // and dropped with the stage (ADR 016 decision 8).
+    const names =
+        context === undefined
+            ? null
+            : new NameVoices({
+                  fetch: options.nameClip,
+                  decode: (bytes) => context.decodeAudioData(bytes),
+              });
 
     return new Promise<Stage>((resolve) => {
+        const scene: BoardScene = new Scene({
+            bridge: options.bridge,
+            style,
+            styleOf: (unit) => styleOfUnit(unit, style),
+            slots,
+            palette,
+            sounds: options.sounds,
+            voice: options.voice,
+            players: options.players,
+            names,
+            figures: options.figures,
+            pictures: options.pictures,
+            onReady: () =>
+                resolve({
+                    unlockAudio: () => {
+                        const sound = game.sound;
+
+                        if (
+                            sound instanceof Phaser.Sound.WebAudioSoundManager
+                        ) {
+                            void sound.context.resume();
+                        } else if (
+                            sound instanceof Phaser.Sound.HTML5AudioSoundManager
+                        ) {
+                            sound.unlock();
+                        }
+                    },
+                    setMuted: (muted) => {
+                        const sound = game.sound;
+
+                        if (
+                            sound instanceof Phaser.Sound.WebAudioSoundManager
+                        ) {
+                            // Phaser's own `mute` schedules the change at
+                            // time 0: Chrome then went silent but kept
+                            // reading the old gain back (and `mute` with
+                            // it). Setting the value is heard and read.
+                            const gain = sound.masterMuteNode.gain;
+
+                            gain.cancelScheduledValues(0);
+                            gain.value = muted ? 0 : 1;
+                        } else {
+                            sound.mute = muted;
+                        }
+
+                        scene.setMuted(muted);
+                    },
+                    destroy: () => {
+                        names?.dispose();
+                        game.destroy(true);
+                    },
+                }),
+        });
         const game = new Phaser.Game({
             type: Phaser.AUTO,
             parent: options.parent,
@@ -135,56 +206,8 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
                 height: BOARD_HEIGHT,
             },
             input: { activePointers: 4 },
-            audio: { context: sharedAudioContext() },
-            scene: new Scene({
-                bridge: options.bridge,
-                style,
-                styleOf: (unit) => styleOfUnit(unit, style),
-                slots,
-                palette,
-                sounds: options.sounds,
-                voice: options.voice,
-                figures: options.figures,
-                pictures: options.pictures,
-                onReady: () =>
-                    resolve({
-                        unlockAudio: () => {
-                            const sound = game.sound;
-
-                            if (
-                                sound instanceof
-                                Phaser.Sound.WebAudioSoundManager
-                            ) {
-                                void sound.context.resume();
-                            } else if (
-                                sound instanceof
-                                Phaser.Sound.HTML5AudioSoundManager
-                            ) {
-                                sound.unlock();
-                            }
-                        },
-                        setMuted: (muted) => {
-                            const sound = game.sound;
-
-                            if (
-                                sound instanceof
-                                Phaser.Sound.WebAudioSoundManager
-                            ) {
-                                // Phaser's own `mute` schedules the change at
-                                // time 0: Chrome then went silent but kept
-                                // reading the old gain back (and `mute` with
-                                // it). Setting the value is heard and read.
-                                const gain = sound.masterMuteNode.gain;
-
-                                gain.cancelScheduledValues(0);
-                                gain.value = muted ? 0 : 1;
-                            } else {
-                                sound.mute = muted;
-                            }
-                        },
-                        destroy: () => game.destroy(true),
-                    }),
-            }),
+            audio: { context },
+            scene,
         });
     });
 }

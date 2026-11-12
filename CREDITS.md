@@ -109,3 +109,11 @@ The app shows the same list on its `/credits` page.
 - License: [MIT License](https://opensource.org/license/mit) (`MIT`)
 - Source: <https://elevenlabs.io/docs/overview/capabilities/text-to-speech/eleven-v4>
 - Changes: A synthetic voice, not a person's recording: made with ElevenLabs Eleven v4 (eleven_v4, language az) in the Voice Library voice «Nigar – Ad Read» under a paid plan, in November 2026; trimmed and levelled with ffmpeg
+
+### The board's voice: the first names of Elifba's name list, in Azerbaijani
+
+- Files: `content/voice-names/*`
+- Author: Elifba contributors
+- License: [MIT License](https://opensource.org/license/mit) (`MIT`)
+- Source: <https://elevenlabs.io/docs/overview/capabilities/text-to-speech/eleven-v4>
+- Changes: A synthetic voice, not a person's recording: made with ElevenLabs Eleven v4 (eleven_v4, language az) in the Voice Library voice «Nigar – Ad Read» under a paid plan, in November 2026, one clip per name of content/names.json (our own list, seeded from Wikidata, CC0); trimmed and levelled with ffmpeg

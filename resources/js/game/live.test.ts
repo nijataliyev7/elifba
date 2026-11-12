@@ -308,6 +308,8 @@ async function wallBoard(
             log.push(`hit:${effect.itemId}:${effect.status}`),
         setPaused: (paused) => log.push(paused ? 'pause' : 'play'),
         repeatPrompt: () => log.push('repeat'),
+        startTurn: () => {},
+        gameOver: () => {},
     };
 
     bridge.connect(scene);

@@ -13,12 +13,18 @@ import { useTranslation } from '@/hooks/use-translation';
 import { index, podium, rankings, show } from '@/routes/classes';
 import { create as createGame } from '@/routes/classes/games';
 import { update as updateLetters } from '@/routes/classes/learned-letters';
-import type { Avatar, Letter, SchoolClass, Student } from '@/types';
+import type {
+    ActiveStudent,
+    Avatar,
+    Letter,
+    SchoolClass,
+    Student,
+} from '@/types';
 
 type Props = {
     schoolClass: SchoolClass;
     /** Active students in the class's order. */
-    students: Student[];
+    students: ActiveStudent[];
     /** Archived students, sorted by name. */
     archivedStudents: Student[];
     alphabet: Letter[];

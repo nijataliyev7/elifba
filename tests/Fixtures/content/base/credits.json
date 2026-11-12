@@ -33,6 +33,13 @@
             "license": "MIT"
         },
         {
+            "files": ["content/voice-names/*"],
+            "title": "Sample name clips",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
             "files": ["content/assets/sample/words/*"],
             "title": "Sample word pictures",
             "author": "Elifba",

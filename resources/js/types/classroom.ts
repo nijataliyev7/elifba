@@ -23,6 +23,17 @@ export type Student = {
     avatar: string;
 };
 
+/**
+ * An active student on the class page: whether the board says the name
+ * aloud (ADR 016 decision 10, derived from the name and Elifba's name
+ * list), null while the account says no name (names or praise off).
+ */
+export type ActiveStudent = Student & {
+    has_voice: boolean | null;
+    /** The name as the list spells a first name typed otherwise («Lale» → «Lalə»), or null. */
+    voice_spelling: string | null;
+};
+
 /** An avatar of `content/avatars.json` with its picture's URL (`Avatars::all()`). */
 export type Avatar = {
     key: string;

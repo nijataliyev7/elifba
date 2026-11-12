@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { BoardAuth } from './http';
-import { authHeaders, boardHttp, HttpError, SESSION_AUTH } from './http';
+import {
+    authHeaders,
+    boardHttp,
+    HttpError,
+    nameClip,
+    SESSION_AUTH,
+} from './http';
 
 /*
  * The board's HTTP in its two modes (docs/architecture.md §4): a teacher
@@ -170,5 +176,70 @@ describe('boardHttp in bearer mode', () => {
         expect(calls[0].init.method).toBe('PATCH');
         expect(calls[0].init.body).toBe('{"status":"paused"}');
         expect(headersOf(calls[0]).Authorization).toBe(`Bearer ${TOKEN}`);
+    });
+});
+
+/*
+ * A player's name clip (ADR 016 decision 8): fetched by the ids-only path
+ * of the props with the board's own headers, never cached; a 404 is "no
+ * clip", not a board that lost its game.
+ */
+describe('nameClip', () => {
+    const PLAYER = '01jz8c3m4n5p6q7r8s9t0v1w2z';
+    const PATH = `/games/${GAME}/players/${PLAYER}/voice`;
+
+    function audio(bytes: number): Response {
+        return new Response(new Uint8Array(bytes), {
+            status: 200,
+            headers: { 'Content-Type': 'audio/mpeg' },
+        });
+    }
+
+    it('fetches the clip with the bearer in the header, never in the URL, and never cached', async () => {
+        const calls = stubFetch(audio(16));
+
+        const clip = await nameClip(PATH, bearer());
+
+        expect(clip?.byteLength).toBe(16);
+        expect(calls).toHaveLength(1);
+        expect(calls[0].url).toBe(PATH);
+        expect(calls[0].url).not.toContain(TOKEN.split('.')[1]);
+        expect(calls[0].init.method).toBe('GET');
+        expect(calls[0].init.cache).toBe('no-store');
+        expect(calls[0].init.credentials).toBe('same-origin');
+        expect(headersOf(calls[0])).toMatchObject({
+            Accept: 'audio/mpeg',
+            Authorization: `Bearer ${TOKEN}`,
+        });
+    });
+
+    it("sends a teacher board's session and no bearer", async () => {
+        const calls = stubFetch(audio(4));
+
+        await nameClip(PATH);
+
+        expect(headersOf(calls[0])).not.toHaveProperty('Authorization');
+    });
+
+    it('has no clip after a 404 and does not take it for a lost game', async () => {
+        const onRefused = vi.fn();
+        stubFetch(reply(404, { message: 'Not Found' }));
+
+        await expect(nameClip(PATH, bearer(onRefused))).resolves.toBeNull();
+        expect(onRefused).not.toHaveBeenCalled();
+    });
+
+    it('tells the guest board of a 401 (board gone)', async () => {
+        const onRefused = vi.fn();
+        stubFetch(reply(401, { message: 'Unauthenticated.' }));
+
+        await expect(nameClip(PATH, bearer(onRefused))).resolves.toBeNull();
+        expect(onRefused).toHaveBeenCalledWith(401);
+    });
+
+    it('has no clip when the network is down', async () => {
+        stubFetch();
+
+        await expect(nameClip(PATH, bearer())).resolves.toBeNull();
     });
 });

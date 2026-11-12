@@ -5,6 +5,7 @@ use App\Domain\Play\Models\GameSession;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Games;
+use Tests\Support\NameClips;
 
 /*
  * The board and the phone of a home game (docs/architecture.md §4 "At
@@ -38,6 +39,7 @@ function solveHomeRounds(GameSession $game, int $count): void
 }
 
 it('gives the board the child and no students', function (): void {
+    NameClips::fake([]);
     $game = Games::start($this->child);
 
     foreach (['games.board', 'games.remote'] as $route) {
@@ -50,8 +52,20 @@ it('gives the board the child and no students', function (): void {
                 ->where('child.avatar.key', 'panda')
                 ->where('child.avatar.url', fn (string $url): bool => str_contains($url, 'panda'))
                 ->where('child.stars', 0)
+                // No name clip is made in the test content (ADR 016, PlayerVoiceTest).
+                ->where('child.name_audio', null)
                 ->where('students', []));
     }
+});
+
+it('gives the board the URL of the child\'s name clip, ids only, once the clip is made', function (): void {
+    NameClips::fake(['Aysel']);
+    $game = Games::start($this->child);
+
+    $this->get(route('games.board', $game))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('child.name_audio', "/games/{$game->id}/players/{$this->child->id}/voice")
+            ->where('voice.names', true));
 });
 
 it('does not open the pairing card on a home board', function (): void {

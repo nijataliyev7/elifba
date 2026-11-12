@@ -12,7 +12,13 @@ import {
     X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from 'react';
 import { BoardChild } from '@/components/games/board-child';
 import { BoardPrompt } from '@/components/games/board-prompt';
 import { BoardResult } from '@/components/games/board-result';
@@ -41,13 +47,14 @@ import { Mechanic } from '@/game/contract';
 import { boardMute } from '@/game/mute';
 import type { Pairing } from '@/game/contract';
 import type { BoardAuth } from '@/game/http';
-import { boardHttp, issueJoinCode } from '@/game/http';
+import { boardHttp, issueJoinCode, nameClip } from '@/game/http';
 import type { LiveBoardView } from '@/game/live';
 import { LiveBoard } from '@/game/live';
 import type { StorageLike } from '@/game/outbox';
 import { boardColours } from '@/game/palette';
 import { connectEcho, gameChannel } from '@/game/socket';
 import type { Stage } from '@/game/stage';
+import type { VoicePlayers } from '@/game/voice';
 import { forceLightTheme } from '@/hooks/use-appearance';
 import { lockLandscape, useFullscreen } from '@/hooks/use-fullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -112,6 +119,10 @@ type Props = BoardProps & {
  * screen: the child stands where the class's grid would, the pairing card
  * waits for «Pultu qoş» (on the start screen too), and the result adds
  * this game's stars to the child's total.
+ *
+ * The voice (§3 "Voice") belongs to the canvas: the stage gets who may be
+ * at the board as ids with their name clips' paths (ADR 016), and fetches
+ * a clip with this board's own `auth`; React never says anything.
  *
  * Two board modes, one board: a teacher board (`games/board`) and a guest
  * board (`lovhe`) differ only in `auth` and in `guest`'s parts.
@@ -214,6 +225,20 @@ export function BoardScreen({
         figures,
     } = pack.style;
     const { pictures } = pack;
+    // Who the voice may name (ADR 016): ids and clip paths, never a name.
+    const players = useMemo<VoicePlayers>(
+        () => ({
+            child:
+                child === null
+                    ? null
+                    : { id: child.id, name_audio: child.name_audio },
+            students: students.map(({ id, name_audio }) => ({
+                id,
+                name_audio,
+            })),
+        }),
+        [child, students],
+    );
 
     useEffect(() => {
         const parent = host.current;
@@ -239,6 +264,8 @@ export function BoardScreen({
                         palette,
                         sounds,
                         voice,
+                        players,
+                        nameClip: (url) => nameClip(url, auth),
                         figures,
                         pictures,
                     }),
@@ -271,12 +298,14 @@ export function BoardScreen({
         };
     }, [
         bridge,
+        auth,
         game.mechanic,
         itemStyle,
         slotStyle,
         palette,
         sounds,
         voice,
+        players,
         figures,
         pictures,
     ]);
