@@ -83,6 +83,12 @@ type VoiceTurn = 'queue' | 'idle' | 'now';
 /** One clip on the voice's channel: a content file, or a player's name (`name-voice.ts`). */
 type Clip = { url: string } | { player: string };
 
+/** What to call once a line is over: said, dropped or cut; null when nobody waits for it. */
+type Over = (() => void) | null;
+
+/** A line waiting for the channel. */
+type Waiting = { clips: Clip[]; over: Over };
+
 /** A line being said: a name and a phrase, `NAME_GAP_MS` apart. */
 type Utterance = {
     /** The clips still to say after the one being said. */
@@ -92,6 +98,7 @@ type Utterance = {
     /** Its sound; null while it loads or in the pause after it. */
     sound: Phaser.Sound.BaseSound | null;
     state: 'loading' | 'playing' | 'gap';
+    over: Over;
 };
 
 /** The voice's texture-cache keys, apart from the pack's sound keys. */
@@ -119,7 +126,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
     private readonly cues: VoiceCues;
     /** The line being said, and the one waiting for it. */
     private speaking: Utterance | null = null;
-    private waiting: Clip[] | null = null;
+    private waiting: Waiting | null = null;
     private readonly loading = new Map<string, ((ok: boolean) => void)[]>();
     /** The game ended on this board: the canvas stands frozen under the result. */
     private over = false;
@@ -222,6 +229,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         let line = end === null ? null : clipsOf(end);
 
         this.over = true;
+        this.drop(this.waiting);
         this.waiting = null;
 
         if (current !== null) {
@@ -246,6 +254,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
                 this.after(NAME_GAP_MS, () => this.sayNext(current));
             } else {
                 this.speaking = null;
+                current.over?.();
             }
         }
 
@@ -428,17 +437,31 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
     /**
      * Praise once the `solved` sound, played `delay` ms from now, is over,
-     * with the player's name after it when it is due.
+     * with the player's name after it when it is due. The controller holds
+     * the next round for the line: the scene tells it the line is due, and
+     * then that it is over — said, or dropped or cut — once (`bridge.praise`).
      */
-    protected sayPraiseAfter(delay: number): void {
+    protected sayPraiseAfter(delay: number, roundId: string): void {
         const line = this.cues.solved();
 
-        if (line !== null) {
-            this.time.delayedCall(
-                delay + this.lengthOf('solved') + VOICE_GAP_MS,
-                () => this.say(clipsOf(line), 'queue'),
-            );
+        if (line === null) {
+            return;
         }
+
+        const bridge = this.options.bridge;
+        let told = false;
+        const over = () => {
+            if (!told) {
+                told = true;
+                bridge.praise({ roundId, state: 'over' });
+            }
+        };
+
+        bridge.praise({ roundId, state: 'due' });
+        this.time.delayedCall(
+            delay + this.lengthOf('solved') + VOICE_GAP_MS,
+            () => this.say(clipsOf(line), 'queue', over),
+        );
     }
 
     /** The retry phrase after the `miss` sound, once a round, into silence. */
@@ -472,13 +495,20 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             : 0;
     }
 
-    /** The voice's one channel (`VoiceTurn`): a line at a time, in order. */
-    private say(line: Clip[], turn: VoiceTurn): void {
+    /**
+     * The voice's one channel (`VoiceTurn`): a line at a time, in order. A
+     * line queued takes the place of the one waiting; `over` is called once
+     * the line is said, or dropped or cut.
+     */
+    private say(line: Clip[], turn: VoiceTurn, over: Over = null): void {
         if (turn === 'now') {
             this.hush();
         } else if (this.speaking !== null) {
             if (turn === 'queue') {
-                this.waiting = line;
+                this.drop(this.waiting);
+                this.waiting = { clips: line, over };
+            } else {
+                over?.();
             }
 
             return;
@@ -489,6 +519,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
             clip: null,
             sound: null,
             state: 'loading',
+            over,
         };
 
         this.speaking = utterance;
@@ -505,6 +536,7 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
         if (clip === undefined) {
             this.speaking = null;
+            utterance.over?.();
             this.sayWaiting();
 
             return;
@@ -561,13 +593,20 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         this.waiting = null;
 
         if (next !== null) {
-            this.say(next, 'queue');
+            this.say(next.clips, 'queue', next.over);
         }
+    }
+
+    /** A line that will not be said (any more). */
+    private drop(line: { over: Over } | null): void {
+        line?.over?.();
     }
 
     /** Stops the line being said and forgets the one waiting. */
     private hush(): void {
-        const sound = this.speaking?.sound;
+        const speaking = this.speaking;
+        const waiting = this.waiting;
+        const sound = speaking?.sound;
 
         if (sound) {
             sound.stop();
@@ -576,6 +615,8 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
 
         this.speaking = null;
         this.waiting = null;
+        this.drop(speaking);
+        this.drop(waiting);
     }
 
     /**

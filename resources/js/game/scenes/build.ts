@@ -390,7 +390,7 @@ export abstract class BuildScene extends BoardScene {
 
         row.copies = [];
         this.time.delayedCall(120, () => this.play('solved'));
-        this.sayPraiseAfter(120);
+        this.sayPraiseAfter(120, row.round.id);
         copies.forEach((copy, at) => {
             this.time.delayedCall(140 + at * 110, () =>
                 effect.play(this, copy),

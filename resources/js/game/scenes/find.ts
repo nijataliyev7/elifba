@@ -90,7 +90,7 @@ export class FindScene extends BoardScene {
 
         if (effect.solved) {
             this.time.delayedCall(260, () => this.play('solved'));
-            this.sayPraiseAfter(260);
+            this.sayPraiseAfter(260, effect.roundId);
 
             for (const [index, rest] of [...this.items.values()].entries()) {
                 rest.leave(300 + index * this.stagger * 0.7);

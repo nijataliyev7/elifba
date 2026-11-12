@@ -17,6 +17,11 @@
  *   same touch — a child on the wall and the teacher on the phone at once:
  *   `duplicate`, neither played nor queued (§4, "Duplicates"). The rule
  *   lives here because direct touches never pass through `live.ts`.
+ * - **The next round** comes once the solved effect has played (1.6 s)
+ *   and, when the scene reports a praise line due for the solved round
+ *   (`bridge.praise`, §3 "Voice"), once that line is over and a short gap
+ *   has passed; never later than `SOLVED_CAP_MS` after the solve, so a
+ *   clip that never ends cannot stall the class. Held while paused.
  * - **Who is at the board** is board state, kept in `sessionStorage`;
  *   null is the whole class (no points). «Başla» and every change of it
  *   during play start a turn of the voice (`bridge.startTurn`, §3
@@ -24,7 +29,7 @@
  * - **Fencing.** A 409 `board_replaced`, or another tab of this browser
  *   claiming the same game, stops this board for good.
  */
-import type { BoardBridge, HitEffect, ItemTouch } from './bridge';
+import type { BoardBridge, HitEffect, ItemTouch, PraiseSignal } from './bridge';
 import type {
     GameStatus,
     Round,
@@ -132,6 +137,24 @@ export type BoardControllerOptions = {
 
 const SOLVED_DELAY_MS = 1600;
 
+/** The pause between the praise line after a solved round and the next round. */
+export const PRAISE_GAP_MS = 300;
+
+/** The longest a solved round waits for its praise line before the next round comes. */
+export const SOLVED_CAP_MS = 6000;
+
+/** The wait after a solved round for the next one. */
+type NextRound = {
+    roundId: string;
+    /** The solved effect has played. */
+    effect: boolean;
+    /** The praise line: none due, due (being or about to be said), or over and the gap after it passed. */
+    line: 'none' | 'due' | 'said';
+    /** `SOLVED_CAP_MS` has passed. */
+    capped: boolean;
+    handles: unknown[];
+};
+
 /** A touch from the other source this soon after an accepted one is the same touch (§4). */
 export const CROSS_SOURCE_MS = 800;
 
@@ -175,6 +198,9 @@ export class BoardController {
     private readonly handles = new Set<unknown>();
     private readonly listeners = new Set<() => void>();
     private readonly unsubscribeBridge: () => void;
+    private readonly unsubscribePraise: () => void;
+    /** The wait after a solved round, null when none. */
+    private next: NextRound | null = null;
     private view: BoardView;
 
     constructor(private readonly options: BoardControllerOptions) {
@@ -189,6 +215,9 @@ export class BoardController {
         this.unsubscribeBridge = options.bridge.onItemTouched((touch) => {
             this.touch(touch);
         });
+        this.unsubscribePraise = options.bridge.onPraise((signal) =>
+            this.praised(signal),
+        );
 
         options.channel?.listen((message) => this.heard(message));
 
@@ -328,6 +357,12 @@ export class BoardController {
                 outcome.verdict.status === 'correct' && outcome.verdict.solved,
         };
 
+        // The wait for the next round is there before the effect starts:
+        // the scene reports its praise line while it plays it.
+        if (effect.solved) {
+            this.awaitNext(touch.roundId);
+        }
+
         // The effect starts before anything else happens.
         this.options.bridge.applyHit(effect);
 
@@ -346,12 +381,6 @@ export class BoardController {
             student_id: this.studentId,
             client_at: new Date(at).toISOString(),
         });
-
-        if (effect.solved) {
-            const solvedId = touch.roundId;
-
-            this.later(() => this.advance(solvedId), this.solvedDelay());
-        }
 
         this.emit();
 
@@ -525,8 +554,10 @@ export class BoardController {
 
     dispose(): void {
         this.disposed = true;
+        this.next = null;
         this.outbox.dispose();
         this.unsubscribeBridge();
+        this.unsubscribePraise();
 
         for (const handle of this.handles) {
             this.timers.clear(handle);
@@ -604,6 +635,92 @@ export class BoardController {
         }
     }
 
+    /**
+     * After a solved round: the next one waits for the effect, for the
+     * praise line when the scene reports one due, and never longer than
+     * the cap.
+     */
+    private awaitNext(roundId: string): void {
+        this.dropNext();
+
+        const next: NextRound = {
+            roundId,
+            effect: false,
+            line: 'none',
+            capped: false,
+            handles: [],
+        };
+
+        this.next = next;
+        next.handles.push(
+            this.later(() => {
+                next.effect = true;
+                this.tryNext();
+            }, this.solvedDelay()),
+            this.later(() => {
+                next.capped = true;
+                this.tryNext();
+            }, SOLVED_CAP_MS),
+        );
+    }
+
+    /** The scene's praise line for a solved round: due, then over. */
+    private praised(signal: PraiseSignal): void {
+        const next = this.next;
+
+        if (next === null || next.roundId !== signal.roundId) {
+            return;
+        }
+
+        // A line reported after the round moved on finds nothing waiting.
+        if (signal.state === 'due') {
+            next.line = 'due';
+
+            return;
+        }
+
+        if (next.line === 'due') {
+            next.handles.push(
+                this.later(() => {
+                    next.line = 'said';
+                    this.tryNext();
+                }, PRAISE_GAP_MS),
+            );
+        }
+    }
+
+    /** The next round, once its wait is over and the game is not paused. */
+    private tryNext(): void {
+        const next = this.next;
+
+        if (next === null) {
+            return;
+        }
+
+        if (this.phase !== 'playing') {
+            this.dropNext();
+
+            return;
+        }
+
+        const over = next.capped || (next.effect && next.line !== 'due');
+
+        if (!over || this.status === 'paused') {
+            return;
+        }
+
+        this.dropNext();
+        this.advance(next.roundId);
+    }
+
+    private dropNext(): void {
+        for (const handle of this.next?.handles ?? []) {
+            this.clearLater(handle);
+        }
+
+        this.next = null;
+    }
+
     private advance(fromRoundId: string): void {
         if (this.phase !== 'playing' || this.game === null) {
             return;
@@ -645,6 +762,7 @@ export class BoardController {
         const played = this.phase === 'playing';
 
         this.phase = 'finished';
+        this.dropNext();
         this.options.bridge.setPaused(true);
 
         // The end is said only when the game ends under play on this board.
@@ -665,9 +783,11 @@ export class BoardController {
             return;
         }
 
-        // Input stops (or starts) at once; the server is told after.
+        // Input stops (or starts) at once; the server is told after. A
+        // next round held by the pause comes now.
         this.status = next;
         this.options.bridge.setPaused(next === 'paused');
+        this.tryNext();
         this.busy = true;
         this.notice = null;
         this.emit();
@@ -713,6 +833,7 @@ export class BoardController {
 
         if (this.phase === 'playing') {
             this.options.bridge.setPaused(game.status !== 'live');
+            this.tryNext();
         }
 
         this.emit();
@@ -748,6 +869,7 @@ export class BoardController {
 
         this.phase = 'replaced';
         this.status = game.status;
+        this.dropNext();
         this.options.bridge.setPaused(true);
         this.emit();
     }
@@ -779,6 +901,7 @@ export class BoardController {
 
     private replacedByTab(): void {
         this.phase = 'replaced';
+        this.dropNext();
         this.options.bridge.setPaused(true);
         this.emit();
         // What is still queued would be refused (409); this clears it.
@@ -801,13 +924,21 @@ export class BoardController {
         return this.options.solvedDelayMs ?? SOLVED_DELAY_MS;
     }
 
-    private later(callback: () => void, ms: number): void {
+    private later(callback: () => void, ms: number): unknown {
         const handle = this.timers.set(() => {
             this.handles.delete(handle);
             callback();
         }, ms);
 
         this.handles.add(handle);
+
+        return handle;
+    }
+
+    private clearLater(handle: unknown): void {
+        if (this.handles.delete(handle)) {
+            this.timers.clear(handle);
+        }
     }
 
     private emit(): void {

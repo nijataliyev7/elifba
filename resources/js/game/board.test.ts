@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import type { BoardControllerOptions, TabChannel } from './board';
-import { BoardController, boardStorageKey } from './board';
+import {
+    BoardController,
+    boardStorageKey,
+    PRAISE_GAP_MS,
+    SOLVED_CAP_MS,
+} from './board';
 import type { BridgeScene, HitEffect } from './bridge';
 import { BoardBridge } from './bridge';
 import type {
@@ -241,14 +246,20 @@ function fakeServer(progress: RoundProgress[] = [], rounds: Round[] = ROUNDS) {
     };
 }
 
-function recordingScene() {
+/** `praise`: the scene says a line after every solved round (§3 "Voice") and reports it due. */
+function recordingScene(bridge: BoardBridge, praise = false) {
     const log: string[] = [];
     /** What the voice heard (§3 "Voice"): turns and the game's end. */
     const voice: string[] = [];
     const scene: BridgeScene = {
         showRound: (shown) => log.push(`show:${shown.id}`),
-        applyHit: (effect: HitEffect) =>
-            log.push(`hit:${effect.itemId}:${effect.status}`),
+        applyHit: (effect: HitEffect) => {
+            log.push(`hit:${effect.itemId}:${effect.status}`);
+
+            if (praise && effect.solved) {
+                bridge.praise({ roundId: effect.roundId, state: 'due' });
+            }
+        },
         setPaused: (paused) => log.push(paused ? 'pause' : 'play'),
         repeatPrompt: () => log.push('repeat'),
         startTurn: (studentId, fresh) =>
@@ -265,13 +276,14 @@ function setup(
     overrides: Partial<BoardControllerOptions> & {
         storage?: StorageLike & { data: Map<string, string> };
         server?: ReturnType<typeof fakeServer>;
+        praise?: boolean;
     } = {},
 ) {
     const storage = overrides.storage ?? memoryStorage();
     const server = overrides.server ?? fakeServer();
     const timers = manualTimers();
     const bridge = new BoardBridge();
-    const { scene, log, voice } = recordingScene();
+    const { scene, log, voice } = recordingScene(bridge, overrides.praise);
 
     bridge.connect(scene);
     // Connecting replays the pause state; the tests watch what follows.
@@ -497,6 +509,140 @@ describe('a touch', () => {
         bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
 
         expect(log.at(-1)).toBe('hit:b:correct');
+    });
+});
+
+/*
+ * The next round after a solved one (§4, §3 "Voice"): it waits for the
+ * effect (1.6 s) and for the praise line the scene reports due, then a
+ * short gap; never longer than the cap; held while paused.
+ */
+describe('the next round', () => {
+    const shown = (log: string[]) =>
+        log.filter((entry) => entry.startsWith('show:'));
+    const praiseOver = (bridge: BoardBridge, roundId = 'round-0') =>
+        bridge.praise({ roundId, state: 'over' });
+
+    it('waits for a praise line longer than the effect, and a gap after it', async () => {
+        const { controller, timers, bridge, log } = setup({ praise: true });
+
+        await controller.load();
+        controller.start();
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+
+        timers.fire(1600);
+        expect(shown(log)).toEqual(['show:round-0']);
+
+        praiseOver(bridge);
+        expect(shown(log)).toEqual(['show:round-0']);
+
+        timers.fire(PRAISE_GAP_MS);
+        expect(shown(log)).toEqual(['show:round-0', 'show:round-1']);
+        // The cap goes with the wait.
+        expect(timers.pending.map((timer) => timer.ms)).not.toContain(
+            SOLVED_CAP_MS,
+        );
+    });
+
+    it('comes after the 1.6 s effect when no line is due, or the line was over sooner', async () => {
+        const silent = setup();
+
+        await silent.controller.load();
+        silent.controller.start();
+        silent.bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        silent.timers.fire(1600);
+
+        expect(shown(silent.log)).toEqual(['show:round-0', 'show:round-1']);
+
+        const short = setup({ praise: true });
+
+        await short.controller.load();
+        short.controller.start();
+        short.bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        praiseOver(short.bridge);
+        short.timers.fire(PRAISE_GAP_MS);
+
+        expect(shown(short.log)).toEqual(['show:round-0']);
+
+        short.timers.fire(1600);
+        expect(shown(short.log)).toEqual(['show:round-0', 'show:round-1']);
+    });
+
+    it('stops waiting for a line that never ends at the cap', async () => {
+        const { controller, timers, bridge, log } = setup({ praise: true });
+
+        await controller.load();
+        controller.start();
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        timers.fire(1600);
+        expect(shown(log)).toEqual(['show:round-0']);
+
+        timers.fire(SOLVED_CAP_MS);
+        expect(shown(log)).toEqual(['show:round-0', 'show:round-1']);
+
+        // The line's end, late, moves nothing on.
+        praiseOver(bridge);
+        timers.fire(PRAISE_GAP_MS);
+        expect(shown(log)).toEqual(['show:round-0', 'show:round-1']);
+    });
+
+    it('is held by a pause during the wait and comes on resume', async () => {
+        const { controller, timers, bridge, log } = setup({ praise: true });
+
+        await controller.load();
+        controller.start();
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        await controller.pause();
+
+        timers.fire(1600);
+        praiseOver(bridge);
+        timers.fire(PRAISE_GAP_MS);
+        timers.fire(SOLVED_CAP_MS);
+        expect(shown(log)).toEqual(['show:round-0']);
+
+        await controller.resume();
+        expect(shown(log)).toEqual(['show:round-0', 'show:round-1']);
+    });
+
+    it('is cancelled when the game is ended during the wait', async () => {
+        const { controller, timers, bridge, log, voice } = setup({
+            praise: true,
+        });
+
+        await controller.load();
+        controller.start();
+        bridge.itemTouched({ roundId: 'round-0', itemId: 'b' });
+        expect(await controller.end()).toBe(true);
+        expect(timers.pending.map((timer) => timer.ms)).not.toContain(
+            SOLVED_CAP_MS,
+        );
+
+        praiseOver(bridge);
+        timers.fire(PRAISE_GAP_MS);
+        timers.fire(1600);
+
+        expect(shown(log)).toEqual(['show:round-0']);
+        expect(controller.getView().phase).toBe('finished');
+        expect(voice).toEqual(['turn:class:fresh', 'over:1']);
+    });
+
+    it('shows the result after the last round once its line is over, then says the end', async () => {
+        const { controller, timers, bridge, voice } = setup({ praise: true });
+
+        await controller.load();
+        controller.start();
+        controller.skip();
+        controller.skip();
+        bridge.itemTouched({ roundId: 'round-2', itemId: 'd' });
+        timers.fire(1600);
+
+        expect(controller.getView().phase).toBe('playing');
+
+        praiseOver(bridge, 'round-2');
+        timers.fire(PRAISE_GAP_MS);
+
+        expect(controller.getView().phase).toBe('finished');
+        expect(voice).toEqual(['turn:class:fresh', 'over:1']);
     });
 });
 

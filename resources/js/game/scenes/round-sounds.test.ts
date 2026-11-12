@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { BoardBridge } from '../bridge';
+import type { PraiseSignal } from '../bridge';
 import { Round } from '../contract';
 import type { RoundProgress } from '../contract';
 import type {
@@ -331,7 +332,14 @@ const TRAIN: BoardSounds = {
 
 const BALLOONS: BoardSounds = { ...TRAIN, arrive: null, leave: null };
 
-type Board<S> = { scene: S; clock: Clock; sounds: FakeSounds; moves: Moves };
+type Board<S> = {
+    scene: S;
+    clock: Clock;
+    sounds: FakeSounds;
+    moves: Moves;
+    /** What the scene told the controller about its praise lines. */
+    praise: string[];
+};
 
 function mount<S extends FindScene | BuildWordScene>(
     make: (options: SceneOptions) => S,
@@ -342,8 +350,15 @@ function mount<S extends FindScene | BuildWordScene>(
 ): Board<S> {
     const moves: Moves = { enter: [], leave: [] };
     const style = itemStyle(moves);
+    const bridge = new BoardBridge();
+    const praise: string[] = [];
+
+    bridge.onPraise((signal: PraiseSignal) =>
+        praise.push(`${signal.state}:${signal.roundId}`),
+    );
+
     const scene = make({
-        bridge: new BoardBridge(),
+        bridge,
         style,
         styleOf: () => style,
         slots: slotStyle(moves),
@@ -406,7 +421,7 @@ function mount<S extends FindScene | BuildWordScene>(
     });
     scene.preload();
 
-    return { scene, clock, sounds, moves };
+    return { scene, clock, sounds, moves, praise };
 }
 
 const count = (played: string[], key: string) =>
@@ -921,6 +936,76 @@ describe('the voice', () => {
 
             clock.advance(1000);
             expect(sounds.said.at(-1)).toBe('/content/voice/rabbit.mp3');
+        });
+
+        it('tells the controller the praise line is due, and over once its name and phrase are said', () => {
+            const { names } = clips(['s1']);
+            const { scene, clock, praise } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                players,
+                names,
+            );
+
+            scene.startTurn('s1', false);
+            scene.showRound(rabbit, open(rabbit));
+            clock.advance(2000);
+            scene.applyHit(solve);
+            expect(praise).toEqual([`due:${rabbit.id}`]);
+
+            // 340 ms to the line, the name, the gap, the phrase.
+            clock.advance(340 + 1000 + NAME_GAP_MS + 999);
+            expect(praise).toEqual([`due:${rabbit.id}`]);
+
+            clock.advance(1);
+            expect(praise).toEqual([`due:${rabbit.id}`, `over:${rabbit.id}`]);
+        });
+
+        it('reports nothing for a solved round with no line due: praise off, or silent', () => {
+            const off = mount((options) => new FindScene(options), BALLOONS, {
+                ...VOICE,
+                praise: [],
+            });
+            const silent = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+            );
+
+            silent.scene.setMuted(true);
+
+            for (const { scene, clock, praise } of [off, silent]) {
+                scene.showRound(rabbit, open(rabbit));
+                clock.advance(2000);
+                scene.applyHit(solve);
+                clock.advance(5000);
+
+                expect(praise).toEqual([]);
+            }
+        });
+
+        it('reports the praise line over when 🔊 cuts it', () => {
+            const { names } = clips(['s1']);
+            const { scene, clock, praise } = mount(
+                (options) => new FindScene(options),
+                BALLOONS,
+                VOICE,
+                players,
+                names,
+            );
+
+            scene.startTurn('s1', false);
+            scene.showRound(rabbit, open(rabbit));
+            clock.advance(2000);
+            scene.applyHit(solve);
+            clock.advance(340 + 500);
+            scene.repeatPrompt();
+
+            expect(praise).toEqual([`due:${rabbit.id}`, `over:${rabbit.id}`]);
+
+            clock.advance(5000);
+            expect(praise).toHaveLength(2);
         });
 
         it('is cut with its praise by 🔊, which says the prompt at once', () => {

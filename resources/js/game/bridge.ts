@@ -9,9 +9,11 @@
  * freezes the canvas, `repeatPrompt` says the prompt again (🔊, §3
  * "Voice"), `startTurn` and `gameOver` tell the voice who is at the board
  * and that the game is over. Out (scene → controller): `itemTouched`, a pointer
- * on an item. The controller judges the touch and calls `applyHit` in the
- * same call stack, so the effect starts in the frame of the touch, before
- * the server has answered.
+ * on an item, and `praise`, the voice's line after a solved round: due, and
+ * then over (§3 "Voice"; the controller holds the next round for it). The
+ * controller judges the touch and calls `applyHit` in the same call stack,
+ * so the effect starts in the frame of the touch, before the server has
+ * answered.
  *
  * The scene boots asynchronously (Phaser is loaded on demand), so the
  * bridge keeps the last round and pause state and replays them when the
@@ -31,6 +33,13 @@ export type HitEffect = {
     solved: boolean;
 };
 
+/**
+ * The praise line after a solved round (§3 "Voice"): `due` once the scene
+ * has decided to say one, `over` once it has been said, or dropped or cut.
+ * A scene reports nothing for a round with no line due.
+ */
+export type PraiseSignal = { roundId: string; state: 'due' | 'over' };
+
 /** What a scene implements to be driven through the bridge. */
 export type BridgeScene = {
     showRound: (round: Round, progress: RoundProgress) => void;
@@ -48,6 +57,7 @@ export class BoardBridge {
     private lastRound: { round: Round; progress: RoundProgress } | null = null;
     private paused = false;
     private readonly touchListeners = new Set<Listener<ItemTouch>>();
+    private readonly praiseListeners = new Set<Listener<PraiseSignal>>();
 
     // In: controller → scene.
 
@@ -96,6 +106,20 @@ export class BoardBridge {
 
         return () => {
             this.touchListeners.delete(listener);
+        };
+    }
+
+    praise(signal: PraiseSignal): void {
+        for (const listener of this.praiseListeners) {
+            listener(signal);
+        }
+    }
+
+    onPraise(listener: Listener<PraiseSignal>): () => void {
+        this.praiseListeners.add(listener);
+
+        return () => {
+            this.praiseListeners.delete(listener);
         };
     }
 
