@@ -213,7 +213,7 @@ describe('a guest board\'s code', function (): void {
         expect(array_keys($setup['classes']))->toEqualCanonicalizing([$this->class->id, $few->id])
             ->and($setup['packs'])->not->toBeEmpty()
             ->and($setup['levels'])->not->toBeEmpty()
-            ->and($setup['rounds'])->toBe(['min' => config('elifba.rounds.min'), 'max' => config('elifba.rounds.max'), 'default' => config('elifba.rounds.default')])
+            ->and($setup)->not->toHaveKey('rounds')
             ->and(array_column($setup['classes'][$few->id]['letters'], 'lower'))->toBe(['a', 'b', 'c'])
             ->and(count($setup['classes'][$this->class->id]['letters']))->toBe(32)
             // The same options the setup page shows for that class.

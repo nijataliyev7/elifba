@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 /**
  * The parts the game setup is made of (docs/frontend.md rule 13): a
  * numbered question, a tile (units, mechanics, themes) and a row button
- * (levels, rounds, letter case, letters, words). Every choice is a
+ * (levels, letter case, letters, words). Every choice is a
  * `button type="button"` with `aria-pressed`; a locked one is dashed and
  * muted with a lock, `aria-disabled` but focusable, and never chosen.
  */

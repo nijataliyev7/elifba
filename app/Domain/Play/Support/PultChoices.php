@@ -26,7 +26,6 @@ use App\Models\User;
  *     packs: list<array{key: string, title: string, cover: string}>,
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>, hint: string}>,
  *     letterCases: list<string>,
- *     rounds: array{min: int, max: int, default: int},
  *     wordMaxLength: int,
  *     classes: array<string, PlayersSetupArray>,
  *     children: array<string, PlayersSetupArray>,

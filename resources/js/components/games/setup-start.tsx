@@ -8,7 +8,7 @@ type Props = {
     cover: string;
     /** «:level · :mechanic». */
     game: string;
-    /** The theme, the rounds and the extras that apply, joined. */
+    /** The theme and the extras that apply, joined. */
     details: string;
     /** Who plays («1A sinfi», «Oynayır: Aysel»), for the card. */
     players?: string;

@@ -269,6 +269,7 @@ function fakeHttp(rounds: Round[] = ROUNDS) {
 
             return { kind: 'ok', game: { status, board_epoch: 5 } };
         },
+        rounds: async () => ({ kind: 'failed' }),
     };
 
     return {

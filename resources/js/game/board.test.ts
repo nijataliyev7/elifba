@@ -15,7 +15,7 @@ import type {
     RoundProgress,
     SyncRequest,
 } from './contract';
-import type { BoardHttp } from './http';
+import type { BoardHttp, RoundCountResult } from './http';
 import type { SendResult, StorageLike, Timers } from './outbox';
 import { ulid } from './ulid';
 
@@ -147,12 +147,18 @@ function manualTimers(): Timers & {
     };
 }
 
-/** A server that judges nothing: a hit on the first solution item is answered correct and solved, with 3 points. */
-function fakeServer(progress: RoundProgress[] = [], rounds: Round[] = ROUNDS) {
+/**
+ * A server that judges nothing: a hit on the first solution item is
+ * answered correct and solved, with 3 points. A new round count builds
+ * `new-0` … rounds of `round()`.
+ */
+function fakeServer(progress: RoundProgress[] = [], built: Round[] = ROUNDS) {
     const calls: string[] = [];
     let epoch = 4;
     let online = true;
     let replaced = false;
+    let ended = false;
+    let rounds = built;
     const synced: SyncRequest[] = [];
 
     const http: BoardHttp = {
@@ -228,12 +234,62 @@ function fakeServer(progress: RoundProgress[] = [], rounds: Round[] = ROUNDS) {
                   }
                 : { kind: 'failed' as const };
         }),
+        rounds: vi.fn(
+            async (
+                boardEpoch: number,
+                count: number,
+            ): Promise<RoundCountResult> => {
+                calls.push(`rounds:${count}@${boardEpoch}`);
+
+                if (!online) {
+                    return { kind: 'failed' };
+                }
+
+                if (replaced) {
+                    return {
+                        kind: 'replaced',
+                        game: { status: 'live', board_epoch: epoch + 1 },
+                    };
+                }
+
+                if (ended) {
+                    return {
+                        kind: 'locked',
+                        game: { status: 'finished', board_epoch: epoch },
+                    };
+                }
+
+                rounds = Array.from({ length: count }, (_, index) => ({
+                    ...round(index),
+                    id: `new-${index}`,
+                    total: count,
+                }));
+
+                return {
+                    kind: 'ok',
+                    state: {
+                        game: {
+                            id: GAME,
+                            status: 'live',
+                            board_epoch: epoch,
+                            pack: 'balloons',
+                            mechanic: 'find',
+                        },
+                        rounds,
+                        progress: [],
+                    },
+                };
+            },
+        ),
     };
 
     return {
         http,
         calls,
         synced,
+        endElsewhere: () => {
+            ended = true;
+        },
         goOffline: () => {
             online = false;
         },
@@ -400,6 +456,128 @@ describe('loading', () => {
         await controller.load();
 
         expect(controller.getView().phase).toBe('finished');
+    });
+});
+
+describe('the round count (§4 "Round count")', () => {
+    it('builds the rounds again before «Başla» and starts with the new ones', async () => {
+        const { controller, server, log } = setup();
+
+        await controller.load();
+        await controller.changeRounds(5);
+
+        expect(server.calls).toEqual(['claim', 'state', 'rounds:5@5']);
+        expect(controller.getView()).toMatchObject({
+            phase: 'ready',
+            epoch: 5,
+            changingRounds: false,
+            tally: { rounds: 5, solved: 0 },
+        });
+
+        controller.start();
+
+        expect(log).toEqual(['show:new-0', 'play']);
+    });
+
+    it('holds «Başla» until the server has answered', async () => {
+        const { controller, server, log } = setup();
+        let answer: (result: RoundCountResult) => void = () => {};
+
+        await controller.load();
+        server.http.rounds = vi.fn(
+            () =>
+                new Promise<RoundCountResult>((resolve) => {
+                    answer = resolve;
+                }),
+        );
+
+        const changing = controller.changeRounds(15);
+
+        expect(controller.getView().changingRounds).toBe(true);
+
+        controller.start();
+        await controller.changeRounds(20);
+
+        expect(controller.getView().phase).toBe('ready');
+        expect(server.http.rounds).toHaveBeenCalledTimes(1);
+
+        answer({ kind: 'failed' });
+        await changing;
+        controller.start();
+
+        expect(controller.getView().phase).toBe('playing');
+        expect(log).toEqual(['show:round-0', 'play']);
+    });
+
+    it('asks nothing for the count the game has, once a round is answered, or during play', async () => {
+        const answeredServer = fakeServer([
+            {
+                round_id: 'round-0',
+                hit_item_ids: [],
+                misses: 1,
+                solved: false,
+                skipped: false,
+            },
+        ]);
+        const resumed = setup({ server: answeredServer });
+
+        await resumed.controller.load();
+        await resumed.controller.changeRounds(5);
+
+        expect(answeredServer.calls).toEqual(['claim', 'state']);
+
+        const { controller, server } = setup();
+
+        await controller.load();
+        await controller.changeRounds(3);
+        controller.start();
+        await controller.changeRounds(5);
+
+        expect(server.calls).toEqual(['claim', 'state']);
+        expect(controller.getView().tally?.rounds).toBe(3);
+    });
+
+    it('stops when another board holds the game', async () => {
+        const { controller, server } = setup();
+
+        await controller.load();
+        server.replaceBoard();
+        await controller.changeRounds(5);
+
+        expect(controller.getView()).toMatchObject({
+            phase: 'replaced',
+            tally: { rounds: 3 },
+        });
+    });
+
+    it('shows the result of a game ended meanwhile', async () => {
+        const { controller, server, voice } = setup();
+
+        await controller.load();
+        server.endElsewhere();
+        await controller.changeRounds(5);
+
+        expect(controller.getView()).toMatchObject({
+            phase: 'finished',
+            status: 'finished',
+        });
+        // Not ended under play on this board: nothing is said.
+        expect(voice).toEqual([]);
+    });
+
+    it('says so when the change fails, and keeps the rounds it has', async () => {
+        const { controller, server } = setup();
+
+        await controller.load();
+        server.goOffline();
+        await controller.changeRounds(5);
+
+        expect(controller.getView()).toMatchObject({
+            phase: 'ready',
+            notice: 'rounds_failed',
+            changingRounds: false,
+            tally: { rounds: 3 },
+        });
     });
 });
 

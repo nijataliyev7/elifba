@@ -7,6 +7,7 @@ use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Alphabet;
 use App\Domain\Play\Enums\LetterCase;
+use App\Domain\Play\Models\GameSession;
 use App\Domain\Play\Support\Playable;
 use App\Domain\Play\Support\StartableGame;
 use Illuminate\Support\Facades\Config;
@@ -105,6 +106,26 @@ final readonly class GameSetupData
             letters: $letters === [] ? null : Alphabet::sort($letters),
             own_words: filter_var($validated['own_words'] ?? false, FILTER_VALIDATE_BOOLEAN),
         );
+    }
+
+    /**
+     * The setup a stored game was started with, as input for `validate()`,
+     * with `$rounds` rounds (`ChangeRoundCount`, `ReplayGame`). A game
+     * stored before its letters and `own_words` were has null and false.
+     *
+     * @return array{mechanic: string, pack: string, level: string, rounds: int, letter_case: string, letters: list<string>|null, own_words: bool}
+     */
+    public static function inputOf(GameSession $game, int $rounds): array
+    {
+        return [
+            'mechanic' => $game->mechanic->value,
+            'pack' => $game->pack,
+            'level' => $game->level,
+            'rounds' => $rounds,
+            'letter_case' => $game->letter_case->value,
+            'letters' => $game->letters,
+            'own_words' => $game->own_words === true,
+        ];
     }
 
     /**

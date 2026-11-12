@@ -76,7 +76,6 @@ export type SharedSetup = {
     packs: SetupPack[];
     levels: SetupLevel[];
     letterCases: ('upper' | 'lower')[];
-    rounds: { min: number; max: number; default: number };
     /** The longest teacher word, for adding one from the form. */
     wordMaxLength: number;
 };
@@ -169,6 +168,8 @@ export type BoardProps = {
      * names, and the greeting and end phrases (null with praise off).
      */
     voice: BoardVoice;
+    /** `elifba.rounds.min` and `.max`: the round count under «Başla» offers every multiple of 5 between them. */
+    roundLimits: { min: number; max: number };
 };
 
 /** `/games/{game}/board`: the board's props and the teacher's own choice (Settings → Oyun). */

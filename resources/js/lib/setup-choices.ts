@@ -431,36 +431,8 @@ export function choosePack(
     };
 }
 
-/** The round counts to choose from: every multiple of 5 from min to max, plus the current count (the configured default) when it is none of them. */
-export function roundSteps(
-    rounds: { min: number; max: number },
-    current: number,
-): number[] {
-    const steps: number[] = [];
-
-    for (
-        let count = Math.ceil(rounds.min / 5) * 5;
-        count <= rounds.max;
-        count += 5
-    ) {
-        steps.push(count);
-    }
-
-    if (
-        !steps.includes(current) &&
-        current >= rounds.min &&
-        current <= rounds.max
-    ) {
-        steps.push(current);
-        steps.sort((a, b) => a - b);
-    }
-
-    return steps;
-}
-
 /** The extras as the summaries name them; null where a choice does not apply. */
 export type Extras = {
-    rounds: number;
     /** Null at a level that does not read. */
     letterCase: 'upper' | 'lower' | null;
     /** How many letters are chosen (0 = all); null outside the letter level. */
@@ -472,12 +444,11 @@ export type Extras = {
 export type Fragment = { key: string; values?: Record<string, number> };
 
 /**
- * The muted values beside «Əlavə»: «10 raund · böyük hərflər · bütün
- * hərflər», every extra that applies, as translation keys.
+ * The muted values beside «Əlavə»: «böyük hərflər · bütün hərflər», every
+ * extra that applies, as translation keys (the round count is the board's).
  */
 export function extrasSummary(extras: Extras): Fragment[] {
     return [
-        { key: 'games.board.rounds', values: { count: extras.rounds } },
         ...(extras.letterCase === null
             ? []
             : [{ key: `games.setup.summary.${extras.letterCase}` }]),
@@ -504,8 +475,8 @@ export function extrasSummary(extras: Extras): Fragment[] {
 }
 
 /**
- * The start bar's second line after the theme: the rounds, the letter case
- * where it applies, the chosen letters when there are some, and «yalnız
+ * The start bar's second line after the theme: the letter case where it
+ * applies, the chosen letters when there are some, and «yalnız
  * mənim sözlərim» when on.
  */
 export function startSummary(extras: Extras): Fragment[] {

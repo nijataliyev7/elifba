@@ -82,6 +82,7 @@ const BOARD_ROUTES = [
     'games.state',
     'games.sync',
     'games.status.update',
+    'games.rounds.update',
     'games.players.voice',
     'guest-boards.show',
     'guest-boards.destroy',
@@ -276,7 +277,7 @@ it('places classes, rankings, teacher words and class games in the teacher area,
         expect(areaGroupsOf($routes[$name]))->toBe(['teacher'], $name);
     }
 
-    foreach (['games.board', 'games.join-code', 'games.remote', 'pult', 'pult.code', 'pult.claim', 'guest-boards.game.edit', 'guest-boards.game.update'] as $name) {
+    foreach (['games.board', 'games.join-code', 'games.remote', 'games.replay', 'pult', 'pult.code', 'pult.claim', 'guest-boards.game.edit', 'guest-boards.game.update'] as $name) {
         expect(areaGroupsOf($routes[$name]))->toBe(['shared'], $name);
     }
 

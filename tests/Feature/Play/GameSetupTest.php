@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Classroom\Models\SchoolClass;
+use App\Domain\Content\Actions\AddCustomWord;
+use App\Domain\Content\Data\CustomWordData;
 use App\Domain\Content\Enums\Mechanic;
 use App\Domain\Content\Enums\Unit;
 use App\Domain\Content\Support\ContentAssets;
@@ -64,7 +66,8 @@ describe('the setup page', function (): void {
                 ->where('allLetters', true)
                 // No «Son oyunlar»: the owner took them out (2026-11-11).
                 ->missing('recent')
-                ->where('rounds', ['min' => 5, 'max' => 30, 'default' => 10])
+                // The round count is the board's, under «Başla» (§4 "Round count").
+                ->missing('rounds')
                 ->where('wordMaxLength', 20)
                 ->where('letterCases', ['upper', 'lower'])
                 ->has('letters', 32)
@@ -245,6 +248,33 @@ describe('starting a game', function (): void {
             ->and($game->started_at->equalTo(now()))->toBeTrue()
             ->and($game->ended_at)->toBeNull()
             ->and(GameRound::query()->where('game_session_id', $game->id)->count())->toBe(7);
+    });
+
+    it('starts the configured ten rounds when the setup sends no count', function (): void {
+        $this->post(route('classes.games.store', $this->class), ['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters'])
+            ->assertSessionHasNoErrors();
+
+        expect(GameRound::query()->where('game_session_id', GameSession::query()->sole()->id)->count())->toBe(10);
+    });
+
+    it('stores the letters asked for and own words with the game, so it can be built again', function (): void {
+        $this->post(route('classes.games.store', $this->class), ['mechanic' => 'find', 'pack' => 'balloons', 'level' => 'letters', 'letters' => ['b', 'a']])
+            ->assertSessionHasNoErrors();
+
+        foreach (['Aysel', 'Orxan', 'Nərmin', 'Elvin'] as $word) {
+            app(AddCustomWord::class)->handle($this->teacher, CustomWordData::validate(['text' => $word]));
+        }
+
+        $this->post(route('classes.games.store', $this->class), ['mechanic' => 'find', 'pack' => 'fruit', 'level' => 'words-short', 'own_words' => true])
+            ->assertSessionHasNoErrors();
+
+        $letters = GameSession::query()->where('level', 'letters')->sole();
+        $own = GameSession::query()->where('level', 'words-short')->sole();
+
+        expect($letters->letters)->toBe(['a', 'b'])
+            ->and($letters->own_words)->toBeFalse()
+            ->and($own->letters)->toBeNull()
+            ->and($own->own_words)->toBeTrue();
     });
 
     it('starts find in every pack with the pack\'s own effect', function (string $pack, string $effect): void {

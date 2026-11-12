@@ -118,6 +118,9 @@ function isolationCases(): array
             Games::hit(Games::round($w['gameA']), Games::target(Games::round($w['gameA'])), $w['studentA']->id),
         ]]],
         'PATCH games/{game}/status' => ['games.status.update', $gameA, static fn (array $w): array => ['status' => 'paused']],
+        'PATCH games/{game}/rounds' => ['games.rounds.update', $gameA, static fn (array $w): array => ['board_epoch' => 0, 'rounds' => 10]],
+        // A live game goes back to its board; a finished one starts again.
+        'POST games/{game}/replay' => ['games.replay', $gameA, $none],
         // A player of the game: the student of a class game, the child of a home game.
         'GET games/{game}/players/{player}/voice' => ['games.players.voice', static fn (array $w): array => ['game' => $w['gameA']->id, 'player' => $w['gameA']->child_id === null ? $w['studentA']->id : $w['childA']->id], $none],
         'POST games/{game}/join-code' => ['games.join-code', $gameA, $none],

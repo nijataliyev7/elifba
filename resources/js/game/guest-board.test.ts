@@ -110,6 +110,7 @@ function props(game: string): BoardProps {
         },
         students: [],
         voice: { ...SILENT, prompt: true },
+        roundLimits: { min: 5, max: 30 },
     };
 }
 

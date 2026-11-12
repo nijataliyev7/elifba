@@ -5,7 +5,6 @@ import { SetupLabel, SetupRowButton } from '@/components/games/setup-tiles';
 import InputError from '@/components/input-error';
 import { AddWordDialog } from '@/components/words/add-word-dialog';
 import { useTranslation } from '@/hooks/use-translation';
-import { roundSteps } from '@/lib/setup-choices';
 import { cn } from '@/lib/utils';
 import { index as wordsIndex } from '@/routes/words';
 import type { Letter, SetupRefusal } from '@/types';
@@ -13,9 +12,6 @@ import type { Letter, SetupRefusal } from '@/types';
 type Props = {
     /** The values beside «Əlavə», joined. */
     summary: string;
-    rounds: { min: number; max: number };
-    roundCount: number;
-    onRounds: (count: number) => void;
     /** The letter case, or null at a level that does not read. */
     letterCase: 'upper' | 'lower' | null;
     letterCases: ('upper' | 'lower')[];
@@ -35,19 +31,18 @@ type Props = {
 };
 
 /** The fields of «Əlavə»: it opens by itself when the server refuses one of them. */
-const FIELDS = ['rounds', 'letter_case', 'letters', 'own_words'];
+const FIELDS = ['letter_case', 'letters', 'own_words'];
 
 /**
  * «Əlavə» (docs/frontend.md rule 13): closed by default, its values beside
- * the button. Inside: the rounds, the letter case at a reading level, the
- * letters at the letter level and, where the server offers it, whether to
- * play only the owner's own words.
+ * the button. Inside: the letter case at a reading level, the letters at
+ * the letter level and, where the server offers it, whether to play only
+ * the owner's own words. A level with none of them (a picture or number
+ * level) has no «Əlavə». The round count is the board's, under «Başla»
+ * (architecture §4 "Round count").
  */
 export function SetupExtras({
     summary,
-    rounds,
-    roundCount,
-    onRounds,
     letterCase,
     letterCases,
     onLetterCase,
@@ -76,6 +71,12 @@ export function SetupExtras({
             setOpen(true);
         }
     }, [refused]);
+
+    const ownShown = own !== null && (own.startable || teacher);
+
+    if (letterCase === null && !ownShown) {
+        return null;
+    }
 
     const toggle = (letter: string) => {
         const next = new Set(asked);
@@ -116,23 +117,6 @@ export function SetupExtras({
             </button>
 
             <div id={id} hidden={!open} className="grid gap-6 px-1">
-                <fieldset className="grid gap-1">
-                    <SetupLabel>{t('games.setup.rounds')}</SetupLabel>
-                    <div className="flex flex-wrap gap-2">
-                        {roundSteps(rounds, roundCount).map((count) => (
-                            <SetupRowButton
-                                key={count}
-                                chosen={count === roundCount}
-                                className="tabular-nums"
-                                onClick={() => onRounds(count)}
-                            >
-                                {count}
-                            </SetupRowButton>
-                        ))}
-                    </div>
-                    <InputError message={errors.rounds} />
-                </fieldset>
-
                 {letterCase !== null && (
                     <fieldset className="grid gap-1">
                         <SetupLabel>{t('games.setup.letter_case')}</SetupLabel>
@@ -194,7 +178,7 @@ export function SetupExtras({
                     </fieldset>
                 )}
 
-                {own !== null && (own.startable || teacher) && (
+                {own !== null && ownShown && (
                     <fieldset className="grid gap-1">
                         <SetupLabel>{t('games.setup.words')}</SetupLabel>
                         {own.startable ? (

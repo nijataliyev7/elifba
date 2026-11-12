@@ -11,7 +11,6 @@ import {
     mechanicChoices,
     mechanicName,
     packChoices,
-    roundSteps,
     setupCatalog,
     startSummary,
     unitGroups,
@@ -389,29 +388,18 @@ describe('names and summaries', () => {
         expect(mechanicName('count', 'number')).toBe('games.mechanics.count');
     });
 
-    it('offers multiples of 5, and a configured default that is none of them', () => {
-        const rounds = { min: 5, max: 30 };
-
-        expect(roundSteps(rounds, 10)).toEqual([5, 10, 15, 20, 25, 30]);
-        expect(roundSteps(rounds, 7)).toEqual([5, 7, 10, 15, 20, 25, 30]);
-        expect(roundSteps(rounds, 40)).toEqual([5, 10, 15, 20, 25, 30]);
-    });
-
-    it('names every extra that applies beside «Əlavə», and only the chosen ones in the start bar', () => {
+    it('names every extra that applies beside «Əlavə», and only the chosen ones in the start bar (never the round count)', () => {
         const letters = {
-            rounds: 10,
             letterCase: 'upper' as const,
             letters: 0,
             ownWords: null,
         };
 
         expect(extrasSummary(letters)).toEqual([
-            { key: 'games.board.rounds', values: { count: 10 } },
             { key: 'games.setup.summary.upper' },
             { key: 'games.setup.summary.all_letters' },
         ]);
         expect(startSummary(letters)).toEqual([
-            { key: 'games.board.rounds', values: { count: 10 } },
             { key: 'games.setup.summary.upper' },
         ]);
         expect(startSummary({ ...letters, letters: 3 })).toContainEqual({
@@ -420,14 +408,12 @@ describe('names and summaries', () => {
         });
 
         const words = {
-            rounds: 15,
             letterCase: 'lower' as const,
             letters: null,
             ownWords: true,
         };
 
         expect(startSummary(words).map((item) => item.key)).toEqual([
-            'games.board.rounds',
             'games.setup.summary.lower',
             'games.setup.summary.own_words',
         ]);
@@ -438,11 +424,10 @@ describe('names and summaries', () => {
         ).toContain('games.setup.summary.all_words');
         expect(
             startSummary({
-                rounds: 5,
                 letterCase: null,
                 letters: null,
                 ownWords: null,
             }),
-        ).toEqual([{ key: 'games.board.rounds', values: { count: 5 } }]);
+        ).toEqual([]);
     });
 });

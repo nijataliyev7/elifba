@@ -27,7 +27,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One game a class or a parent's child plays: mechanic × pack × level, with
- * its rounds as snapshots (docs/architecture.md §1, §2). Exactly one of
+ * its rounds as snapshots (docs/architecture.md §1, §2), and the rest of
+ * its setup (`letters`, `own_words`), so its rounds can be built again
+ * (`ChangeRoundCount`, `ReplayGame`). Exactly one of
  * `school_class_id` and `child_id` is set (`StartGame`); Play reads who the
  * game is for only through `Play\Data\GamePlayers` (ADR 011). `status`
  * changes only through `TransitionGameSession`; `board_epoch` fences the
@@ -45,6 +47,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $pack_version the pack version the rounds were built from
  * @property string $level level key
  * @property LetterCase $letter_case
+ * @property list<string>|null $letters the letters asked for at a letter level; null = every learned letter
+ * @property bool $own_words only the owner's own words in the pack (§3 "Teacher words")
  * @property int $seed makes round generation reproducible
  * @property GameSessionStatus $status
  * @property int $board_epoch
@@ -60,7 +64,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[UseFactory(GameSessionFactory::class)]
 #[UsePolicy(GameSessionPolicy::class)]
-#[Fillable(['mechanic', 'pack', 'pack_version', 'level', 'letter_case', 'seed', 'status', 'board_epoch', 'started_at', 'ended_at', 'last_activity_at'])]
+#[Fillable(['mechanic', 'pack', 'pack_version', 'level', 'letter_case', 'letters', 'own_words', 'seed', 'status', 'board_epoch', 'started_at', 'ended_at', 'last_activity_at'])]
 class GameSession extends Model
 {
     /** @use HasFactory<GameSessionFactory> */
@@ -153,6 +157,8 @@ class GameSession extends Model
             'mechanic' => Mechanic::class,
             'pack_version' => 'integer',
             'letter_case' => LetterCase::class,
+            'letters' => 'array',
+            'own_words' => 'boolean',
             'seed' => 'integer',
             'status' => GameSessionStatus::class,
             'board_epoch' => 'integer',

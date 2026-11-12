@@ -1,19 +1,20 @@
 import { Link } from '@inertiajs/react';
 import {
     CloudOff,
+    LogOut,
     Maximize,
     Pause,
     Play,
     RotateCcw,
     SkipForward,
     Smartphone,
-    Square,
     VolumeOff,
     X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
     useEffect,
+    useId,
     useMemo,
     useRef,
     useState,
@@ -66,6 +67,7 @@ import {
     playersHome,
     playersLabel,
 } from '@/lib/game-players';
+import { roundSteps } from '@/lib/round-steps';
 import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
 import type { BoardProps, BoardStudent } from '@/types';
@@ -124,8 +126,16 @@ type Props = BoardProps & {
  * at the board as ids with their name clips' paths (ADR 016), and fetches
  * a clip with this board's own `auth`; React never says anything.
  *
+ * Before the first answer the start screen offers the round count under
+ * «Başla» (§4 "Round count"): a tap builds the rounds again on the server
+ * (`changeRounds()`), and «Başla» waits for it. Leaving the game looks like
+ * leaving: «Oyunu bitir» in the header is a red-tinted `LogOut` set apart
+ * from skip and pause; the result offers «Yenidən oyna» first
+ * (`BoardResult`).
+ *
  * Two board modes, one board: a teacher board (`games/board`) and a guest
- * board (`lovhe`) differ only in `auth` and in `guest`'s parts.
+ * board (`lovhe`) differ only in `auth` and in `guest`'s parts (a guest
+ * board's result has its own actions, never «Yenidən oyna»).
  *
  * From `lg` up this is the projector's layout; below it the same parts
  * shrink around the 16:9 canvas for a phone or a tablet (docs/frontend.md
@@ -139,6 +149,7 @@ export function BoardScreen({
     pack,
     students,
     voice,
+    roundLimits,
     auth,
     guest,
     phoneRemote = true,
@@ -410,6 +421,8 @@ export function BoardScreen({
     const playing = view.phase === 'playing';
     const live = playing && view.status === 'live';
     const paused = playing && view.status === 'paused';
+    // The count after a change on this board; the props keep the first.
+    const roundCount = view.tally?.rounds ?? game.rounds;
 
     return (
         <>
@@ -525,6 +538,11 @@ export function BoardScreen({
                                     <Label>{t('games.board.pause')}</Label>
                                 </Button>
                             )}
+                            {/* Leaving the game stands apart from what plays it. */}
+                            <span
+                                aria-hidden
+                                className="mx-1 w-px self-stretch bg-neutral-300 max-lg:mx-0.5"
+                            />
                             <EndGame
                                 disabled={!playing || view.busy}
                                 onEnd={() => void controller?.end()}
@@ -656,7 +674,7 @@ export function BoardScreen({
                                     {t(label.key, label.values)}
                                     {' · '}
                                     {t('games.board.rounds', {
-                                        count: game.rounds,
+                                        count: roundCount,
                                     })}
                                 </p>
                             </div>
@@ -666,19 +684,40 @@ export function BoardScreen({
                                 </p>
                             ) : view.phase === 'ready' &&
                               stageState === 'ready' ? (
-                                <Button
-                                    type="button"
-                                    size="lg"
-                                    className="h-20 rounded-2xl px-14 text-3xl max-lg:h-14 max-lg:px-8 max-lg:text-xl"
-                                    style={{ backgroundColor: colours.accent }}
-                                    onClick={pressStart}
-                                    autoFocus
-                                >
-                                    <Play className="size-8 max-lg:size-6" />
-                                    {view.resumed
-                                        ? t('games.board.continue')
-                                        : t('games.board.start')}
-                                </Button>
+                                <div className="flex flex-col items-center gap-6 max-lg:gap-3">
+                                    <Button
+                                        type="button"
+                                        size="lg"
+                                        className="h-20 rounded-2xl px-14 text-3xl max-lg:h-14 max-lg:px-8 max-lg:text-xl"
+                                        style={{
+                                            backgroundColor: colours.accent,
+                                        }}
+                                        disabled={view.changingRounds}
+                                        onClick={pressStart}
+                                        autoFocus
+                                    >
+                                        <Play className="size-8 max-lg:size-6" />
+                                        {view.resumed
+                                            ? t('games.board.continue')
+                                            : t('games.board.start')}
+                                    </Button>
+                                    {!view.resumed && (
+                                        <RoundChoice
+                                            steps={roundSteps(
+                                                roundLimits,
+                                                roundCount,
+                                            )}
+                                            count={roundCount}
+                                            changing={view.changingRounds}
+                                            accent={colours.accent}
+                                            onChoose={(count) =>
+                                                void controller?.changeRounds(
+                                                    count,
+                                                )
+                                            }
+                                        />
+                                    )}
+                                </div>
                             ) : (
                                 <p
                                     className="flex items-center gap-3 text-xl max-lg:text-base"
@@ -744,6 +783,7 @@ export function BoardScreen({
                 {view.phase === 'finished' && (
                     <Curtain solid>
                         <BoardResult
+                            gameId={game.id}
                             players={{ schoolClass, child }}
                             child={child}
                             points={view.points}
@@ -839,6 +879,10 @@ export function BoardScreen({
     );
 }
 
+/**
+ * «Oyunu bitir»: it leaves the game, so it looks like an exit — `LogOut`,
+ * tinted red, after a divider — and asks first.
+ */
 function EndGame({
     disabled,
     onEnd,
@@ -855,10 +899,14 @@ function EndGame({
                     type="button"
                     variant="outline"
                     size="lg"
-                    className={ICON_BELOW_LG}
+                    className={cn(
+                        ICON_BELOW_LG,
+                        'border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800',
+                    )}
                     disabled={disabled}
+                    data-test="end-game"
                 >
-                    <Square />
+                    <LogOut />
                     <Label>{t('games.board.end')}</Label>
                 </Button>
             </DialogTrigger>
@@ -894,6 +942,79 @@ function EndGame({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+/**
+ * The round count under «Başla» (§4 "Round count"): one button per step,
+ * the game's count filled in the pack's accent. A tap asks the server for
+ * that many rounds; while it builds them every button waits and the one
+ * asked for spins.
+ */
+function RoundChoice({
+    steps,
+    count,
+    changing,
+    accent,
+    onChoose,
+}: {
+    steps: number[];
+    count: number;
+    changing: boolean;
+    accent: string;
+    onChoose: (count: number) => void;
+}) {
+    const { t } = useTranslation();
+    const [asked, setAsked] = useState<number | null>(null);
+    const label = useId();
+    const pending = changing ? asked : null;
+
+    return (
+        <div
+            role="group"
+            aria-labelledby={label}
+            className="flex flex-col items-center gap-2 max-lg:gap-1"
+            data-test="round-choice"
+        >
+            <p
+                id={label}
+                className="text-lg font-semibold text-neutral-600 max-lg:text-sm"
+            >
+                {t('games.board.round_count')}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 max-lg:gap-1.5">
+                {steps.map((step) => {
+                    const chosen = step === (pending ?? count);
+
+                    return (
+                        <Button
+                            key={step}
+                            type="button"
+                            variant={chosen ? 'default' : 'outline'}
+                            size="lg"
+                            className="h-12 min-w-14 px-3 text-xl tabular-nums max-lg:h-11 max-lg:min-w-11 max-lg:px-1 max-lg:text-base"
+                            style={
+                                chosen
+                                    ? {
+                                          backgroundColor: accent,
+                                          borderColor: accent,
+                                      }
+                                    : undefined
+                            }
+                            aria-pressed={chosen}
+                            disabled={changing}
+                            onClick={() => {
+                                setAsked(step);
+                                onChoose(step);
+                            }}
+                        >
+                            {pending === step && <Spinner />}
+                            {step}
+                        </Button>
+                    );
+                })}
+            </div>
+        </div>
     );
 }
 
@@ -1077,6 +1198,7 @@ const LOADING_VIEW: BoardView = {
     lastPoints: null,
     studentId: null,
     busy: false,
+    changingRounds: false,
     notice: null,
 };
 

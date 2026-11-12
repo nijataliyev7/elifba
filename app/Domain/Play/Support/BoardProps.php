@@ -11,6 +11,7 @@ use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Language\Support\Az;
 use App\Domain\Play\Models\GameRound;
 use App\Domain\Play\Models\GameSession;
+use Illuminate\Support\Facades\Config;
 
 /**
  * What a board draws around the rounds (docs/architecture.md §4), built in
@@ -31,6 +32,8 @@ use App\Domain\Play\Models\GameSession;
  * never a name or a hash — or null when the board does not say the name
  * (off the name list, no clip yet, names or praise off; `PlayerVoice`). The rounds come from
  * `GET /games/{game}/state` after the board has claimed the game.
+ * `roundLimits` are `elifba.rounds.min` and `.max`: the board's round count
+ * under «Başla» offers every multiple of 5 between them (§4 "Round count").
  *
  * A pack whose items stand in front of pictures (`animal`, `fruit`; §2
  * "Figures") also sends them: `pictures`, the pictures that show a content
@@ -56,6 +59,7 @@ use App\Domain\Play\Models\GameSession;
  *     pack: array{key: string, title: string, style: array{item: string, slot: string, effect: string, palette: list<string>, backdrop: string|null, sounds: array<string, string|null>, figures: list<FigureArray>}, pictures: object},
  *     students: list<StudentArray>,
  *     voice: BoardVoiceArray,
+ *     roundLimits: array{min: int, max: int},
  * }
  */
 final class BoardProps
@@ -127,6 +131,10 @@ final class BoardProps
                 ->all()),
             // Public content files: a guest board's bearer reaches nothing more (§4).
             'voice' => app(BoardVoice::class)->of($game->owner),
+            'roundLimits' => [
+                'min' => Config::integer('elifba.rounds.min'),
+                'max' => Config::integer('elifba.rounds.max'),
+            ],
         ];
     }
 

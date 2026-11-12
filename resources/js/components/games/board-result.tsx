@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { Form, Link } from '@inertiajs/react';
+import { LogOut, Plus, RotateCcw, Star } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { studentAvatars } from '@/components/games/student-grid';
 import { StudentAvatar } from '@/components/students/student-avatar';
@@ -10,9 +10,12 @@ import { useTranslation } from '@/hooks/use-translation';
 import { playersHome, playersNewGame } from '@/lib/game-players';
 import type { GamePlayers } from '@/lib/game-players';
 import { cn } from '@/lib/utils';
+import { replay } from '@/routes/games';
 import type { BoardChild } from '@/types';
 
 type Props = {
+    /** The game just played: «Yenidən oyna» starts it again. */
+    gameId: string;
     /** The class or the child the game was for: where the links lead. */
     players: GamePlayers;
     /** A home game's child, with their stars before this game; null for a class. */
@@ -36,8 +39,16 @@ type Props = {
  * and the child's own total follows: the stars before this game
  * (`BoardProps.child.stars`) plus this game's, as `/sync` returned them.
  * Never a place or anyone else's stars.
+ *
+ * What comes next, most likely first: «Yenidən oyna» (the same game again,
+ * straight to its board; `POST /games/{game}/replay`, architecture §2) in
+ * the pack's accent with `RotateCcw`, then «Yeni oyun» (the setup page) as
+ * an outline with `Plus`; leaving for the class's or the child's page is
+ * set apart below a rule, with `LogOut`. A guest board passes its own
+ * `actions` instead.
  */
 export function BoardResult({
+    gameId,
     players,
     child = null,
     actions,
@@ -127,35 +138,61 @@ export function BoardResult({
             )}
 
             {actions ?? (
-                <div className="flex flex-wrap justify-center gap-3">
-                    <Button
-                        asChild
-                        size="lg"
-                        variant="outline"
-                        className={cn(
-                            'max-lg:h-11',
-                            saving && 'pointer-events-none opacity-50',
-                        )}
-                    >
-                        <Link href={home.href} aria-disabled={saving}>
-                            {t(home.label)}
-                        </Link>
-                    </Button>
-                    <Button
-                        asChild
-                        size="lg"
-                        className={cn(
-                            'max-lg:h-11',
-                            saving && 'pointer-events-none opacity-50',
-                        )}
-                    >
-                        <Link
-                            href={playersNewGame(players)}
-                            aria-disabled={saving}
+                <div className="flex w-full flex-col items-center gap-6 max-lg:gap-3">
+                    <div className="flex flex-wrap justify-center gap-3">
+                        <Form {...replay.form(gameId)}>
+                            {({ processing }) => (
+                                <Button
+                                    type="submit"
+                                    size="lg"
+                                    className="h-14 rounded-xl px-8 text-xl text-white max-lg:h-11 max-lg:px-5 max-lg:text-base"
+                                    style={{ backgroundColor: accent }}
+                                    disabled={saving || processing}
+                                    data-test="replay"
+                                >
+                                    {processing ? (
+                                        <Spinner />
+                                    ) : (
+                                        <RotateCcw className="size-6 max-lg:size-5" />
+                                    )}
+                                    {t('games.board.replay')}
+                                </Button>
+                            )}
+                        </Form>
+                        <Button
+                            asChild
+                            size="lg"
+                            variant="outline"
+                            className={cn(
+                                'h-14 rounded-xl px-6 text-lg max-lg:h-11 max-lg:px-4 max-lg:text-base',
+                                saving && 'pointer-events-none opacity-50',
+                            )}
                         >
-                            {t('games.board.new_game')}
-                        </Link>
-                    </Button>
+                            <Link
+                                href={playersNewGame(players)}
+                                aria-disabled={saving}
+                            >
+                                <Plus className="size-5" />
+                                {t('games.board.new_game')}
+                            </Link>
+                        </Button>
+                    </div>
+                    <div className="flex w-full justify-center border-t border-neutral-200 pt-5 max-lg:pt-3">
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="lg"
+                            className={cn(
+                                'text-base text-neutral-700 hover:text-neutral-900 max-lg:h-11',
+                                saving && 'pointer-events-none opacity-50',
+                            )}
+                        >
+                            <Link href={home.href} aria-disabled={saving}>
+                                <LogOut />
+                                {t(home.label)}
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
             )}
         </div>

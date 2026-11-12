@@ -22,6 +22,10 @@
  *   (`bridge.praise`, §3 "Voice"), once that line is over and a short gap
  *   has passed; never later than `SOLVED_CAP_MS` after the solve, so a
  *   clip that never ends cannot stall the class. Held while paused.
+ * - **The round count** (§4 "Round count"): while the board waits for
+ *   «Başla» and nothing is answered, `changeRounds()` asks the server to
+ *   build the rounds again with another count and shows the new ones;
+ *   «Başla» waits for the answer.
  * - **Who is at the board** is board state, kept in `sessionStorage`;
  *   null is the whole class (no points). «Başla» and every change of it
  *   during play start a turn of the voice (`bridge.startTurn`, §3
@@ -70,7 +74,9 @@ export type BoardNotice =
     /** A pause, resume or end did not reach the server. */
     | 'status_failed'
     /** The outbox is full; new answers are not saved. */
-    | 'outbox_full';
+    | 'outbox_full'
+    /** The round count did not change. */
+    | 'rounds_failed';
 
 export type BoardView = {
     phase: BoardPhase;
@@ -80,7 +86,7 @@ export type BoardView = {
     round: Round | null;
     progress: RoundProgress | null;
     tally: Tally | null;
-    /** Any round already solved or skipped: «Davam et» rather than «Başla». */
+    /** Any round already answered (solved, skipped, hit or missed): «Davam et» rather than «Başla», and no round count. */
     resumed: boolean;
     pending: number;
     retrying: boolean;
@@ -90,6 +96,8 @@ export type BoardView = {
     lastPoints: number | null;
     studentId: string | null;
     busy: boolean;
+    /** The server is building the rounds again with another count; «Başla» waits. */
+    changingRounds: boolean;
     notice: BoardNotice | null;
 };
 
@@ -186,6 +194,7 @@ export class BoardController {
         { source: TouchSource; at: number }
     >();
     private busy = false;
+    private changingRounds = false;
     private notice: BoardNotice | null = null;
     private loading = true;
     /** The highest epoch another tab announced, heard even while loading. */
@@ -311,7 +320,11 @@ export class BoardController {
 
     /** «Başla»: the round appears and touches count. */
     start(): void {
-        if (this.phase !== 'ready' || this.game === null) {
+        if (
+            this.phase !== 'ready' ||
+            this.game === null ||
+            this.changingRounds
+        ) {
             return;
         }
 
@@ -321,6 +334,71 @@ export class BoardController {
         this.options.bridge.startTurn(this.studentId, !answered(this.game));
         this.showCurrent();
         this.options.bridge.setPaused(this.status === 'paused');
+        this.emit();
+    }
+
+    /**
+     * The round count under «Başla» (§4 "Round count"): the server builds
+     * every round again with `count` (same setup and seed; new round ids)
+     * and this board shows the new ones. Only while waiting for «Başla»
+     * with nothing answered, and not for the count the game has. A board
+     * another holds stops; a game that ended meanwhile shows its result.
+     */
+    async changeRounds(count: number): Promise<void> {
+        const game = this.game;
+
+        if (
+            this.phase !== 'ready' ||
+            game === null ||
+            this.changingRounds ||
+            answered(game) ||
+            count === game.rounds.length
+        ) {
+            return;
+        }
+
+        this.changingRounds = true;
+        this.notice = null;
+        this.emit();
+
+        const result = await this.options.http.rounds(this.epoch, count);
+
+        this.changingRounds = false;
+
+        if (this.disposed) {
+            return;
+        }
+
+        if (result.kind === 'ok') {
+            // A tab that took the board, or an end heard meanwhile, decides.
+            if (this.phase === 'ready') {
+                this.game = boardGame(result.state);
+                this.shown = currentRound(this.game);
+            }
+
+            this.emit();
+
+            return;
+        }
+
+        if (result.kind === 'replaced') {
+            this.replaced(result.game);
+
+            return;
+        }
+
+        if (result.kind === 'locked') {
+            if (this.isFinal(result.game.status)) {
+                this.applyStatus(result.game);
+            } else {
+                // Answered elsewhere: read the game again.
+                void this.load();
+            }
+
+            return;
+        }
+
+        this.notice = 'rounds_failed';
         this.emit();
     }
 
@@ -970,6 +1048,7 @@ export class BoardController {
             lastPoints: this.lastPoints,
             studentId: this.studentId,
             busy: this.busy,
+            changingRounds: this.changingRounds,
             notice: this.notice,
         };
     }
@@ -1007,10 +1086,15 @@ export class BoardController {
     }
 }
 
-/** Any round already solved, skipped or hit: «Davam et» rather than «Başla». */
+/**
+ * Any round already solved, skipped, hit or missed: «Davam et» rather than
+ * «Başla», and the round count is fixed (the server's `ChangeRoundCount`
+ * asks the same).
+ */
 function answered(game: BoardGame): boolean {
     return Object.values(game.progress).some(
-        (p) => p.solved || p.skipped || p.hit_item_ids.length > 0,
+        (p) =>
+            p.solved || p.skipped || p.hit_item_ids.length > 0 || p.misses > 0,
     );
 }
 

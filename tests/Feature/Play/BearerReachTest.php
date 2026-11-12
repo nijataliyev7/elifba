@@ -33,6 +33,7 @@ const BEARER_ROUTES = [
     'games.state',
     'games.sync',
     'games.status.update',
+    'games.rounds.update',
     'games.players.voice',
     'guest-boards.show',
     'guest-boards.destroy',

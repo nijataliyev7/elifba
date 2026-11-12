@@ -20,11 +20,12 @@ use Illuminate\Support\Facades\Config;
  * in one place for every page that shows it: the setup page on the laptop
  * (`/classes/{class}/games/create`, `/children/{child}/games/create`) and
  * the phone's guest board pages (`/pult/{code}`, `/guest-boards/{board}/game`,
- * §4). The packs, levels, letter cases and round limits are the same for
- * every game; the options (with the reason a game cannot start — the check
- * `GameSetupData::rules()` makes, also for a game of the owner's own words
- * only) and the learned letters belong to one class or one child
- * (`GamePlayers`).
+ * §4). The packs, levels and letter cases are the same for every game (a
+ * new game has `elifba.rounds.default` rounds; the board changes the count
+ * before «Başla», §4 "Round count"); the options (with the reason a game
+ * cannot start — the check `GameSetupData::rules()` makes, also for a game
+ * of the owner's own words only) and the learned letters belong to one
+ * class or one child (`GamePlayers`).
  *
  * The setup form (docs/frontend.md rule 13) only orders and explains these:
  * a pack's `cover` and a level's `hint` are built here, and each refusal
@@ -36,7 +37,6 @@ use Illuminate\Support\Facades\Config;
  *     packs: list<array{key: string, title: string, cover: string}>,
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>, hint: string}>,
  *     letterCases: list<string>,
- *     rounds: array{min: int, max: int, default: int},
  *     wordMaxLength: int,
  * }
  * @phpstan-type PlayersSetupArray array{
@@ -71,11 +71,6 @@ final class GameSetupOptions
                 'hint' => self::hint($level),
             ], $content->levels())),
             'letterCases' => array_map(static fn (LetterCase $case): string => $case->value, LetterCase::cases()),
-            'rounds' => [
-                'min' => Config::integer('elifba.rounds.min'),
-                'max' => Config::integer('elifba.rounds.max'),
-                'default' => Config::integer('elifba.rounds.default'),
-            ],
             // For adding a teacher word from the form (§3 "Teacher words").
             'wordMaxLength' => Config::integer('elifba.custom_words.max_length'),
         ];

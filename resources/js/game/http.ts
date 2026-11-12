@@ -1,6 +1,6 @@
 /**
  * The board's HTTP calls (docs/architecture.md §4): the claim, the state,
- * `/sync` and status changes, as JSON. Responses are parsed with the
+ * `/sync`, status changes and the round count before «Başla», as JSON. Responses are parsed with the
  * contract's zod schemas, so nothing malformed reaches the engine. Laravel
  * accepts same-origin `fetch` by its `Sec-Fetch-Site` header; the XSRF
  * cookie goes along for browsers that do not send it.
@@ -20,6 +20,7 @@ import {
     sync as syncRoute,
 } from '@/routes/games';
 import { claim as claimRoute } from '@/routes/games/board';
+import { update as roundsRoute } from '@/routes/games/rounds';
 import { update as statusRoute } from '@/routes/games/status';
 import {
     BoardReplaced,
@@ -39,11 +40,23 @@ export type BoardHttp = {
     status: (
         status: 'live' | 'paused' | 'finished',
     ) => Promise<StatusChangeResult>;
+    rounds: (boardEpoch: number, count: number) => Promise<RoundCountResult>;
 };
 
 export type StatusChangeResult =
     | { kind: 'ok'; game: GameStatus }
     | { kind: 'refused'; game: GameStatus }
+    | { kind: 'failed' };
+
+/**
+ * `PATCH /games/{game}/rounds` (§4 "Round count"): the rounds built again,
+ * another board holds the game (`board_replaced`), the game has begun or
+ * ended (`rounds_locked`), or no answer the board can use.
+ */
+export type RoundCountResult =
+    | { kind: 'ok'; state: GameState }
+    | { kind: 'replaced'; game: GameStatus }
+    | { kind: 'locked'; game: GameStatus }
     | { kind: 'failed' };
 
 export type JoinCodeResult =
@@ -72,6 +85,11 @@ export class HttpError extends Error {
 
 const InvalidTransition = z.strictObject({
     error: z.literal('invalid_transition'),
+    game: GameStatus,
+});
+
+const RoundsLocked = z.strictObject({
+    error: z.literal('rounds_locked'),
     game: GameStatus,
 });
 
@@ -259,6 +277,43 @@ export function boardHttp(
 
             return refused.success
                 ? { kind: 'refused', game: refused.data.game }
+                : { kind: 'failed' };
+        },
+
+        async rounds(boardEpoch, count) {
+            let response: Response;
+
+            try {
+                response = await request(
+                    'PATCH',
+                    roundsRoute.url(gameId),
+                    { board_epoch: boardEpoch, rounds: count },
+                    auth,
+                );
+            } catch {
+                return { kind: 'failed' };
+            }
+
+            const body = await json(response);
+
+            if (response.ok) {
+                const parsed = GameState.safeParse(body);
+
+                return parsed.success
+                    ? { kind: 'ok', state: parsed.data }
+                    : { kind: 'failed' };
+            }
+
+            const replaced = BoardReplaced.safeParse(body);
+
+            if (response.status === 409 && replaced.success) {
+                return { kind: 'replaced', game: replaced.data.game };
+            }
+
+            const locked = RoundsLocked.safeParse(body);
+
+            return response.status === 409 && locked.success
+                ? { kind: 'locked', game: locked.data.game }
                 : { kind: 'failed' };
         },
     };

@@ -141,7 +141,7 @@ it('sends the board exactly the board props, whatever the teacher chose for the 
 
     $poll = asBoard('GET', route('guest-boards.show', $board['board']->id), $board['token'])->assertOk();
 
-    expect(array_keys($poll->json('props')))->toBe(['game', 'schoolClass', 'child', 'pack', 'students', 'voice'])
+    expect(array_keys($poll->json('props')))->toBe(['game', 'schoolClass', 'child', 'pack', 'students', 'voice', 'roundLimits'])
         ->and($poll->json('props'))->toEqual(json_decode((string) json_encode(BoardProps::of($game->refresh())), true));
 })->with(['remote on' => [true], 'remote off' => [false]]);
 

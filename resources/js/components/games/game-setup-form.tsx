@@ -101,7 +101,6 @@ export function GameSetupForm({
     letters,
     allLetters,
     letterCases,
-    rounds,
     wordMaxLength,
     form,
     hidden = {},
@@ -120,7 +119,6 @@ export function GameSetupForm({
         initialState(catalog),
     );
     const [lockedUnit, setLockedUnit] = useState<SetupUnit | null>(null);
-    const [roundCount, setRoundCount] = useState(rounds.default);
     // The server's default (capitals for letters, as written otherwise)
     // until the adult picks one.
     const [chosenCase, setCase] = useState<'upper' | 'lower' | null>(null);
@@ -164,7 +162,6 @@ export function GameSetupForm({
         .find((item) => item.unit === lockedUnit && !item.startable);
 
     const extras: Extras = {
-        rounds: roundCount,
         letterCase: reads ? letterCase : null,
         letters: letterLevel ? asked.size : null,
         ownWords: own?.startable === true ? ownWords : null,
@@ -175,7 +172,9 @@ export function GameSetupForm({
         level: level?.title ?? '',
         mechanic: t(mechanicName(choice.mechanic, choice.unit)),
     });
-    const details = [pack?.title ?? '', say(startSummary(extras))].join(' · ');
+    const details = [pack?.title ?? '', say(startSummary(extras))]
+        .filter((part) => part !== '')
+        .join(' · ');
 
     /** A short reason on a locked unit or level: «Daha çox hərf lazımdır» for a learned-letters shortage. */
     const shortReason = (status: SetupRefusal) =>
@@ -226,7 +225,6 @@ export function GameSetupForm({
                         value={choice.mechanic}
                     />
                     <input type="hidden" name="pack" value={choice.pack} />
-                    <input type="hidden" name="rounds" value={roundCount} />
                     {reads && (
                         <input
                             type="hidden"
@@ -538,9 +536,6 @@ export function GameSetupForm({
 
                         <SetupExtras
                             summary={say(extrasSummary(extras))}
-                            rounds={rounds}
-                            roundCount={roundCount}
-                            onRounds={setRoundCount}
                             letterCase={reads ? letterCase : null}
                             letterCases={letterCases}
                             onLetterCase={setCase}

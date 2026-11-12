@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Play\Events\GameSessionTransitioned;
 use App\Domain\Play\Listeners\BroadcastSessionStatus;
+use App\Domain\Play\Models\GameSession;
 use App\Domain\Play\Support\GuestBoardGuard;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -76,8 +77,8 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * The guest board's guard, the pairing limits and the `session.status`
-     * broadcast (docs/architecture.md §4).
+     * The guest board's guard, the pairing and round-count limits and the
+     * `session.status` broadcast (docs/architecture.md §4).
      */
     protected function configurePlay(): void
     {
@@ -94,6 +95,13 @@ class AppServiceProvider extends ServiceProvider
 
         // A guest board's 2 s poll, per board, apart from the opening limit.
         RateLimiter::for('guest-board', static fn (Request $request): Limit => Limit::perMinute(120)->by($who($request)));
+
+        // The round count under «Başla» builds every round again: 30 a minute per game.
+        RateLimiter::for('board-rounds', static function (Request $request): Limit {
+            $game = $request->route('game');
+
+            return Limit::perMinute(30)->by('board-rounds:'.($game instanceof GameSession ? $game->id : (is_string($game) ? $game : '')));
+        });
 
         Event::listen(GameSessionTransitioned::class, BroadcastSessionStatus::class);
     }

@@ -3,6 +3,8 @@
 use App\Enums\Role;
 use App\Http\Controllers\Play\BoardController;
 use App\Http\Controllers\Play\GameController;
+use App\Http\Controllers\Play\GameReplayController;
+use App\Http\Controllers\Play\GameRoundsController;
 use App\Http\Controllers\Play\GameStateController;
 use App\Http\Controllers\Play\GameStatusController;
 use App\Http\Controllers\Play\GameSyncController;
@@ -70,6 +72,11 @@ Route::middleware(['auth', 'role.chosen', 'verified', Role::middleware(Role::Tea
     Route::get('games/{game}/remote', RemoteController::class)
         ->can('update', 'game')
         ->name('games.remote');
+    // «Yenidən oyna» on the end screen: the same game again, for the
+    // account's own board only (a guest board has its next game instead).
+    Route::post('games/{game}/replay', GameReplayController::class)
+        ->can('update', 'game')
+        ->name('games.replay');
 
     // Pairing from the phone: 10 a minute per teacher, all three together.
     Route::middleware('throttle:pult')->group(function () {
@@ -106,6 +113,11 @@ Route::middleware(['auth:board,web', 'verified'])->group(function () {
     Route::patch('games/{game}/status', GameStatusController::class)
         ->can('play', 'game')
         ->name('games.status.update');
+    // The round count under «Başla», before anything is answered (§4).
+    Route::patch('games/{game}/rounds', GameRoundsController::class)
+        ->can('play', 'game')
+        ->middleware('throttle:board-rounds')
+        ->name('games.rounds.update');
     // A player's first name in the board's voice (ADR 016): ids only, never
     // a name or a hash; `{player}` is checked against the game's players.
     Route::get('games/{game}/players/{player}/voice', PlayerVoiceController::class)
