@@ -126,34 +126,27 @@ final class PersonName
     }
 
     /**
-     * The one first name a name is called by, or null when it cannot be
-     * told: the name itself when it is one word («Nihat», and «Nihat M.»
-     * without the initial); of two words, the one that is not the surname,
-     * either way round («Nihat Əliyev», «Əliyev Nihat», «Nihat Kərimli»),
-     * after a patronymic is dropped («Nihat Rəşid oğlu»). Null for a first
-     * name of two words («Ayşən Nur»), where taking one word would say half
-     * a name, and for three words or more.
+     * The one first name a name is called by, after a patronymic is dropped
+     * («Nihat Rəşid oğlu»): the name itself when it is one word («Nihat»,
+     * and «Nihat M.» without the initial); of more, the first word, and
+     * whatever follows it is taken as the surname («Nihat Əliyev», «Nicat
+     * mp», «Nicat M», «Ayşən Nur» → «Nihat», «Nicat», «Ayşən»; the owner's
+     * rule of 2026-11-13, ADR 016) — unless the first word is the surname,
+     * written first as in a register («Əliyev Nihat», «Rəsulzadə Aysel»),
+     * when it is the second. Null for no name.
      */
     public static function firstName(#[SensitiveParameter] string $name): ?string
     {
         [$words] = self::withoutPatronymic(self::words($name));
 
-        if (count($words) === 1) {
-            return $words[0];
-        }
-
-        if (count($words) !== 2) {
+        if ($words === []) {
             return null;
         }
 
-        $first = self::surnameScore($words[0]);
-        $last = self::surnameScore($words[1]);
+        $surnameFirst = count($words) > 1
+            && self::surnameScore($words[0]) > self::surnameScore($words[count($words) - 1]);
 
-        return match (true) {
-            $last > $first => $words[0],
-            $first > $last => $words[1],
-            default => null,
-        };
+        return $surnameFirst ? $words[1] : $words[0];
     }
 
     /**

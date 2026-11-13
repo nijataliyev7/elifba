@@ -17,8 +17,9 @@ use App\Domain\Language\Support\PersonName;
  * it, must be one listed word, compared with `Az::lower()`: «Əli M.» is
  * said «Əli», «ƏLİ» too, and so is a name written with its surname or
  * patronymic, either way round («Nihat Əliyev», «Əliyev Nihat», «Nihat
- * Rəşid oğlu» are said «Nihat»); «Ayşən-Nur» and «Ayşən Nur» are silent
- * (never half a name). A name typed without the Azerbaijani letters is
+ * Rəşid oğlu» are said «Nihat»), and so is the first word of any name of
+ * more words, the rest taken as the surname («Nicat mp», «Ayşən Nur» →
+ * «Nicat», «Ayşən»); «Ayşən-Nur» is silent. A name typed without the Azerbaijani letters is
  * found by `Az::plain()` when exactly one listed name is typed so («Lale»
  * is said «Lalə», «Huseyn» «Hüseyn», «ILKIN» «İlkin»); when two are («Roya»
  * and «Röya»), only the exact spelling is said. Nothing else is near:
@@ -56,8 +57,9 @@ final class NameVoices
 
     /**
      * The list key a display name is said by (`Əli M.` → `əli`, `Nihat
-     * Əliyev` → `nihat`), or null when its first name is not one listed
-     * word: a hyphenated or two-word first name, or a name off the list.
+     * Əliyev` → `nihat`, `Nicat mp` → `nicat`), or null when its first name
+     * is not one listed word: a hyphenated first name, or a name off the
+     * list.
      */
     public function key(string $displayName): ?string
     {

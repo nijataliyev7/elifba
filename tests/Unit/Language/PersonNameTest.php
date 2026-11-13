@@ -26,14 +26,25 @@ it('reads the first name of a full name, either way round', function (string $na
     'extra spaces' => ['  Nihat   Əliyev ', 'Nihat'],
 ]);
 
-it('never takes half of a first name of two words', function (string $name): void {
-    expect(PersonName::firstName($name))->toBeNull();
+/*
+ * The owner's rule (2026-11-13, ADR 016): the first word is the first
+ * name, whatever follows it is taken as the surname.
+ */
+it('takes the first word of a name of more words, the rest as the surname', function (string $name, string $first): void {
+    expect(PersonName::firstName($name))->toBe($first);
 })->with([
-    'two first names' => ['Ayşən Nur'],
-    'two first names with a surname' => ['Ayşən Nur Əliyeva'],
-    'two first names in one' => ['Məhəmməd Əli'],
-    'nothing' => [''],
+    'letters made up to tell two apart' => ['Nicat mp', 'Nicat'],
+    'an initial without its dot' => ['Nicat M', 'Nicat'],
+    'two first names' => ['Ayşən Nur', 'Ayşən'],
+    'two first names with a surname' => ['Ayşən Nur Əliyeva', 'Ayşən'],
+    'two first names in one' => ['Məhəmməd Əli', 'Məhəmməd'],
+    'the surname first, then two first names' => ['Əliyeva Ayşən Nur', 'Ayşən'],
 ]);
+
+it('has no first name for no name', function (): void {
+    expect(PersonName::firstName(''))->toBeNull()
+        ->and(PersonName::firstName('   '))->toBeNull();
+});
 
 it('finds a surname or a patronymic that a display name must not keep', function (string $name): void {
     expect(PersonName::hasSurname($name))->toBeTrue();

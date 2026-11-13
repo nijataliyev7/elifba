@@ -51,16 +51,28 @@ it('says two students of one first name with one clip', function (): void {
     expect($voices->file('Əli M.'))->not->toBeNull()->toBe($voices->file('Əli H.'))->toBe($voices->file('Əli'));
 });
 
-it('leaves a hyphenated or two-word first name silent', function (string $displayName): void {
-    expect(fixtureNameVoices()->key($displayName))->toBeNull()
-        ->and(fixtureNameVoices()->file($displayName))->toBeNull();
+it('says the first word of a name of two words or more, the rest taken as the surname', function (string $displayName, string $key): void {
+    expect(fixtureNameVoices()->key($displayName))->toBe($key);
 })->with([
-    'hyphenated' => ['Ayşən-Nur'],
-    'two words' => ['Ayşən Nur'],
-    'two words with an initial' => ['Ayşən Nur M.'],
-    'a first name of two listed names' => ['Nihat Əli'],
-    'a first name of two words with a surname' => ['Ayşən Nur Əliyeva'],
+    'letters made up to tell two apart' => ['Nihat mp', 'nihat'],
+    'an initial without its dot' => ['Nihat M', 'nihat'],
+    'two first names' => ['Ayşən Nur', 'ayşən'],
+    'two first names with an initial' => ['Ayşən Nur M.', 'ayşən'],
+    'two listed names' => ['Nihat Əli', 'nihat'],
+    'two first names with a surname' => ['Ayşən Nur Əliyeva', 'ayşən'],
 ]);
+
+it('says such a name with its first word\'s clip', function (): void {
+    $voices = fixtureNameVoices();
+
+    expect($voices->file('Nihat mp'))->not->toBeNull()->toBe($voices->file('Nihat'))
+        ->and($voices->file('Nihat M'))->toBe($voices->file('Nihat'));
+});
+
+it('leaves a hyphenated first name silent', function (): void {
+    expect(fixtureNameVoices()->key('Ayşən-Nur'))->toBeNull()
+        ->and(fixtureNameVoices()->file('Ayşən-Nur'))->toBeNull();
+});
 
 it('matches with Azerbaijani casing', function (): void {
     $voices = fixtureNameVoices();
