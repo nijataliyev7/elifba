@@ -147,6 +147,33 @@ export default function Security(props: Props) {
                 </Form>
             </div>
 
+            {/* Every other device's login, «Məni xatırla» included, ends;
+                this one stays (architecture §7 "Remembered login", ADR 017). */}
+            <div className="space-y-6">
+                <Heading
+                    variant="small"
+                    title={t('settings.security.other_devices.heading')}
+                    description={t(
+                        'settings.security.other_devices.description',
+                    )}
+                />
+
+                <Form
+                    {...SecurityController.logOutOtherDevices.form()}
+                    options={{ preserveScroll: true }}
+                >
+                    {({ processing }) => (
+                        <Button
+                            variant="outline"
+                            disabled={processing}
+                            data-test="log-out-other-devices-button"
+                        >
+                            {t('settings.security.other_devices.button')}
+                        </Button>
+                    )}
+                </Form>
+            </div>
+
             <ManageTwoFactor
                 canManageTwoFactor={props.canManageTwoFactor}
                 requiresConfirmation={props.requiresConfirmation}

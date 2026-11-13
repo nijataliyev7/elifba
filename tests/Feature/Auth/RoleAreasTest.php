@@ -52,6 +52,7 @@ const ACCOUNT_ROUTES = [
     'profile.destroy',
     'security.edit',
     'user-password.update',
+    'other-devices.destroy',
     'appearance.edit',
     'play-settings.edit',
     'play-settings.update',
@@ -67,6 +68,7 @@ const ACCOUNT_ROUTES = [
 const ACCOUNT_ROUTES_AFTER_THE_CHOICE = [
     'security.edit',
     'user-password.update',
+    'other-devices.destroy',
     'appearance.edit',
     'play-settings.edit',
     'play-settings.update',

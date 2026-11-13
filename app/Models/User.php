@@ -78,6 +78,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The password hash, `''` for an account made with Google that has none
+     * (ADR 017 decision 4). Laravel binds the «Məni xatırla» cookie to this
+     * hash and refuses the cookie of an account whose hash is not a string;
+     * with `''` the remember token alone guards it. Every hash check against
+     * `''` fails, so the password login and confirmation still refuse it.
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password ?? '';
+    }
+
+    /**
      * The roles the account holds, in the enum's order (ADR 010).
      *
      * @return list<Role>

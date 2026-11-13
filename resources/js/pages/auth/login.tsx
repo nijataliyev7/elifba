@@ -1,12 +1,13 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import AuthDivider from '@/components/auth-divider';
 import AuthStatus from '@/components/auth-status';
 import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import RememberMe from '@/components/remember-me';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -25,7 +26,8 @@ type Props = {
 
 /**
  * Google first, when the instance offers it, then the e-mail form
- * (frontend.md rule 1 "Auth pages"). Tab order is the DOM order.
+ * (frontend.md rule 1 "Auth pages"). Tab order is the DOM order. One
+ * «Məni xatırla» box, on by default, governs both ways in (ADR 017).
  */
 export default function Login({
     status,
@@ -33,6 +35,7 @@ export default function Login({
     googleSignIn,
 }: Props) {
     const { t } = useTranslation();
+    const [remember, setRemember] = useState(true);
 
     return (
         <>
@@ -44,7 +47,9 @@ export default function Login({
                 {googleSignIn && (
                     <>
                         <GoogleSignIn
-                            href={google.url()}
+                            href={google.url({
+                                query: { remember: remember ? 1 : 0 },
+                            })}
                             label={t('auth.google.sign_in')}
                         />
                         <AuthDivider label={t('auth.google.or_email')} />
@@ -90,13 +95,10 @@ export default function Login({
                                 <InputError message={errors.password} />
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                                <div className="flex items-center gap-3">
-                                    <Checkbox id="remember" name="remember" />
-                                    <Label htmlFor="remember">
-                                        {t('auth.login.remember')}
-                                    </Label>
-                                </div>
+                            <RememberMe
+                                checked={remember}
+                                onCheckedChange={setRemember}
+                            >
                                 {canResetPassword && (
                                     <TextLink
                                         href={request()}
@@ -105,7 +107,7 @@ export default function Login({
                                         {t('auth.login.forgot')}
                                     </TextLink>
                                 )}
-                            </div>
+                            </RememberMe>
 
                             <Button
                                 type="submit"

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\GoogleRegistrationController;
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Middleware\EnsureGoogleSignInIsEnabled;
 use Illuminate\Support\Facades\Route;
 
@@ -24,3 +25,8 @@ Route::middleware([EnsureGoogleSignInIsEnabled::class, 'throttle:google'])
         // Both round trips come back here; the session says which one it was.
         Route::get('callback', [GoogleController::class, 'callback'])->name('callback');
     });
+
+// «Çıxış» ends this browser's login only (docs/architecture.md §7
+// "Remembered login", ADR 017). These routes load after Fortify's, so this
+// one replaces Fortify's `POST /logout` and its name.
+Route::post('logout', LogoutController::class)->middleware('auth')->name('logout');

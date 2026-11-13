@@ -1,9 +1,11 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import { LinkedText } from '@/components/app/linked-text';
 import AuthDivider from '@/components/auth-divider';
 import GoogleSignIn from '@/components/google-sign-in';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import RememberMe from '@/components/remember-me';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,10 +25,12 @@ type Props = {
 
 /**
  * Google first, when the instance offers it, then the e-mail form
- * (frontend.md rule 1 "Auth pages"). Tab order is the DOM order.
+ * (frontend.md rule 1 "Auth pages"). Tab order is the DOM order. One
+ * «Məni xatırla» box, on by default, governs both ways in (ADR 017).
  */
 export default function Register({ passwordRules, googleSignIn }: Props) {
     const { t } = useTranslation();
+    const [remember, setRemember] = useState(true);
 
     return (
         <>
@@ -36,7 +40,9 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                 {googleSignIn && (
                     <>
                         <GoogleSignIn
-                            href={google.url()}
+                            href={google.url({
+                                query: { remember: remember ? 1 : 0 },
+                            })}
                             label={t('auth.google.sign_up')}
                         />
                         <AuthDivider label={t('auth.google.or_email')} />
@@ -121,6 +127,11 @@ export default function Register({ passwordRules, googleSignIn }: Props) {
                                     message={errors.password_confirmation}
                                 />
                             </div>
+
+                            <RememberMe
+                                checked={remember}
+                                onCheckedChange={setRemember}
+                            />
 
                             <div className="grid gap-2">
                                 <div className="flex items-start gap-3">

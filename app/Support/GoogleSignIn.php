@@ -21,10 +21,13 @@ use Laravel\Socialite\Two\GoogleProvider;
  */
 final class GoogleSignIn
 {
-    /** What the round trip to Google is for: `['for' => 'login']` or `['for' => 'confirm', 'user' => id]`. */
+    /**
+     * What the round trip to Google is for: `['for' => 'login', 'remember' => bool]`
+     * (the page's «Məni xatırla» box, ADR 017) or `['for' => 'confirm', 'user' => id]`.
+     */
     public const string INTENT = 'google.intent';
 
-    /** A new teacher's Google profile, kept until the completion page. */
+    /** A new teacher's Google profile and «Məni xatırla» choice, kept until the completion page. */
     public const string PENDING = 'google.pending';
 
     public const int PENDING_MINUTES = 10;
@@ -68,13 +71,22 @@ final class GoogleSignIn
         return self::enabled() && $user->google_id !== null && $user->password === null;
     }
 
-    /** Keeps a new teacher's profile for the completion page. */
-    public static function keepPending(Session $session, GoogleProfile $profile): void
+    /** Keeps a new teacher's profile, and whether to remember the login, for the completion page. */
+    public static function keepPending(Session $session, GoogleProfile $profile, bool $remember): void
     {
         $session->put(self::PENDING, [
             ...$profile->toArray(),
+            'remember' => $remember,
             'expires_at' => Date::now()->addMinutes(self::PENDING_MINUTES)->unix(),
         ]);
+    }
+
+    /** Whether the pending sign-up was started with «Məni xatırla» ticked (ADR 017). */
+    public static function remembersPending(Session $session): bool
+    {
+        $pending = $session->get(self::PENDING);
+
+        return is_array($pending) && ($pending['remember'] ?? false) === true;
     }
 
     /** The profile waiting for the completion page; null when there is none or it expired. */
@@ -95,15 +107,16 @@ final class GoogleSignIn
     /**
      * Lets a teacher in as a password login would: a teacher with confirmed
      * two-factor authentication gets Fortify's challenge (as its
-     * `RedirectIfTwoFactorAuthenticatable` does); everyone else gets a fresh
-     * session, never "remember me" (§7 "Shared computers").
+     * `RedirectIfTwoFactorAuthenticatable` does), which remembers the login
+     * as $remember says; everyone else gets a fresh session, remembered as
+     * the page's «Məni xatırla» box said (§7 "Remembered login", ADR 017).
      */
-    public static function logIn(Request $request, User $user): RedirectResponse
+    public static function logIn(Request $request, User $user, bool $remember): RedirectResponse
     {
         if (Features::enabled(Features::twoFactorAuthentication()) && $user->hasEnabledTwoFactorAuthentication()) {
             $request->session()->put([
                 'login.id' => $user->getKey(),
-                'login.remember' => false,
+                'login.remember' => $remember,
             ]);
 
             TwoFactorAuthenticationChallenged::dispatch($user);
@@ -111,7 +124,7 @@ final class GoogleSignIn
             return to_route('two-factor.login');
         }
 
-        Auth::guard(Config::string('fortify.guard'))->login($user);
+        Auth::guard(Config::string('fortify.guard'))->login($user, $remember);
 
         $request->session()->regenerate();
 

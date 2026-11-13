@@ -41,6 +41,12 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // How long «Məni xatırla» keeps a browser logged in, in minutes
+            // (docs/architecture.md §7 "Remembered login", ADR 017): 30 days
+            // rather than Laravel's 400. Sessions themselves stay
+            // SESSION_LIFETIME; a password change, a reset and «Başqa
+            // cihazlardan çıx» cut every other device at once.
+            'remember' => (int) env('AUTH_REMEMBER_DURATION', 43200),
         ],
 
         // A guest board's bearer `{board_id}.{secret}` (docs/architecture.md

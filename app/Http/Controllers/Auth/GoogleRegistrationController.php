@@ -49,11 +49,14 @@ final class GoogleRegistrationController extends Controller
             return to_route('login')->withErrors(['google' => __($refused->reason)]);
         }
 
+        // The «Məni xatırla» box of the page the teacher came from (ADR 017).
+        $remember = GoogleSignIn::remembersPending($request->session());
+
         $request->session()->forget(GoogleSignIn::PENDING);
 
         event(new Registered($user));
 
-        return GoogleSignIn::logIn($request, $user);
+        return GoogleSignIn::logIn($request, $user, $remember);
     }
 
     /** The teacher changed their mind: Google's name and address leave the session. */

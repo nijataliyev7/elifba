@@ -33,6 +33,11 @@ Route::middleware(['auth', 'role.chosen', 'verified'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
+    // «Başqa cihazlardan çıx» (docs/architecture.md §7 "Remembered login", ADR 017).
+    Route::delete('settings/other-devices', [SecurityController::class, 'logOutOtherDevices'])
+        ->middleware([RequirePassword::class, 'throttle:6,1'])
+        ->name('other-devices.destroy');
+
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
 
     Route::get('settings/play', [PlaySettingsController::class, 'edit'])->name('play-settings.edit');

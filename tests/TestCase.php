@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,6 +47,32 @@ abstract class TestCase extends BaseTestCase
         GuestBoards::forgetBearer($this->app);
 
         return parent::call($method, $uri, $parameters, $cookies, $files, $server, $content);
+    }
+
+    /**
+     * The next requests come from a browser that holds only these cookies
+     * (encrypted, as the browser holds them), seen as a new PHP process sees
+     * them: what the requests before left in memory — the session store and
+     * its handler, the guards and their user, the queued cookies — is
+     * dropped. For tests of more than one device and of a session past its
+     * lifetime (docs/architecture.md §7 "Remembered login").
+     *
+     * @param  array<string, string>  $cookies
+     */
+    public function fromBrowser(array $cookies = []): static
+    {
+        $this->app->make('session')->forgetDrivers();
+        $this->app->forgetInstance('session.store');
+        // The redirector flashes (errors, old input) into the store it was made with.
+        $this->app->forgetInstance('redirect');
+        $this->app->forgetInstance(ResponseFactory::class);
+        $this->app->make('auth')->forgetGuards();
+        $this->app->forgetInstance('auth.driver');
+        $this->app->make('cookie')->flushQueuedCookies();
+
+        $this->defaultCookies = $cookies;
+
+        return $this;
     }
 
     protected function skipUnlessFortifyHas(string $feature, ?string $message = null): void

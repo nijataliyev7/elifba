@@ -23,10 +23,14 @@ use Laravel\Socialite\Two\InvalidStateException;
  */
 final class GoogleController extends Controller
 {
-    /** Sign in or sign up: off to Google's account chooser. */
+    /**
+     * Sign in or sign up: off to Google's account chooser. The page's «Məni
+     * xatırla» box comes as `remember=1|0`; a link without it is not
+     * remembered (ADR 017).
+     */
     public function redirect(Request $request): RedirectResponse
     {
-        $request->session()->put(GoogleSignIn::INTENT, ['for' => 'login']);
+        $request->session()->put(GoogleSignIn::INTENT, ['for' => 'login', 'remember' => $request->boolean('remember')]);
 
         return GoogleSignIn::provider($request)->redirect();
     }
@@ -85,10 +89,10 @@ final class GoogleController extends Controller
 
         return $for === 'confirm'
             ? $this->confirmed($request, $intent['user'] ?? null, $profile)
-            : $this->signIn($request, $profile, $link);
+            : $this->signIn($request, $profile, $link, ($intent['remember'] ?? false) === true);
     }
 
-    private function signIn(Request $request, GoogleProfile $profile, LinkGoogleAccount $link): RedirectResponse
+    private function signIn(Request $request, GoogleProfile $profile, LinkGoogleAccount $link, bool $remember): RedirectResponse
     {
         // Signed in meanwhile, in another tab: nothing to change.
         if ($request->user() !== null) {
@@ -102,12 +106,12 @@ final class GoogleController extends Controller
         }
 
         if ($user === null) {
-            GoogleSignIn::keepPending($request->session(), $profile);
+            GoogleSignIn::keepPending($request->session(), $profile, $remember);
 
             return to_route('google.register');
         }
 
-        return GoogleSignIn::logIn($request, $user);
+        return GoogleSignIn::logIn($request, $user, $remember);
     }
 
     private function confirmed(Request $request, mixed $userId, GoogleProfile $profile): RedirectResponse

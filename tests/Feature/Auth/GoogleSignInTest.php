@@ -32,10 +32,11 @@ beforeEach(function (): void {
  * the state the redirect sent.
  *
  * @param  array<string, string>  $answer  more of Google's answer (`error`, `state`)
+ * @param  array<string, int>  $query  the start link's query (`remember`, ADR 017)
  */
-function throughGoogle(TestCase $test, string $start = 'google.redirect', array $answer = []): TestResponse
+function throughGoogle(TestCase $test, string $start = 'google.redirect', array $answer = [], array $query = []): TestResponse
 {
-    $location = (string) $test->get(route($start))->assertRedirect()->headers->get('Location');
+    $location = (string) $test->get(route($start, $query))->assertRedirect()->headers->get('Location');
     parse_str((string) parse_url($location, PHP_URL_QUERY), $query);
 
     return $test->get(route('google.callback', [
@@ -61,8 +62,18 @@ it('sends the teacher to Google\'s account chooser with the three scopes, state 
         ->and($query['state'])->toHaveLength(40)
         ->and($query['code_challenge'])->not->toBeEmpty()
         ->and(session('state'))->toBe($query['state'])
-        ->and(session(GoogleSignIn::INTENT))->toBe(['for' => 'login']);
+        ->and(session(GoogleSignIn::INTENT))->toBe(['for' => 'login', 'remember' => false]);
 });
+
+it('keeps the page\'s «Məni xatırla» box in the intent; a link without it is not remembered', function (array $query, bool $remember): void {
+    $this->get(route('google.redirect', $query))->assertRedirect();
+
+    expect(session(GoogleSignIn::INTENT))->toBe(['for' => 'login', 'remember' => $remember]);
+})->with([
+    'ticked' => [['remember' => 1], true],
+    'unticked' => [['remember' => 0], false],
+    'no parameter' => [[], false],
+]);
 
 it('comes back to the host the teacher used', function (): void {
     $location = (string) $this->get('http://school.example/auth/google/redirect')->headers->get('Location');
@@ -71,19 +82,42 @@ it('comes back to the host the teacher used', function (): void {
     expect($query['redirect_uri'])->toBe('http://school.example/auth/google/callback');
 });
 
-it('signs in the teacher linked to the Google account, without "remember me"', function (): void {
+it('signs in the teacher linked to the Google account, remembered only when the box was ticked', function (int $remember): void {
+    $this->freezeTime();
     $teacher = User::factory()->create(['google_id' => GOOGLE_SUB, 'email' => 'changed@example.com']);
     $guard = Auth::guard('web');
     assert($guard instanceof SessionGuard);
 
-    throughGoogle($this)
-        ->assertRedirect(route('start', absolute: false))
-        ->assertCookieMissing($guard->getRecallerName());
+    $response = throughGoogle($this, query: ['remember' => $remember])
+        ->assertRedirect(route('start', absolute: false));
+
+    if ($remember === 1) {
+        // ADR 017: 30 days, as a password login.
+        expect($response->getCookie($guard->getRecallerName(), decrypt: false)?->getExpiresTime())
+            ->toEqualWithDelta(now()->addDays(30)->getTimestamp(), 60);
+    } else {
+        $response->assertCookieMissing($guard->getRecallerName());
+    }
 
     $this->assertAuthenticatedAs($teacher);
     expect($this->google->tokenRequest())
         ->toMatchArray(['code' => '4/test-code', 'redirect_uri' => url('/auth/google/callback')])
         ->toHaveKey('code_verifier');
+})->with(['remember=1' => 1, 'remember=0' => 0]);
+
+it('remembers a teacher who has no password: the cookie logs them back in', function (): void {
+    $teacher = User::factory()->create(['google_id' => GOOGLE_SUB, 'password' => null]);
+    $guard = Auth::guard('web');
+    assert($guard instanceof SessionGuard);
+
+    $recaller = (string) throughGoogle($this, query: ['remember' => 1])
+        ->getCookie($guard->getRecallerName())?->getValue();
+
+    // A new browser with only the cookie: the session is gone.
+    $this->fromBrowser([$guard->getRecallerName() => $recaller])
+        ->get(route('profile.edit'))
+        ->assertOk();
+    $this->assertAuthenticatedAs($teacher);
 });
 
 it('links a teacher whose address is confirmed, case-insensitively, and keeps the password', function (): void {
@@ -227,21 +261,29 @@ it('refuses an address whose teacher is linked to another Google account', funct
     expect($teacher->refresh()->google_id)->toBe('another-google-account');
 });
 
-it('sends a teacher with two-factor authentication to the challenge, never straight in', function (): void {
+it('sends a teacher with two-factor authentication to the challenge, never straight in, with the box\'s choice', function (int $remember): void {
     Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true]);
     $teacher = User::factory()->withTwoFactor()->create(['google_id' => GOOGLE_SUB]);
+    $guard = Auth::guard('web');
+    assert($guard instanceof SessionGuard);
 
-    throughGoogle($this)
+    throughGoogle($this, query: ['remember' => $remember])
         ->assertRedirect(route('two-factor.login'))
         ->assertSessionHas('login.id', $teacher->id)
-        ->assertSessionHas('login.remember', false);
+        ->assertSessionHas('login.remember', $remember === 1);
 
     $this->assertGuest();
     $this->get(route('two-factor.login'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('auth/two-factor-challenge'));
     $this->get(route('classes.index'))->assertRedirect(route('login'));
-});
+
+    // Fortify's challenge logs in as the intent said (ADR 017).
+    $response = $this->post(route('two-factor.login.store'), ['recovery_code' => 'recovery-code-1']);
+
+    $this->assertAuthenticatedAs($teacher);
+    expect($response->getCookie($guard->getRecallerName(), decrypt: false) !== null)->toBe($remember === 1);
+})->with(['remember=1' => 1, 'remember=0' => 0]);
 
 it('asks a new teacher for the privacy-note agreement before creating the account', function (): void {
     Notification::fake();
@@ -284,6 +326,21 @@ it('asks a new teacher for the privacy-note agreement before creating the accoun
     throughGoogle($this)->assertRedirect(route('start', absolute: false));
     $this->assertAuthenticatedAs($teacher);
 });
+
+it('keeps the box\'s choice through the completion page', function (int $remember): void {
+    Notification::fake();
+    $guard = Auth::guard('web');
+    assert($guard instanceof SessionGuard);
+
+    throughGoogle($this, query: ['remember' => $remember])->assertRedirect(route('google.register'));
+    $this->get(route('google.register'))->assertOk();
+
+    $response = $this->post(route('google.register.store'), ['name' => 'Aygün müəllimə', 'terms' => '1'])
+        ->assertRedirect(route('start', absolute: false));
+
+    $this->assertAuthenticatedAs(User::query()->sole());
+    expect($response->getCookie($guard->getRecallerName(), decrypt: false) !== null)->toBe($remember === 1);
+})->with(['remember=1' => 1, 'remember=0' => 0]);
 
 it('sends the completion page to login without a Google profile or after 15 minutes', function (): void {
     $this->get(route('google.register'))->assertRedirect(route('login'));
