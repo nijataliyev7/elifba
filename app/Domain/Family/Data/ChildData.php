@@ -31,7 +31,7 @@ final readonly class ChildData
     public static function rules(): array
     {
         return [
-            'display_name' => ['required', 'string', new DisplayName(initial: false, message: 'children.errors.invalid_name', surnameMessage: 'children.errors.surname')],
+            'display_name' => ['required', 'string', new DisplayName(initial: false, surname: false, message: 'children.errors.invalid_name', surnameMessage: 'children.errors.surname')],
             'avatar' => ['sometimes', 'nullable', 'string', Rule::in(Avatars::keys())],
         ];
     }

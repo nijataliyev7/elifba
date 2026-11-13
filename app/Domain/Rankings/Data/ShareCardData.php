@@ -5,6 +5,7 @@ namespace App\Domain\Rankings\Data;
 use App\Domain\Content\Support\Avatars;
 use App\Domain\Content\Support\ContentAssets;
 use App\Domain\Language\Support\Ordinal;
+use App\Domain\Language\Support\PersonName;
 use App\Domain\Language\Support\Plural;
 use App\Domain\Rankings\Enums\Period;
 
@@ -12,8 +13,9 @@ use App\Domain\Rankings\Enums\Period;
  * The share card of a podium (docs/architecture.md §6): the 1080×1920 PNG
  * the teacher posts to WhatsApp status, made in the browser from this shape
  * and nothing else. It carries exactly §6's list — the title, the date or
- * week, places 1–3 with their label, points and each student's display name
- * and avatar picture, the wordmark and the domain — plus the file name.
+ * week, places 1–3 with their label, points and each student's first name
+ * (never the surname or patronymic a display name may hold, ADR 018) and
+ * avatar picture, the wordmark and the domain — plus the file name.
  *
  * Never in it (§7): ids, the class name, the teacher's name, a link, a time,
  * a student off the podium. The avatar is a path on the page's own origin,
@@ -84,7 +86,7 @@ final readonly class ShareCardData
                             $image = Avatars::image($row->student->avatar);
 
                             return [
-                                'display_name' => $row->student->display_name,
+                                'display_name' => PersonName::firstName($row->student->display_name) ?? $row->student->display_name,
                                 'avatar_url' => $image === null ? null : ContentAssets::path($image),
                             ];
                         },

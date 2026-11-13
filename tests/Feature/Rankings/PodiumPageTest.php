@@ -216,6 +216,22 @@ it('shows the week that holds the date, with its own title and file name', funct
             ->where('card.file_name', 'elifba-heftenin-qalibleri-2026-11-09.png'));
 });
 
+it('shows a full name on the podium and only the first name on the card (ADR 018)', function (): void {
+    $nihat = Student::factory()->for($this->class)->create(['display_name' => 'Nihat Əliyev Vəli oğlu']);
+    $register = Student::factory()->for($this->class)->create(['display_name' => 'Məmmədova Aysel']);
+    $game = Games::start($this->class);
+    podiumPageRound($game, $nihat, 3);
+    podiumPageRound($game, $register, 2);
+
+    $this->get(podiumUrl($this->class))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('podium.0.students.0.display_name', 'Nihat Əliyev Vəli oğlu')
+            ->where('podium.1.students.0.display_name', 'Məmmədova Aysel')
+            ->where('card.places.0.students.0.display_name', 'Nihat')
+            ->where('card.places.1.students.0.display_name', 'Aysel'));
+});
+
 it('writes the card in the teacher\'s language', function (): void {
     $this->teacher->forceFill(['locale' => 'en'])->save();
     $aysel = Student::factory()->for($this->class)->create(['display_name' => 'Aysel']);

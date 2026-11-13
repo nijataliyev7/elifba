@@ -53,7 +53,6 @@ const BADGES: Partial<
     duplicate: 'outline',
     taken: 'destructive',
     in_class: 'secondary',
-    initial_added: 'secondary',
     surname_first: 'outline',
 };
 

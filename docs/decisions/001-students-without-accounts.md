@@ -1,6 +1,6 @@
 # 001 — Students without accounts: a first name and an avatar, owned by one teacher
 
-- **Status:** Accepted, 2026-11-09 (roadmap step A1)
+- **Status:** Accepted, 2026-11-09 (roadmap step A1). Decisions 1 and 7 superseded for a class's students by [018](018-students-full-names.md) (2026-11-13): a student's display name is the name as the teacher writes it, and the paste flow keeps the full name, first name first, with no initial added.
 - **Sections:** architecture.md §1 (tables), §7 (privacy)
 - **Why it is hard to reverse:** every table, route and page is built around "a student is a row a teacher owns". Adding student logins or more personal fields later changes the legal footing of the whole product; removing data once collected cannot be undone for copies that already left (exports, share cards, backups).
 

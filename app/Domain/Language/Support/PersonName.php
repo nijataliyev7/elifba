@@ -68,6 +68,16 @@ final class PersonName
     }
 
     /**
+     * A word of a name as it is written: title case («ƏLİYEV» → «Əliyev»,
+     * «ayşən-nur» → «Ayşən-Nur»), and the patronymic's «oğlu», «qızı»
+     * lowercase («Rəşid oğlu»).
+     */
+    public static function cased(#[SensitiveParameter] string $word): string
+    {
+        return in_array(Az::lower($word), self::PATRONYMIC_WORDS, true) ? Az::lower($word) : Az::title($word);
+    }
+
+    /**
      * Removes one patronymic: "Rəşid oğlu" (two words) or "Rəşidovna" (one).
      * The second value says whether it ended the name (null: there was none).
      *

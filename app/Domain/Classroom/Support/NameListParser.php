@@ -18,11 +18,12 @@ use SensitiveParameter;
  *
  * Per line: tab columns without a name (numbers, dates) are dropped, the text
  * is normalized, numbering and bullets are stripped, words with digits are
- * dropped, a patronymic ("Rəşid oğlu", "Rəşidovna") is removed, and the order
- * (first name first, or surname first as in school registers) is read from
- * the surname suffixes (`Language\Support\PersonName`, shared with the
- * display name rule and the board's voice). Only the first name is kept; a
- * surname initial is added only when two first names collide.
+ * dropped, a patronymic ("Rəşid oğlu", "Rəşidovna") is set aside, and the
+ * order (first name first, or surname first as in school registers) is read
+ * from the surname suffixes (`Language\Support\PersonName`, shared with the
+ * display name rule and the board's voice). The whole name is suggested,
+ * first name first and cased, the patronymic after it (ADR 018); a first
+ * name the class already has is a warning, never an added initial.
  *
  * The pasted text and its lines are marked `#[SensitiveParameter]` on the
  * entry points and line readers, so a stack trace in a log shows neither.
@@ -71,7 +72,7 @@ final readonly class NameListParser
     }
 
     /**
-     * @return array{line: int, text: string, key: string, names: list<string>, initials: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}|null
+     * @return array{line: int, text: string, key: string, names: list<string>, initials: list<string>, patronymic: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}|null
      */
     private function read(#[SensitiveParameter] string $raw, int $number): ?array
     {
@@ -109,7 +110,9 @@ final readonly class NameListParser
             $words[] = $core;
         }
 
-        [$words, $patronymicAtEnd] = PersonName::withoutPatronymic($words);
+        [$rest, $patronymicAtEnd] = PersonName::withoutPatronymic($words);
+        $patronymic = self::removed($words, $rest);
+        $words = $rest;
 
         $names = [];
         $initials = [];
@@ -142,13 +145,32 @@ final readonly class NameListParser
         return [
             'line' => $number,
             'text' => $text,
-            'key' => Az::lower(implode(' ', $words)),
+            'key' => Az::lower(implode(' ', [...$words, ...$patronymic])),
             'names' => $names,
             'initials' => $initials,
+            'patronymic' => $patronymic,
             'order' => $order,
             'patronymic_at_end' => $patronymicAtEnd,
             'invalid' => $invalid,
         ];
+    }
+
+    /**
+     * The words `withoutPatronymic()` took out of `$all`, in their order.
+     *
+     * @param  list<string>  $all
+     * @param  list<string>  $rest
+     * @return list<string>
+     */
+    private static function removed(#[SensitiveParameter] array $all, #[SensitiveParameter] array $rest): array
+    {
+        $at = 0;
+
+        while ($at < count($rest) && $rest[$at] === $all[$at]) {
+            $at++;
+        }
+
+        return array_slice($all, $at, count($all) - count($rest));
     }
 
     private function stripNumbering(#[SensitiveParameter] string $text): string
@@ -170,8 +192,8 @@ final readonly class NameListParser
      * Lines whose order the suffixes do not reveal follow the rest of the
      * list; when the list does not say either, first name first.
      *
-     * @param  list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>  $lines
-     * @return list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>
+     * @param  list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, patronymic: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>  $lines
+     * @return list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, patronymic: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>
      */
     private function resolveOrder(array $lines): array
     {
@@ -193,7 +215,7 @@ final readonly class NameListParser
     }
 
     /**
-     * @param  list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>  $lines
+     * @param  list<array{line: int, text: string, key: string, names: list<string>, initials: list<string>, patronymic: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}>  $lines
      * @param  iterable<string>  $activeNames
      * @return list<PastedNameData>
      */
@@ -204,11 +226,11 @@ final readonly class NameListParser
 
         foreach ($activeNames as $name) {
             $existingNames[DisplayName::key($name)] = true;
-            $existingFirstNames[DisplayName::key(DisplayName::firstName($name))] = true;
+            $existingFirstNames[DisplayName::key(PersonName::firstName($name) ?? $name)] = true;
         }
 
-        // First name and surname initial of every usable line; repeats of a
-        // full name are duplicates of the first occurrence.
+        // The whole name of every usable line, first name first; repeats of
+        // a full name are duplicates of the first occurrence.
         $parsed = [];
         $firstOccurrence = [];
 
@@ -217,23 +239,18 @@ final readonly class NameListParser
                 continue;
             }
 
-            $surnameFirst = $line['order'] === self::SURNAME && count($line['names']) >= 2;
-            $first = Az::title($surnameFirst ? $line['names'][1] : $line['names'][0]);
-            $surname = match (true) {
-                $surnameFirst => $line['names'][0],
-                count($line['names']) >= 2 => $line['names'][count($line['names']) - 1],
-                default => $line['initials'][0] ?? null,
-            };
+            $name = $this->wholeName($line);
 
-            if (mb_strlen($first) > DisplayName::MAX_LENGTH - 3) {
+            if ($name === null) {
                 $lines[$index]['invalid'] = true;
 
                 continue;
             }
 
+            $surnameFirst = $line['order'] === self::SURNAME && count($line['names']) >= 2;
             $parsed[$index] = [
-                'first' => $first,
-                'initial' => $surname === null ? null : Az::upper(mb_substr($surname, 0, 1)),
+                'name' => $name,
+                'first' => $surnameFirst ? $line['names'][1] : $line['names'][0],
                 'surname_first' => $surnameFirst,
                 'duplicate_of' => $firstOccurrence[$line['key']] ?? null,
             ];
@@ -241,32 +258,13 @@ final readonly class NameListParser
             $firstOccurrence[$line['key']] ??= $index;
         }
 
-        // How many distinct pasted children share each first name.
-        $firstNameCount = [];
+        $suggestionCount = [];
 
         foreach ($parsed as $entry) {
             if ($entry['duplicate_of'] === null) {
-                $key = DisplayName::key($entry['first']);
-                $firstNameCount[$key] = ($firstNameCount[$key] ?? 0) + 1;
+                $key = DisplayName::key($entry['name']);
+                $suggestionCount[$key] = ($suggestionCount[$key] ?? 0) + 1;
             }
-        }
-
-        $suggestions = [];
-        $suggestionCount = [];
-
-        foreach ($parsed as $index => $entry) {
-            if ($entry['duplicate_of'] !== null) {
-                continue;
-            }
-
-            $key = DisplayName::key($entry['first']);
-            $collides = $firstNameCount[$key] > 1 || isset($existingFirstNames[$key]);
-            $withInitial = $collides && $entry['initial'] !== null;
-            $suggestion = $withInitial ? "{$entry['first']} {$entry['initial']}." : $entry['first'];
-
-            $suggestions[$index] = ['name' => $suggestion, 'initial_added' => $withInitial, 'in_class' => isset($existingFirstNames[$key])];
-            $suggestionKey = DisplayName::key($suggestion);
-            $suggestionCount[$suggestionKey] = ($suggestionCount[$suggestionKey] ?? 0) + 1;
         }
 
         $result = [];
@@ -281,34 +279,58 @@ final readonly class NameListParser
             $entry = $parsed[$index];
 
             if ($entry['duplicate_of'] !== null) {
-                $result[] = new PastedNameData($line['line'], $line['text'], $suggestions[$entry['duplicate_of']]['name'], [PastedNameFlag::Duplicate]);
+                $result[] = new PastedNameData($line['line'], $line['text'], $parsed[$entry['duplicate_of']]['name'], [PastedNameFlag::Duplicate]);
 
                 continue;
             }
 
-            $suggestion = $suggestions[$index];
-            $suggestionKey = DisplayName::key($suggestion['name']);
+            $key = DisplayName::key($entry['name']);
             $flags = [];
 
             if ($entry['surname_first']) {
                 $flags[] = PastedNameFlag::SurnameFirst;
             }
 
-            if ($suggestion['initial_added']) {
-                $flags[] = PastedNameFlag::InitialAdded;
-            }
-
-            if ($suggestion['in_class']) {
+            if (isset($existingFirstNames[DisplayName::key($entry['first'])])) {
                 $flags[] = PastedNameFlag::InClass;
             }
 
-            if ($suggestionCount[$suggestionKey] > 1 || isset($existingNames[$suggestionKey])) {
+            if ($suggestionCount[$key] > 1 || isset($existingNames[$key])) {
                 $flags[] = PastedNameFlag::Taken;
             }
 
-            $result[] = new PastedNameData($line['line'], $line['text'], $suggestion['name'], $flags);
+            $result[] = new PastedNameData($line['line'], $line['text'], $entry['name'], $flags);
         }
 
         return $result;
+    }
+
+    /**
+     * The line's name as it is suggested (ADR 018): first name first, then
+     * the surname and any other names, the patronymic, and a lone initial
+     * with its dot when there is no surname; every word cased. Without the
+     * patronymic when the whole is too long; null when even that is.
+     *
+     * @param  array{line: int, text: string, key: string, names: list<string>, initials: list<string>, patronymic: list<string>, order: string|null, patronymic_at_end: bool|null, invalid: bool}  $line
+     */
+    private function wholeName(#[SensitiveParameter] array $line): ?string
+    {
+        $names = $line['names'];
+
+        if ($line['order'] === self::SURNAME && count($names) >= 2) {
+            [$names[0], $names[1]] = [$names[1], $names[0]];
+        }
+
+        $initial = count($names) === 1 && $line['initials'] !== [] ? [Az::upper($line['initials'][0]).'.'] : [];
+
+        foreach ([[...$names, ...$line['patronymic']], $names] as $words) {
+            $name = implode(' ', [...array_map(PersonName::cased(...), $words), ...$initial]);
+
+            if (mb_strlen($name) <= DisplayName::MAX_LENGTH) {
+                return $name;
+            }
+        }
+
+        return null;
     }
 }

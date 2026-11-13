@@ -17,13 +17,10 @@ enum PastedNameFlag: string
     /** Read as "Surname First…", as school registers write names. */
     case SurnameFirst = 'surname_first';
 
-    /** A surname initial was added because another line or an active student has the same first name. */
-    case InitialAdded = 'initial_added';
-
-    /** An active student of the class already has this first name; it may be the same child. */
+    /** An active student of the class already has this first name; it may be the same child. A warning only (ADR 018). */
     case InClass = 'in_class';
 
-    /** The suggestion equals another line's or an active student's name; the teacher must change it. */
+    /** The suggestion equals another line's or an active student's name; the teacher adds a patronymic or another word. */
     case Taken = 'taken';
 
     public function blocksAdding(): bool

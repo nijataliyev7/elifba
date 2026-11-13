@@ -18,6 +18,7 @@ it('previews against the class\'s active students and writes nothing', function 
 
     $lines = app(NameListParser::class)->parseForClass($class, "Məmmədova Aysel\nHəsənov Əli\nQuliyeva Leyla");
 
-    expect(array_map(fn ($line): ?string => $line->display_name, $lines))->toBe(['Aysel M.', 'Əli', 'Leyla'])
+    expect(array_map(fn ($line): ?string => $line->display_name, $lines))->toBe(['Aysel Məmmədova', 'Əli Həsənov', 'Leyla Quliyeva'])
+        ->and(array_map(fn ($line): array => $line->toArray()['flags'], $lines))->toBe([['surname_first', 'in_class'], ['surname_first'], ['surname_first']])
         ->and(Student::query()->get()->toArray())->toBe($before);
 });

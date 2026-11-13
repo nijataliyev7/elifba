@@ -53,7 +53,6 @@ export type PastedNameFlag =
     | 'invalid'
     | 'duplicate'
     | 'surname_first'
-    | 'initial_added'
     | 'in_class'
     | 'taken';
 

@@ -116,11 +116,15 @@ it('gives the list spelling of a first name typed otherwise, for the pages\' fix
         ->and($voices->corrected('Eli M.'))->toBe('Əli M.')
         ->and($voices->corrected('ƏLİ'))->toBe('Əli')
         ->and($voices->corrected('Huseyn'))->toBe('Hüseyn')
-        // Spelled so already, off the list, or more than a first name and an initial.
+        // The first name of a full name (ADR 018), the rest as it is written.
+        ->and($voices->corrected('Eli Məmmədov'))->toBe('Əli Məmmədov')
+        ->and($voices->corrected('Məmmədov Eli'))->toBe('Məmmədov Əli')
+        ->and($voices->corrected('Eli Məmmədov Vəli oğlu'))->toBe('Əli Məmmədov Vəli oğlu')
+        // Spelled so already, or off the list.
         ->and($voices->corrected('Əli'))->toBeNull()
         ->and($voices->corrected('Əli M.'))->toBeNull()
+        ->and($voices->corrected('Əli Məmmədov'))->toBeNull()
         ->and($voices->corrected('Ramin'))->toBeNull()
-        ->and($voices->corrected('Eli Məmmədov'))->toBeNull()
         ->and($voices->corrected('Ayşən Nur'))->toBeNull();
 });
 

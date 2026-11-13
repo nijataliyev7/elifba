@@ -111,21 +111,31 @@ final class NameVoices
 
     /**
      * The display name with its first name spelled as the list spells it,
-     * when it is written otherwise and holds nothing but a first name and
-     * perhaps a surname initial: «Lale M.» → «Lalə M.», «AYSEL» → «Aysel»;
-     * null when it is spelled so already, or is anything else. For the
-     * pages' one-tap fix (ADR 016 decision 10): the board shows the name
-     * as it is stored, to children learning to read.
+     * when it is written otherwise, the rest of the name as it is: «Lale
+     * M.» → «Lalə M.», «AYSEL» → «Aysel», «Lale Məmmədova» → «Lalə
+     * Məmmədova» (ADR 018); null when it is spelled so already or has no
+     * listed first name. For the pages' one-tap fix (ADR 016 decision 10):
+     * the board shows the name as it is stored, to children learning to
+     * read.
      */
     public function corrected(string $displayName): ?string
     {
-        if (preg_match('/^(\p{L}+)( \p{L}\.)?$/u', Az::normalize($displayName), $parts) !== 1) {
+        $words = explode(' ', Az::normalize($displayName));
+        $first = PersonName::firstName($displayName);
+
+        if ($first === null || ($at = array_search($first, $words, true)) === false) {
             return null;
         }
 
-        $listed = $this->listedName($parts[1]);
+        $listed = $this->listedName($first);
 
-        return $listed === null || $listed === $parts[1] ? null : $listed.($parts[2] ?? '');
+        if ($listed === null || $listed === $first) {
+            return null;
+        }
+
+        $words[$at] = $listed;
+
+        return implode(' ', $words);
     }
 
     /**

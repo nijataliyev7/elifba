@@ -50,17 +50,17 @@ function loggedDuring(callable $callback): array
 }
 
 describe('paste preview', function (): void {
-    it('suggests first names, adds initials only where two collide, and writes nothing', function (): void {
+    it('suggests whole names, first name first, never adds an initial, and writes nothing', function (): void {
         $before = DB::table('students')->count();
 
         $this->postJson(route('classes.students.preview', $this->schoolClass), ['text' => PASTED_LIST])
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
-            ->assertJsonPath('lines.*.display_name', ['Əli', 'Aysel H.', 'Aysel Q.', 'Leyla', 'Nərgiz'])
+            ->assertJsonPath('lines.*.display_name', ['Əli Məmmədov Rəşid oğlu', 'Aysel Həsənova', 'Aysel Quliyeva', 'Leyla Kərimli', 'Nərgiz Əliyeva'])
             ->assertJsonPath('lines.0', [
                 'line' => 1,
                 'text' => 'Məmmədov Əli Rəşid oğlu',
-                'display_name' => 'Əli',
+                'display_name' => 'Əli Məmmədov Rəşid oğlu',
                 'flags' => ['surname_first'],
                 'addable' => true,
             ])
@@ -140,7 +140,7 @@ describe('confirming the preview', function (): void {
 
         $this->post(route('classes.students.store', $this->schoolClass), ['names' => $names])->assertSessionHasNoErrors();
 
-        expect(classRoster($this->schoolClass))->toBe(['Əli', 'Aysel H.', 'Aysel Q.', 'Leyla', 'Nərgiz']);
+        expect(classRoster($this->schoolClass))->toBe(['Əli Məmmədov Rəşid oğlu', 'Aysel Həsənova', 'Aysel Quliyeva', 'Leyla Kərimli', 'Nərgiz Əliyeva']);
     });
 
     it('refuses a name the class already has, on that name, and adds none', function (): void {
