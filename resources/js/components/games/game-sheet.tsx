@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { GameScene } from '@/components/games/game-scene';
 import { MODE_ICONS, UNIT_ICONS } from '@/components/games/game-icons';
 import { SetupExtras, SetupLabel } from '@/components/games/setup-extras';
+import type { CatalogWords } from '@/components/words/my-words-dialog';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,7 @@ import {
     isLettersShortage,
     lockedLine,
     openGame,
+    openWithOwnWords,
     playsOwnWords,
     postedFields,
     startSummary,
@@ -41,18 +43,19 @@ import { useLine } from '@/components/games/game-card';
 export type GameSheetProps = {
     /** The card whose page is open; null when closed. */
     card: CatalogCard | null;
+    /** Opened by «Bu sözlərlə oyna»: «Yalnız mənim sözlərim» on (`openWithOwnWords`). */
+    ownWords: boolean;
     onClose: () => void;
     remembered: RememberedSetup;
     letters: Letter[];
     letterCases: ('upper' | 'lower')[];
-    wordMaxLength: number;
     /** Where the game starts: the setup page's `StartGame`, or a guest board. */
     form: RouteFormDefinition<'post'>;
     /** Fields sent as they are (the class or the child, on a guest board); their errors show at the top. */
     hidden: Record<string, string>;
     submitLabel: string;
-    /** The teacher area: «Əlavə» offers the words page when own words cannot start. */
-    teacher: boolean;
+    /** The teacher area: «Əlavə» offers «Sözlərim» when own words cannot start; null in the parent area. */
+    words: CatalogWords | null;
     /** The class's name or the child's first name, for «… yadda qalır». */
     name: string;
     /** The learned letters on the class's or the child's page; null on the guest board. */
@@ -94,7 +97,8 @@ export function useSummary(): (fragments: Fragment[]) => string {
  * dialog over the catalog, from `lg` a 390px panel on the right. The scene,
  * the unit and the mode, the card's name, what the child does, «Səviyyə»,
  * «Əlavə» and a start bar stuck to the bottom. It opens with the
- * remembered choices that still apply (`openGame`) and forgets what was
+ * remembered choices that still apply (`openGame`; from «Bu sözlərlə
+ * oyna», with own words on, `openWithOwnWords`) and forgets what was
  * changed when it closes without starting; a game that starts is
  * remembered by the server. A locked card's page says why, and «Başlat»
  * stays disabled.
@@ -124,14 +128,14 @@ export function GameSheet({ card, onClose, ...props }: GameSheetProps) {
 
 function GamePage({
     card,
+    ownWords,
     remembered,
     letters,
     letterCases,
-    wordMaxLength,
     form,
     hidden,
     submitLabel,
-    teacher,
+    words,
     name,
     lettersHref,
 }: Omit<GameSheetProps, 'card' | 'onClose'> & { card: CatalogCard }) {
@@ -139,7 +143,7 @@ function GamePage({
     const say = useLine();
     const summarise = useSummary();
     const [choice, setChoice] = useState<GameChoice | null>(() =>
-        openGame(card, remembered, letters),
+        (ownWords ? openWithOwnWords : openGame)(card, remembered, letters),
     );
     const [shown, setShown] = useState<string | null>(null);
     const UnitIcon = UNIT_ICONS[card.card.unit];
@@ -374,8 +378,8 @@ function GamePage({
                                                     ownWords,
                                                 })
                                             }
-                                            teacher={teacher}
-                                            wordMaxLength={wordMaxLength}
+                                            words={words}
+                                            defaultOpen={ownWords}
                                             errors={errors}
                                         />
                                     )}

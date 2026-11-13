@@ -9,6 +9,7 @@ use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Data\GameSetupData;
 use App\Domain\Play\Support\GameSetupOptions;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Play\Concerns\OffersMyWords;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,10 +24,13 @@ use Inertia\Response;
  * `GameSetupData::rules()` makes) and a started game opens on the board.
  * `drawable` tells a pack the board cannot draw yet ("coming soon") from
  * one there is not enough content for. An archived class is hidden from
- * games.
+ * games. A class's page also offers the teacher's words for «Sözlərim»
+ * (`myWords`, `OffersMyWords`); a child's never does.
  */
 final class GameController extends Controller
 {
+    use OffersMyWords;
+
     public function create(SchoolClass $class): Response
     {
         abort_if($class->archived_at !== null, 404);
@@ -58,6 +62,7 @@ final class GameController extends Controller
             'child' => $players->child === null ? null : ['id' => $players->child->id, 'display_name' => $players->child->display_name],
             ...GameSetupOptions::shared(),
             ...GameSetupOptions::for($players),
+            ...($players->isHome() ? [] : $this->myWords($players->owner)),
         ]);
     }
 

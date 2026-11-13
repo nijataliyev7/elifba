@@ -9,6 +9,7 @@ use App\Domain\Play\Models\GuestBoard;
 use App\Domain\Play\Support\PairingCode;
 use App\Domain\Play\Support\PultChoices;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Play\Concerns\OffersMyWords;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -29,13 +30,16 @@ use Inertia\Response;
  *   `?code=` (typed) goes to `/pult/{code}`.
  * - `GET /pult/{code}`: the teacher's own live game with that join code →
  *   its remote; else the open guest board with that code → what to show on
- *   it (`PultChoices`: a live game, or a new one with the setup form);
+ *   it (`PultChoices`: a live game, or a new one with the setup form;
+ *   for a teacher, `myWords` for «Sözlərim», `OffersMyWords`);
  *   anything else → the same 404 (`PairingCode::resolve()`).
  * - `POST /pult/{code}`: claim that guest board and send it a game
  *   (`ClaimGuestBoard`), then open the remote.
  */
 final class PultController extends Controller
 {
+    use OffersMyWords;
+
     public function index(Request $request, #[CurrentUser] User $teacher): Response|RedirectResponse
     {
         if ($request->query->has('code')) {
@@ -71,6 +75,7 @@ final class PultController extends Controller
             'code' => (string) $found->code,
             'board' => null,
             ...PultChoices::forGuestBoard($teacher),
+            ...$this->myWords($teacher),
         ]);
     }
 

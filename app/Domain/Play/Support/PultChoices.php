@@ -27,7 +27,6 @@ use App\Models\User;
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>, hint: string}>,
  *     games: list<array{unit: string, mechanic: string, mode: string, name: string, hint: string}>,
  *     letterCases: list<string>,
- *     wordMaxLength: int,
  *     classes: array<string, PlayersSetupArray>,
  *     children: array<string, PlayersSetupArray>,
  * }

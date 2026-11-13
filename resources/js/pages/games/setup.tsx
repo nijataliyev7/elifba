@@ -20,11 +20,13 @@ import type { GameSetupProps } from '@/types';
  * rule 13) for a class or for a parent's child (ADR 011): the catalog of
  * ready games (`GameCatalog`), started through `StartGame`; a started game
  * opens on the board. «Dəyiş» leads to the learned letters on the class's
- * or the child's page.
+ * or the child's page. A class's catalog has «Sözlərim» (`myWords`, loaded
+ * when it opens); a child's has none.
  */
 export default function GameSetup({
     schoolClass,
     child,
+    myWords,
     ...setup
 }: GameSetupProps) {
     const { t } = useTranslation();
@@ -74,6 +76,11 @@ export default function GameSetup({
                 <GameCatalog
                     {...setup}
                     home={child !== null}
+                    words={
+                        child !== null
+                            ? null
+                            : { list: myWords, reload: ['options', 'cards'] }
+                    }
                     name={child?.display_name ?? schoolClass?.name ?? ''}
                     bleed="-mx-4 px-4 scroll-px-4 md:-mx-6 md:px-6 md:scroll-px-6"
                     lettersHref={

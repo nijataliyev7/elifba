@@ -48,3 +48,12 @@ export type WordLimits = {
     /** The teacher's words. */
     count: number;
 };
+
+/**
+ * «Sözlərim» on a teacher's game catalog (`myWords`, an optional prop the
+ * dialog loads when it opens): the words page's `customWords` and `limits`.
+ */
+export type MyWords = {
+    words: CustomWord[];
+    limits: WordLimits;
+};

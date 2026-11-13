@@ -11,10 +11,12 @@ import {
     lockedLine,
     mechanicName,
     openGame,
+    openWithOwnWords,
     postedFields,
     readyCard,
     shelves,
     startSummary,
+    takesOwnWords,
 } from '@/lib/setup-choices';
 import type { CatalogCard, GameChoice } from '@/lib/setup-choices';
 import type {
@@ -461,6 +463,105 @@ describe('a game page', () => {
         );
         expect(chooseLevel(train, choice, 'syllables-closed')).toBe(choice);
         expect(chooseLevel(train, choice, 'missing')).toBe(choice);
+    });
+});
+
+describe('«Sözlərim»', () => {
+    const own = { startable: true, reason: null, code: null };
+
+    it("offers «+» on the cards whose game can play the teacher's words at one of its levels", () => {
+        const all = catalog({}, { 'syllables-closed|find': own });
+
+        expect(takesOwnWords(card(all, 'syllable.find.train'))).toBe(true);
+        expect(takesOwnWords(card(all, 'syllable.pop.train'))).toBe(false);
+        expect(takesOwnWords(card(all, 'letter.find.train'))).toBe(false);
+        // Offered but not startable yet still offers «+»: that is when it helps.
+        expect(
+            takesOwnWords(
+                card(
+                    catalog({}, { 'syllables-open': refused('no_own_words') }),
+                    'syllable.build_syllable.animals',
+                ),
+            ),
+        ).toBe(true);
+    });
+
+    it('opens «Bu sözlərlə oyna» with own words on, over a remembered «Hamısı»', () => {
+        const all = catalog({}, { 'syllables-open|find': own });
+
+        expect(
+            openWithOwnWords(
+                card(all, 'syllable.find.train'),
+                remembered({ ownWords: false }),
+                learned,
+            ),
+        ).toEqual({
+            level: 'syllables-open',
+            letterCase: 'lower',
+            letters: [],
+            ownWords: true,
+        });
+    });
+
+    it('keeps the remembered level where own words can start, else takes the first where they can', () => {
+        const all = catalog(
+            { 'syllables-open|find|animals': 'too_few_syllables' },
+            {
+                'syllables-open|find': refused('too_few_syllables'),
+                'syllables-closed|find': own,
+            },
+        );
+        const memory = remembered({ levels: { syllable: 'syllables-open' } });
+
+        // The remembered level cannot play own words: the next one can.
+        expect(
+            openWithOwnWords(card(all, 'syllable.find.train'), memory, learned)
+                ?.level,
+        ).toBe('syllables-closed');
+        expect(
+            openWithOwnWords(
+                card(all, 'syllable.find.train'),
+                remembered({ levels: { syllable: 'syllables-closed' } }),
+                learned,
+            )?.level,
+        ).toBe('syllables-closed');
+    });
+
+    it('keeps the default level where own words can start nowhere, and never opens a locked card', () => {
+        const all = catalog(
+            { 'syllables-closed|find|animals': 'too_few_syllables' },
+            {
+                'syllables-open|find': refused('too_few_syllables'),
+                'syllables-closed|find|animals': own,
+            },
+        );
+
+        // Own words could start only at a level this card cannot play.
+        expect(
+            openWithOwnWords(
+                card(all, 'syllable.find.animals'),
+                remembered(),
+                learned,
+            ),
+        ).toEqual({
+            level: 'syllables-open',
+            letterCase: 'lower',
+            letters: [],
+            ownWords: true,
+        });
+        expect(
+            openWithOwnWords(
+                card(
+                    catalog({
+                        'syllables-open': 'too_few_syllables',
+                        'syllables-closed': 'too_few_syllables',
+                    }),
+                    'syllable.find.train',
+                ),
+                remembered(),
+                learned,
+            ),
+        ).toBeNull();
     });
 });
 

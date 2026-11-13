@@ -1,9 +1,11 @@
 import { Link } from '@inertiajs/react';
-import { ChevronDown, Lock } from 'lucide-react';
+import { ChevronDown, Lock, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useId, useState } from 'react';
 import InputError from '@/components/input-error';
-import { AddWordDialog } from '@/components/words/add-word-dialog';
+import { Button } from '@/components/ui/button';
+import { MyWordsDialog } from '@/components/words/my-words-dialog';
+import type { CatalogWords } from '@/components/words/my-words-dialog';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { index as wordsIndex } from '@/routes/words';
@@ -24,9 +26,10 @@ type Props = {
     own: SetupRefusal | null;
     ownWords: boolean;
     onOwnWords: (on: boolean) => void;
-    /** The teacher area: the words page and adding a word are offered when own words cannot start. */
-    teacher: boolean;
-    wordMaxLength: number;
+    /** The teacher area: the words page and «Sözlərim» are offered when own words cannot start; null in the parent area. */
+    words: CatalogWords | null;
+    /** Open from the start: the page was opened by «Bu sözlərlə oyna», so the words choice (or why it cannot play) shows. */
+    defaultOpen?: boolean;
     errors: Record<string, string | undefined>;
 };
 
@@ -89,7 +92,8 @@ const FIELDS = ['letter_case', 'letters', 'own_words'];
  * «Əlavə» on a game page (docs/frontend.md rule 13): closed by default,
  * its values beside the button. Inside: the letter case at a reading
  * level, the letters at the letter level and, where the server offers it,
- * whether to play only the owner's own words. A game whose unit does not
+ * whether to play only the owner's own words — in the teacher area, with
+ * «Söz əlavə et» to «Sözlərim» when they cannot start yet. A game whose unit does not
  * read (pictures, numbers) has no «Əlavə». The round count is the board's,
  * under «Başla» (architecture §4 "Round count").
  */
@@ -104,13 +108,14 @@ export function SetupExtras({
     own,
     ownWords,
     onOwnWords,
-    teacher,
-    wordMaxLength,
+    words,
+    defaultOpen = false,
     errors,
 }: Props) {
     const { t } = useTranslation();
     const id = useId();
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(defaultOpen);
+    const [wordsOpen, setWordsOpen] = useState(false);
     const lettersError =
         errors.letters ??
         Object.entries(errors).find(([key]) => key.startsWith('letters.'))?.[1];
@@ -124,7 +129,7 @@ export function SetupExtras({
         }
     }, [refused]);
 
-    const ownShown = own !== null && (own.startable || teacher);
+    const ownShown = own !== null && (own.startable || words !== null);
 
     if (letterCase === null && !ownShown) {
         return null;
@@ -264,13 +269,34 @@ export function SetupExtras({
                                 <p className="text-sm text-muted-foreground">
                                     {own.reason}
                                 </p>
-                                <AddWordDialog maxLength={wordMaxLength} />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setWordsOpen(true)}
+                                >
+                                    <Plus />
+                                    {t('words.add.title')}
+                                </Button>
                             </div>
                         )}
                         <InputError message={errors.own_words} />
                     </fieldset>
                 )}
             </div>
+
+            {/* Outside the choice, so it stays open once own words can start. */}
+            {words !== null && (
+                <MyWordsDialog
+                    words={words}
+                    open={wordsOpen}
+                    onOpenChange={setWordsOpen}
+                    onPlay={() => {
+                        setWordsOpen(false);
+                        onOwnWords(true);
+                    }}
+                />
+            )}
         </section>
     );
 }

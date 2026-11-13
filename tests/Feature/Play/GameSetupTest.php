@@ -70,7 +70,8 @@ describe('the setup page', function (): void {
                 ->missing('recent')
                 // The round count is the board's, under «Başla» (§4 "Round count").
                 ->missing('rounds')
-                ->where('wordMaxLength', 20)
+                // «Sözlərim» reads its limits from `myWords` (rule 13).
+                ->missing('wordMaxLength')
                 ->where('letterCases', ['upper', 'lower'])
                 ->has('letters', 32)
                 ->where('letters.13', ['lower' => 'i', 'upper' => 'İ'])

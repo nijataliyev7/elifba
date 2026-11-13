@@ -14,6 +14,7 @@ use App\Domain\Play\Support\SetupMemory;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Games;
+use Tests\Support\GuestBoards;
 
 /*
  * «Yeni oyun» as a catalog of ready games (docs/frontend.md rule 13,
@@ -363,5 +364,84 @@ describe('starting a game', function (): void {
         $this->child->delete();
 
         expect(SetupChoice::query()->count())->toBe(0);
+    });
+});
+
+describe('«Sözlərim»', function (): void {
+    beforeEach(function (): void {
+        foreach (['Aysel', 'kələm'] as $word) {
+            app(AddCustomWord::class)->handle($this->teacher, CustomWordData::validate(['text' => $word]));
+        }
+    });
+
+    it('gives a class\'s catalog the teacher\'s words and limits only when asked, as the words page has them', function (): void {
+        $words = [];
+
+        $this->get(route('words.index'))
+            ->assertInertia(function (Assert $page) use (&$words): void {
+                $words = $page->toArray()['props']['customWords'];
+            });
+
+        $this->get(route('classes.games.create', $this->class))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('games/setup')
+                ->missing('myWords')
+                ->reloadOnly('myWords', fn (Assert $reload) => $reload
+                    ->where('myWords.words', $words)
+                    ->where('myWords.words.0.text', 'Aysel')
+                    ->where('myWords.limits', ['max_length' => 20, 'max_per_teacher' => 200, 'count' => 2])
+                    ->missing('myWords.levelTotals')
+                    ->missing('options')));
+    });
+
+    it('never gives a child\'s catalog the words, even to a parent who is also a teacher', function (): void {
+        $this->get(route('children.games.create', $this->child))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('myWords')
+                ->reload(fn (Assert $reload) => $reload->missing('myWords'), only: 'myWords'));
+    });
+
+    it('gives the guest board the words for a teacher, never for a parent', function (): void {
+        $code = (string) GuestBoards::open()['board']->code;
+
+        $this->get(route('pult.code', $code))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('pult/guest-board')
+                ->missing('myWords')
+                ->reloadOnly('myWords', fn (Assert $reload) => $reload->has('myWords.words', 2)));
+
+        $parent = User::factory()->parent()->create();
+        Child::factory()->for($parent, 'parent')->create();
+
+        $this->actingAs($parent)->get(route('pult.code', $code))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('myWords')
+                ->reload(fn (Assert $reload) => $reload->missing('myWords'), only: 'myWords'));
+    });
+
+    it('answers a word added from the catalog with the words and the options it asked for', function (): void {
+        $page = route('classes.games.create', $this->class);
+        $version = $this->get($page)->viewData('page')['version'];
+
+        $props = $this->from($page)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => (string) $version,
+                'X-Inertia-Partial-Component' => 'games/setup',
+                'X-Inertia-Partial-Data' => 'options,cards,myWords',
+            ])
+            ->followingRedirects()
+            ->post(route('words.store'), ['text' => 'Tural'])
+            ->assertOk()
+            ->json('props');
+
+        expect($props)->toHaveKeys(['options', 'cards', 'myWords'])
+            ->not->toHaveKeys(['packs', 'remembered', 'translations'])
+            ->and(array_column($props['myWords']['words'], 'text'))->toBe(['Aysel', 'kələm', 'Tural'])
+            ->and($props['myWords']['limits']['count'])->toBe(3);
     });
 });

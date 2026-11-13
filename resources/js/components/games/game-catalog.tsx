@@ -10,6 +10,8 @@ import {
     useSummary,
 } from '@/components/games/game-sheet';
 import InputError from '@/components/input-error';
+import { MyWordsDialog } from '@/components/words/my-words-dialog';
+import type { CatalogWords } from '@/components/words/my-words-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
@@ -25,6 +27,7 @@ import {
     readyCard,
     shelves,
     startSummary,
+    takesOwnWords,
 } from '@/lib/setup-choices';
 import type { CatalogCard } from '@/lib/setup-choices';
 import { cn } from '@/lib/utils';
@@ -54,6 +57,8 @@ export type GameCatalogProps = SharedSetup &
         lettersHref?: string | null;
         /** Classes that let a sideways row reach the page's edges (its padding, negated). */
         bleed?: string;
+        /** A teacher's catalog: the teacher's words for «Sözlərim»; null for a parent's child. */
+        words?: CatalogWords | null;
     };
 
 const MODES: SetupMode[] = ['easy', 'normal'];
@@ -64,9 +69,12 @@ const MODES: SetupMode[] = ['easy', 'normal'];
  * (kept for the class or the child at once), the skill chips, «Hazır oyun»
  * — the first game that can start, two taps from «Oyna» — and one shelf
  * per unit of cards that scroll sideways. A card opens its game page
- * (`GameSheet`). The choosing logic is `lib/setup-choices.ts`; what can
- * start is the server's `options`. The setup page and the phone's guest
- * board use it alike, for a class or a parent's child (`home`).
+ * (`GameSheet`); on a teacher's catalog, a card whose game plays the
+ * teacher's words also has «+» for «Sözlərim», whose «Bu sözlərlə oyna»
+ * opens that card's page with own words on. The choosing logic is
+ * `lib/setup-choices.ts`; what can start is the server's `options`. The
+ * setup page and the phone's guest board use it alike, for a class or a
+ * parent's child (`home`).
  */
 export function GameCatalog({
     packs,
@@ -77,7 +85,6 @@ export function GameCatalog({
     letters,
     allLetters,
     letterCases,
-    wordMaxLength,
     remembered,
     form,
     modeUrl,
@@ -87,6 +94,7 @@ export function GameCatalog({
     name,
     lettersHref = null,
     bleed,
+    words = null,
 }: GameCatalogProps) {
     const { t } = useTranslation();
     const summarise = useSummary();
@@ -101,7 +109,13 @@ export function GameCatalog({
         [packs, levels, games, serverCards, options],
     );
     const [mode, setMode] = useState<SetupMode>(remembered.mode);
-    const [openId, setOpenId] = useState<string | null>(null);
+    const [opened, setOpened] = useState<{
+        id: string;
+        ownWords: boolean;
+    } | null>(null);
+    /** The card «Sözlərim» was opened from. */
+    const [wordsFor, setWordsFor] = useState<string | null>(null);
+    const open = (id: string, ownWords = false) => setOpened({ id, ownWords });
     const shown = useMemo(
         () => shelves(cards, mode, home),
         [cards, mode, home],
@@ -239,7 +253,7 @@ export function GameCatalog({
                             hidden={hidden}
                             label={label}
                             summarise={summarise}
-                            onOpen={() => setOpenId(ready.id)}
+                            onOpen={() => open(ready.id)}
                         />
                     )}
 
@@ -295,7 +309,13 @@ export function GameCatalog({
                                         <GameCard
                                             key={card.id}
                                             card={card}
-                                            onOpen={() => setOpenId(card.id)}
+                                            onOpen={() => open(card.id)}
+                                            onWords={
+                                                words !== null &&
+                                                takesOwnWords(card)
+                                                    ? () => setWordsFor(card.id)
+                                                    : undefined
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -306,19 +326,38 @@ export function GameCatalog({
             )}
 
             <GameSheet
-                card={cards.find((card) => card.id === openId) ?? null}
-                onClose={() => setOpenId(null)}
+                card={cards.find((card) => card.id === opened?.id) ?? null}
+                ownWords={opened?.ownWords ?? false}
+                onClose={() => setOpened(null)}
                 remembered={remembered}
                 letters={letters}
                 letterCases={letterCases}
-                wordMaxLength={wordMaxLength}
                 form={form}
                 hidden={hidden}
                 submitLabel={label}
-                teacher={!home}
+                words={words}
                 name={name}
                 lettersHref={lettersHref}
             />
+
+            {words !== null && (
+                <MyWordsDialog
+                    words={words}
+                    open={wordsFor !== null}
+                    onOpenChange={(next) => {
+                        if (!next) {
+                            setWordsFor(null);
+                        }
+                    }}
+                    onPlay={() => {
+                        if (wordsFor !== null) {
+                            open(wordsFor, true);
+                        }
+
+                        setWordsFor(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

@@ -1,6 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
+import type { WordFormOptions } from '@/components/words/add-word-form';
 import { WordFields } from '@/components/words/word-fields';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,13 +22,19 @@ import type { CustomWord } from '@/types';
 type Props = {
     word: CustomWord;
     maxLength: number;
+    /** How the page answers (`AddWordForm`). */
+    options?: WordFormOptions;
 };
 
 /**
  * Edit one of the teacher's words: its text or its syllable split. The
  * word plays in every theme. Games already started keep their rounds.
  */
-export function EditWordDialog({ word, maxLength }: Props) {
+export function EditWordDialog({
+    word,
+    maxLength,
+    options = { preserveScroll: true },
+}: Props) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
 
@@ -52,7 +59,7 @@ export function EditWordDialog({ word, maxLength }: Props) {
 
                 <Form
                     {...update.form(word.id)}
-                    options={{ preserveScroll: true }}
+                    options={options}
                     onSuccess={() => setOpen(false)}
                     className="grid gap-6"
                 >

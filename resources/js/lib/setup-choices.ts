@@ -319,6 +319,40 @@ export function openGame(
     };
 }
 
+/**
+ * A game page opened from «Bu sözlərlə oyna» in «Sözlərim» (rule 13): as
+ * `openGame`, with «Yalnız mənim sözlərim» on whatever was remembered, at
+ * the remembered level when the teacher's words can start there, else the
+ * first level where they can. Where they can start nowhere, the level stays
+ * `openGame`'s and the page shows the server's reason. Null for a locked card.
+ */
+export function openWithOwnWords(
+    card: CatalogCard,
+    remembered: RememberedSetup,
+    learned: readonly Letter[],
+): GameChoice | null {
+    const choice = openGame(card, { ...remembered, ownWords: true }, learned);
+
+    if (choice === null || playsOwnWords(card, choice)) {
+        return choice;
+    }
+
+    const level = card.levels.find(
+        (item) => item.startable && item.option.own?.startable === true,
+    );
+
+    return level === undefined ? choice : { ...choice, level: level.level.key };
+}
+
+/**
+ * Whether a card's game can play the teacher's own words at one of its
+ * levels (`own` is offered: the syllable and word games but `build_word`);
+ * on a teacher's catalog such a card has «+» for «Sözlərim».
+ */
+export function takesOwnWords(card: CatalogCard): boolean {
+    return card.levels.some((level) => level.option.own !== null);
+}
+
 /** The card's level a choice names. */
 export function chosenLevel(
     card: CatalogCard,

@@ -15,7 +15,6 @@ use App\Domain\Language\Support\Az;
 use App\Domain\Play\Data\GamePlayers;
 use App\Domain\Play\Enums\LetterCase;
 use App\Domain\Play\Enums\SetupMode;
-use Illuminate\Support\Facades\Config;
 
 /**
  * What the game catalog offers (docs/architecture.md §2, "Game setup"), built
@@ -45,7 +44,6 @@ use Illuminate\Support\Facades\Config;
  *     levels: list<array{key: string, title: string, unit: string, mechanics: list<string>, hint: string}>,
  *     games: list<array{unit: string, mechanic: string, mode: string, name: string, hint: string}>,
  *     letterCases: list<string>,
- *     wordMaxLength: int,
  * }
  * @phpstan-type PlayersSetupArray array{
  *     options: list<array{mechanic: string, pack: string, level: string, drawable: bool, startable: bool, reason: string|null, code: string|null, own: array{startable: bool, reason: string|null, code: string|null}|null}>,
@@ -89,8 +87,6 @@ final class GameSetupOptions
                 'hint' => self::text('games.setup.mechanic_hints.'.($game[1] === Mechanic::Pop && ! $game[0]->reads() ? 'pop_say' : $game[1]->value)),
             ], self::games()),
             'letterCases' => array_map(static fn (LetterCase $case): string => $case->value, LetterCase::cases()),
-            // For adding a teacher word from the form (§3 "Teacher words").
-            'wordMaxLength' => Config::integer('elifba.custom_words.max_length'),
         ];
     }
 

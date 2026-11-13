@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { RouteFormDefinition } from '@/wayfinder';
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -23,6 +23,8 @@ type Props = {
     confirmLabel: string;
     /** The Wayfinder form the confirm button submits. */
     form: RouteFormDefinition<'get' | 'post'>;
+    /** How the page answers; by default it reloads where it was. */
+    options?: ComponentProps<typeof Form>['options'];
     /** Red confirm button for actions that cannot be undone. */
     destructive?: boolean;
 };
@@ -37,6 +39,7 @@ export function ConfirmDialog({
     description,
     confirmLabel,
     form,
+    options = { preserveScroll: true },
     destructive = false,
 }: Props) {
     const { t } = useTranslation();
@@ -53,7 +56,7 @@ export function ConfirmDialog({
 
                 <Form
                     {...form}
-                    options={{ preserveScroll: true }}
+                    options={options}
                     onSuccess={() => setOpen(false)}
                 >
                     {({ processing }) => (

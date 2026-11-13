@@ -807,6 +807,8 @@
     "words.flash.hidden": "Word hidden from your games.",
     "words.flash.shown": "Word back in your games.",
     "words.flash.updated": "Word updated.",
+    "words.mine.play": "Play with these words",
+    "words.mine.title": "My words",
     "words.pack": "Theme",
     "words.title": "Words"
 }

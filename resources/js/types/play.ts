@@ -1,5 +1,6 @@
 import type { BoardVoice } from '@/game/voice';
 import type { Letter } from './classroom';
+import type { MyWords } from './words';
 
 /*
  * Page props of the game pages (`Play\…` controllers). The round contract
@@ -121,8 +122,6 @@ export type SharedSetup = {
     levels: SetupLevel[];
     games: SetupGame[];
     letterCases: ('upper' | 'lower')[];
-    /** The longest teacher word, for adding one from «Əlavə». */
-    wordMaxLength: number;
 };
 
 /**
@@ -133,6 +132,8 @@ export type GameSetupProps = SharedSetup &
     PlayersSetup & {
         schoolClass: { id: string; name: string } | null;
         child: { id: string; display_name: string } | null;
+        /** A class's page only: the teacher's words, once «Sözlərim» asked for them. */
+        myWords?: MyWords;
     };
 
 /**
@@ -255,4 +256,6 @@ export type GuestBoardChoicesProps = {
         classes: Record<string, PlayersSetup>;
         children: Record<string, PlayersSetup>;
     };
+    /** A teacher only: the teacher's words, once «Sözlərim» asked for them. */
+    myWords?: MyWords;
 };

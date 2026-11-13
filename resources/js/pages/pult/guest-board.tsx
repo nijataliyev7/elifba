@@ -35,6 +35,7 @@ export default function PultGuestBoard({
     classes,
     children,
     setup,
+    myWords,
 }: GuestBoardChoicesProps) {
     const { t } = useTranslation();
     const target =
@@ -207,7 +208,6 @@ export default function PultGuestBoard({
                             levels={setup.levels}
                             games={setup.games}
                             letterCases={setup.letterCases}
-                            wordMaxLength={setup.wordMaxLength}
                             {...chosen}
                             form={target}
                             modeUrl={
@@ -217,6 +217,11 @@ export default function PultGuestBoard({
                             }
                             hidden={{ [players.field]: players.id }}
                             home={players.field === 'child'}
+                            words={
+                                players.field === 'child'
+                                    ? null
+                                    : { list: myWords, reload: ['setup'] }
+                            }
                             name={players.name}
                             bleed="-mx-4 px-4 scroll-px-4"
                             submitLabel={t('pult.guest_board.start')}
