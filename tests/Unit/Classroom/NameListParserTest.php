@@ -106,6 +106,13 @@ it('does not take a first name that ends in -li or -zadə for a surname', functi
     ['Əli Rəşid oğlu Məmmədov', 'Əli Məmmədov Rəşid oğlu'],
 ]);
 
+it('reads a surname in the middle as first name first, whatever the rest of the list', function (): void {
+    $lines = parseNames("Məmmədov Əli Rəşid oğlu\nnihat eliyev veli\nƏli Həsənov Kamal");
+
+    expect(suggestions($lines))->toBe(['Əli Məmmədov Rəşid oğlu', 'Nihat Eliyev Veli', 'Əli Həsənov Kamal'])
+        ->and(flagsOf($lines[1]))->toBe([]);
+});
+
 it('reads an ambiguous line in the order of the rest of the list', function (): void {
     $register = parseNames("Məmmədov Əli\nHəsənova Aysel\nMurad Kamran");
     $plain = parseNames("Əli Məmmədov\nAysel Həsənova\nMurad Kamran");

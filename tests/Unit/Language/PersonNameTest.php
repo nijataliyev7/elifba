@@ -39,6 +39,19 @@ it('takes the first word of a name of more words, the rest as the surname', func
     'two first names with a surname' => ['Ayşən Nur Əliyeva', 'Ayşən'],
     'two first names in one' => ['Məhəmməd Əli', 'Məhəmməd'],
     'the surname first, then two first names' => ['Əliyeva Ayşən Nur', 'Ayşən'],
+    'the surname in the middle' => ['nihat eliyev veli', 'nihat'],
+    'the surname first, a patronymic without oğlu' => ['Eliyev Nihat Veli', 'Nihat'],
+]);
+
+it('tells whether names are written surname first, comparing the first with every word after it', function (array $names, ?bool $surnameFirst): void {
+    expect(PersonName::surnameFirst($names))->toBe($surnameFirst);
+})->with([
+    'surname first' => [['Məmmədov', 'Əli'], true],
+    'a likely surname first' => [['Kərimli', 'Nazlı', 'Rəşid'], true],
+    'first name first' => [['Əli', 'Məmmədov'], false],
+    'the surname in the middle' => [['nihat', 'eliyev', 'veli'], false],
+    'a tie' => [['Murad', 'Kamran'], null],
+    'one name' => [['Nihat'], null],
 ]);
 
 it('has no first name for no name', function (): void {

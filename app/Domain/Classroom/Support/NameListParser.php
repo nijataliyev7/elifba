@@ -128,15 +128,14 @@ final readonly class NameListParser
         $order = null;
 
         if (count($names) >= 2) {
-            $first = PersonName::surnameScore($names[0]);
-            $last = PersonName::surnameScore($names[count($names) - 1]);
-
-            $order = match (true) {
-                $first > $last => self::SURNAME,
-                $last > $first => self::FIRST,
-                $patronymicAtEnd === true => self::SURNAME,
-                $patronymicAtEnd === false => self::FIRST,
-                default => null,
+            $order = match (PersonName::surnameFirst($names)) {
+                true => self::SURNAME,
+                false => self::FIRST,
+                default => match ($patronymicAtEnd) {
+                    true => self::SURNAME,
+                    false => self::FIRST,
+                    null => null,
+                },
             };
         } elseif ($names === [] || PersonName::surnameScore($names[0]) === PersonName::SURE) {
             $invalid = true; // only initials, or only a surname: no first name to keep

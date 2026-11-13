@@ -68,6 +68,28 @@ final class PersonName
     }
 
     /**
+     * Whether names (a patronymic set aside) are written surname first:
+     * true when the first word scores higher as a surname than every word
+     * after it («Məmmədov Əli», «Kərimli Nazlı Rəşid»), false when a word
+     * after it scores higher («Əli Məmmədov», «nihat eliyev veli», the
+     * surname in the middle), null when they tie («Murad Kamran») or there
+     * is one name.
+     *
+     * @param  list<string>  $names
+     */
+    public static function surnameFirst(#[SensitiveParameter] array $names): ?bool
+    {
+        if (count($names) < 2) {
+            return null;
+        }
+
+        $first = self::surnameScore($names[0]);
+        $rest = max(array_map(self::surnameScore(...), array_slice($names, 1)));
+
+        return $first === $rest ? null : $first > $rest;
+    }
+
+    /**
      * A word of a name as it is written: title case («ƏLİYEV» → «Əliyev»,
      * «ayşən-nur» → «Ayşən-Nur»), and the patronymic's «oğlu», «qızı»
      * lowercase («Rəşid oğlu»).
@@ -153,10 +175,7 @@ final class PersonName
             return null;
         }
 
-        $surnameFirst = count($words) > 1
-            && self::surnameScore($words[0]) > self::surnameScore($words[count($words) - 1]);
-
-        return $surnameFirst ? $words[1] : $words[0];
+        return self::surnameFirst($words) === true ? $words[1] : $words[0];
     }
 
     /**
