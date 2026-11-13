@@ -27,7 +27,8 @@ import { BoardStudents } from '@/components/games/board-students';
 import type { GuestBoardActionsProps } from '@/components/games/guest-board-actions';
 import { GuestBoardActions } from '@/components/games/guest-board-actions';
 import { PairingCard } from '@/components/games/pairing-card';
-import { StudentGrid, studentAvatars } from '@/components/games/student-grid';
+import { studentAvatars } from '@/components/games/student-grid';
+import { StudentPickerDialog } from '@/components/games/student-picker-dialog';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,7 +71,7 @@ import {
 import { roundSteps } from '@/lib/round-steps';
 import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
-import type { BoardProps, BoardStudent } from '@/types';
+import type { BoardProps } from '@/types';
 
 /**
  * A guest board's own parts on the board (`/lovhe`, §4): whose board it is,
@@ -126,6 +127,12 @@ type Props = BoardProps & {
  * at the board as ids with their name clips' paths (ADR 016), and fetches
  * a clip with this board's own `auth`; React never says anything.
  *
+ * On a teacher board of a class game both pickers of who plays offer
+ * «Şagird əlavə et» (§4 "A student added on the board"): the page then
+ * reloads only `students`, which reach the controller (`setStudents()`)
+ * and the stage (`setPlayers()`) without either being made again, so the
+ * board is not claimed again.
+ *
  * Before the first answer the start screen offers the round count under
  * «Başla» (§4 "Round count"): a tap builds the rounds again on the server
  * (`changeRounds()`), and «Başla» waits for it. Leaving the game looks like
@@ -170,6 +177,9 @@ export function BoardScreen({
     const home = playersHome({ schoolClass, child });
     const pairsOnLoad = pairingOnLoad({ schoolClass, child });
     const asksWho = asksWhoPlays({ schoolClass, child }, students);
+    // «Şagird əlavə et»: a teacher's class only, never a guest board's bearer.
+    const addTo =
+        guest === undefined && schoolClass !== null ? schoolClass.id : null;
     const [asking, setAsking] = useState(false);
     // The server renders sound on; the device's choice follows at once.
     const muted = useSyncExternalStore(
@@ -181,7 +191,9 @@ export function BoardScreen({
     useEffect(() => forceLightTheme(), []);
 
     // The controller: flush, claim, load. Deferred a tick so React's
-    // development double mount never claims the board twice.
+    // development double mount never claims the board twice. A change of
+    // `students` alone (a student added here) must not make a new one: that
+    // would claim the board again; it goes to `setStudents()` below.
     useEffect(() => {
         const created = new BoardController({
             gameId: game.id,
@@ -203,15 +215,11 @@ export function BoardScreen({
             window.clearTimeout(handle);
             created.dispose();
         };
-    }, [
-        bridge,
-        auth,
-        game.id,
-        game.status,
-        game.board_epoch,
-        game.points,
-        students,
-    ]);
+    }, [bridge, auth, game.id, game.status, game.board_epoch, game.points]);
+
+    useEffect(() => {
+        controller?.setStudents(students.map((student) => student.id));
+    }, [controller, students]);
 
     // A guest board's page flushes this board before the next game.
     const onController = guest?.onController;
@@ -251,6 +259,8 @@ export function BoardScreen({
         [child, students],
     );
 
+    // Mounted with the players of its first render; later ones go to
+    // `setPlayers()` below, so a student added here keeps the canvas.
     useEffect(() => {
         const parent = host.current;
         const mechanic = Mechanic.safeParse(game.mechanic);
@@ -316,7 +326,6 @@ export function BoardScreen({
         palette,
         sounds,
         voice,
-        players,
         figures,
         pictures,
     ]);
@@ -325,6 +334,11 @@ export function BoardScreen({
     useEffect(() => {
         stage.current?.setMuted(muted);
     }, [muted, stageState]);
+
+    // So are the players: the stage may have mounted with older ones.
+    useEffect(() => {
+        stage.current?.setPlayers(players);
+    }, [players, stageState]);
 
     const toggleMuted = () => boardMute.set(!muted);
 
@@ -623,6 +637,7 @@ export function BoardScreen({
                             studentId={view.studentId}
                             accent={colours.accent}
                             disabled={view.phase === 'replaced'}
+                            addTo={addTo}
                             onChoose={(id) => controller?.setStudent(id)}
                             onNext={() => controller?.nextStudent()}
                         />
@@ -769,14 +784,19 @@ export function BoardScreen({
                     </Curtain>
                 )}
 
+                {/* «Kim oynayır?» (§4): a tap on a choice starts the game; closing starts nothing. */}
                 {child === null && (
-                    <WhoPlays
+                    <StudentPickerDialog
                         open={asking && view.phase === 'ready'}
+                        onOpenChange={setAsking}
+                        title={t('games.board.who_plays.title')}
+                        description={t('games.board.who_plays.description')}
                         students={students}
                         studentId={view.studentId}
                         accent={colours.accent}
-                        onOpenChange={setAsking}
+                        addTo={addTo}
                         onChoose={chooseAndBegin}
+                        data-test="who-plays"
                     />
                 )}
 
@@ -1015,53 +1035,6 @@ function RoundChoice({
                 })}
             </div>
         </div>
-    );
-}
-
-/**
- * «Kim oynayır?» (§4 "Board without a phone"): «Bütün sinif» or a student,
- * the current choice marked. A tap chooses and starts the game; closing
- * starts nothing.
- */
-function WhoPlays({
-    open,
-    students,
-    studentId,
-    accent,
-    onOpenChange,
-    onChoose,
-}: {
-    open: boolean;
-    students: BoardStudent[];
-    studentId: string | null;
-    accent: string;
-    onOpenChange: (open: boolean) => void;
-    onChoose: (studentId: string | null) => void;
-}) {
-    const { t } = useTranslation();
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                className="max-h-[90svh] overflow-y-auto sm:max-w-3xl"
-                data-test="who-plays"
-            >
-                <DialogHeader>
-                    <DialogTitle>
-                        {t('games.board.who_plays.title')}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {t('games.board.who_plays.description')}
-                    </DialogDescription>
-                </DialogHeader>
-                <StudentGrid
-                    students={students}
-                    studentId={studentId}
-                    accent={accent}
-                    onChoose={onChoose}
-                />
-            </DialogContent>
-        </Dialog>
     );
 }
 

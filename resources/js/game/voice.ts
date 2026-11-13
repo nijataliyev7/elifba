@@ -116,10 +116,19 @@ export class VoiceCues {
 
     constructor(
         private readonly voice: BoardVoice,
-        private readonly players: VoicePlayers = NO_PLAYERS,
+        private players: VoicePlayers = NO_PLAYERS,
         private readonly random: () => number = Math.random,
     ) {
         this.player = players.child;
+    }
+
+    /**
+     * Who may be at the board now: a student added on the board
+     * (architecture §4 "A student added on the board") has a name to say
+     * from their first turn. The turn going on keeps its player.
+     */
+    setPlayers(players: VoicePlayers): void {
+        this.players = players;
     }
 
     /**

@@ -1,16 +1,9 @@
 import { ChevronRight, Users } from 'lucide-react';
 import { useState } from 'react';
-import { StudentGrid, studentAvatars } from '@/components/games/student-grid';
+import { studentAvatars } from '@/components/games/student-grid';
+import { StudentPickerDialog } from '@/components/games/student-picker-dialog';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/use-translation';
 import type { BoardStudent } from '@/types';
 
@@ -20,6 +13,8 @@ type Props = {
     studentId: string | null;
     accent: string;
     disabled: boolean;
+    /** The class «Şagird əlavə et» adds to; null on a guest board. */
+    addTo: string | null;
     onChoose: (studentId: string | null) => void;
     onNext: () => void;
 };
@@ -27,14 +22,16 @@ type Props = {
 /**
  * Who is at the board (docs/architecture.md §4, "Board without a phone"):
  * the student credited with the rounds solved now, «Bütün sinif» (no
- * points), "next" in class order, and a grid of the class to pick from.
- * Smaller below `lg` (docs/frontend.md §6).
+ * points), "next" in class order, and a grid of the class to pick from
+ * (`StudentPickerDialog`, as «Kim oynayır?»). Smaller below `lg`
+ * (docs/frontend.md §6).
  */
 export function BoardStudents({
     students,
     studentId,
     accent,
     disabled,
+    addTo,
     onChoose,
     onNext,
 }: Props) {
@@ -50,8 +47,17 @@ export function BoardStudents({
 
     return (
         <div className="flex min-w-0 items-center gap-3">
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
+            <StudentPickerDialog
+                open={open}
+                onOpenChange={setOpen}
+                title={t('games.board.choose_student')}
+                description={t('games.board.choose_student_description')}
+                students={students}
+                studentId={studentId}
+                accent={accent}
+                addTo={addTo}
+                onChoose={choose}
+                trigger={
                     <button
                         type="button"
                         disabled={disabled}
@@ -84,24 +90,8 @@ export function BoardStudents({
                             </span>
                         </span>
                     </button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {t('games.board.choose_student')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('games.board.choose_student_description')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <StudentGrid
-                        students={students}
-                        studentId={studentId}
-                        accent={accent}
-                        onChoose={choose}
-                    />
-                </DialogContent>
-            </Dialog>
+                }
+            />
 
             {students.length > 0 && (
                 <Button

@@ -977,6 +977,45 @@ describe('who is at the board', () => {
 
         expect(setup({ storage }).controller.getView().studentId).toBeNull();
     });
+
+    it('takes a student added on the board, keeping the game, the epoch and the turn (§4)', async () => {
+        const { controller, server, storage, log, voice } = setup();
+
+        await controller.load();
+        controller.setStudent('s2');
+        controller.start();
+        controller.touch({ roundId: 'round-0', itemId: 'b' });
+        const before = controller.getView();
+
+        controller.setStudents(['s1', 's2', 's3', 's4']);
+
+        expect(controller.getView()).toBe(before);
+        expect(before).toMatchObject({
+            phase: 'playing',
+            epoch: 5,
+            studentId: 's2',
+        });
+
+        controller.setStudent('s4');
+        expect(controller.getView().studentId).toBe('s4');
+        expect(storage.data.get(boardStorageKey(GAME, 'student'))).toBe('s4');
+        controller.nextStudent();
+        expect(controller.getView().studentId).toBe('s1');
+        controller.setStudent('s3');
+        controller.nextStudent();
+        expect(controller.getView().studentId).toBe('s4');
+
+        // One claim: the hit went out under the same epoch.
+        expect(server.calls).toEqual(['claim', 'state', 'sync@5']);
+        expect(log).toEqual(['show:round-0', 'play', 'hit:b:correct']);
+        expect(voice).toEqual([
+            'turn:s2:fresh',
+            'turn:s4',
+            'turn:s1',
+            'turn:s3',
+            'turn:s4',
+        ]);
+    });
 });
 
 /*

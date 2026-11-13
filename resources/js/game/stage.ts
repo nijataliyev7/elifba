@@ -78,6 +78,12 @@ export type Stage = {
      * nothing new meanwhile.
      */
     setMuted: (muted: boolean) => void;
+    /**
+     * Who may be at the board now, with their name clips (a student added
+     * on the board, architecture §4): the stage keeps playing, and the new
+     * player's name is said from their first turn.
+     */
+    setPlayers: (players: VoicePlayers) => void;
     destroy: () => void;
 };
 
@@ -185,6 +191,7 @@ export async function mountStage(options: StageOptions): Promise<Stage> {
 
                         scene.setMuted(muted);
                     },
+                    setPlayers: (players) => scene.setPlayers(players),
                     destroy: () => {
                         names?.dispose();
                         game.destroy(true);

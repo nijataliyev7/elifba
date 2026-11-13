@@ -128,7 +128,7 @@ export type BoardControllerOptions = {
     gameId: string;
     status: SessionStatus;
     epoch: number;
-    /** Active students in class order, for "next". */
+    /** Active students in class order, for "next"; `setStudents()` changes them. */
     studentIds: readonly string[];
     /** Points of the rounds solved before the page loaded, by round id (page props). */
     points?: Readonly<Record<string, number>>;
@@ -186,6 +186,8 @@ export class BoardController {
     private status: SessionStatus;
     private epoch: number;
     private studentId: string | null;
+    /** Who may be chosen, in class order: the props' list, then `setStudents()`'s. */
+    private studentIds: readonly string[];
     private points: Record<string, number>;
     private lastPoints: number | null = null;
     /** The last accepted touch per round and item, for the cross-source rule. */
@@ -218,6 +220,7 @@ export class BoardController {
         this.timers = options.timers ?? defaultTimers;
         this.now = options.now ?? Date.now;
         this.makeId = options.makeId ?? (() => ulid(this.now()));
+        this.studentIds = options.studentIds;
         this.studentId = this.readStudent();
         this.points = { ...options.points };
         this.outbox = this.makeOutbox();
@@ -500,7 +503,7 @@ export class BoardController {
         const before = this.studentId;
 
         this.studentId =
-            studentId !== null && this.options.studentIds.includes(studentId)
+            studentId !== null && this.studentIds.includes(studentId)
                 ? studentId
                 : null;
         this.writeStudent();
@@ -514,9 +517,19 @@ export class BoardController {
         this.emit();
     }
 
+    /**
+     * The class's students now, in class order: a student added on this
+     * board (architecture §4 "A student added on the board") may be chosen
+     * and comes in "next". The board is not claimed again; the game, the
+     * epoch, the turn and the choice stay.
+     */
+    setStudents(studentIds: readonly string[]): void {
+        this.studentIds = [...studentIds];
+    }
+
     /** The next student in class order; after the last, the first again. */
     nextStudent(): void {
-        const ids = this.options.studentIds;
+        const ids = this.studentIds;
 
         if (ids.length === 0) {
             this.setStudent(null);
@@ -1058,7 +1071,7 @@ export class BoardController {
             boardStorageKey(this.options.gameId, 'student'),
         );
 
-        return stored !== null && this.options.studentIds.includes(stored)
+        return stored !== null && this.studentIds.includes(stored)
             ? stored
             : null;
     }

@@ -16,8 +16,10 @@ use Inertia\Inertia;
 
 /**
  * Students of a class. `store` adds the names the teacher confirmed in the
- * paste preview (`StudentPreviewController`); flash messages never carry a
- * child's name (docs/architecture.md §7).
+ * paste preview (`StudentPreviewController`), or the one name added on the
+ * board (§4 "A student added on the board"), and goes back to where it was
+ * asked, so the board keeps playing; flash messages never carry a child's
+ * name (docs/architecture.md §7).
  */
 final class StudentController extends Controller
 {
@@ -31,7 +33,7 @@ final class StudentController extends Controller
             'message' => __('students.flash.added', ['count' => $added->count()]),
         ]);
 
-        return to_route('classes.show', $class);
+        return back(fallback: route('classes.show', $class));
     }
 
     public function update(Request $request, SchoolClass $class, Student $student, UpdateStudent $updateStudent): RedirectResponse

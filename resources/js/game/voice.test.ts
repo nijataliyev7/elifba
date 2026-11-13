@@ -251,6 +251,23 @@ describe('the name with the praise (ADR 016 decision 6)', () => {
             name: null,
         });
     });
+
+    it('names a student added on the board from their first turn, and keeps the turn going on', () => {
+        const cues = new VoiceCues(ON, CLASS);
+        const tural = { id: 's4', name_audio: clipOf('s4') };
+
+        cues.turn('s1');
+        expect(namesOver(cues, 2)).toEqual(['s1', '']);
+
+        cues.setPlayers({
+            child: null,
+            students: [...CLASS.students, tural],
+        });
+        expect(namesOver(cues, 2)).toEqual(['', 's1']);
+
+        expect(cues.turn('s4')).toEqual(tural);
+        expect(namesOver(cues, 1)).toEqual(['s4']);
+    });
 });
 
 describe('the greeting and the end (ADR 016 decision 7)', () => {

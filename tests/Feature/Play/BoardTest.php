@@ -220,6 +220,57 @@ describe('the board page', function (): void {
     });
 });
 
+/*
+ * «Şagird əlavə et» in «Kim oynayır?» (architecture §4 "A student added on
+ * the board"): the class page's own route, answered back to the board,
+ * which reloads only `students` and is not claimed again.
+ */
+describe('a student added on the board', function (): void {
+    it('goes back to the board with the new student, last in class order, and nothing else', function (): void {
+        NameClips::fake([]);
+        Student::factory()->for($this->class)->create(['display_name' => 'Aysel', 'position' => 1]);
+        $game = Games::start($this->class);
+        $board = route('games.board', $game);
+
+        $this->from($board)
+            ->post(route('classes.students.store', $this->class), ['names' => ['Nərgiz']])
+            ->assertRedirect($board)
+            ->assertSessionHasNoErrors();
+
+        $version = $this->get($board)->viewData('page')['version'];
+        $props = $this->from($board)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => (string) $version,
+                'X-Inertia-Partial-Component' => 'games/board',
+                'X-Inertia-Partial-Data' => 'students',
+            ])
+            ->followingRedirects()
+            ->post(route('classes.students.store', $this->class), ['names' => ['Tural']])
+            ->assertOk()
+            ->json('props');
+
+        expect($props)->toHaveKey('students')
+            ->not->toHaveKeys(['game', 'pack', 'voice', 'schoolClass'])
+            ->and(array_column($props['students'], 'display_name'))->toBe(['Aysel', 'Nərgiz', 'Tural'])
+            ->and($game->fresh()?->board_epoch)->toBe(0);
+    });
+
+    it('answers a refused name on the field, back on the board, and adds no one', function (): void {
+        Student::factory()->for($this->class)->create(['display_name' => 'Aysel']);
+        $game = Games::start($this->class);
+        $board = route('games.board', $game);
+
+        $this->from($board)
+            ->post(route('classes.students.store', $this->class), ['names' => ['aysel']])
+            ->assertRedirect($board)
+            ->assertSessionHasErrors(['names.0' => __('students.errors.name_taken')])
+            ->assertSessionMissing('_old_input.names');
+
+        expect($this->class->students()->pluck('display_name')->all())->toBe(['Aysel']);
+    });
+});
+
 describe('claiming the board', function (): void {
     it('raises the epoch on every load', function (): void {
         $game = Games::start($this->class);

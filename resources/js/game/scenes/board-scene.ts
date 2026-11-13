@@ -263,6 +263,11 @@ export abstract class BoardScene extends Phaser.Scene implements BridgeScene {
         }
     }
 
+    /** Who may be at the board now (`Stage.setPlayers()`). */
+    setPlayers(players: VoicePlayers): void {
+        this.cues.setPlayers(players);
+    }
+
     /**
      * The device's silent mode («Səssiz»): the stage mutes what plays; the
      * voice starts nothing new meanwhile.
