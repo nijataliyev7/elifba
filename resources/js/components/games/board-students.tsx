@@ -1,6 +1,7 @@
 import { ChevronRight, Users } from 'lucide-react';
 import { useState } from 'react';
 import { studentAvatars } from '@/components/games/student-grid';
+import type { StudentPickerAdd } from '@/components/games/student-picker-dialog';
 import { StudentPickerDialog } from '@/components/games/student-picker-dialog';
 import { StudentAvatar } from '@/components/students/student-avatar';
 import { Button } from '@/components/ui/button';
@@ -13,8 +14,8 @@ type Props = {
     studentId: string | null;
     accent: string;
     disabled: boolean;
-    /** The class «Şagird əlavə et» adds to; null on a guest board. */
-    addTo: string | null;
+    /** Where «Şagird əlavə et» adds; null on a guest board. */
+    addTo: StudentPickerAdd | null;
     onChoose: (studentId: string | null) => void;
     onNext: () => void;
 };

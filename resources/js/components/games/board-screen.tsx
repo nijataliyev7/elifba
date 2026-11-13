@@ -71,7 +71,7 @@ import {
 import { roundSteps } from '@/lib/round-steps';
 import { cn } from '@/lib/utils';
 import { board as boardRoute } from '@/routes/games';
-import type { BoardProps } from '@/types';
+import type { BoardProps, PasteLimits } from '@/types';
 
 /**
  * A guest board's own parts on the board (`/lovhe`, §4): whose board it is,
@@ -94,6 +94,8 @@ type Props = BoardProps & {
      * qoş» — the board is played on its own screen.
      */
     phoneRemote?: boolean;
+    /** A teacher board's class game: the paste flow's limits for «Şagird əlavə et». */
+    pasteLimits?: PasteLimits | null;
 };
 
 /**
@@ -160,6 +162,7 @@ export function BoardScreen({
     auth,
     guest,
     phoneRemote = true,
+    pasteLimits = null,
 }: Props) {
     const { t } = useTranslation();
     const colours = boardColours(pack.style.palette);
@@ -179,7 +182,9 @@ export function BoardScreen({
     const asksWho = asksWhoPlays({ schoolClass, child }, students);
     // «Şagird əlavə et»: a teacher's class only, never a guest board's bearer.
     const addTo =
-        guest === undefined && schoolClass !== null ? schoolClass.id : null;
+        guest === undefined && schoolClass !== null && pasteLimits !== null
+            ? { classId: schoolClass.id, limits: pasteLimits }
+            : null;
     const [asking, setAsking] = useState(false);
     // The server renders sound on; the device's choice follows at once.
     const muted = useSyncExternalStore(

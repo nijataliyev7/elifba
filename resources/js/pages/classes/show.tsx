@@ -17,6 +17,7 @@ import type {
     ActiveStudent,
     Avatar,
     Letter,
+    PasteLimits,
     SchoolClass,
     Student,
 } from '@/types';
@@ -31,7 +32,7 @@ type Props = {
     /** Every avatar with its picture's URL, in the file's order. */
     avatars: Avatar[];
     retentionDays: number;
-    limits: { paste_length: number; names: number };
+    limits: PasteLimits;
 };
 
 export default function ClassShow({

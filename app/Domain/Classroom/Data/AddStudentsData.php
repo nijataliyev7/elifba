@@ -15,6 +15,20 @@ final readonly class AddStudentsData
     public const MAX_NAMES = 50;
 
     /**
+     * What the paste flow is told of its limits (`PasteNames`): the class
+     * page's and the teacher board's, the same.
+     *
+     * @return array{paste_length: int, names: int}
+     */
+    public static function limits(): array
+    {
+        return [
+            'paste_length' => NameListData::MAX_LENGTH,
+            'names' => self::MAX_NAMES,
+        ];
+    }
+
+    /**
      * @var list<string>
      */
     public array $names;

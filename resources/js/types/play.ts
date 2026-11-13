@@ -1,5 +1,5 @@
 import type { BoardVoice } from '@/game/voice';
-import type { Letter } from './classroom';
+import type { Letter, PasteLimits } from './classroom';
 import type { MyWords } from './words';
 
 /*
@@ -221,6 +221,8 @@ export type BoardProps = {
 /** `/games/{game}/board`: the board's props and the teacher's own choice (Settings → Oyun). */
 export type TeacherBoardProps = BoardProps & {
     phoneRemote: boolean;
+    /** A class game's paste flow in «Kim oynayır?»; null for a home game. */
+    pasteLimits: PasteLimits | null;
 };
 
 /** `/games/{game}/remote`: the board's props and the guest board showing the game, if any. */

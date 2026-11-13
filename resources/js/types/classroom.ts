@@ -46,6 +46,9 @@ export type Letter = {
     upper: string;
 };
 
+/** The paste flow's limits (`AddStudentsData::limits()`): the class page's and the teacher board's. */
+export type PasteLimits = { paste_length: number; names: number };
+
 export type PastedNameFlag =
     | 'invalid'
     | 'duplicate'

@@ -78,7 +78,9 @@ it('does not open the pairing card on a home board', function (): void {
         ->assertInertia(fn (Assert $page) => $page
             ->component('games/board')
             ->where('child.id', $this->child->id)
-            ->where('phoneRemote', true));
+            ->where('phoneRemote', true)
+            // No class to add students to (architecture §4 "A student added on the board").
+            ->where('pasteLimits', null));
 
     expect($game->refresh()->join_code)->toBeNull();
 

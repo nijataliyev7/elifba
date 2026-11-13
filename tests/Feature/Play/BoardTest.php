@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Classroom\Data\AddStudentsData;
+use App\Domain\Classroom\Data\NameListData;
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Support\Avatars;
@@ -226,6 +228,12 @@ describe('the board page', function (): void {
  * which reloads only `students` and is not claimed again.
  */
 describe('a student added on the board', function (): void {
+    it('gives the board the class page\'s paste limits, for the same flow', function (): void {
+        $this->get(route('games.board', Games::start($this->class)))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('pasteLimits', ['paste_length' => NameListData::MAX_LENGTH, 'names' => AddStudentsData::MAX_NAMES]));
+    });
+
     it('goes back to the board with the new student, last in class order, and nothing else', function (): void {
         NameClips::fake([]);
         Student::factory()->for($this->class)->create(['display_name' => 'Aysel', 'position' => 1]);

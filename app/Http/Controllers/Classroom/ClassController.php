@@ -7,7 +7,6 @@ use App\Domain\Classroom\Actions\DeleteClass;
 use App\Domain\Classroom\Actions\UpdateClass;
 use App\Domain\Classroom\Data\AddStudentsData;
 use App\Domain\Classroom\Data\ClassData;
-use App\Domain\Classroom\Data\NameListData;
 use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Support\Avatars;
@@ -88,10 +87,7 @@ final class ClassController extends Controller
             ),
             'avatars' => Avatars::all(),
             'retentionDays' => Config::integer('elifba.retention_days'),
-            'limits' => [
-                'paste_length' => NameListData::MAX_LENGTH,
-                'names' => AddStudentsData::MAX_NAMES,
-            ],
+            'limits' => AddStudentsData::limits(),
         ]);
     }
 

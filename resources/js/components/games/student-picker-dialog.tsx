@@ -2,7 +2,7 @@ import { UserPlus, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import { StudentGrid } from '@/components/games/student-grid';
-import { AddStudentForm } from '@/components/students/add-student-form';
+import { PasteNames } from '@/components/students/paste-names';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,7 +14,10 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/use-translation';
-import type { BoardStudent } from '@/types';
+import type { BoardStudent, PasteLimits } from '@/types';
+
+/** Where «Şagird əlavə et» adds: a teacher board's class, with the paste flow's limits. */
+export type StudentPickerAdd = { classId: string; limits: PasteLimits };
 
 type PickerProps = {
     title: string;
@@ -25,10 +28,10 @@ type PickerProps = {
     accent: string;
     onChoose: (studentId: string | null) => void;
     /**
-     * The class «Şagird əlavə et» adds to: a teacher board of a class game
-     * only; null on a guest board (its bearer reaches no class).
+     * Where «Şagird əlavə et» adds: a teacher board of a class game only;
+     * null on a guest board (its bearer reaches no class).
      */
-    addTo: string | null;
+    addTo: StudentPickerAdd | null;
 };
 
 type Props = PickerProps & {
@@ -39,19 +42,16 @@ type Props = PickerProps & {
     'data-test'?: string;
 };
 
-/** The board answers a student added here with only `students`, keeping its state. */
-const BOARD_RELOAD = {
-    preserveScroll: true,
-    preserveState: true,
-    only: ['students'],
-};
+/** The board answers students added here with only `students`, keeping its state. */
+const BOARD_RELOAD = { preserveState: true, only: ['students'] };
 
 /**
  * Who is at the board, to pick from (docs/architecture.md §4): «Kim
  * oynayır?» before «Başla» and the footer's «Kim lövhədədir?» are this one
  * dialog with their own title. On a teacher board its top-right corner has
- * a green «Şagird əlavə et» beside ✕, which opens one name field here
- * (`AddStudentForm`); the student added joins the grid unchosen, since a
+ * a green «Şagird əlavə et» beside ✕, which opens the class page's own
+ * paste flow here (`PasteNames`: surnames dropped, names cased, the
+ * preview to check); the students added join the grid unchosen, since a
  * choice in «Kim oynayır?» starts the game.
  */
 export function StudentPickerDialog({
@@ -111,7 +111,7 @@ function Picker({
                         >
                             <UserPlus />
                             <span className="max-sm:sr-only">
-                                {t('students.add_one.button')}
+                                {t('students.paste.button')}
                             </span>
                         </Button>
                     )}
@@ -129,12 +129,13 @@ function Picker({
                 </div>
             </div>
             {adding && addTo !== null && (
-                <div id={formId}>
-                    <AddStudentForm
-                        classId={addTo}
-                        options={BOARD_RELOAD}
+                <div id={formId} className="grid gap-4 rounded-xl border p-4">
+                    <PasteNames
+                        classId={addTo.classId}
+                        limits={addTo.limits}
+                        visit={BOARD_RELOAD}
+                        onAdded={() => setAdding(false)}
                         onCancel={() => setAdding(false)}
-                        className="rounded-xl border p-4"
                     />
                 </div>
             )}
