@@ -14,10 +14,14 @@ import type { RoomLastMove, RoomPiece } from '@/rooms/contract';
 
 /*
  * The pieces on the board (docs/frontend.md rule 15 "Board games" →
- * "Motion", ADR 034 decision 30): a piece standing on its square, the
- * piece of a move the page saw arrive sliding along the path a leg at a
- * time, and the pieces it took fading once it has landed. Under reduced
- * motion every one stands on its square at once.
+ * "Motion", ADR 034 decision 30 as amended 2026-11-21, «Qalxma + oturma»):
+ * a piece standing on its square, which rises a little over a shadow of
+ * its own when the viewer lifts it; the piece of a move the page saw
+ * arrive, raised, sliding along the path a leg at a time and settling onto
+ * the board as it lands — the moment its sound plays; and the pieces it
+ * took fading once it has landed. Transform and opacity only. Under
+ * reduced motion every one stands on its square at once: nothing rises,
+ * slides, settles or fades, and a lifted piece shows its ring alone.
  */
 
 /** A move the page saw arrive (ADR 034 decision 30): its path, and the position it was made from. */
@@ -49,6 +53,24 @@ function placeOf(square: string, flipped: boolean): CSSProperties {
 
 const box = 'absolute grid size-[12.5%] place-items-center';
 
+/** The piece with its ring, the part that rises (`raised`): 2px up and 1.06 larger, in 80 ms. */
+const lift = 'relative grid size-[80%] place-items-center';
+const raised = 'motion-safe:-translate-y-0.5 motion-safe:scale-[1.06]';
+
+/** The shadow under a piece that is up: it grows and moves off, in 120 ms. */
+function PieceShadow({ up }: { up: boolean }) {
+    return (
+        <span
+            aria-hidden
+            className={cn(
+                'absolute size-[80%] rounded-full bg-[radial-gradient(closest-side,rgb(0_0_0/0.38),rgb(0_0_0/0.16)_70%,transparent)] opacity-0 transition-[opacity,translate,scale] duration-[120ms] ease-out motion-reduce:hidden',
+                up &&
+                    'motion-safe:translate-x-[1.5px] motion-safe:translate-y-[3px] motion-safe:scale-[1.12] motion-safe:opacity-100',
+            )}
+        />
+    );
+}
+
 export function PlacedPiece({
     piece,
     flipped,
@@ -60,23 +82,38 @@ export function PlacedPiece({
 }) {
     return (
         <span className={box} style={placeOf(piece.square, flipped)}>
-            <DraughtsPiece
-                color={piece.color}
-                king={piece.king}
+            <PieceShadow up={lifted} />
+            <span
                 className={cn(
-                    'size-[80%] transition-transform duration-[80ms] motion-reduce:transition-none',
-                    lifted &&
-                        'scale-110 ring-[3px] ring-primary ring-offset-1 ring-offset-draughts-dark',
+                    lift,
+                    'transition-transform duration-[80ms] ease-out motion-reduce:transition-none',
+                    lifted && raised,
                 )}
-            />
+            >
+                {/* The lifted ring: its own element, so the piece keeps its own shadows. */}
+                <span
+                    aria-hidden
+                    className={cn(
+                        'absolute inset-0 rounded-full opacity-0 shadow-[0_0_0_1px_var(--draughts-dark),0_0_0_4px_var(--primary)] transition-opacity duration-[80ms] motion-reduce:transition-none',
+                        lifted && 'opacity-100',
+                    )}
+                />
+                <DraughtsPiece
+                    color={piece.color}
+                    king={piece.king}
+                    className="size-full"
+                />
+            </span>
         </span>
     );
 }
 
 /**
- * The piece of a move the page saw arrive: drawn at the path's start and
- * slid along it a leg at a time; a man that crowned turns into a king,
- * with one pop, from the landing where it crowned. Under reduced motion it
+ * The piece of a move the page saw arrive: drawn at the path's start,
+ * raised over its shadow as the first leg begins, slid along the path a
+ * leg at a time, and settled onto the board as the last leg ends (140 ms,
+ * `animate-draughts-settle`); a man that crowned turns into a king, with
+ * one pop, from the landing where it crowned. Under reduced motion it
  * stands on its square at once.
  */
 export function MovingPiece({
@@ -92,7 +129,8 @@ export function MovingPiece({
     const legs = path.length - 1;
     const [still] = useState(() => reducedMotion());
     const [leg, setLeg] = useState(still ? legs : 0);
-    const { legMs } = slideOf(arrival.last);
+    const [landed, setLanded] = useState(still);
+    const { legMs, ms } = slideOf(arrival.last);
     const crown = crownedAt(arrival.last, piece.color);
 
     useEffect(() => {
@@ -100,13 +138,16 @@ export function MovingPiece({
             return;
         }
 
-        // The first leg starts once the piece has been drawn at the start.
-        const timers = Array.from({ length: legs }, (_, index) =>
-            window.setTimeout(() => setLeg(index + 1), index * legMs + 16),
-        );
+        // The first leg starts once the piece has been drawn at the start; the last one ends where it lands.
+        const timers = [
+            ...Array.from({ length: legs }, (_, index) =>
+                window.setTimeout(() => setLeg(index + 1), index * legMs + 16),
+            ),
+            window.setTimeout(() => setLanded(true), ms + 16),
+        ];
 
         return () => timers.forEach((timer) => window.clearTimeout(timer));
-    }, [still, legs, legMs]);
+    }, [still, legs, legMs, ms]);
 
     const end = cellOf(path[legs], flipped);
     const at = cellOf(path[leg], flipped);
@@ -123,18 +164,29 @@ export function MovingPiece({
                     still || leg === 0 ? 'none' : `transform ${legMs}ms`,
             }}
         >
-            <DraughtsPiece
-                key={king ? 'king' : 'man'}
-                color={piece.color}
-                king={king}
+            <PieceShadow up={leg > 0 && !landed} />
+            <span
                 className={cn(
-                    'size-[80%]',
-                    crown !== null &&
-                        king &&
-                        !still &&
-                        'motion-safe:animate-room-pop',
+                    lift,
+                    landed
+                        ? !still && 'motion-safe:animate-draughts-settle'
+                        : 'transition-transform duration-[80ms] ease-out',
+                    leg > 0 && !landed && raised,
                 )}
-            />
+            >
+                <DraughtsPiece
+                    key={king ? 'king' : 'man'}
+                    color={piece.color}
+                    king={king}
+                    className={cn(
+                        'size-full',
+                        crown !== null &&
+                            king &&
+                            !still &&
+                            'motion-safe:animate-room-pop',
+                    )}
+                />
+            </span>
         </span>
     );
 }

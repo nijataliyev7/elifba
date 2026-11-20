@@ -135,8 +135,8 @@ export function LiveMatch({
                 />
 
                 <div className="-mx-2 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                    {/* No taller than the viewport leaves — 19.25rem: the frame's bar, the strip, the line and the action bar — and never under 44px squares. */}
-                    <div className="mx-auto max-w-[max(22rem,calc(100svh-19.25rem))]">
+                    {/* No taller than the viewport leaves — 19.25rem: the frame's bar, the strip, the line and the action bar — and never under 44px squares: 22rem and the rim's 3px a side. */}
+                    <div className="mx-auto max-w-[max(calc(22rem+6px),calc(100svh-19.25rem))]">
                         <DraughtsBoard
                             position={match.position}
                             last={match.last}

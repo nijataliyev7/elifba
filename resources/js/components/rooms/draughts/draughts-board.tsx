@@ -18,12 +18,22 @@ import type { RoomLastMove, RoomPiece } from '@/rooms/contract';
 export type { Arrival } from '@/components/rooms/draughts/board-pieces';
 import type { Arrival } from '@/components/rooms/draughts/board-pieces';
 
+/** The screen's rim, in % of the board (its `p-[5.2%]`), and a square's share of what is inside it. */
+const RIM = 5.2;
+const SQUARE = (100 - 2 * RIM) / 8;
+
 /**
  * The board of a match (docs/frontend.md rule 15 "Board games" → "The
- * board", ADR 034 decisions 5 and 30): eight by eight in the board's own
- * colours, a square's name drawn at its column and row only (turned round
- * for a seat that plays black), each dark square a button named by its
- * square and what stands on it, the last move's squares tinted. It draws
+ * board", ADR 034 decisions 5 and 30 as amended 2026-11-21): eight by
+ * eight in the board's own wood — the squares one texture
+ * (`draughts-wood`) under 64 transparent squares, in a walnut rim
+ * (`draughts-rim`): 3px on a phone, where the files and ranks stand in
+ * the edge squares, and 5.2 % of the board on the screen, where they stand
+ * in the rim. A square's name is drawn at its column and row only (turned
+ * round for a seat that plays black), each dark square a button named by
+ * its square and what stands on it, the last move's squares tinted (14 %)
+ * and framed 2px in `primary` — the frame ≥ 3:1 against the darkest
+ * walnut under the tint, which a tint alone never reaches. It draws
  * the state's `position` and offers what the page gives it — the lifted
  * piece, the squares the begun path may land on next — and reports a tap:
  * it computes no move.
@@ -57,7 +67,7 @@ export function DraughtsBoard({
     /** The viewer's own move posted and not yet in the state: its piece stands on its last square. */
     pending?: string[] | null;
     onTap?: (square: string) => void;
-    /** The files and ranks: inside the edge squares (a phone), or outside the board (the screen). */
+    /** The files and ranks: inside the edge squares (a phone, a 3px rim), or in the rim (the screen, 5.2 %). */
     labels?: 'inside' | 'outside';
     className?: string;
 }) {
@@ -99,7 +109,7 @@ export function DraughtsBoard({
                                 'absolute inset-0',
                                 trail.has(square)
                                     ? 'bg-primary/35'
-                                    : 'bg-primary/20',
+                                    : 'bg-primary/14 shadow-[inset_0_0_0_2px_var(--primary)]',
                             )}
                         />
                     )}
@@ -112,7 +122,12 @@ export function DraughtsBoard({
                     {rank !== null && (
                         <span
                             aria-hidden
-                            className="absolute top-0.5 left-0.5 text-[9px] leading-none text-muted-foreground"
+                            className={cn(
+                                'absolute top-0.5 left-0.5 text-[9px] leading-none',
+                                dark
+                                    ? 'text-draughts-label-dark'
+                                    : 'text-draughts-label',
+                            )}
                         >
                             {rank}
                         </span>
@@ -120,7 +135,12 @@ export function DraughtsBoard({
                     {file !== null && (
                         <span
                             aria-hidden
-                            className="absolute right-0.5 bottom-0.5 text-[9px] leading-none text-muted-foreground"
+                            className={cn(
+                                'absolute right-0.5 bottom-0.5 text-[9px] leading-none',
+                                dark
+                                    ? 'text-draughts-label-dark'
+                                    : 'text-draughts-label',
+                            )}
                         >
                             {file}
                         </span>
@@ -137,16 +157,12 @@ export function DraughtsBoard({
                         aria-pressed={lifted === square ? true : undefined}
                         disabled={onTap === undefined}
                         onClick={() => onTap?.(square)}
-                        className="relative bg-draughts-dark outline-none focus-visible:z-10 focus-visible:ring-[3px] focus-visible:ring-ring disabled:cursor-default"
+                        className="relative outline-none focus-visible:z-10 focus-visible:ring-[3px] focus-visible:ring-ring disabled:cursor-default"
                     >
                         {body}
                     </button>
                 ) : (
-                    <span
-                        key={square}
-                        aria-hidden
-                        className="relative bg-draughts-light"
-                    >
+                    <span key={square} aria-hidden className="relative">
                         {body}
                     </span>
                 ),
@@ -154,86 +170,92 @@ export function DraughtsBoard({
         }
     }
 
-    const board = (
+    // The files under the board and the ranks at its left, in the screen's rim.
+    const files = flipped ? [...FILES].reverse() : FILES;
+    const ranks = flipped ? RANKS : [...RANKS].reverse();
+    const coordinate =
+        'absolute grid place-items-center text-[max(0.75rem,1.9vh)] leading-none font-semibold text-draughts-coord tabular-nums';
+
+    return (
         <div
             role="group"
             aria-label={t('rooms.match.board')}
             className={cn(
-                'relative overflow-hidden rounded-md shadow-[0_0_0_1px_var(--border)]',
-                labels === 'inside'
-                    ? cn('aspect-square w-full', className)
-                    : 'size-full',
-            )}
-        >
-            <div className="grid size-full grid-cols-8 grid-rows-8">
-                {squares}
-            </div>
-            <div className="pointer-events-none absolute inset-0">
-                {drawn.map((piece) =>
-                    piece.square === moving && arrival !== null ? (
-                        <MovingPiece
-                            key={`move:${arrival.key}`}
-                            piece={piece}
-                            arrival={arrival}
-                            flipped={flipped}
-                        />
-                    ) : (
-                        <PlacedPiece
-                            key={piece.square}
-                            piece={piece}
-                            flipped={flipped}
-                            lifted={lifted === piece.square}
-                        />
-                    ),
-                )}
-                {arrival !== null && (
-                    <Taken
-                        key={`taken:${arrival.key}`}
-                        arrival={arrival}
-                        flipped={flipped}
-                    />
-                )}
-            </div>
-        </div>
-    );
-
-    if (labels === 'inside') {
-        return board;
-    }
-
-    // The screen: the files under the board and the ranks at its left, outside it.
-    const files = flipped ? [...FILES].reverse() : FILES;
-    const ranks = flipped ? RANKS : [...RANKS].reverse();
-
-    return (
-        <div
-            className={cn(
-                'grid aspect-square grid-cols-[2.4vh_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_2.4vh] gap-[0.8vh]',
+                'relative aspect-square',
+                labels === 'inside' && 'w-full',
                 className,
             )}
         >
             <div
-                aria-hidden
-                className="grid grid-rows-8 text-[max(0.75rem,1.6vh)] text-muted-foreground"
+                className={cn(
+                    'absolute inset-0 rounded-[7px] draughts-rim',
+                    labels === 'inside' ? 'p-[3px]' : 'p-[5.2%]',
+                )}
             >
-                {ranks.map((rank) => (
-                    <span key={rank} className="grid place-items-center">
-                        {rank}
-                    </span>
-                ))}
+                <div className="relative size-full overflow-hidden rounded-[2px] draughts-wood">
+                    <div className="grid size-full grid-cols-8 grid-rows-8">
+                        {squares}
+                    </div>
+                    <div className="pointer-events-none absolute inset-0">
+                        {drawn.map((piece) =>
+                            piece.square === moving && arrival !== null ? (
+                                <MovingPiece
+                                    key={`move:${arrival.key}`}
+                                    piece={piece}
+                                    arrival={arrival}
+                                    flipped={flipped}
+                                />
+                            ) : (
+                                <PlacedPiece
+                                    key={piece.square}
+                                    piece={piece}
+                                    flipped={flipped}
+                                    lifted={lifted === piece.square}
+                                />
+                            ),
+                        )}
+                        {arrival !== null && (
+                            <Taken
+                                key={`taken:${arrival.key}`}
+                                arrival={arrival}
+                                flipped={flipped}
+                            />
+                        )}
+                    </div>
+                </div>
             </div>
-            {board}
-            <span />
-            <div
-                aria-hidden
-                className="grid grid-cols-8 text-[max(0.75rem,1.6vh)] text-muted-foreground"
-            >
-                {files.map((file) => (
-                    <span key={file} className="text-center">
-                        {file}
-                    </span>
-                ))}
-            </div>
+            {labels === 'outside' && (
+                <div aria-hidden>
+                    {files.map((file, index) => (
+                        <span
+                            key={file}
+                            className={coordinate}
+                            style={{
+                                left: `${RIM + index * SQUARE}%`,
+                                width: `${SQUARE}%`,
+                                bottom: 0,
+                                height: `${RIM}%`,
+                            }}
+                        >
+                            {file}
+                        </span>
+                    ))}
+                    {ranks.map((rank, index) => (
+                        <span
+                            key={rank}
+                            className={coordinate}
+                            style={{
+                                top: `${RIM + index * SQUARE}%`,
+                                height: `${SQUARE}%`,
+                                left: 0,
+                                width: `${RIM}%`,
+                            }}
+                        >
+                            {rank}
+                        </span>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

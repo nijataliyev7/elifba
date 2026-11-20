@@ -395,19 +395,35 @@ def reverb(signal, size, wet, damp=0.35, predelay=0.012):
 
 MARIMBA = ((1.0, 1.0, 1.0), (3.9, 0.22, 0.25), (2.0, 0.12, 0.6), (9.2, 0.03, 0.08))
 ROUND_NOTE = ((1.0, 1.0, 1.0), (2.0, 0.18, 0.5), (3.0, 0.04, 0.3))
-# A board game's (ADR 034 decision 31): a wooden piece's inharmonic modes, a
-# small bell's (a glockenspiel bar's) and a vibraphone bar's partials.
-WOOD = ((1.0, 1.0, 1.0), (1.68, 0.55, 0.7), (2.71, 0.3, 0.45), (3.73, 0.15, 0.3))
-GLOCK = ((1.0, 1.0, 1.0), (2.76, 0.18, 0.35), (5.40, 0.06, 0.15), (2.0, 0.04, 0.5))
+# A board game's offer (ADR 034 decision 31): a vibraphone bar's partials.
 VIBES = ((1.0, 1.0, 1.0), (4.0, 0.12, 0.25), (10.0, 0.02, 0.08))
 
 
-def wood(r, f0, length, decay, body=0.45):
-    """A piece put down on a wooden board: four damped wooden modes from `f0`, a short 210 Hz body of the board, a soft click; its last 30 ms fade."""
-    out = tone(f0, length, attack=0.0004, decay=decay, partials=WOOD)
-    place(out, 0.0, tone(210.0, length, attack=0.0008, decay=0.02), body)
-    place(out, 0.0, shaped(bandpass(noise(0.012, r), 3000.0, 0.8), 0.0002, 0.0015), 0.25)
-    return fade_out(lowpass(out, 5000), 0.03)
+def board(r, low, high, modes, length, contact, decay_low, decay_high, centre=900.0, width=0.7, body=0.0, body_hz=150.0, body_decay=0.015, lp=3500.0):
+    """A wooden board touched by a piece (our synthesis): `modes` inharmonic modes spread between `low` and
+    `high` Hz (seeded, one in each slot of a log scale, so no two beat), loudest near `centre` Hz (a log-normal
+    weight of `width`), each dying faster as it rises; rising over `contact` s — a soft contact, never a click;
+    a short body of the table under it; low-passed twice at `lp`. No mode rings on: no pitch."""
+    out = [0.0] * seconds(length)
+    for k in range(modes):
+        x = (k + r.uniform(0.3, 0.7)) / modes
+        f = low * (high / low) ** x
+        d = decay_low * (decay_high / decay_low) ** x
+        g = math.exp(-(math.log(f / centre) ** 2) / (2 * width ** 2)) * r.uniform(0.6, 1.0)
+        place(out, 0.0, tone(f, length, attack=contact, decay=d), g)
+    if body:
+        place(out, 0.0, tone(body_hz, length, attack=contact * 1.5, decay=body_decay), body)
+    return fade_out(lowpass(lowpass(out, lp), lp), min(0.04, length / 3))
+
+
+def stack(r, gap=0.024):
+    """A piece set on another: a smaller, brighter wood-on-wood touch (modes 700–3200 Hz, no table) and the
+    piece settling `gap` s later, softer."""
+    out = silence(0.14)
+    one = board(r, 700.0, 3200.0, 12, 0.10, contact=0.0010, decay_low=0.014, decay_high=0.005, centre=1500.0, width=0.5, lp=4200.0)
+    place(out, 0.0, one, 1.0)
+    place(out, gap, one, 0.4)
+    return out
 
 
 # ── the screen: the room's moments ───────────────────────────────────────
@@ -535,30 +551,28 @@ def join():
 
 
 def move():
-    """A move the page saw arrive (our synthesis): a piece put down on a wooden board, its modes from 820 Hz — above the clock's tick, below the tap."""
-    return wood(rng("move"), 820.0, 0.11, decay=0.022)
+    """A move the page saw arrive (our synthesis, «Taxta lövhə», as chosen 2026-11-21): a wooden piece set down on
+    a wooden board — sixteen board modes 320–2800 Hz, loudest near 1.15 kHz, a 1.2 ms contact, the table under it
+    at 160 Hz; −40 dB inside 70 ms, nothing ringing."""
+    return board(rng("move-board"), 320.0, 2800.0, 16, 0.13, contact=0.0012, decay_low=0.018, decay_high=0.006, centre=1150.0, body=0.3, body_hz=160.0)
 
 
 def capture():
-    """A move that took pieces (our synthesis): the move's knock, then a lower, fuller one 70 ms later over a short low thud."""
-    r = rng("capture")
-    length = 0.24
-    out = silence(length)
-    place(out, 0.0, wood(r, 820.0, 0.12, decay=0.022), 0.75)
-    place(out, 0.07, wood(r, 700.0, 0.16, decay=0.028, body=0.7), 1.0)
-    place(out, 0.07, fade_out(kick(0.16, 130.0, 62.0, 0.03, 0.05, 0.0, r), 0.06), 0.55)
-    return fade_out(out[: seconds(length)], 0.05)
+    """A move that took pieces (our synthesis, «Tuk–tuk», as chosen 2026-11-21): the move's touch, then a lower,
+    fuller landing 90 ms later (the board's modes 0.8×, the table louder) — two onsets, the second no louder than
+    a move."""
+    r = rng("capture-two")
+    out = silence(0.26)
+    place(out, 0.0, move(), 0.55)
+    place(out, 0.09, board(r, 230.0, 2000.0, 16, 0.15, contact=0.0018, decay_low=0.026, decay_high=0.007, centre=720.0, body=0.5, body_hz=125.0, body_decay=0.02), 0.95)
+    return fade_out(out[: seconds(0.26)], 0.04)
 
 
 def crown():
-    """A man becomes a king, after the move's sound (our synthesis): four small bells up C6–E6–G6–C7, 55 ms apart, the last ringing, a small room — no fanfare."""
-    length = 0.5
-    out = silence(length)
-    for n, name in enumerate(("C6", "E6", "G6", "C7")):
-        at = n * 0.055
-        place(out, at, tone(note(name), length - at, attack=0.0015, decay=0.07 if n < 3 else 0.2, partials=GLOCK), 0.55 + 0.12 * n)
-    out = reverb(out, size=0.4, wet=0.16)
-    return fade_out(out[: seconds(length)], 0.12)
+    """A man becomes a king, after the move's sound (our synthesis, «Daş daşın üstünə», as chosen 2026-11-21): the
+    crowning piece set on the man, as a board crowns by hand — two touches 24 ms apart, brighter than the move,
+    nothing ringing."""
+    return fade_out(stack(rng("crown-stack"))[: seconds(0.14)], 0.03)
 
 
 # ── a phone's quiet cues ─────────────────────────────────────────────────

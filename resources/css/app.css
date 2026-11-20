@@ -587,37 +587,206 @@
 }
 
 /*
- * Board games (docs/frontend.md rule 15 "Board games", ADR 034 decision
- * 27): the draughts board's own colours in both themes — muted light and
- * dark squares, and the two pieces, each a fill and a ring. Never the
+ * Board games (docs/frontend.md rule 15 "Board games", ADR 034 decisions
+ * 27 and 30, as amended 2026-11-21): the draughts board's own look in both
+ * themes, as chosen from the variant page. «Qoz taxta»: maple light squares
+ * with a horizontal grain and walnut dark squares with a vertical one, a
+ * faint seam between the tiles and a tone of its own for each (±4.5 %), all
+ * one SVG for the whole board (`--draughts-wood`: two `feTurbulence` grains
+ * through a checker mask), in a walnut rim with a grain and a bevel of its
+ * own (`--draughts-rim-wood`). «Yonma taxta» pieces: turned boxwood and
+ * ebony — a light from the top left, a bevelled edge, two grooves (dark on
+ * white, light on black; a king keeps the outer one and carries its crown,
+ * engraved), a soft two-layer shadow. `--draughts-light` and
+ * `--draughts-dark` are the squares' medians, measured from the drawn
+ * texture, and the textures are drawn from the same palette (light square
+ * #e6cfa7 with a #b98f5c grain, dark #ad7f59 with #7a4f31, rim #5a3a25
+ * with #2f1c0f; dark theme #a98e6a/#7d6040, #6c4931/#3e2616, #3a2618/
+ * #1c1009): a change of a square's colour redraws them. The files and
+ * ranks are `--draughts-label` on a light square, `--draughts-label-dark`
+ * on a dark one and `--draughts-coord` in the screen's rim. Never the
  * room's emerald or red (right, wrong), the lamp's amber, the strip's sky
  * or orange, the taunt's violet or the voice's indigo; a seat's colour is
  * its piece, never the strip's side. A white and a black piece differ by
- * fill and by ring, and a king carries its crown: never colour alone.
+ * fill and by groove, and a king carries its crown: never colour alone.
  */
 :root {
-    --draughts-light: var(--color-stone-100);
-    --draughts-dark: var(--color-stone-400);
-    --draughts-white: var(--color-white);
-    --draughts-white-ring: var(--color-stone-500);
-    --draughts-black: var(--color-stone-900);
-    --draughts-black-ring: var(--color-stone-300);
+    --draughts-light: #dec59c;
+    --draughts-dark: #a67a55;
+    --draughts-rim: #5a3a25;
+    --draughts-label: #7c5534;
+    --draughts-label-dark: #f1dfbf;
+    --draughts-coord: #ead6b2;
+    --draughts-white: #e9d8b8;
+    --draughts-white-top: #f6ebd5;
+    --draughts-white-edge: #d8c098;
+    --draughts-white-ring: rgb(120 86 50 / 0.75);
+    --draughts-white-crown: #7a5634;
+    --draughts-black: #38271d;
+    --draughts-black-top: #4f3829;
+    --draughts-black-edge: #1f1510;
+    --draughts-black-ring: rgb(214 178 128 / 0.7);
+    --draughts-black-crown: #dcbf92;
+    --draughts-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='h' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0032 .105' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .7255 0 0 0 0 .5608 0 0 0 0 .3608 1.25 0 0 0 -.5'/%3E%3C/filter%3E%3Cfilter id='v' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.105 .0032' numOctaves='3' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .4784 0 0 0 0 .3098 0 0 0 0 .1922 1.15 0 0 0 -.48'/%3E%3C/filter%3E%3Cpattern id='c' width='200' height='200' patternUnits='userSpaceOnUse'%3E%3Cpath d='M100 0h100v100H100zM0 100h100v100H0z' fill='%23fff'/%3E%3C/pattern%3E%3Cmask id='m'%3E%3Crect width='800' height='800' fill='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='800' height='800' fill='%23e6cfa7'/%3E%3Crect width='800' height='800' filter='url(%23h)'/%3E%3Cg mask='url(%23m)'%3E%3Crect width='800' height='800' fill='%23ad7f59'/%3E%3Crect width='800' height='800' filter='url(%23v)'/%3E%3C/g%3E%3Cpath d='M400 300h100v100h-100z' opacity='.005'/%3E%3Cpath d='M700 200h100v100h-100zM0 500h100v100h-100z' opacity='.01'/%3E%3Cpath d='M300 300h100v100h-100zM400 400h100v100h-100zM700 500h100v100h-100z' opacity='.015'/%3E%3Cpath d='M600 0h100v100h-100zM0 100h100v100h-100zM300 100h100v100h-100zM0 200h100v100h-100zM500 700h100v100h-100z' opacity='.02'/%3E%3Cpath d='M400 100h100v100h-100zM500 100h100v100h-100zM0 400h100v100h-100zM700 400h100v100h-100zM400 500h100v100h-100zM100 600h100v100h-100z' opacity='.025'/%3E%3Cpath d='M100 0h100v100h-100zM300 0h100v100h-100zM0 600h100v100h-100z' opacity='.03'/%3E%3Cpath d='M400 0h100v100h-100zM200 400h100v100h-100zM500 400h100v100h-100zM200 500h100v100h-100zM500 600h100v100h-100z' opacity='.035'/%3E%3Cpath d='M0 300h100v100h-100zM100 300h100v100h-100zM700 300h100v100h-100zM200 700h100v100h-100zM600 700h100v100h-100z' opacity='.04'/%3E%3Cpath d='M200 0h100v100h-100zM700 0h100v100h-100zM400 200h100v100h-100zM600 200h100v100h-100zM300 600h100v100h-100z' fill='%23fff' opacity='.005'/%3E%3Cpath d='M600 100h100v100h-100zM500 200h100v100h-100zM500 300h100v100h-100zM600 300h100v100h-100zM0 700h100v100h-100z' fill='%23fff' opacity='.01'/%3E%3Cpath d='M0 0h100v100h-100zM100 100h100v100h-100zM200 200h100v100h-100zM300 200h100v100h-100zM700 700h100v100h-100z' fill='%23fff' opacity='.015'/%3E%3Cpath d='M700 100h100v100h-100zM600 400h100v100h-100zM100 500h100v100h-100zM400 600h100v100h-100z' fill='%23fff' opacity='.02'/%3E%3Cpath d='M500 0h100v100h-100zM200 100h100v100h-100zM100 400h100v100h-100zM300 500h100v100h-100zM200 600h100v100h-100zM300 700h100v100h-100z' fill='%23fff' opacity='.025'/%3E%3Cpath d='M500 500h100v100h-100zM100 700h100v100h-100z' fill='%23fff' opacity='.03'/%3E%3Cpath d='M200 300h100v100h-100z' fill='%23fff' opacity='.035'/%3E%3Cpath d='M300 400h100v100h-100zM600 500h100v100h-100zM700 600h100v100h-100zM400 700h100v100h-100z' fill='%23fff' opacity='.04'/%3E%3Cpath d='M100 0V800M0 100H800M200 0V800M0 200H800M300 0V800M0 300H800M400 0V800M0 400H800M500 0V800M0 500H800M600 0V800M0 600H800M700 0V800M0 700H800' stroke='%232a1608' stroke-opacity='.22' stroke-width='1.4'/%3E%3C/svg%3E");
+    --draughts-rim-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='r' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .08' numOctaves='3' seed='23'/%3E%3CfeColorMatrix values='0 0 0 0 .1843 0 0 0 0 .1098 0 0 0 0 .0588 1.3 0 0 0 -.45'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='800' height='800' fill='%235a3a25'/%3E%3Crect width='800' height='800' filter='url(%23r)'/%3E%3C/svg%3E");
 }
 
 .dark {
-    --draughts-light: var(--color-stone-600);
-    --draughts-dark: var(--color-stone-800);
-    --draughts-white: var(--color-stone-100);
-    --draughts-white-ring: var(--color-stone-400);
-    --draughts-black: var(--color-stone-950);
-    --draughts-black-ring: var(--color-stone-500);
+    --draughts-light: #a38765;
+    --draughts-dark: #68462e;
+    --draughts-rim: #3a2618;
+    --draughts-label: #4d321f;
+    --draughts-label-dark: #d9c3a0;
+    --draughts-coord: #cdb38c;
+    --draughts-white: #dccaa8;
+    --draughts-white-top: #e9dbbf;
+    --draughts-white-edge: #c7ad84;
+    --draughts-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='h' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0032 .105' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .4902 0 0 0 0 .3765 0 0 0 0 .251 1.25 0 0 0 -.5'/%3E%3C/filter%3E%3Cfilter id='v' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.105 .0032' numOctaves='3' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .2431 0 0 0 0 .149 0 0 0 0 .0863 1.15 0 0 0 -.48'/%3E%3C/filter%3E%3Cpattern id='c' width='200' height='200' patternUnits='userSpaceOnUse'%3E%3Cpath d='M100 0h100v100H100zM0 100h100v100H0z' fill='%23fff'/%3E%3C/pattern%3E%3Cmask id='m'%3E%3Crect width='800' height='800' fill='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='800' height='800' fill='%23a98e6a'/%3E%3Crect width='800' height='800' filter='url(%23h)'/%3E%3Cg mask='url(%23m)'%3E%3Crect width='800' height='800' fill='%236c4931'/%3E%3Crect width='800' height='800' filter='url(%23v)'/%3E%3C/g%3E%3Cpath d='M400 300h100v100h-100z' opacity='.005'/%3E%3Cpath d='M700 200h100v100h-100zM0 500h100v100h-100z' opacity='.01'/%3E%3Cpath d='M300 300h100v100h-100zM400 400h100v100h-100zM700 500h100v100h-100z' opacity='.015'/%3E%3Cpath d='M600 0h100v100h-100zM0 100h100v100h-100zM300 100h100v100h-100zM0 200h100v100h-100zM500 700h100v100h-100z' opacity='.02'/%3E%3Cpath d='M400 100h100v100h-100zM500 100h100v100h-100zM0 400h100v100h-100zM700 400h100v100h-100zM400 500h100v100h-100zM100 600h100v100h-100z' opacity='.025'/%3E%3Cpath d='M100 0h100v100h-100zM300 0h100v100h-100zM0 600h100v100h-100z' opacity='.03'/%3E%3Cpath d='M400 0h100v100h-100zM200 400h100v100h-100zM500 400h100v100h-100zM200 500h100v100h-100zM500 600h100v100h-100z' opacity='.035'/%3E%3Cpath d='M0 300h100v100h-100zM100 300h100v100h-100zM700 300h100v100h-100zM200 700h100v100h-100zM600 700h100v100h-100z' opacity='.04'/%3E%3Cpath d='M200 0h100v100h-100zM700 0h100v100h-100zM400 200h100v100h-100zM600 200h100v100h-100zM300 600h100v100h-100z' fill='%23fff' opacity='.005'/%3E%3Cpath d='M600 100h100v100h-100zM500 200h100v100h-100zM500 300h100v100h-100zM600 300h100v100h-100zM0 700h100v100h-100z' fill='%23fff' opacity='.01'/%3E%3Cpath d='M0 0h100v100h-100zM100 100h100v100h-100zM200 200h100v100h-100zM300 200h100v100h-100zM700 700h100v100h-100z' fill='%23fff' opacity='.015'/%3E%3Cpath d='M700 100h100v100h-100zM600 400h100v100h-100zM100 500h100v100h-100zM400 600h100v100h-100z' fill='%23fff' opacity='.02'/%3E%3Cpath d='M500 0h100v100h-100zM200 100h100v100h-100zM100 400h100v100h-100zM300 500h100v100h-100zM200 600h100v100h-100zM300 700h100v100h-100z' fill='%23fff' opacity='.025'/%3E%3Cpath d='M500 500h100v100h-100zM100 700h100v100h-100z' fill='%23fff' opacity='.03'/%3E%3Cpath d='M200 300h100v100h-100z' fill='%23fff' opacity='.035'/%3E%3Cpath d='M300 400h100v100h-100zM600 500h100v100h-100zM700 600h100v100h-100zM400 700h100v100h-100z' fill='%23fff' opacity='.04'/%3E%3Cpath d='M100 0V800M0 100H800M200 0V800M0 200H800M300 0V800M0 300H800M400 0V800M0 400H800M500 0V800M0 500H800M600 0V800M0 600H800M700 0V800M0 700H800' stroke='%232a1608' stroke-opacity='.22' stroke-width='1.4'/%3E%3C/svg%3E");
+    --draughts-rim-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='r' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .08' numOctaves='3' seed='23'/%3E%3CfeColorMatrix values='0 0 0 0 .1098 0 0 0 0 .0627 0 0 0 0 .0353 1.3 0 0 0 -.45'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='800' height='800' fill='%233a2618'/%3E%3Crect width='800' height='800' filter='url(%23r)'/%3E%3C/svg%3E");
 }
 
 @theme inline {
     --color-draughts-light: var(--draughts-light);
     --color-draughts-dark: var(--draughts-dark);
+    --color-draughts-label: var(--draughts-label);
+    --color-draughts-label-dark: var(--draughts-label-dark);
+    --color-draughts-coord: var(--draughts-coord);
     --color-draughts-white: var(--draughts-white);
     --color-draughts-white-ring: var(--draughts-white-ring);
     --color-draughts-black: var(--draughts-black);
     --color-draughts-black-ring: var(--draughts-black-ring);
+}
+
+/* The board's walnut rim (`DraughtsBoard`'s frame): its grain, a bevel and a soft shadow under it. */
+@utility draughts-rim {
+    background:
+        var(--draughts-rim-wood) center / cover,
+        var(--draughts-rim);
+    box-shadow:
+        inset 0 1px 0 rgb(255 235 205 / 0.28),
+        inset 0 -1px 0 rgb(0 0 0 / 0.35),
+        0 1px 2px rgb(0 0 0 / 0.25),
+        0 6px 16px -6px rgb(40 20 5 / 0.35);
+}
+
+/* The squares' wood under the 64 squares, which are transparent; a hairline where it meets the rim. */
+@utility draughts-wood {
+    background:
+        var(--draughts-wood) 0 0 / 100% 100%,
+        var(--draughts-light);
+    box-shadow:
+        0 0 0 1px rgb(30 15 5 / 0.45),
+        0 1px 0 1px rgb(255 235 205 / 0.12);
+}
+
+/* A piece (`DraughtsPiece`): turned wood — `data-color` black for ebony, `data-king` drops the inner groove for its crown. */
+@utility draughts-piece {
+    --top: var(--draughts-white-top);
+    --edge: var(--draughts-white-edge);
+    --groove: var(--draughts-white-ring);
+    --lip: rgb(255 250 235 / 0.7);
+    --gloss: rgb(255 255 255 / 0.38);
+    --bevel-hi: rgb(255 255 255 / 0.55);
+    --bevel-lo: rgb(90 60 30 / 0.45);
+    --engrave: rgb(255 248 230 / 0.55);
+    color: var(--draughts-white-crown);
+    background:
+        radial-gradient(circle at 34% 28%, var(--gloss), transparent 46%),
+        radial-gradient(
+            circle,
+            transparent 0 33%,
+            var(--groove) 34% 36.5%,
+            var(--lip) 37% 39%,
+            transparent 40%
+        ),
+        radial-gradient(
+            circle,
+            transparent 0 60%,
+            var(--groove) 61% 63.5%,
+            var(--lip) 64% 66%,
+            transparent 67%
+        ),
+        radial-gradient(circle at 50% 42%, var(--top), var(--edge) 78%);
+    box-shadow:
+        inset 0 1.5px 0.5px var(--bevel-hi),
+        inset 0 -2px 2px var(--bevel-lo),
+        0 0 0 0.5px rgb(60 35 15 / 0.45),
+        0 1.5px 1.5px rgb(30 15 5 / 0.3),
+        0 3px 6px rgb(30 15 5 / 0.18);
+
+    &[data-color='black'] {
+        --top: var(--draughts-black-top);
+        --edge: var(--draughts-black-edge);
+        --groove: var(--draughts-black-ring);
+        --lip: rgb(0 0 0 / 0.35);
+        --gloss: rgb(255 230 190 / 0.16);
+        --bevel-hi: rgb(255 225 180 / 0.28);
+        --bevel-lo: rgb(0 0 0 / 0.5);
+        --engrave: rgb(0 0 0 / 0.55);
+        color: var(--draughts-black-crown);
+    }
+
+    &[data-king] {
+        background:
+            radial-gradient(circle at 34% 28%, var(--gloss), transparent 46%),
+            radial-gradient(
+                circle,
+                transparent 0 60%,
+                var(--groove) 61% 63.5%,
+                var(--lip) 64% 66%,
+                transparent 67%
+            ),
+            radial-gradient(circle at 50% 42%, var(--top), var(--edge) 78%);
+    }
+}
+
+/* A small piece beside a name (`PieceMark`) and the tile's: the fill and one groove. */
+@utility draughts-mark {
+    background:
+        radial-gradient(
+            circle,
+            transparent 0 52%,
+            var(--draughts-white-ring) 54% 62%,
+            transparent 64%
+        ),
+        radial-gradient(
+            circle at 45% 38%,
+            var(--draughts-white-top),
+            var(--draughts-white-edge)
+        );
+    box-shadow: 0 0 0 1px rgb(80 50 25 / 0.45);
+
+    &[data-color='black'] {
+        background:
+            radial-gradient(
+                circle,
+                transparent 0 52%,
+                var(--draughts-black-ring) 54% 62%,
+                transparent 64%
+            ),
+            radial-gradient(
+                circle at 45% 38%,
+                var(--draughts-black-top),
+                var(--draughts-black-edge)
+            );
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
+    }
+}
+
+@theme {
+    /* «Qalxma + oturma»: a piece that has slid settles onto the board as it lands — the moment its sound plays. */
+    --animate-draughts-settle: draughts-settle 140ms
+        cubic-bezier(0.3, 0.7, 0.4, 1);
+
+    @keyframes draughts-settle {
+        0% {
+            transform: translateY(-2px) scale(1.06);
+        }
+        70% {
+            transform: translateY(0.4px) scale(0.985);
+        }
+        100% {
+            transform: none;
+        }
+    }
 }

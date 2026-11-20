@@ -3,11 +3,13 @@ import { cn } from '@/lib/utils';
 import type { RoomMatchColor } from '@/rooms/contract';
 
 /**
- * A draughts piece (docs/frontend.md rule 15 "Board games"): a disc in the
- * board's own colours, a white and a black piece told apart by fill
- * **and** by ring, a king by `Crown` — never colour alone. It fills its
- * box; the caller gives the size. Decoration where the words beside it say
- * what it is (`aria-hidden`).
+ * A draughts piece (docs/frontend.md rule 15 "Board games" → "The board",
+ * ADR 034 decision 30 as amended 2026-11-21): turned wood in the board's
+ * own tokens (`draughts-piece`) — boxwood and ebony, a white and a black
+ * piece told apart by fill **and** by groove (dark on white, light on
+ * black), a king by `Crown`, engraved (drawn twice, a light line under it)
+ * — never colour alone. It fills its box; the caller gives the size.
+ * Decoration where the words beside it say what it is (`aria-hidden`).
  */
 export function DraughtsPiece({
     color,
@@ -18,25 +20,33 @@ export function DraughtsPiece({
     king?: boolean;
     className?: string;
 }) {
-    const white = color === 'white';
-
     return (
         <span
             aria-hidden
+            data-color={color}
+            data-king={king ? '' : undefined}
             className={cn(
-                'relative inline-grid shrink-0 place-items-center rounded-full',
-                white
-                    ? 'bg-draughts-white text-draughts-black shadow-[inset_0_0_0_2px_var(--draughts-white-ring),inset_0_0_0_5px_var(--draughts-white),inset_0_0_0_6px_var(--draughts-white-ring),0_1px_2px_rgb(0_0_0/0.3)]'
-                    : 'bg-draughts-black text-draughts-white shadow-[inset_0_0_0_2px_var(--draughts-black-ring),inset_0_0_0_5px_var(--draughts-black),inset_0_0_0_6px_var(--draughts-black-ring),0_1px_2px_rgb(0_0_0/0.4)]',
+                'relative inline-grid shrink-0 place-items-center rounded-full draughts-piece',
                 className,
             )}
         >
-            {king && <Crown className="size-[52%]" strokeWidth={2.5} />}
+            {king && (
+                <>
+                    <Crown
+                        className="col-start-1 row-start-1 size-[52%] translate-y-[0.9px] text-(--engrave)"
+                        strokeWidth={2.6}
+                    />
+                    <Crown
+                        className="col-start-1 row-start-1 size-[52%]"
+                        strokeWidth={2.6}
+                    />
+                </>
+            )}
         </span>
     );
 }
 
-/** A small piece beside a name: no inner rings, a plain ring in its colour's tone. */
+/** A small piece beside a name: its fill and one groove (`draughts-mark`). */
 export function PieceMark({
     color,
     className,
@@ -47,11 +57,9 @@ export function PieceMark({
     return (
         <span
             aria-hidden
+            data-color={color}
             className={cn(
-                'inline-block shrink-0 rounded-full',
-                color === 'white'
-                    ? 'bg-draughts-white shadow-[inset_0_0_0_1.5px_var(--draughts-white-ring)]'
-                    : 'bg-draughts-black shadow-[inset_0_0_0_1.5px_var(--draughts-black-ring)]',
+                'inline-block shrink-0 rounded-full draughts-mark',
                 className ?? 'size-4',
             )}
         />
