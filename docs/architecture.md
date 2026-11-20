@@ -3428,7 +3428,7 @@ D1 (2026-11-20) read pull request #9 (commit `f5e5308`, by the contributor Jafar
     - _Tests._ ADR 034 decision 34's page rows; `composer ci:check`.
     - _Finish line._ Two seats, a watcher and the screen play a match to its final at 375 × 667 and 1920 × 1080, light and dark, with reduced motion, with and without a screen; the board's squares are at least 44px; `git grep -i checkers` finds only ADR 034.
     - _As built._ Landed 2026-11-20 on `feat/rooms-draughts`: `components/rooms/draughts/*`, `kinds.ts` (`GAME_VIEWS`), `choiceParts()`, `stripRows()`, `finalRows()` and a match's moments, asks and cues; `screen-round.tsx` and `race-end.tsx` moved out of the pages; one write loop (`rooms/receipt.ts`) for answers, taunts and acts; the four sounds; the words and `privacy.rooms.stored`. A choice of the other kind is filled on the page (ADR 034 "As built (D4)" item 4, a gap reported to the owner). A Playwright run plays a match to its final on two phones, a watcher and the screen, light, dark and reduced.
-- **D5 — The audit** (duplicates and structure, rules and protocol, the interface's rules), and **D6-O — the owner** plays a match on two phones and the screen (`composer dev:lan`).
+- **D5 — The audit** (duplicates and structure, rules and protocol, the interface's rules), and **D6-O — the owner** plays a match on two phones and the screen (on elifba.io, the branch deployed without a merge; done 2026-11-20, ADR 034 "As built (D6)").
 
 ## Open questions for the owner
 
