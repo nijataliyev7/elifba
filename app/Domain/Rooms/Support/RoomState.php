@@ -106,7 +106,7 @@ final class RoomState
             game: $game === null ? null : RoomGameData::of($game, $live ? RoomGamePhase::Live : RoomGamePhase::Over),
             round: $live ? self::round($game, $moment, $rows, $mine) : null,
             ranking: match (true) {
-                $game === null => [],
+                $game === null => $room->board === null ? [] : RoomRanking::ofRoom($room, $nowMs, $rows),
                 $live => RoomRanking::ofGame($game, $nowMs, $rows),
                 default => RoomRanking::ofRoom($room, $nowMs, $rows),
             },

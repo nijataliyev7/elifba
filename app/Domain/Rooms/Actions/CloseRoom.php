@@ -46,6 +46,7 @@ final readonly class CloseRoom
         }
 
         EndRoomGame::end($locked, RoomClock::nowMs());
+        EndRoomMatch::whenClosed($locked);
 
         $locked->closed_at = now();
         $locked->code = null;

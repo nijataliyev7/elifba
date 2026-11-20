@@ -13,6 +13,7 @@ use App\Domain\Rooms\Actions\RecordRoomRead;
 use App\Domain\Rooms\Data\LockRoomData;
 use App\Domain\Rooms\Data\OpenRoomData;
 use App\Domain\Rooms\Data\RoomGameSetupData;
+use App\Domain\Rooms\Data\RoomMatchStateData;
 use App\Domain\Rooms\Exceptions\RoomGameRunning;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Support\RoomClock;
@@ -132,6 +133,9 @@ final class RoomController extends Controller
             'rivalry' => $open && $watches ? $content->roomRivalry()->urls() : null,
             'taunts' => $open && $watches ? RoomTauntData::props($content->roomTaunts(), $tauntVoices) : null,
             'finish' => $open && $watches ? $finish->urls() : null,
+            // A room opened for a board game (ADR 034): which one, and its match as the viewer sees it.
+            'board' => $room->board?->value,
+            'match' => $room->board !== null && $open && $watches ? RoomMatchStateData::for($room, $account) : null,
             'can' => [
                 'host' => $gate->allows('host', $room),
                 'leave' => $gate->allows('play', $room),

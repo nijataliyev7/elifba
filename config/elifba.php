@@ -108,6 +108,11 @@ return [
         // was aimed at is emptied `forget_target_hours` after it
         // (`PruneOldRooms`). The price is `RoomPointsRule::TAUNT_COST`, never
         // config.
+        // Board games (ADR 034): each player's time in a checkers match.
+        'checkers' => [
+            'clock_ms' => 300_000,
+        ],
+
         'taunts' => [
             'cooldown_ms' => 10_000,
             'show_ms' => 4_000,

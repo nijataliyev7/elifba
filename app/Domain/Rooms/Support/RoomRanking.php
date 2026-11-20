@@ -98,7 +98,43 @@ final class RoomRanking
             }
         }
 
+        foreach (self::matchPoints($room, $nowMs) as $player => $won) {
+            $points[$player] = ($points[$player] ?? 0) + $won;
+        }
+
         return self::rank($players ?? self::players($room), $points);
+    }
+
+    /**
+     * The room's board matches that are over by `$nowMs` (ADR 034 decision
+     * 10): `MATCH_WIN` to the winner, `MATCH_DRAW` to each side of a draw,
+     * nothing for a match the host ended. A side out of time has lost
+     * (`RoomMatch::settled()`).
+     *
+     * @return array<string, int> by player row
+     */
+    public static function matchPoints(Room $room, int $nowMs): array
+    {
+        $points = [];
+
+        foreach ($room->matches()->get() as $match) {
+            $match->settled($nowMs);
+
+            if (! $match->isOver() || $match->ended_ms > $nowMs) {
+                continue;
+            }
+
+            if ($match->result === 'draw') {
+                foreach ([$match->white_player_id, $match->black_player_id] as $player) {
+                    $points[$player] = ($points[$player] ?? 0) + RoomPointsRule::MATCH_DRAW;
+                }
+            } elseif ($match->result !== null) {
+                $winner = $match->playerOf($match->result);
+                $points[$winner] = ($points[$winner] ?? 0) + RoomPointsRule::MATCH_WIN;
+            }
+        }
+
+        return $points;
     }
 
     /**

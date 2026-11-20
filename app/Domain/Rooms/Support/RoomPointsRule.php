@@ -21,6 +21,12 @@ use InvalidArgumentException;
  */
 final class RoomPointsRule
 {
+    /** A board match won (ADR 034 decision 10): the winner's points in the room's standing. */
+    public const int MATCH_WIN = 3;
+
+    /** A board match drawn: each player's points in the room's standing. */
+    public const int MATCH_DRAW = 1;
+
     public const int RIGHT = 10;
 
     public const int SPEED = 10;

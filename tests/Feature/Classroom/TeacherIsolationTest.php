@@ -4,15 +4,19 @@ use App\Domain\Classroom\Models\SchoolClass;
 use App\Domain\Classroom\Models\Student;
 use App\Domain\Content\Models\CustomWord;
 use App\Domain\Content\Support\Avatars;
+use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Family\Models\Child;
 use App\Domain\Play\Models\GameSession;
 use App\Domain\Rooms\Actions\CloseRoom;
 use App\Domain\Rooms\Actions\RemoveRoomPlayer;
 use App\Domain\Rooms\Actions\SetRoomVoice;
 use App\Domain\Rooms\Data\RoomVoiceSwitchData;
+use App\Domain\Rooms\Enums\RoomBoardGame;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
+use App\Domain\Rooms\Models\RoomMatch;
 use App\Domain\Rooms\Models\RoomPlayer;
+use App\Domain\Rooms\Support\Checkers;
 use App\Models\User;
 use App\Support\RoomInvitation;
 use Illuminate\Routing\Route as RoutingRoute;
@@ -52,7 +56,7 @@ const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word', 'child', 'room'
  * factories (`OpenRoom` gives a host one open room), since starting a game
  * needs a room without one and ending it a room with one.
  *
- * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord, childA: Child, secondChildA: Child, homeGameA: GameSession, childB: Child, homeGameB: GameSession, roomA: Room, memberA: RoomPlayer, closedRoomA: Room, roomB: Room, memberB: RoomPlayer, playingRoomA: Room, roomGameA: RoomGame}
+ * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord, childA: Child, secondChildA: Child, homeGameA: GameSession, childB: Child, homeGameB: GameSession, roomA: Room, memberA: RoomPlayer, closedRoomA: Room, roomB: Room, memberB: RoomPlayer, playingRoomA: Room, roomGameA: RoomGame, boardRoomA: Room, boardWhiteA: RoomPlayer, boardBlackA: RoomPlayer, matchRoomA: Room}
  */
 function isolationWorld(): array
 {
@@ -73,6 +77,24 @@ function isolationWorld(): array
     $roomB = Rooms::open($b);
     $playingRoomA = Room::factory()->for($a, 'host')->create();
     $roomGameA = RoomGame::factory()->for($playingRoomA)->withRounds(5)->create();
+    // Board games (ADR 034): a checkers room waiting for its match, and one with a match running.
+    $boardRoomA = Room::factory()->for($a, 'host')->create(['board' => RoomBoardGame::Checkers]);
+    $boardWhiteA = Rooms::join($boardRoomA);
+    $boardBlackA = Rooms::join($boardRoomA);
+    $matchRoomA = Room::factory()->for($a, 'host')->create(['board' => RoomBoardGame::Checkers]);
+    $match = new RoomMatch;
+    $match->room_id = $matchRoomA->id;
+    $match->position = 0;
+    $match->board_game = RoomBoardGame::Checkers;
+    $match->white_player_id = Rooms::join($matchRoomA)->id;
+    $match->black_player_id = Rooms::join($matchRoomA)->id;
+    $match->board = Checkers::initial();
+    $match->turn = 'w';
+    $match->started_ms = now()->getTimestampMs();
+    $match->turn_since_ms = $match->started_ms;
+    $match->white_left_ms = 300_000;
+    $match->black_left_ms = 300_000;
+    $match->save();
     $childA = Child::factory()->for($a, 'parent')->create(['display_name' => 'Aysel']);
     $childB = Child::factory()->for($b, 'parent')->create(['display_name' => 'Nigar']);
 
@@ -111,6 +133,10 @@ function isolationWorld(): array
         'memberB' => Rooms::join($roomB),
         'playingRoomA' => $playingRoomA,
         'roomGameA' => $roomGameA->load('rounds'),
+        'boardRoomA' => $boardRoomA->refresh(),
+        'boardWhiteA' => $boardWhiteA,
+        'boardBlackA' => $boardBlackA,
+        'matchRoomA' => $matchRoomA->refresh(),
     ];
 }
 
@@ -203,6 +229,13 @@ function isolationCases(): array
         'PUT rooms/{room}/voice' => ['rooms.voice.update', $roomA, static fn (array $w): array => ['on' => false]],
         'PUT rooms/{room}/members/{member}/voice' => ['rooms.members.voice.update', static fn (array $w): array => ['room' => $w['roomA']->id, 'member' => $w['memberA']->id], static fn (array $w): array => ['standing' => 'muted']],
         'POST rooms/{room}/voice/tickets' => ['rooms.voice.tickets.store', $roomA, static fn (array $w): array => ['agree' => true]],
+        // Board games (ADR 034): the match of a room, whichever game it was opened for.
+        'GET rooms/{room}/match' => ['rooms.match.show', $roomA, $none],
+        'POST rooms/{room}/match' => ['rooms.match.store', static fn (array $w): array => ['room' => $w['boardRoomA']->id], static fn (array $w): array => ['white' => $w['boardWhiteA']->id, 'black' => $w['boardBlackA']->id]],
+        'DELETE rooms/{room}/match' => ['rooms.match.destroy', static fn (array $w): array => ['room' => $w['matchRoomA']->id], $none],
+        'POST rooms/{room}/match/moves' => ['rooms.match.moves.store', $roomA, static fn (array $w): array => ['event_id' => '01jcheckers000000000000000', 'ply' => 0, 'path' => [40, 33]]],
+        'POST rooms/{room}/match/resign' => ['rooms.match.resign', $roomA, $none],
+        'POST rooms/{room}/match/taunts' => ['rooms.match.taunts.store', $roomA, static fn (array $w): array => ['event_id' => '01jcheckers000000000000001', 'taunt' => array_key_first(app(ContentRepository::class)->roomTaunts())]],
         // A closed room: the host deletes it, a player takes their name out.
         'DELETE rooms/{room}' => ['rooms.destroy', $closedRoomA, $none],
         'DELETE rooms/{room}/name' => ['rooms.name.destroy', $closedRoomA, $none],
@@ -259,6 +292,9 @@ function isolationSnapshot(): array
         'room_rounds' => $rows('room_rounds'),
         'room_answers' => $rows('room_answers'),
         'room_taunts' => $rows('room_taunts'),
+        'room_matches' => $rows('room_matches'),
+        'room_moves' => $rows('room_moves'),
+        'room_match_taunts' => $rows('room_match_taunts'),
     ];
 }
 
@@ -426,7 +462,7 @@ it('lists only the account\'s own rooms on «Oyunlar» and «Keçmiş oyunlar»'
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('rooms/index')
-            ->where('open', [['id' => $world['roomB']->id, 'code' => $world['roomB']->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
+            ->where('open', [['id' => $world['roomB']->id, 'code' => $world['roomB']->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
     $this->get(route('rooms.past'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('rooms/past')->where('past', []));

@@ -1,3 +1,5 @@
+import { ScreenCheckers } from '@/components/rooms/checkers/screen-checkers';
+import type { RoomMatchState } from '@/components/rooms/checkers/match';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -89,6 +91,10 @@ type Props = {
     finish: RoomFinishVoice;
     /** How often the shown screen reads the state at least, so phones know the room has its screen (ADR 028 as amended). */
     beat_ms: number;
+    /** The board game the room was opened for (ADR 034); null: the round games. */
+    board: 'checkers' | null;
+    /** Its match as the screen sees it, every taunt with its target. */
+    match: RoomMatchState | null;
 };
 
 /**
@@ -138,6 +144,8 @@ export default function RoomsScreen({
     taunts,
     finish,
     beat_ms: beatMs,
+    board,
+    match,
 }: Props) {
     const { t } = useTranslation();
     // A closed room has no screen: its results are on the room's page.
@@ -218,7 +226,7 @@ export default function RoomsScreen({
                         onChange={setTauntsHidden}
                     />
                 )}
-                <SoundToggle sound={sound} big />
+                {board === null && <SoundToggle sound={sound} big />}
                 <FullscreenToggle />
                 <Button asChild variant="ghost" className="h-11">
                     <Link href={show(room.id)}>
@@ -236,6 +244,17 @@ export default function RoomsScreen({
                         {t('rooms.show.closed')}
                     </p>
                 </main>
+            ) : board !== null ? (
+                <ScreenCheckers
+                    roomId={room.id}
+                    state={state}
+                    initial={match}
+                    join={join}
+                    sounds={sounds}
+                    taunts={taunts}
+                    tauntsHidden={tauntsHidden}
+                    placeLabels={placeLabels}
+                />
             ) : playing ? (
                 <main className="flex min-h-0 flex-1 flex-col px-[4vw] py-[3vh]">
                     <ScreenRound

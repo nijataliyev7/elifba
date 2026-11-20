@@ -3,6 +3,7 @@
 namespace App\Domain\Rooms\Actions;
 
 use App\Domain\Rooms\Models\Room;
+use App\Domain\Rooms\Models\RoomMatchTaunt;
 use App\Domain\Rooms\Models\RoomTaunt;
 use App\Domain\Rooms\Support\RoomClock;
 use Illuminate\Support\Facades\Config;
@@ -30,6 +31,10 @@ final readonly class PruneOldRooms
 
         return DB::transaction(static function () use ($cutoff, $forgetBeforeMs): int {
             RoomTaunt::query()
+                ->whereNotNull('target_player_id')
+                ->where('sent_ms', '<', $forgetBeforeMs)
+                ->update(['target_player_id' => null]);
+            RoomMatchTaunt::query()
                 ->whereNotNull('target_player_id')
                 ->where('sent_ms', '<', $forgetBeforeMs)
                 ->update(['target_player_id' => null]);

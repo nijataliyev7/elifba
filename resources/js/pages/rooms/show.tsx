@@ -17,6 +17,8 @@ import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import InputError from '@/components/input-error';
 import { withGame } from '@/components/rooms/catalog';
+import { CheckersRoom } from '@/components/rooms/checkers/checkers-room';
+import type { RoomMatchState } from '@/components/rooms/checkers/match';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
 import { FinalStanding } from '@/components/rooms/final-standing';
 import { carriesRoom } from '@/components/rooms/sound-cues';
@@ -107,6 +109,10 @@ type Props = {
     taunts: TauntList | null;
     /** «Əla oynadın!» and «Əla oynadınız!», said after the final's fanfare in a room without a screen (ADR 030 as amended); null when it follows no open room. */
     finish: RoomFinishVoice | null;
+    /** The board game the room was opened for (ADR 034); null: the round games. */
+    board: 'checkers' | null;
+    /** Its match as the viewer sees it; null outside an open board room. */
+    match: RoomMatchState | null;
     can: Can;
 };
 
@@ -159,6 +165,8 @@ export default function RoomsShow({
     rivalry,
     taunts,
     finish,
+    board,
+    match,
     can,
 }: Props) {
     const { t } = useTranslation();
@@ -221,6 +229,24 @@ export default function RoomsShow({
                     </Button>
                 </div>
             </RoomFrame>
+        );
+    }
+
+    if (board !== null) {
+        return (
+            <CheckersRoom
+                roomId={room.id}
+                state={state}
+                initial={match}
+                host={can.host}
+                canLeave={can.leave}
+                join={join}
+                refresh={refresh}
+                voice={voiceButton}
+                placeLabels={placeLabels}
+                sounds={sounds}
+                taunts={taunts}
+            />
         );
     }
 

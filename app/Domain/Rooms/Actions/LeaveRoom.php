@@ -41,6 +41,7 @@ final readonly class LeaveRoom
             $row->save();
 
             RoomRoundClose::whenPresenceChanges($locked, RoomClock::nowMs());
+            EndRoomMatch::whenPresenceChanges($locked, $row);
             RoomSignal::raise($locked);
 
             if ($locked->voiceIsOn() && ! RoomVoice::isHost($locked, $row)) {

@@ -123,7 +123,7 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
     $this->actingAs($this->resad)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/index')
-            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]])
+            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]])
             ->missing('past'));
     $this->get(route('rooms.past'))
         ->assertInertia(fn (Assert $page) => $page
@@ -140,7 +140,7 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
 
     $this->actingAs($this->aygun)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
+            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
     $this->get(route('rooms.past'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('past', [[
@@ -160,11 +160,11 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
     // Tural sees his own room only; Nigar the same one; nobody else's.
     $this->actingAs($this->tural)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
+            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
     $this->get(route('rooms.past'))->assertInertia(fn (Assert $page) => $page->where('past', []));
     $this->actingAs($nigar)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
+            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
     $this->get(route('rooms.past'))->assertInertia(fn (Assert $page) => $page->where('past', []));
 
     // A player who left an open room finds it under the past ones, with what the room has played so far.
@@ -613,7 +613,7 @@ it('sends the home the catalog and the open rooms, and the past rooms to their o
         ->and($home)->not->toHaveKey('past')
         ->and($home['catalog'])->toBe(RoomGameSetupData::options())
         ->and(array_column($home['catalog']['mechanics'], 'mechanic'))->toBe(array_map(static fn (RoomMechanic $mechanic): string => $mechanic->value, RoomGameSetupData::mechanics()))
-        ->and($home['open'])->toBe([['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 1, 'mechanic' => 'spelling', 'running' => false]])
+        ->and($home['open'])->toBe([['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 1, 'mechanic' => 'spelling', 'board' => null, 'running' => false]])
         ->and($home['entrance'])->toBe($root.'/oyun');
 
     // While a game runs there, the home says so.

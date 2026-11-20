@@ -4,8 +4,10 @@ namespace App\Domain\Rooms\Models;
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Data\RoomGameSetupData;
+use App\Domain\Rooms\Enums\RoomBoardGame;
 use App\Domain\Rooms\Enums\RoomStatus;
 use App\Domain\Rooms\Policies\RoomPolicy;
+use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomDefaults;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -59,11 +61,13 @@ use Illuminate\Support\Facades\Config;
  * @property int|null $screen_seen_ms when the big screen last read the state while shown, Unix ms (`RecordScreenRead`)
  * @property CarbonImmutable|null $voice_at the host turned the room's voice on; null: off
  * @property int $voice_epoch in the voice room's name; raised to close it for everyone
+ * @property RoomBoardGame|null $board the board game the room was opened for (ADR 034); null: the round games
  * @property CarbonImmutable $created_at what the retention period counts from
  * @property CarbonImmutable $updated_at
  * @property-read User $host
  * @property-read Collection<int, RoomPlayer> $players
  * @property-read Collection<int, RoomGame> $games by position
+ * @property-read Collection<int, RoomMatch> $matches by position
  */
 #[UseFactory(RoomFactory::class)]
 #[UsePolicy(RoomPolicy::class)]
@@ -167,6 +171,25 @@ class Room extends Model
         return RoomDefaults::for($this->host, $this->setup_mechanic ?? RoomGameSetupData::firstMechanic());
     }
 
+    /**
+     * The room's latest board match as it stands now — a side out of time
+     * has lost (`RoomMatch::settled()`) — or null before the first (ADR 034).
+     */
+    public function latestMatch(): ?RoomMatch
+    {
+        return $this->matches()->reorder()->orderByDesc('position')->first()?->settled(RoomClock::nowMs());
+    }
+
+    /**
+     * The board match being played: the latest, until it ended.
+     */
+    public function runningMatch(): ?RoomMatch
+    {
+        $match = $this->latestMatch();
+
+        return $match !== null && ! $match->isOver() ? $match : null;
+    }
+
     public function isHostedBy(User $account): bool
     {
         return $this->user_id === $account->id;
@@ -226,6 +249,16 @@ class Room extends Model
     }
 
     /**
+     * The board matches played in the room, one at a time, in order (ADR 034).
+     *
+     * @return HasMany<RoomMatch, $this>
+     */
+    public function matches(): HasMany
+    {
+        return $this->hasMany(RoomMatch::class)->orderBy('position');
+    }
+
+    /**
      * `{member}` is scoped under `{room}` through `players()`.
      *
      * @param  string  $childType
@@ -252,6 +285,7 @@ class Room extends Model
             'screen_seen_ms' => 'integer',
             'voice_at' => 'datetime',
             'voice_epoch' => 'integer',
+            'board' => RoomBoardGame::class,
         ];
     }
 

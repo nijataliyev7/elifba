@@ -63,7 +63,19 @@ final class RoomPolicy
     /** `host` of an open room with no game running: starting a game (B3). */
     public function start(User $user, Room $room): bool
     {
-        return $this->host($user, $room) && $room->isOpen() && $room->runningGame(RoomClock::nowMs()) === null;
+        return $this->host($user, $room) && $room->isOpen() && $room->board === null && $room->runningGame(RoomClock::nowMs()) === null;
+    }
+
+    /** `host` of an open board room with no match running: starting a match (ADR 034). */
+    public function startMatch(User $user, Room $room): bool
+    {
+        return $this->host($user, $room) && $room->isOpen() && $room->board !== null && $room->runningMatch() === null;
+    }
+
+    /** `host` of an open room while a match runs in it: ending the match (ADR 034). */
+    public function endMatch(User $user, Room $room): bool
+    {
+        return $this->host($user, $room) && $room->isOpen() && $room->runningMatch() !== null;
     }
 
     /** `host` of an open room, while a game is running in it: ending the game (B3). */

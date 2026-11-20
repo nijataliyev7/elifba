@@ -145,8 +145,8 @@ it('lists the account\'s own rooms on «Oyunlar» and «Keçmiş oyunlar»', fun
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/index')
             ->where('open', [
-                ['id' => $joined->id, 'code' => $joined->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'running' => true],
-                ['id' => $mine->id, 'code' => $mine->code, 'host' => true, 'players' => 1, 'mechanic' => 'anagram', 'running' => false],
+                ['id' => $joined->id, 'code' => $joined->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => true],
+                ['id' => $mine->id, 'code' => $mine->code, 'host' => true, 'players' => 1, 'mechanic' => 'anagram', 'board' => null, 'running' => false],
             ])
             ->missing('past'));
     $this->get(route('rooms.past'))

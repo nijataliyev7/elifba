@@ -50,6 +50,7 @@ final readonly class RemoveRoomPlayer
             }
 
             RoomRoundClose::whenPresenceChanges($locked, RoomClock::nowMs());
+            EndRoomMatch::whenPresenceChanges($locked, $row);
             RoomSignal::raise($locked);
 
             if ($voiceBefore !== null) {

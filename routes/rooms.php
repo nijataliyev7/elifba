@@ -8,6 +8,7 @@ use App\Http\Controllers\Rooms\RoomGameController;
 use App\Http\Controllers\Rooms\RoomInvitedController;
 use App\Http\Controllers\Rooms\RoomJoinController;
 use App\Http\Controllers\Rooms\RoomLeaveController;
+use App\Http\Controllers\Rooms\RoomMatchController;
 use App\Http\Controllers\Rooms\RoomMemberController;
 use App\Http\Controllers\Rooms\RoomMemberVoiceController;
 use App\Http\Controllers\Rooms\RoomNameController;
@@ -180,6 +181,35 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
         ->name('rooms.game.destroy');
 
     // A closed room: the host deletes it, a player takes their name out.
+    // Board games (ADR 034): the match of a room opened for one.
+    Route::get('rooms/{room}/match', [RoomMatchController::class, 'show'])
+        ->whereUlid('room')
+        ->middleware('throttle:room-state')
+        ->can('watch', 'room')
+        ->name('rooms.match.show');
+    Route::post('rooms/{room}/match', [RoomMatchController::class, 'store'])
+        ->whereUlid('room')
+        ->can('startMatch', 'room')
+        ->name('rooms.match.store');
+    Route::delete('rooms/{room}/match', [RoomMatchController::class, 'destroy'])
+        ->whereUlid('room')
+        ->can('endMatch', 'room')
+        ->name('rooms.match.destroy');
+    Route::post('rooms/{room}/match/moves', [RoomMatchController::class, 'move'])
+        ->whereUlid('room')
+        ->middleware('throttle:room-answers')
+        ->can('play', 'room')
+        ->name('rooms.match.moves.store');
+    Route::post('rooms/{room}/match/resign', [RoomMatchController::class, 'resign'])
+        ->whereUlid('room')
+        ->can('play', 'room')
+        ->name('rooms.match.resign');
+    Route::post('rooms/{room}/match/taunts', [RoomMatchController::class, 'taunt'])
+        ->whereUlid('room')
+        ->middleware('throttle:room-taunts')
+        ->can('play', 'room')
+        ->name('rooms.match.taunts.store');
+
     Route::delete('rooms/{room}', [RoomController::class, 'destroy'])
         ->whereUlid('room')
         ->can('delete', 'room')

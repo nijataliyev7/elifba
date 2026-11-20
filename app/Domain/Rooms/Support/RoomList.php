@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Config;
  * and never stored; null for a host who did not play. No name is listed
  * here: a room has none, and its players are on its own page.
  *
- * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, running: bool}
+ * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, board: string|null, running: bool}
  * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int}>, mine: array{points: int, place: string|null}|null}
  */
 final class RoomList
@@ -54,7 +54,8 @@ final class RoomList
                     'host' => $host,
                     'players' => (int) $room->getAttribute('present_count'),
                     'mechanic' => $room->setup()->mechanic->value,
-                    'running' => $room->runningGame($nowMs) !== null,
+                    'board' => $room->board?->value,
+                    'running' => $room->runningGame($nowMs) !== null || $room->runningMatch() !== null,
                 ];
             }
         }
