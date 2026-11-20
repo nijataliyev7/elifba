@@ -1,5 +1,5 @@
 {
-    "version": 4,
+    "version": 5,
     "sounds": {
         "countdown": "rooms/sounds/countdown.mp3",
         "go": "rooms/sounds/go.mp3",

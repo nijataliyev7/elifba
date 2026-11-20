@@ -30,7 +30,7 @@ describe('the taps over the state paths', () => {
         expect(tapSquare(PATHS, [], 'a1')).toEqual({
             taps: ['a1'],
             send: null,
-            sound: 'tap',
+            sound: null,
         });
         // A piece that begins no path, or an empty square, does nothing.
         expect(tapSquare(PATHS, [], 'e3')).toEqual({
@@ -50,7 +50,7 @@ describe('the taps over the state paths', () => {
     it('sends a path once the taps name it whole, and never a part of one', () => {
         const first = tapSquare(PATHS, ['a1'], 'c3');
 
-        expect(first).toEqual({ taps: ['a1', 'c3'], send: null, sound: 'tap' });
+        expect(first).toEqual({ taps: ['a1', 'c3'], send: null, sound: null });
         expect(completeMove(PATHS, ['a1', 'c3'])).toBeNull();
 
         const whole = tapSquare(PATHS, first.taps, 'a5');
@@ -63,7 +63,7 @@ describe('the taps over the state paths', () => {
         expect(tapSquare(PATHS, ['a1', 'c3'], 'g1')).toEqual({
             taps: ['g1'],
             send: null,
-            sound: 'tap',
+            sound: null,
         });
         // The lifted piece again, or a square no path lands on next.
         expect(tapSquare(PATHS, ['a1'], 'a1')).toEqual({

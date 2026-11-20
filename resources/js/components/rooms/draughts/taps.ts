@@ -71,14 +71,17 @@ export function completeMove(
  * may land on next is added — and a whole path is sent; a piece that begins
  * a path is lifted, or lifted instead of the one before; anything else —
  * the lifted piece again, an empty square, a piece that begins no path —
- * takes the taps back, and with nothing begun does nothing.
+ * takes the taps back, and with nothing begun does nothing. A lift and a
+ * landing are silent — the owner's choice of 2026-11-21, no `tap` in a
+ * match (ADR 034 "Amended 2026-11-21") — and taking the taps back is
+ * `undo`.
  */
 export type TapResult = {
     taps: Square[];
     /** The whole path to post, when this tap finished one. */
     send: Square[] | null;
-    /** The sound of the tap, or none when it changed nothing. */
-    sound: 'tap' | 'undo' | null;
+    /** `undo` when the tap took the path back; a lift, a landing and a tap that changed nothing are silent. */
+    sound: 'undo' | null;
 };
 
 export function tapSquare(
@@ -89,14 +92,14 @@ export function tapSquare(
     if (nextSquares(paths, taps).has(square)) {
         const next = [...taps, square];
 
-        return { taps: next, send: completeMove(paths, next), sound: 'tap' };
+        return { taps: next, send: completeMove(paths, next), sound: null };
     }
 
     if (
         startsOf(paths).has(square) &&
         !(taps.length === 1 && taps[0] === square)
     ) {
-        return { taps: [square], send: null, sound: 'tap' };
+        return { taps: [square], send: null, sound: null };
     }
 
     return {

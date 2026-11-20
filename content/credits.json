@@ -130,7 +130,6 @@
                 "content/assets/rooms/sounds/ranking.mp3",
                 "content/assets/rooms/sounds/place.mp3",
                 "content/assets/rooms/sounds/join.mp3",
-                "content/assets/rooms/sounds/move.mp3",
                 "content/assets/rooms/sounds/capture.mp3",
                 "content/assets/rooms/sounds/crown.mp3",
                 "content/assets/rooms/sounds/undo.mp3",
@@ -138,10 +137,18 @@
                 "content/assets/rooms/sounds/wrong.mp3",
                 "content/assets/rooms/sounds/offer.mp3"
             ],
-            "title": "Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's move, capture and crown, and a phone's undo, «answer sent», «wrong» and a draw offer",
+            "title": "Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's capture and crown, and a phone's undo, «answer sent», «wrong» and a draw offer",
             "author": "Elifba contributors",
             "source": "https://github.com/nijataliyev7/elifba",
             "license": "MIT"
+        },
+        {
+            "files": ["content/assets/rooms/sounds/move.mp3"],
+            "title": "A board game's move: a wooden chess piece set down on a wooden board, recorded a little way off («Chess Pieces Move (Far)»)",
+            "author": "JJTaynos",
+            "source": "https://freesound.org/people/JJTaynos/sounds/733932/",
+            "license": "CC0-1.0",
+            "changes": "Downloaded without a login as Freesound's preview of sound 733932 (733932_15803939-hq.mp3) and checked by SHA-256; one touch cut from 14.36 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 35 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
         },
         {
             "files": ["content/rooms/words.json"],

@@ -5,7 +5,8 @@ The sounds of a room game (docs/architecture.md §12 "Room content", ADR
 screen's — the room's speaker — and a phone's quiet cues of its own. Each
 file is made here from recordings of the VS Chamber Orchestra: Community
 Edition (CC0-1.0, downloaded from a pinned commit and checked by
-SHA-256) and from our own synthesis (MIT); ffmpeg levels the set to one
+SHA-256), from a Freesound recording (CC0-1.0, its preview pinned by name
+and SHA-256) and from our own synthesis (MIT); ffmpeg levels the set to one
 loudness and writes the mono MP3 files a room page plays. Plain Python 3
 (standard library only) and ffmpeg.
 
@@ -94,6 +95,16 @@ VSCO = {
     "trombone-c4": ("Brass/Tenor Trombone/sus/tenortbn_sus_C3_v3_1.wav", "ba3760e74edf6c25f96a0deb526bf87eba2bf74be94ba76bf31d0d6592efe687"),
 }
 
+# Freesound (https://freesound.org): a sound under the license its own page names
+# (CC0-1.0 here), downloaded without a login as the site's own preview. A sound
+# on Freesound is never replaced — a new upload is a new sound — so its id, its
+# preview's file name and its SHA-256 pin it (ADR 028 as amended 2026-11-21).
+FREESOUND_URL = "https://cdn.freesound.org/previews/{folder}/{file}"
+FREESOUND = {
+    # «Chess Pieces Move (Far)» by JJTaynos, https://freesound.org/people/JJTaynos/sounds/733932/, CC0-1.0
+    "chess-move-far": ("733932_15803939-hq.mp3", "fe7c7d8db858edea34360ae2a79b70d6e4610e4598e15d52ad42f00208b08663"),
+}
+
 FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
 FFPROBE = shutil.which("ffprobe") or "/opt/homebrew/bin/ffprobe"
 
@@ -114,13 +125,19 @@ _cache_dir = CACHE
 
 def fetch(name):
     """The cached recording `name`, downloaded once from its pinned URL and checked by SHA-256."""
-    path, digest = VSCO[name]
-    target = _cache_dir / "vsco" / VSCO_COMMIT[:12] / path
+    if name in FREESOUND:
+        path, digest = FREESOUND[name]
+        target = _cache_dir / "freesound" / f"{path.split('_')[0]}.mp3"
+        url = FREESOUND_URL.format(folder=path.split("_")[0][:3], file=path)
+    else:
+        path, digest = VSCO[name]
+        target = _cache_dir / "vsco" / VSCO_COMMIT[:12] / path
+        url = VSCO_URL.format(commit=VSCO_COMMIT, path=urllib.parse.quote(path))
     if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
-        url = VSCO_URL.format(commit=VSCO_COMMIT, path=urllib.parse.quote(path))
         print(f"downloading {path}", flush=True)
-        with urllib.request.urlopen(url, timeout=120) as response:
+        request = urllib.request.Request(url, headers={"User-Agent": "elifba-room-sounds"})
+        with urllib.request.urlopen(request, timeout=120) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != digest:
             sys.exit(f"{path}: the download does not match its SHA-256; nothing was written.")
@@ -135,7 +152,7 @@ def channels(path):
         [FFPROBE, "-v", "error", "-show_entries", "stream=channels", "-of", "csv=p=0", str(path)],
         capture_output=True, text=True, check=True,
     )
-    return int(result.stdout.strip().splitlines()[0])
+    return int(result.stdout.strip().splitlines()[0].split(",")[0])
 
 
 def decode(path, semitones=0.0):
@@ -395,8 +412,25 @@ def reverb(signal, size, wet, damp=0.35, predelay=0.012):
 
 MARIMBA = ((1.0, 1.0, 1.0), (3.9, 0.22, 0.25), (2.0, 0.12, 0.6), (9.2, 0.03, 0.08))
 ROUND_NOTE = ((1.0, 1.0, 1.0), (2.0, 0.18, 0.5), (3.0, 0.04, 0.3))
-# A board game's offer (ADR 034 decision 31): a vibraphone bar's partials.
+# A board game's (ADR 034 decision 31): a wooden piece's inharmonic modes, a
+# small bell's (a glockenspiel bar's) and a vibraphone bar's partials.
+WOOD = ((1.0, 1.0, 1.0), (1.68, 0.55, 0.7), (2.71, 0.3, 0.45), (3.73, 0.15, 0.3))
+GLOCK = ((1.0, 1.0, 1.0), (2.76, 0.18, 0.35), (5.40, 0.06, 0.15), (2.0, 0.04, 0.5))
 VIBES = ((1.0, 1.0, 1.0), (4.0, 0.12, 0.25), (10.0, 0.02, 0.08))
+
+
+def wood(r, f0, length, decay, body=0.45):
+    """A piece put down on a wooden board: four damped wooden modes from `f0`, a short 210 Hz body of the board, a soft click; its last 30 ms fade."""
+    out = tone(f0, length, attack=0.0004, decay=decay, partials=WOOD)
+    place(out, 0.0, tone(210.0, length, attack=0.0008, decay=0.02), body)
+    place(out, 0.0, shaped(bandpass(noise(0.012, r), 3000.0, 0.8), 0.0002, 0.0015), 0.25)
+    return fade_out(lowpass(out, 5000), 0.03)
+
+
+def butterworth(signal, freq, kind):
+    """A fourth-order Butterworth high- or low-pass: two biquads, Q 0.5412 and 1.3066."""
+    f = highpass if kind == "high" else lowpass
+    return f(f(signal, freq, 0.5412), freq, 1.3066)
 
 
 def board(r, low, high, modes, length, contact, decay_low, decay_high, centre=900.0, width=0.7, body=0.0, body_hz=150.0, body_decay=0.015, lp=3500.0):
@@ -551,28 +585,43 @@ def join():
 
 
 def move():
-    """A move the page saw arrive (our synthesis, «Taxta lövhə», as chosen 2026-11-21): a wooden piece set down on
-    a wooden board — sixteen board modes 320–2800 Hz, loudest near 1.15 kHz, a 1.2 ms contact, the table under it
-    at 160 Hz; −40 dB inside 70 ms, nothing ringing."""
-    return board(rng("move-board"), 320.0, 2800.0, 16, 0.13, contact=0.0012, decay_low=0.018, decay_high=0.006, centre=1150.0, body=0.3, body_hz=160.0)
+    """A move the page saw arrive, as the owner chose it on 2026-11-21 («b»): a wooden chess piece set down on a
+    wooden board, recorded a little way off (JJTaynos, Freesound 733932, CC0-1.0) — one touch, 14.36 s into
+    the recording, cut where it has fallen 40 dB and 30 ms after; below 70 Hz and above 9 kHz removed (a
+    fourth-order Butterworth each), a 1 ms fade in and a 35 ms fade out. All contact, it reaches −21.1 LUFS
+    under the limiter: levelled further, the limiter would change the touch the owner chose."""
+    x = decode(fetch("chess-move-far"))
+    first, last, settle = 633336, 638707, seconds(0.5)
+    touch = butterworth(x[first - settle:last], 70.0, "high")[settle:]
+    touch = butterworth(touch, 9000.0, "low")
+    n_in, n_out = seconds(0.001), seconds(0.035)
+    for i in range(n_in):
+        touch[i] *= i / (n_in - 1)
+    for i in range(n_out):
+        touch[len(touch) - n_out + i] *= (1 - i / (n_out - 1)) ** 2
+    return normalized(touch)
 
 
 def capture():
-    """A move that took pieces (our synthesis, «Tuk–tuk», as chosen 2026-11-21): the move's touch, then a lower,
-    fuller landing 90 ms later (the board's modes 0.8×, the table louder) — two onsets, the second no louder than
-    a move."""
-    r = rng("capture-two")
-    out = silence(0.26)
-    place(out, 0.0, move(), 0.55)
-    place(out, 0.09, board(r, 230.0, 2000.0, 16, 0.15, contact=0.0018, decay_low=0.026, decay_high=0.007, centre=720.0, body=0.5, body_hz=125.0, body_decay=0.02), 0.95)
-    return fade_out(out[: seconds(0.26)], 0.04)
+    """A move that took pieces (our synthesis, D4's, as the owner chose it again on 2026-11-21): the move's knock, then a lower, fuller one 70 ms later over a short low thud."""
+    r = rng("capture")
+    length = 0.24
+    out = silence(length)
+    place(out, 0.0, wood(r, 820.0, 0.12, decay=0.022), 0.75)
+    place(out, 0.07, wood(r, 700.0, 0.16, decay=0.028, body=0.7), 1.0)
+    place(out, 0.07, fade_out(kick(0.16, 130.0, 62.0, 0.03, 0.05, 0.0, r), 0.06), 0.55)
+    return fade_out(out[: seconds(length)], 0.05)
 
 
 def crown():
-    """A man becomes a king, after the move's sound (our synthesis, «Daş daşın üstünə», as chosen 2026-11-21): the
-    crowning piece set on the man, as a board crowns by hand — two touches 24 ms apart, brighter than the move,
-    nothing ringing."""
-    return fade_out(stack(rng("crown-stack"))[: seconds(0.14)], 0.03)
+    """A man becomes a king, after the move's sound (our synthesis, as the owner chose it on 2026-11-21, «z»): the
+    crowning piece set on the man — two small wood touches 24 ms apart — and one small bell G6, softly, in a
+    small room: the crowning heard as a piece and marked as a moment."""
+    out = silence(0.36)
+    place(out, 0.0, stack(rng("crown-stack")), 1.0)
+    place(out, 0.05, tone(note("G6"), 0.3, attack=0.002, decay=0.055, partials=GLOCK), 0.3)
+    out = reverb(out, size=0.35, wet=0.12)
+    return fade_out(out[: seconds(0.36)], 0.08)
 
 
 # ── a phone's quiet cues ─────────────────────────────────────────────────
