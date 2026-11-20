@@ -26,7 +26,10 @@ use Illuminate\Validation\ValidationException;
  * difficulty, white, black}`: two different present players of the room,
  * stored as its seats (`setup_white_id`, `setup_black_id`) — 422 when one
  * of them is not present now. Its number of rounds stays as it is, for the
- * next race; a race's choice leaves the seats as they are.
+ * next race; a race's choice leaves the seats as they are. A choice of the
+ * other kind than the room's names only the game and its level (D5): a
+ * board game's then keeps the room's seats — read through `RoomSeats` —
+ * and a race's takes the rounds the room keeps (`Room::roundsKept()`).
  */
 final readonly class ChooseRoomGame
 {

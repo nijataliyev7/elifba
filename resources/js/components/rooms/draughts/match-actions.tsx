@@ -1,11 +1,12 @@
 import { Flag, Handshake } from 'lucide-react';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { MoveListButton } from '@/components/rooms/draughts/move-list';
 import type { MatchActs } from '@/components/rooms/draughts/use-match-acts';
 import { RoomConfirm } from '@/components/rooms/room-confirm';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 import type { RoomMatch, RoomSide } from '@/rooms/contract';
 
 /**
@@ -31,13 +32,21 @@ export function MatchActions({
 }) {
     const { t } = useTranslation();
     const why = useId();
+    // An offer standing when the page opened is drawn still; one the page saw arrive enters (ADR 025).
+    const [openedOn] = useState(() => (offerFrom !== null ? match.ply : null));
 
     if (seat === null) {
         return <MoveListButton moves={match.moves} className="w-full" />;
     }
 
     if (offerFrom !== null) {
-        return <DrawOffer name={offerFrom} acts={acts} />;
+        return (
+            <DrawOffer
+                name={offerFrom}
+                acts={acts}
+                enters={openedOn !== match.ply}
+            />
+        );
     }
 
     const live = match.phase !== 'over';
@@ -93,14 +102,26 @@ export function MatchActions({
  * fits 375 × 667. Making a move declines it too, and the card goes with
  * the state.
  */
-export function DrawOffer({ name, acts }: { name: string; acts: MatchActs }) {
+export function DrawOffer({
+    name,
+    acts,
+    enters,
+}: {
+    name: string;
+    acts: MatchActs;
+    /** The page saw the offer arrive. */
+    enters: boolean;
+}) {
     const { t } = useTranslation();
 
     return (
         <div
             role="group"
             aria-labelledby="draw-offer"
-            className="flex items-center gap-2 motion-safe:animate-room-enter"
+            className={cn(
+                'flex items-center gap-2',
+                enters && 'motion-safe:animate-room-enter',
+            )}
         >
             <Handshake aria-hidden className="size-5 shrink-0" />
             <p

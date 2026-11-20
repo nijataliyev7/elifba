@@ -1,14 +1,13 @@
 import { CircleStop, Handshake, Trophy } from 'lucide-react';
 import { gameSummary } from '@/components/rooms/catalog';
+import { seatOf } from '@/components/rooms/draughts/board';
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
 import { MoveListButton } from '@/components/rooms/draughts/move-list';
-import { finalRows } from '@/components/rooms/final';
-import { FinalStanding } from '@/components/rooms/final-standing';
-import { carriesRoom } from '@/components/rooms/sound-cues';
+import { EndHead } from '@/components/rooms/end-head';
+import { GameFinal } from '@/components/rooms/final-standing';
 import { StandingCard } from '@/components/rooms/start-parts';
 import type { RoomMotion } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
-import { cn } from '@/lib/utils';
 import type { RoomGame, RoomMatch, RoomState } from '@/rooms/contract';
 
 type Over = Extract<RoomMatch, { phase: 'over' }>;
@@ -60,52 +59,23 @@ export function MatchEnd({
           : t('rooms.match.draw');
 
     const head = (
-        <div
-            className={cn(
-                'flex items-center room-motion:animate-room-enter',
-                big ? 'gap-[2vh]' : 'gap-3',
-            )}
-        >
-            <span
-                className={cn(
-                    'flex shrink-0 items-center justify-center rounded-full room-motion:animate-room-pop',
-                    big ? 'size-[8vh]' : 'size-11',
-                    stopped
-                        ? 'bg-muted text-muted-foreground'
-                        : 'bg-amber-400 text-amber-950',
-                )}
-            >
-                <Icon aria-hidden className={big ? 'size-[4.4vh]' : 'size-5'} />
-            </span>
-            <span className="flex min-w-0 flex-col">
-                <span
-                    className={cn(
-                        'text-muted-foreground',
-                        big ? 'text-[2.4vh]' : 'text-sm',
-                    )}
-                >
-                    {t('rooms.game.over')} · {gameSummary(t, game)}
-                </span>
-                <span
-                    className={cn(
-                        'leading-tight font-bold',
-                        big ? 'text-[4.4vh]' : 'text-lg',
-                    )}
-                >
-                    {heading}
-                </span>
-                {!stopped && (
-                    <span
-                        className={cn(
-                            'text-muted-foreground',
-                            big ? 'text-[2.4vh]' : 'text-sm',
-                        )}
-                    >
-                        {t(`rooms.match.ending.${result.ending}`)}
-                    </span>
-                )}
-            </span>
-        </div>
+        <EndHead
+            icon={Icon}
+            muted={stopped}
+            lines={[
+                { text: `${t('rooms.game.over')} · ${gameSummary(t, game)}` },
+                { text: heading, strong: true },
+                ...(stopped
+                    ? []
+                    : [
+                          {
+                              text: t(`rooms.match.ending.${result.ending}`),
+                              wrap: true,
+                          },
+                      ]),
+            ]}
+            big={big}
+        />
     );
 
     const board = (
@@ -113,10 +83,7 @@ export function MatchEnd({
             position={match.position}
             last={match.last}
             flipped={
-                !big &&
-                match.sides.find(
-                    (side) => side.player_id === state.me.player_id,
-                )?.color === 'black'
+                !big && seatOf(match, state.me.player_id)?.color === 'black'
             }
             labels={big ? 'outside' : 'inside'}
             className={big ? 'h-full' : undefined}
@@ -124,14 +91,10 @@ export function MatchEnd({
     );
 
     const final = !stopped && (
-        <FinalStanding
-            ranking={finalRows(state)}
-            players={state.players}
-            me={big ? null : state.me.player_id}
+        <GameFinal
+            state={state}
             placeLabels={placeLabels}
             animate={motion.phase}
-            forRoom={!big && carriesRoom(state)}
-            spent={result.spent}
             big={big}
         />
     );

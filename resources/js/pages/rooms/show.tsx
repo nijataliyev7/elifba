@@ -17,7 +17,11 @@ import type { ReactNode } from 'react';
 import InputError from '@/components/input-error';
 import { choiceParts } from '@/components/rooms/catalog';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
-import { SeatNote, SeatPair } from '@/components/rooms/draughts/seat-rows';
+import {
+    SeatNext,
+    SeatNote,
+    SeatPair,
+} from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import {
     GameSettings,
@@ -360,15 +364,12 @@ function HostRoom({
     voice?: ReactNode;
 }) {
     const { t } = useTranslation();
-    const { t: tr } = useTranslation();
     const choice = useRoomChoice({
         roomId,
         choice: setup,
-        players: state.players,
-        options: catalog,
         onChanged: refresh,
     });
-    const parts = choiceParts(tr, choice.shown);
+    const parts = choiceParts(t, choice.shown);
     const tauntsSwitch = useTauntsSwitch({
         roomId,
         on: state.room.taunts,
@@ -504,15 +505,11 @@ function HostRoom({
                 ) : (
                     over !== null &&
                     parts.second === 'seats' && (
-                        <p className="text-center text-sm text-muted-foreground">
-                            {t('rooms.seats.next', {
-                                name:
-                                    state.players.find(
-                                        (player) =>
-                                            player.id === parts.seats.white,
-                                    )?.name ?? t('rooms.show.nameless'),
-                            })}
-                        </p>
+                        <SeatNext
+                            white={parts.seats.white}
+                            players={state.players}
+                            className="text-center text-sm text-muted-foreground"
+                        />
                     )
                 )}
                 {over !== null ? (
@@ -656,6 +653,7 @@ function PlayerRoom({
     voice?: ReactNode;
 }) {
     const { t } = useTranslation();
+    const setupParts = choiceParts(t, setup);
     const present = state.players.filter((player) => player.present).length;
     const me = state.players.find((player) => player.id === state.me.player_id);
     useTopOnTurn(over === null ? 'start' : over.id);
@@ -736,9 +734,9 @@ function PlayerRoom({
                             )}
                         </div>
                         <ChoiceRow choice={setup} />
-                        {choiceParts(t, setup).second === 'seats' && (
+                        {setupParts.second === 'seats' && (
                             <SeatNote
-                                seats={choiceParts(t, setup).seats}
+                                seats={setupParts.seats}
                                 me={state.me.player_id}
                             />
                         )}

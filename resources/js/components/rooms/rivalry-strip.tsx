@@ -8,7 +8,9 @@ import {
     overtakeOf,
     pairBefore,
     rivalPair,
+    stripChange,
     stripMoment,
+    stripRows,
 } from '@/components/rooms/rivalry';
 import type { RivalPair, TotalChange } from '@/components/rooms/rivalry';
 import { useCountUp } from '@/components/rooms/use-motion';
@@ -38,7 +40,7 @@ const SETTLE_AT = SLIDE_AT + SLIDE_MS;
 /** Then the sides take their new places, and an overtake's ribbon pops. */
 const SWAP_AT = SETTLE_AT + 80;
 
-type Rivalry = {
+export type Rivalry = {
     /** The pair the page draws now; null without two contenders (no strip). */
     pair: RivalPair | null;
     /** The pair the page drew last before this moment: in the round's question, or the reveal before. */
@@ -104,6 +106,70 @@ export function useRivalry(
 }
 
 /**
+ * The strip of a live game (docs/frontend.md rule 15 "Rivals face to face",
+ * "Board games" → "The strip"): `RivalryStrip` over the pair a page draws
+ * (`useRivalry()`, which the caller keeps — a round's screen reads the
+ * pair, a phone's throw its rival), its rows and what the moment changed
+ * them by (`stripRows()`, `stripChange()`) — a round's and a match's alike.
+ * `children` lies over it: a player's throw, as T4 built it.
+ */
+export function GameStrip({
+    rivalry,
+    state,
+    placeLabels,
+    icons,
+    moves,
+    marks,
+    ribbonInGap,
+    big = false,
+    children,
+}: {
+    rivalry: Rivalry & { key: string };
+    state: RoomState;
+    placeLabels: string[];
+    icons: RivalryIcons | null;
+    /** A reveal the page saw begin, or a capture it saw arrive. */
+    moves: boolean;
+    marks?: SideMarks;
+    ribbonInGap?: boolean;
+    big?: boolean;
+    children?: ReactNode;
+}) {
+    if (rivalry.pair === null) {
+        return null;
+    }
+
+    const change = stripChange(state);
+    const strip = (
+        <RivalryStrip
+            key={`strip:${rivalry.key}`}
+            pair={rivalry.pair}
+            previous={rivalry.previous}
+            overtake={rivalry.overtake}
+            ranking={stripRows(state).rows}
+            results={change.results}
+            spent={change.spent}
+            players={state.players}
+            placeLabels={placeLabels}
+            icons={icons}
+            moves={moves}
+            marks={marks}
+            ribbonInGap={ribbonInGap}
+            big={big}
+        />
+    );
+
+    return children === undefined ? (
+        strip
+    ) : (
+        <div className="relative">
+            {strip}
+            {children}
+        </div>
+    );
+}
+
+/**
  * What a side shows beside its name in place of a place label: a match's
  * piece of its colour before the name and its clock after it (ADR 034
  * decision 23), by `player_id`.
@@ -141,6 +207,7 @@ export function RivalryStrip({
     icons,
     moves,
     marks,
+    ribbonInGap = false,
     big = false,
 }: {
     pair: RivalPair;
@@ -159,6 +226,8 @@ export function RivalryStrip({
     moves: boolean;
     /** A match's piece and clock by each side's name. */
     marks?: SideMarks;
+    /** A match on a phone fits 375 × 667 with nothing to spare: the ribbon takes the gap's place, never a row of its own. */
+    ribbonInGap?: boolean;
     big?: boolean;
 }) {
     const { t } = useTranslation();
@@ -191,6 +260,7 @@ export function RivalryStrip({
         (id === null ? null : names.get(id)?.name) ?? t('rooms.show.nameless');
     const ribbon = overtake !== null && (!animate || step >= 3);
     const leftTook = overtake !== null && overtake === pair.left?.player_id;
+    const overGap = ribbon && !big && ribbonInGap;
 
     return (
         <div
@@ -256,12 +326,22 @@ export function RivalryStrip({
                     big={big}
                 />
 
-                <div className="flex justify-center">
+                <div
+                    className={cn(
+                        'flex justify-center',
+                        overGap && 'invisible',
+                    )}
+                >
                     <Gap
                         key={gapWords(t, words, nameOf)}
                         pair={words}
                         words={gapWords(t, words, nameOf)}
-                        pop={animate && step >= 2}
+                        // Words the ribbon is about to cover do not pop first.
+                        pop={
+                            animate &&
+                            step >= 2 &&
+                            !(ribbonInGap && !big && overtake !== null)
+                        }
                         big={big}
                     />
                 </div>
@@ -271,7 +351,11 @@ export function RivalryStrip({
                 <div
                     className={cn(
                         'pointer-events-none flex justify-center',
-                        big ? 'absolute inset-x-0 top-[6.6vh] z-[4]' : 'mt-0.5',
+                        big
+                            ? 'absolute inset-x-0 top-[6.6vh] z-[4]'
+                            : overGap
+                              ? 'absolute inset-x-0 bottom-0 z-[4]'
+                              : 'mt-0.5',
                     )}
                 >
                     <span
@@ -279,7 +363,11 @@ export function RivalryStrip({
                             'inline-flex items-center font-bold whitespace-nowrap text-white shadow-[0_6px_18px_rgb(0_0_0/0.22),0_0_0_2px_rgb(255_255_255/0.9)] dark:shadow-[0_6px_18px_rgb(0_0_0/0.5),0_0_0_2px_rgb(255_255_255/0.25)]',
                             big
                                 ? 'gap-[1vh] rounded-full py-[0.8vh] pr-[2.4vh] pl-[1.2vh] text-[2.9vh]'
-                                : 'gap-1.5 rounded-full py-1 pr-[13px] pl-[7px] text-[13px]',
+                                : cn(
+                                      'gap-1.5 rounded-full pr-[13px] pl-[7px] text-[13px]',
+                                      // In the gap's place: no taller than the gap, clear of the bar and its ⚡.
+                                      overGap ? 'py-0.5' : 'py-1',
+                                  ),
                             leftTook
                                 ? 'bg-[linear-gradient(180deg,var(--rival-left-hi),var(--rival-left))]'
                                 : 'bg-[linear-gradient(180deg,var(--rival-right-hi),var(--rival-right))]',

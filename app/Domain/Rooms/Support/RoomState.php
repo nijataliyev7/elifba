@@ -12,6 +12,7 @@ use App\Domain\Rooms\Data\RoomTauntSeenData;
 use App\Domain\Rooms\Data\RoomViewerData;
 use App\Domain\Rooms\Data\RoomVoiceData;
 use App\Domain\Rooms\Enums\RoomGamePhase;
+use App\Domain\Rooms\Enums\RoomMatchEnding;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
@@ -20,6 +21,7 @@ use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A room's state as one account sees it (docs/architecture.md §12 "The
@@ -77,6 +79,21 @@ final class RoomState
      * @param  bool  $voice  whether the instance's live voice is on — the switch, which the caller reads (§12 "Live voice")
      */
     public static function for(Room $room, User $viewer, bool $screen = false, bool $voice = false): RoomStateData
+    {
+        $state = self::build($room, $viewer, $screen, $voice);
+
+        // A flag fall is derived from the clock alone, and an act stamped before it under the
+        // room's lock but not yet committed would take it back: a read that finds one is made
+        // again under the room row's shared lock, its moment read after any write in flight
+        // (`RoomLock::shared()`). Every other read takes no lock, so no write waits for readers.
+        if ($state->match?->result?->ending !== RoomMatchEnding::Time) {
+            return $state;
+        }
+
+        return DB::transaction(static fn (): RoomStateData => self::build(RoomLock::shared($room) ?? $room, $viewer, $screen, $voice));
+    }
+
+    private static function build(Room $room, User $viewer, bool $screen, bool $voice): RoomStateData
     {
         $nowMs = RoomClock::nowMs();
         $rows = RoomRanking::players($room);
@@ -136,7 +153,7 @@ final class RoomState
             ->limit(RoomTauntsData::MAX_LISTED);
 
         return new RoomTauntsData(
-            open: $plays && $room->taunts && RoomTauntWindow::open($room, $game, $nowMs) && RoomGameDriver::of($game->mechanic)->mayThrow($game, $mine),
+            open: $plays && $room->taunts && RoomTauntWindow::open($room, $game, $mine, $nowMs),
             balance: $plays ? RoomTauntBalance::of($game, $mine, $nowMs) : null,
             ready_ms: $readyMs !== null && $readyMs > $nowMs ? $readyMs : null,
             received: ! $plays || ! $room->taunts ? [] : array_values($window()

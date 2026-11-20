@@ -674,16 +674,38 @@ export const RoomTauntReceipt = z.strictObject({
 });
 
 /**
- * `POST /rooms/{room}/acts` (D3, ADR 034 decision 9): a seat's own act — a
+ * `POST /rooms/{room}/acts` (D3, ADR 034 decision 9): a seat's own act in
+ * the game the device saw (`game_id`, as an answer names its round) — a
  * move with its path, a draw offer or its answer at the ply the device saw,
  * or resigning. Never a player, never `leave`, which the server writes.
  */
 export const RoomAct = z.discriminatedUnion('kind', [
-    z.strictObject({ event_id: id, kind: z.literal('move'), ply: count, path }),
-    z.strictObject({ event_id: id, kind: z.literal('offer'), ply: count }),
-    z.strictObject({ event_id: id, kind: z.literal('accept'), ply: count }),
-    z.strictObject({ event_id: id, kind: z.literal('decline'), ply: count }),
-    z.strictObject({ event_id: id, kind: z.literal('resign') }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('move'),
+        ply: count,
+        path,
+    }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('offer'),
+        ply: count,
+    }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('accept'),
+        ply: count,
+    }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('decline'),
+        ply: count,
+    }),
+    z.strictObject({ event_id: id, game_id: id, kind: z.literal('resign') }),
 ]);
 
 /** The receipt of an act: what was done with it; the match comes with the next state. */
@@ -734,6 +756,7 @@ export type RoomRound = z.infer<typeof RoomRound>;
 export type RoomGame = z.infer<typeof RoomGame>;
 /** A race of rounds: the game a round is of. */
 export type RoomRaceGame = Extract<RoomGame, { kind: 'race' }>;
+export type RoomBoardGame = Extract<RoomGame, { kind: 'board' }>;
 export type RoomSetup = z.infer<typeof RoomSetup>;
 export type RoomRankedPlayer = z.infer<typeof RoomRankedPlayer>;
 export type RoomState = z.infer<typeof RoomState>;

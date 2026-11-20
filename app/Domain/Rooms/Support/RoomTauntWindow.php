@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Support;
 
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
+use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 
 /**
@@ -17,16 +18,24 @@ use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
  * `ThrowRoomTaunt`'s to check.
  *
  * That is a race's (`RaceDriver::tauntsOpen()`); a board game's window is
- * the live match, its countdown included (ADR 034 decision 22) — each as
- * the game's driver says.
+ * the live match, its countdown included, and only its two seats throw
+ * (ADR 034 decision 22) — each as the game's driver says.
  */
 final class RoomTauntWindow
 {
     /**
+     * Whether `$thrower` — a present player — may throw a taunt now.
+     *
      * @param  RoomGame|null  $game  the room's latest game, with its rounds
      */
-    public static function open(Room $room, ?RoomGame $game, int $nowMs): bool
+    public static function open(Room $room, ?RoomGame $game, RoomPlayer $thrower, int $nowMs): bool
     {
-        return $game !== null && $room->isOpen() && RoomGameDriver::of($game->mechanic)->tauntsOpen($game, $nowMs);
+        if ($game === null || ! $room->isOpen()) {
+            return false;
+        }
+
+        $driver = RoomGameDriver::of($game->mechanic);
+
+        return $driver->tauntsOpen($game, $nowMs) && $driver->mayThrow($game, $thrower);
     }
 }

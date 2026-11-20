@@ -21,8 +21,10 @@ import type { RoomMatch, RoomPlayer, RoomSide } from '@/rooms/contract';
  * is begun; «:name oynayır» while the other seat thinks; «Oyunu
  * izləyirsiniz» first for a watcher. A standing draw offer says itself
  * here to everyone but the seat it is made to (that seat has its card),
- * and a move not taken says so in the wrong colour. On the screen (`big`)
- * whose turn it is and a standing offer, larger.
+ * and a move not taken says so in the wrong colour. On a phone it is one
+ * 44px row — at most two parts, each on a line of its own, or one part in
+ * two lines, beside «Geri» — so the match still fits 375 × 667. On the
+ * screen (`big`) whose turn it is and a standing offer, larger.
  */
 export function MatchLine({
     match,
@@ -119,32 +121,54 @@ export function MatchLine({
         }
     }
 
+    const shown = failed
+        ? [
+              <Part
+                  key="failed"
+                  icon={<TriangleAlert aria-hidden className={icon} />}
+                  wrong
+              >
+                  {t('rooms.match.move_failed')}
+              </Part>,
+          ]
+        : // A phone's line is one 44px row: at most two parts, a watcher's «Oyunu izləyirsiniz» giving way to an offer.
+          big
+          ? parts
+          : parts.slice(-2);
+
+    if (big) {
+        return (
+            <div
+                role="status"
+                aria-live="polite"
+                className="flex flex-col items-start gap-y-1 text-[max(1rem,2.6vh)]"
+            >
+                {shown}
+            </div>
+        );
+    }
+
     return (
         <div
             role="status"
             aria-live="polite"
-            className={cn(
-                'flex items-center gap-x-3 gap-y-1',
-                big
-                    ? 'flex-col items-start text-[max(1rem,2.6vh)]'
-                    : 'min-h-11 flex-wrap text-sm',
-            )}
+            className="flex min-h-11 items-center gap-3 text-sm"
         >
-            {failed ? (
-                <Part
-                    icon={<TriangleAlert aria-hidden className={icon} />}
-                    wrong
-                >
-                    {t('rooms.match.move_failed')}
-                </Part>
-            ) : (
-                parts
-            )}
+            <div
+                className={cn(
+                    'flex min-w-0 flex-1 flex-col',
+                    shown.length > 1
+                        ? '[&>*>span]:truncate'
+                        : '[&>*>span]:line-clamp-2',
+                )}
+            >
+                {shown}
+            </div>
             {begun && onUndo !== undefined && (
                 <Button
                     type="button"
                     variant="outline"
-                    className="ml-auto h-11"
+                    className="h-11 shrink-0"
                     onClick={onUndo}
                 >
                     <Undo2 />

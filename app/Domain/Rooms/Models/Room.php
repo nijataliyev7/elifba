@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use LogicException;
 
 /**
  * A room an account opened (docs/architecture.md §1 `rooms`, §12 "Rooms and
@@ -154,6 +155,17 @@ class Room extends Model
     public function setup(): RoomGameSetupData
     {
         return $this->chosen()->seated(fn (): array => RoomSeats::of($this));
+    }
+
+    /**
+     * The rounds the room's next race takes when its choice names none — a
+     * race chosen after a board game, whose choice has no rounds: the
+     * number the room keeps (`setup_rounds`), else a new room's
+     * (`RoomDefaults`).
+     */
+    public function roundsKept(RoomMechanic $race): int
+    {
+        return $this->setup_rounds ?? RoomDefaults::for($this->host, $race)->rounds ?? throw new LogicException('A race has its rounds.');
     }
 
     private function chosen(): RoomGameSetupData

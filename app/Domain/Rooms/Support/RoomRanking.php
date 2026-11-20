@@ -130,13 +130,14 @@ final class RoomRanking
     }
 
     /**
-     * One game's points less the cost of its counted taunts, never below 0.
+     * One game's points less the cost of its counted taunts, never below 0
+     * — the ranking's, and a match's own two rows (`BoardDriver`).
      *
      * @param  array<string, int>  $points  by player row
      * @param  array<string, int>  $spent  counted taunts by player row
      * @return array<string, int>
      */
-    private static function net(array $points, array $spent): array
+    public static function net(array $points, array $spent): array
     {
         foreach ($spent as $player => $count) {
             $points[$player] = max(0, ($points[$player] ?? 0) - RoomPointsRule::TAUNT_COST * $count);

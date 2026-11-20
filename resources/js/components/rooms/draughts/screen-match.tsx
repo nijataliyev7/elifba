@@ -1,8 +1,10 @@
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
+import { MatchTitle } from '@/components/rooms/draughts/live-match';
 import { MatchLine } from '@/components/rooms/draughts/match-line';
 import { MatchStrip } from '@/components/rooms/draughts/match-strip';
 import { MoveLines } from '@/components/rooms/draughts/move-list';
 import { useArrival } from '@/components/rooms/draughts/use-arrival';
+import { useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import { ScreenTauntReaction } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
@@ -10,12 +12,13 @@ import type { RoomMotion } from '@/components/rooms/use-motion';
 import { useServerNow } from '@/components/rooms/use-server-now';
 import { useTranslation } from '@/hooks/use-translation';
 import type { ServerClock } from '@/rooms/clock';
-import type { RoomGame, RoomMatch, RoomState } from '@/rooms/contract';
+import type { RoomBoardGame, RoomMatch, RoomState } from '@/rooms/contract';
 
 /**
  * A live match on the big screen (docs/frontend.md rule 15 "Board games"
  * → "The screen", ADR 034 decision 27): the rivalry strip of white and
- * black with their clocks, in `vh`; under it the board at the height that
+ * black with their clocks, in `vh`; under it the match's head — «Şaşki ·
+ * 5+3» over the move's number, as a round's head; then the board at the height that
  * is left, from white's side with the files and ranks outside it, and on
  * its right a column with the moves («Gedişlər», always shown), whose turn
  * it is and a standing offer; a taunt's reaction over the whole screen as
@@ -33,7 +36,7 @@ export function ScreenMatch({
     tauntsHidden,
 }: {
     state: RoomState;
-    game: Extract<RoomGame, { kind: 'board' }>;
+    game: RoomBoardGame;
     match: RoomMatch;
     clock: ServerClock;
     placeLabels: string[];
@@ -45,6 +48,7 @@ export function ScreenMatch({
     const { t } = useTranslation();
     const now = useServerNow(clock, true);
     const arrival = useArrival(game.id, match);
+    const rivalry = useRivalry(state, null);
 
     return (
         <section
@@ -53,6 +57,7 @@ export function ScreenMatch({
             className="flex min-h-0 flex-1 flex-col gap-[2.4vh]"
         >
             <MatchStrip
+                rivalry={rivalry}
                 state={state}
                 match={match}
                 now={now}
@@ -69,6 +74,8 @@ export function ScreenMatch({
                 now={now}
                 hidden={tauntsHidden}
             />
+
+            <MatchTitle game={game} match={match} motion={motion.round} big />
 
             <div className="flex min-h-0 flex-1 justify-center gap-[3vw]">
                 <DraughtsBoard

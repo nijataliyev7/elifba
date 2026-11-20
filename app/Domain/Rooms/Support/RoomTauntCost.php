@@ -19,7 +19,8 @@ use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
  *
  * That is a race's: `countsAt()`, `counted()` and `spentAt()` read its
  * timetable. A board game has one close, its end, where every taunt of it
- * counts (ADR 034 decision 22); `spent()` asks the game's driver.
+ * counts (ADR 034 decision 22); `spent()` asks the game's driver when
+ * a taunt counts (`RoomGameDriver::tauntCounts()`).
  */
 final class RoomTauntCost
 {
@@ -63,7 +64,16 @@ final class RoomTauntCost
      */
     public static function spent(RoomGame $game, int $nowMs, ?iterable $taunts = null): array
     {
-        return RoomGameDriver::of($game->mechanic)->spent($game, $nowMs, $taunts ?? self::of($game));
+        $counts = RoomGameDriver::of($game->mechanic)->tauntCounts($game, $nowMs);
+        $spent = [];
+
+        foreach ($taunts ?? self::of($game) as $taunt) {
+            if ($counts($taunt->sent_ms)) {
+                $spent[$taunt->room_player_id] = ($spent[$taunt->room_player_id] ?? 0) + 1;
+            }
+        }
+
+        return $spent;
     }
 
     /**

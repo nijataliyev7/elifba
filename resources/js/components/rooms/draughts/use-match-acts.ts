@@ -26,8 +26,8 @@ export type MatchActs = {
     marks: Set<string>;
     /** The viewer's move posted at this ply, until the state has it. */
     pending: string[] | null;
-    /** The path of the last move this page posted and was not refused: the arrival it need not slide. */
-    sentPath: string[] | null;
+    /** The move this page posted last, whatever its receipt said: an arrival of it need not slide (`ownArrival()`). */
+    posted: { ply: number; path: string[] } | null;
     /** The posted move was not taken: its piece stands back. */
     failed: boolean;
     /** An offer, its answer or a resignation is on its way. */
@@ -48,11 +48,14 @@ const wait = (ms: number) =>
  * answers and back where it was with «Gediş göndərilmədi» if it was not
  * taken. An offer, its answer and a resignation are posted the same way.
  * Every act names the ply the page saw; the page then asks for the state,
- * which alone says what happened. Nothing here keeps a clock or a sound:
- * a tap's sound is the page's (`sound.tap`).
+ * which alone says what happened. Every act names its game (`game_id`),
+ * and a retry stops once the page shows another game or no match at all,
+ * so an act of a match that ended is never taken in the next. Nothing
+ * here keeps a clock or a sound: a tap's sound is the page's (`sound.tap`).
  */
 export function useMatchActs({
     roomId,
+    gameId,
     match,
     clock,
     refresh,
@@ -60,6 +63,8 @@ export function useMatchActs({
     sound,
 }: {
     roomId: string;
+    /** The game the match is: every act names it. */
+    gameId: string;
     match: RoomMatch;
     clock: ServerClock;
     refresh: () => void;
@@ -72,12 +77,24 @@ export function useMatchActs({
     });
     const [sent, setSent] = useState<Sent | null>(null);
     const [busy, setBusy] = useState(false);
-    // What a retry reads: the ply the page shows now.
-    const shown = useRef(match);
+    // What a retry reads: the game and the ply the page shows now — none once the match is gone from it.
+    const shown = useRef<{ game: string; match: RoomMatch } | null>({
+        game: gameId,
+        match,
+    });
 
     useEffect(() => {
-        shown.current = match;
-    }, [match]);
+        shown.current = { game: gameId, match };
+
+        return () => {
+            shown.current = null;
+        };
+    }, [gameId, match]);
+
+    const showing = (test: (match: RoomMatch) => boolean) =>
+        shown.current !== null &&
+        shown.current.game === gameId &&
+        test(shown.current.match);
 
     const mine = sent?.ply === match.ply ? sent : null;
     const pending =
@@ -101,8 +118,18 @@ export function useMatchActs({
 
         setSent({ ply, path, status: 'sending' });
         void post(
-            { event_id: eventId(clock.now() ?? 0), kind: 'move', ply, path },
-            () => shown.current.ply === ply && shown.current.phase === 'play',
+            {
+                event_id: eventId(clock.now() ?? 0),
+                game_id: gameId,
+                kind: 'move',
+                ply,
+                path,
+            },
+            () =>
+                showing(
+                    (shownMatch) =>
+                        shownMatch.ply === ply && shownMatch.phase === 'play',
+                ),
         ).then((outcome) => {
             if (outcome.kind === 'gone') {
                 onGone();
@@ -114,6 +141,12 @@ export function useMatchActs({
                 outcome.kind === 'receipt' && outcome.receipt.status !== 'late';
 
             setSent({ ply, path, status: taken ? 'taken' : 'failed' });
+
+            if (!taken) {
+                // The piece stands back on its start, lifted no more.
+                setTaps({ ply, squares: [] });
+            }
+
             refresh();
         });
     };
@@ -124,6 +157,11 @@ export function useMatchActs({
         }
 
         setTaps({ ply: match.ply, squares: result.taps });
+
+        if (mine?.status === 'failed') {
+            // A new tap after a refusal: «Gediş göndərilmədi» has been read.
+            setSent(null);
+        }
 
         if (result.send !== null) {
             move(result.send);
@@ -141,9 +179,9 @@ export function useMatchActs({
         setBusy(true);
         await post(
             kind === 'resign'
-                ? { event_id: id, kind }
-                : { event_id: id, kind, ply },
-            () => shown.current.phase !== 'over',
+                ? { event_id: id, game_id: gameId, kind }
+                : { event_id: id, game_id: gameId, kind, ply },
+            () => showing((shownMatch) => shownMatch.phase !== 'over'),
         ).then((outcome) => {
             setBusy(false);
 
@@ -159,7 +197,7 @@ export function useMatchActs({
         taps: squares,
         marks: nextSquares(paths, squares),
         pending,
-        sentPath: sent !== null && sent.status !== 'failed' ? sent.path : null,
+        posted: sent,
         failed: mine?.status === 'failed',
         busy,
         tap:

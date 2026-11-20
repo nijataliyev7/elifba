@@ -4,12 +4,14 @@ import InputError from '@/components/input-error';
 import {
     choiceBody,
     choiceParts,
+    clockLevel,
     clockLevelText,
     gameOf,
     levelOf,
     roundSteps,
     sameChoice,
     withGame,
+    withLevel,
 } from '@/components/rooms/catalog';
 import type {
     CatalogGame,
@@ -48,7 +50,7 @@ export type RoomChoice = {
     pending: ChoiceControl | null;
     failed: boolean;
     choose: (next: SetupChoice, control: ChoiceControl) => void;
-    /** Another game, with what a choice of its kind needs (`withGame()`). */
+    /** Another game, at a level it has (`withGame()`). */
     pick: (game: CatalogGame) => void;
 };
 
@@ -65,27 +67,15 @@ export type RoomChoice = {
 export function useRoomChoice({
     roomId,
     choice,
-    players,
-    options,
     onChanged,
 }: {
     roomId: string;
     /** The room's choice, from the state. */
     choice: SetupChoice;
-    /** The room's players, in the order they joined: who a board game may seat. */
-    players: RoomPlayer[];
-    /** The catalog: the rounds' bounds. */
-    options: GameSetupOptions;
     /** After a write: the page asks for the state now rather than wait for the signal. */
     onChanged: () => void;
 }): RoomChoice {
     const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}`;
-    // A board game's choice has no rounds: a race chosen after it takes the last the page saw.
-    const [rounds, setRounds] = useState<number | null>(choice.rounds ?? null);
-
-    if (choice.rounds !== undefined && choice.rounds !== rounds) {
-        setRounds(choice.rounds);
-    }
 
     // The tap, and the state's choice it was made over: once that moves, the state has answered.
     const [tap, setTap] = useState<{
@@ -123,17 +113,8 @@ export function useRoomChoice({
             });
     };
 
-    const steps = roundSteps(options.rounds);
     const pick = (game: CatalogGame) =>
-        choose(
-            withGame(shown, game, {
-                rounds: rounds ?? steps[Math.floor(steps.length / 2)],
-                present: players
-                    .filter((player) => player.present)
-                    .map((player) => player.id),
-            }),
-            'mechanic',
-        );
+        choose(withGame(shown, game), 'mechanic');
 
     return { shown, pending, failed, choose, pick };
 }
@@ -269,7 +250,12 @@ export function DifficultySegments({
 
     return (
         <div className={cn('flex flex-col gap-2', big && 'gap-[1.2vh]')}>
-            <div className="grid grid-cols-4 gap-1 rounded-xl bg-muted p-1">
+            <div
+                className="grid gap-1 rounded-xl bg-muted p-1"
+                style={{
+                    gridTemplateColumns: `repeat(${game.difficulties.length}, minmax(0, 1fr))`,
+                }}
+            >
                 {game.difficulties.map((difficulty) => {
                     const pressed = difficulty === choice.shown.difficulty;
                     const clock = levelOf(game, difficulty)?.clock;
@@ -282,7 +268,7 @@ export function DifficultySegments({
                             disabled={choice.pending !== null}
                             onClick={() =>
                                 choice.choose(
-                                    { ...choice.shown, difficulty },
+                                    withLevel(choice.shown, game, difficulty),
                                     'difficulty',
                                 )
                             }
@@ -380,10 +366,7 @@ export function LevelLine({
     let line: string | null = null;
 
     if (level.clock !== undefined) {
-        line = t('rooms.clock.line', {
-            minutes: Math.round(level.clock.base_ms / 60_000),
-            seconds: Math.round(level.clock.increment_ms / 1000),
-        });
+        line = t('rooms.clock.line', clockLevel(level.clock));
     } else if (level.rules !== null) {
         line = t('rooms.setup.levels.sequence', {
             terms: level.terms ?? 0,

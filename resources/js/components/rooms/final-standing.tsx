@@ -1,16 +1,62 @@
 import { Medal, Trophy } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { finalTier, finalTimeline, holdsFirst } from '@/components/rooms/final';
+import {
+    finalRows,
+    finalSpent,
+    finalTier,
+    finalTimeline,
+    holdsFirst,
+} from '@/components/rooms/final';
 import type { FinalTier } from '@/components/rooms/final';
 import { celebrate } from '@/components/rooms/motion-dom';
+import { carriesRoom } from '@/components/rooms/sound-cues';
 import { SpentMark } from '@/components/rooms/taunt-parts';
 import { standingGroups } from '@/components/rooms/standing-groups';
 import type { StandingGroup } from '@/components/rooms/standing-groups';
 import { useCountUp } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import type { RoomPlayer, RoomRankedPlayer, RoomSpent } from '@/rooms/contract';
+import type {
+    RoomPlayer,
+    RoomRankedPlayer,
+    RoomSpent,
+    RoomState,
+} from '@/rooms/contract';
+
+/**
+ * A game's final as a page draws it once the game is over (ADR 025; ADR
+ * 034 decision 25): the rows `finalRows()` opens — a race's room standing,
+ * a match's own two places — with the taunts `finalSpent()` counts beside
+ * them; on a phone the viewer's own row «siz», its confetti the room's in
+ * a room without a screen (`carriesRoom()`); on the screen (`big`) larger
+ * and at the screen's pace.
+ */
+export function GameFinal({
+    state,
+    placeLabels,
+    animate,
+    big = false,
+}: {
+    state: RoomState;
+    placeLabels: string[];
+    /** The page saw the game end. */
+    animate: boolean;
+    big?: boolean;
+}) {
+    return (
+        <FinalStanding
+            ranking={finalRows(state)}
+            players={state.players}
+            me={big ? null : state.me.player_id}
+            placeLabels={placeLabels}
+            animate={animate}
+            forRoom={!big && carriesRoom(state)}
+            spent={finalSpent(state)}
+            big={big}
+        />
+    );
+}
 
 /**
  * The final of a room game (docs/frontend.md rule 15 "The final", ADR

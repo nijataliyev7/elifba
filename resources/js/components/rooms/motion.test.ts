@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RoomState } from '@/rooms/contract';
 import type { RoomState as State } from '@/rooms/contract';
-import { nextDrawn } from './draughts/use-arrival';
+import { nextDrawn, ownArrival } from './draughts/use-arrival';
 import {
     countUpValue,
     rankShift,
@@ -266,5 +266,25 @@ describe('a match', () => {
         // Two plies ahead, or another game: still.
         expect(nextDrawn(opened, game, match(at(play, 3))).arrival).toBeNull();
         expect(nextDrawn(opened, 'another', match(play)).arrival).toBeNull();
+    });
+
+    it('never slides the viewer’s own move again, even when its answer was lost (D5)', () => {
+        const game = play.game?.id ?? '';
+        const arrival = nextDrawn(
+            nextDrawn(null, game, match(at(play, 1))),
+            game,
+            match(play),
+        ).arrival;
+        const path = match(play).last?.path ?? [];
+
+        // Posted at the ply before: it stands where it went, whether the receipt came back or not.
+        expect(ownArrival(arrival, { ply: 1, path }, 2)).toBe(true);
+        // The other seat's move, a move posted at another ply, or nothing posted: it slides.
+        expect(ownArrival(arrival, { ply: 1, path: ['a3', 'b4'] }, 2)).toBe(
+            false,
+        );
+        expect(ownArrival(arrival, { ply: 0, path }, 2)).toBe(false);
+        expect(ownArrival(arrival, null, 2)).toBe(false);
+        expect(ownArrival(null, { ply: 1, path }, 2)).toBe(false);
     });
 });

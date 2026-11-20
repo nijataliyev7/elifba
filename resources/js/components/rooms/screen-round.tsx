@@ -3,7 +3,7 @@ import { Countdown, Counted, RoundHead } from '@/components/rooms/live-round';
 import { MECHANIC_VIEWS } from '@/components/rooms/mechanics/views';
 import { REVEAL_MS } from '@/components/rooms/motion';
 import { RaceLanes } from '@/components/rooms/race-lanes';
-import { RivalryStrip, useRivalry } from '@/components/rooms/rivalry-strip';
+import { GameStrip, useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import { ScreenFit } from '@/components/rooms/screen-fit';
 import { Standing } from '@/components/rooms/standing';
@@ -86,22 +86,14 @@ export function ScreenRound({
                 rivalry.pair === null ? 'gap-[3vh]' : 'gap-[2vh]',
             )}
         >
-            {rivalry.pair !== null && (
-                <RivalryStrip
-                    key={`strip:${rivalry.key}`}
-                    pair={rivalry.pair}
-                    previous={rivalry.previous}
-                    overtake={rivalry.overtake}
-                    ranking={state.ranking}
-                    results={round.reveal?.results ?? null}
-                    spent={round.reveal?.spent ?? []}
-                    players={state.players}
-                    placeLabels={placeLabels}
-                    icons={icons}
-                    moves={motion.strip}
-                    big
-                />
-            )}
+            <GameStrip
+                rivalry={rivalry}
+                state={state}
+                placeLabels={placeLabels}
+                icons={icons}
+                moves={motion.strip}
+                big
+            />
 
             <ScreenTauntReaction
                 shown={state.taunts?.shown}

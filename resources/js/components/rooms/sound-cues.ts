@@ -1,4 +1,4 @@
-import { slideOf } from '@/components/rooms/draughts/board';
+import { offerTo, slideOf } from '@/components/rooms/draughts/board';
 import { finalRows, finalTier, finalTimeline } from '@/components/rooms/final';
 import { momentKey, REVEAL_MS, roomMoment } from '@/components/rooms/motion';
 import { standingGroups } from '@/components/rooms/standing-groups';
@@ -370,18 +370,13 @@ function hearPhone(state: RoomState | null): Heard {
 
     if (match !== null && match.phase === 'play') {
         // A draw offer made to the viewer's seat: the side to move, whose offer it is not.
-        const seat = match.sides.find(
-            (side) => side.player_id === state?.me.player_id,
-        );
-        const toMe =
-            match.offer !== null &&
-            seat !== undefined &&
-            seat.color !== match.offer;
-
         return {
             ...quiet,
             began: match.since_ms,
-            beats: toMe ? { offer: [now0('offer')] } : {},
+            beats:
+                offerTo(match, state?.me.player_id ?? null) !== null
+                    ? { offer: [now0('offer')] }
+                    : {},
         };
     }
 

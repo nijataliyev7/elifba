@@ -13,11 +13,13 @@ use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomRanking;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Support\Draughts;
@@ -60,14 +62,15 @@ function matchStarted(int $difficulty = 2): RoomGame
 }
 
 /**
- * `$account` posts an act through the endpoint.
+ * `$account` posts an act through the endpoint, in the room's latest game
+ * unless the body names another.
  *
  * @param  array<string, mixed>  $body
  * @return TestResponse<Response>
  */
 function matchAct(User $account, Room $room, array $body): TestResponse
 {
-    return test()->actingAs($account)->postJson(route('rooms.acts.store', $room), $body);
+    return test()->actingAs($account)->postJson(route('rooms.acts.store', $room), [...$body, 'game_id' => $body['game_id'] ?? $room->latestGame()?->id]);
 }
 
 /**
@@ -207,6 +210,36 @@ it('seats the present players who joined first, and a seat whose player left is 
     $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $this->room), ['mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 7])->assertNoContent();
 
     expect(matchState($this->resad, $this->room)['setup'])->toBe(['kind' => 'race', 'mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 7, 'played' => false]);
+});
+
+it('fills a choice of the other kind from the room: a race takes its kept rounds, a board game keeps its seats (D5)', function (): void {
+    $choose = fn (array $body) => $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $this->room), $body);
+    $setup = fn (): array => matchState($this->resad, $this->room)['setup'];
+
+    $choose(['mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 7])->assertNoContent();
+    $choose(['mechanic' => 'draughts', 'difficulty' => 3, 'white' => $this->turalRow->id, 'black' => $this->aygunRow->id])->assertNoContent();
+
+    // A race chosen after the board game names no rounds: the 7 the room kept.
+    $choose(['mechanic' => 'spelling', 'difficulty' => 2])->assertNoContent();
+    expect($setup())->toBe(['kind' => 'race', 'mechanic' => 'spelling', 'difficulty' => 2, 'rounds' => 7, 'played' => false]);
+
+    // The board game chosen again names no seats: Tural and Aygün, as the host seated them.
+    $choose(['mechanic' => 'draughts', 'difficulty' => 3])->assertNoContent();
+    expect([$setup()['white'], $setup()['black']])->toBe([$this->turalRow->id, $this->aygunRow->id]);
+
+    // Both seats or neither; a race may still name its rounds.
+    $choose(['mechanic' => 'draughts', 'difficulty' => 3, 'white' => $this->aygunRow->id])->assertUnprocessable()->assertJsonValidationErrors(['black']);
+    $choose(['mechanic' => 'draughts', 'difficulty' => 3, 'black' => $this->aygunRow->id])->assertUnprocessable()->assertJsonValidationErrors(['white']);
+    $choose(['mechanic' => 'spelling', 'difficulty' => 2, 'rounds' => 99])->assertUnprocessable()->assertJsonValidationErrors(['rounds']);
+
+    // A room opened for draughts kept no rounds: its first race takes a new room's (`RoomDefaults`).
+    // Alone in it, Tural changes the clock with no seats to name.
+    $room = Rooms::open($this->tural, mechanic: RoomMechanic::Draughts);
+    expect($room->setup_rounds)->toBeNull();
+    $this->actingAs($this->tural)->putJson(route('rooms.setup.update', $room), ['mechanic' => 'draughts', 'difficulty' => 1])->assertNoContent();
+    expect(matchState($this->tural, $room)['setup'])->toMatchArray(['difficulty' => 1, 'white' => $room->rowOf($this->tural)?->id, 'black' => null]);
+    $this->actingAs($this->tural)->putJson(route('rooms.setup.update', $room), ['mechanic' => 'anagram', 'difficulty' => 2])->assertNoContent();
+    expect(matchState($this->tural, $room)['setup']['rounds'])->toBe(Config::integer('elifba.rooms.defaults.rounds'));
 });
 
 it('refuses to start a match with fewer than two seats', function (): void {
@@ -357,6 +390,36 @@ it('derives a flag fall with nothing written: the side out of time has lost, and
         ->and($this->room->runningGame(RoomClock::nowMs()))->toBeNull();
 });
 
+it('reads a flag fall again under the room row\'s shared lock, so an act in flight before the flag is never taken back (D5)', function (): void {
+    $game = matchStarted(3);
+    matchAct($this->aygun, $this->room, Rooms::act('move', 0, 'c3-d4'))->assertJsonPath('status', 'accepted');
+    $flagMs = matchState($this->tural, $this->room)['match']['flag_ms'];
+    $outer = DB::transactionLevel();
+    $reads = [];
+    DB::listen(static function (QueryExecuted $query) use (&$reads): void {
+        if (preg_match('/^select \* from "rooms" where "rooms"\."id" = \?/', $query->sql) === 1) {
+            $reads[] = [$query->sql, $query->connection->transactionLevel()];
+        }
+    });
+    // The room row's reads made inside a transaction of the read's own (an arrow function would copy `$reads`).
+    $shared = static function () use (&$reads, $outer): array {
+        return array_values(array_filter($reads, static fn (array $read): bool => $read[1] > $outer));
+    };
+
+    // In play nothing waits for a read: no lock, so a move is never held up by the room's readers.
+    $this->travelTo(RoomClock::at($flagMs - 1));
+    expect(matchState($this->tural, $this->room)['match']['phase'])->toBe('play')
+        ->and($shared())->toBe([]);
+
+    // At the flag the read is made again in a transaction of its own, the row taken for share: an act
+    // stamped at the flag − 1 under the lock and committed after it would be seen, never taken back.
+    $this->travelTo(RoomClock::at($flagMs));
+    expect(matchState($this->tural, $this->room)['match']['result']['ending'])->toBe('time')
+        ->and($shared())->not->toBeEmpty()
+        ->and(DB::getDriverName() === 'pgsql' ? str_ends_with($shared()[0][0], 'for share') : true)->toBeTrue()
+        ->and($game->refresh()->ended_ms)->toBeNull();
+});
+
 it('gives the match to the other side when a seat resigns, in the countdown too', function (): void {
     $game = Rooms::match($this->room, $this->aygunRow, $this->resadRow);
     matchAct($this->resad, $this->room, Rooms::act('resign'))->assertJsonPath('status', 'accepted');
@@ -478,6 +541,32 @@ it('gives the match to the other side when a seat leaves or is removed, and none
         ->and(array_column(RoomRanking::ofRoom($closing->refresh(), RoomClock::nowMs()), 'points'))->toBe([0, 0]);
 });
 
+it('takes an act only in the game it names, so a retry from an ended match never lands in the next (D5)', function (): void {
+    $first = matchStarted();
+    $resign = Rooms::act('resign', gameId: $first->id);
+    $move = Rooms::act('move', 0, 'c3-d4', gameId: $first->id);
+
+    // Rəşad resigns; Aygün's own resignation, its answer lost, is still being sent.
+    matchAct($this->resad, $this->room, Rooms::act('resign'))->assertJsonPath('status', 'accepted');
+
+    // «Yenidən oyna»: Rəşad plays white, Aygün black; the old bodies arrive in the countdown and in play.
+    $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
+    $second = $this->room->latestGame() ?? throw new RuntimeException('A game started.');
+    $this->reverb->sent = [];
+    $revision = $this->room->refresh()->revision;
+
+    matchAct($this->aygun, $this->room, $resign)->assertExactJson(['status' => 'late', 'revision' => $revision]);
+    $this->travelTo(RoomClock::at($second->started_ms));
+    matchAct($this->resad, $this->room, $move)->assertExactJson(['status' => 'late', 'revision' => $revision]);
+
+    expect(RoomAct::query()->where('room_game_id', $second->id)->count())->toBe(0)
+        ->and(matchState($this->tural, $this->room)['match'])->toMatchArray(['phase' => 'play', 'ply' => 0, 'result' => null])
+        ->and($this->reverb->sent)->toBe([]);
+
+    // The same moves named in the running game are taken.
+    matchAct($this->resad, $this->room, Rooms::act('move', 0, 'c3-d4', gameId: $second->id))->assertJsonPath('status', 'accepted');
+});
+
 it('counts a win 3 and a draw 1 in the room\'s standing, each game netted on its own', function (): void {
     Config::set('elifba.rooms.taunts.cooldown_ms', 0);
 
@@ -565,23 +654,25 @@ it('keeps a page\'s read out of a match, and a match out of a race\'s answers', 
 });
 
 it('limits a seat\'s acts to 90 a minute, apart from its answers', function (): void {
-    matchStarted();
+    $game = matchStarted();
     $this->actingAs($this->aygun);
 
     foreach (range(1, 90) as $_) {
-        $this->postJson(route('rooms.acts.store', $this->room), Rooms::act('offer', 0))->assertOk();
+        $this->postJson(route('rooms.acts.store', $this->room), Rooms::act('offer', 0, gameId: $game->id))->assertOk();
     }
 
-    $this->postJson(route('rooms.acts.store', $this->room), Rooms::act('offer', 0))->assertTooManyRequests();
+    $this->postJson(route('rooms.acts.store', $this->room), Rooms::act('offer', 0, gameId: $game->id))->assertTooManyRequests();
     $this->postJson(route('rooms.answers.store', $this->room), ['event_id' => Str::lower((string) Str::ulid()), 'round_id' => Str::lower((string) Str::ulid()), 'picked' => ['abcdefgh']])->assertOk();
 });
 
 it('keeps the rules of an act in its Data class', function (): void {
-    $body = Rooms::act('move', 4, 'c3:e5:g7');
+    $gameId = strtolower((string) Str::ulid());
+    $body = Rooms::act('move', 4, 'c3:e5:g7', gameId: $gameId);
 
     expect(RoomActData::validate($body)->toArray())->toBe($body)
-        ->and(RoomActData::validate(Rooms::act('resign'))->ply)->toBeNull()
-        ->and(array_keys(RoomActData::rules()))->toBe(['event_id', 'kind', 'ply', 'path', 'path.*']);
+        ->and(RoomActData::validate(Rooms::act('resign', gameId: $gameId))->ply)->toBeNull()
+        ->and(array_keys(RoomActData::rules()))->toBe(['event_id', 'game_id', 'kind', 'ply', 'path', 'path.*'])
+        ->and(fn () => RoomActData::validate(Rooms::act('resign')))->toThrow(ValidationException::class);
 });
 
 /**

@@ -18,14 +18,13 @@ use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomRound;
-use App\Domain\Rooms\Models\RoomTaunt;
 use App\Domain\Rooms\Support\RoomPlayable;
-use App\Domain\Rooms\Support\RoomPointsRule;
 use App\Domain\Rooms\Support\RoomRanking;
 use App\Domain\Rooms\Support\RoomRoundClose;
 use App\Domain\Rooms\Support\RoomSeed;
 use App\Domain\Rooms\Support\RoomTauntCost;
 use App\Domain\Rooms\Support\RoomWaits;
+use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 
@@ -44,10 +43,11 @@ use Illuminate\Support\Facades\Config;
  */
 final class RaceDriver extends RoomGameDriver
 {
-    public function choiceRules(): array
+    public function choiceRules(bool $kept = false): array
     {
         return [
-            'rounds' => ['required', 'integer', 'between:'.Config::integer('elifba.rooms.rounds.min').','.Config::integer('elifba.rooms.rounds.max')],
+            // Left out of a race chosen after a board game: the room's own number then (`Room::roundsKept()`).
+            'rounds' => [$kept ? 'sometimes' : 'required', 'integer', 'between:'.Config::integer('elifba.rooms.rounds.min').','.Config::integer('elifba.rooms.rounds.max')],
         ];
     }
 
@@ -117,18 +117,11 @@ final class RaceDriver extends RoomGameDriver
      * Each taunt from the first close of the game after it, and every one
      * once the game is over (`RoomTauntCost::counted()`).
      */
-    public function spent(RoomGame $game, int $nowMs, iterable $taunts): array
+    public function tauntCounts(RoomGame $game, int $nowMs): Closure
     {
         $timetable = $game->timetable();
-        $spent = [];
 
-        foreach ($taunts as $taunt) {
-            if (RoomTauntCost::counted($timetable, $taunt->sent_ms, $nowMs)) {
-                $spent[$taunt->room_player_id] = ($spent[$taunt->room_player_id] ?? 0) + 1;
-            }
-        }
-
-        return $spent;
+        return static fn (int $sentMs): bool => RoomTauntCost::counted($timetable, $sentMs, $nowMs);
     }
 
     /**
@@ -156,25 +149,19 @@ final class RaceDriver extends RoomGameDriver
     }
 
     /**
-     * The points of the player's answers over the game's closed rounds less
-     * the cost of every taunt the player threw in this game, counted yet or
-     * not, never below 0: the −1 a thrower sees at once is the same
-     * whatever anybody answered, and every balance is 0 until the first
+     * The points of the player's answers over the game's closed rounds: the
+     * open round's are never read, so the −1 a thrower sees at once is the
+     * same whatever anybody answered, and every budget is 0 until the first
      * round closes.
      */
-    public function balance(RoomGame $game, RoomPlayer $row, int $nowMs): int
+    public function tauntBudget(RoomGame $game, RoomPlayer $row, int $nowMs): int
     {
         $rounds = RoomRanking::closedRounds($game, $nowMs);
-        $points = $rounds === [] ? 0 : (int) RoomAnswer::query()
+
+        return $rounds === [] ? 0 : (int) RoomAnswer::query()
             ->whereIn('room_round_id', $rounds)
             ->where('room_player_id', $row->id)
             ->sum('points');
-        $thrown = RoomTaunt::query()
-            ->where('room_game_id', $game->id)
-            ->where('room_player_id', $row->id)
-            ->count();
-
-        return max(0, $points - RoomPointsRule::TAUNT_COST * $thrown);
     }
 
     /**

@@ -11,7 +11,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { MECHANIC_VIEWS } from '@/components/rooms/mechanics/views';
 import { REVEAL_MS } from '@/components/rooms/motion';
-import { RivalryStrip, useRivalry } from '@/components/rooms/rivalry-strip';
+import { rivalOf } from '@/components/rooms/rivalry';
+import { FrameTitle, ScreenHead } from '@/components/rooms/game-head';
+import { GameStrip, useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import {
     SpentLine,
@@ -141,19 +143,6 @@ export function LiveRound({
     const previous = usePreviousReveal(game, round, state.ranking);
     const rivalry = useRivalry(state, state.me.player_id);
     const spent = round.reveal?.spent ?? [];
-    const rival =
-        rivalry.pair !== null &&
-        rivalry.pair.mine &&
-        rivalry.pair.right !== null
-            ? {
-                  id: rivalry.pair.right.player_id,
-                  name:
-                      state.players.find(
-                          (player) =>
-                              player.id === rivalry.pair?.right?.player_id,
-                      )?.name ?? null,
-              }
-            : null;
     const [draft, setDraft] = useState<{ round: string; ids: string[] }>({
         round: '',
         ids: [],
@@ -253,35 +242,26 @@ export function LiveRound({
             data-round={round.index}
             className="flex flex-col gap-4"
         >
-            {rivalry.pair !== null && (
-                <div className="relative">
-                    <RivalryStrip
-                        key={`strip:${rivalry.key}`}
-                        pair={rivalry.pair}
-                        previous={rivalry.previous}
-                        overtake={rivalry.overtake}
-                        ranking={state.ranking}
-                        results={round.reveal?.results ?? null}
-                        spent={spent}
-                        players={state.players}
-                        placeLabels={placeLabels}
-                        icons={icons}
-                        moves={motion.strip}
-                    />
-                    <TauntThrow
-                        roomId={roomId}
-                        state={state}
-                        rival={rival}
-                        list={taunts}
-                        clock={clock}
-                        now={now}
-                        phase={`${round.index}:${round.phase}`}
-                        hidden={tauntsHidden}
-                        onHiddenChange={onTauntsHiddenChange}
-                        onThrown={refresh}
-                    />
-                </div>
-            )}
+            <GameStrip
+                rivalry={rivalry}
+                state={state}
+                placeLabels={placeLabels}
+                icons={icons}
+                moves={motion.strip}
+            >
+                <TauntThrow
+                    roomId={roomId}
+                    state={state}
+                    rival={rivalOf(rivalry.pair, state.players)}
+                    list={taunts}
+                    clock={clock}
+                    now={now}
+                    phase={`${round.index}:${round.phase}`}
+                    hidden={tauntsHidden}
+                    onHiddenChange={onTauntsHiddenChange}
+                    onThrown={refresh}
+                />
+            </GameStrip>
 
             <TauntReaction
                 received={state.taunts?.received}
@@ -622,26 +602,14 @@ export function RoundTitle({
     motion?: boolean;
 }) {
     const { t } = useTranslation();
-    const title = useRoundTitle(round);
 
     return (
-        <>
-            <h1
-                key={round.index}
-                id="round-heading"
-                className={cn(
-                    'origin-left truncate text-base leading-tight font-semibold tabular-nums',
-                    motion && 'motion-safe:animate-room-pop',
-                )}
-            >
-                {title}
-            </h1>
-            <p className="truncate text-xs text-muted-foreground">
-                {t(`rooms.mechanics.${game.mechanic}.name`)}
-                {' · '}
-                {t(`rooms.difficulty.${game.difficulty}`)}
-            </p>
-        </>
+        <FrameTitle
+            title={useRoundTitle(round)}
+            titleKey={round.index}
+            line={`${t(`rooms.mechanics.${game.mechanic}.name`)} · ${t(`rooms.difficulty.${game.difficulty}`)}`}
+            motion={motion}
+        />
     );
 }
 
@@ -684,7 +652,6 @@ export function RoundHead({
         seconds !== null &&
         seconds > 0 &&
         round.bell_ms - now <= URGENT_MS;
-    const pop = motion ? 'motion-safe:animate-room-pop' : undefined;
     const time =
         left === null ? null : (
             <span
@@ -710,26 +677,15 @@ export function RoundHead({
 
     if (big) {
         return (
-            <div className="flex flex-col gap-[1.2vh]">
-                <p className="truncate text-[2.2vh] text-muted-foreground">
-                    {t(`rooms.mechanics.${game.mechanic}.name`)}
-                    {' · '}
-                    {t(`rooms.difficulty.${game.difficulty}`)}
-                </p>
-                <div className="flex items-baseline justify-between gap-3">
-                    <h2
-                        key={round.index}
-                        className={cn(
-                            'origin-left text-[3.4vh] font-semibold tabular-nums',
-                            pop,
-                        )}
-                    >
-                        {title}
-                    </h2>
-                    {time}
-                </div>
+            <ScreenHead
+                line={`${t(`rooms.mechanics.${game.mechanic}.name`)} · ${t(`rooms.difficulty.${game.difficulty}`)}`}
+                title={title}
+                titleKey={round.index}
+                motion={motion}
+                aside={time}
+            >
                 {bar}
-            </div>
+            </ScreenHead>
         );
     }
 

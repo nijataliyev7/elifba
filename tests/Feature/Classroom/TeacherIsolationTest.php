@@ -200,7 +200,7 @@ function isolationCases(): array
         ]],
         'PUT rooms/{room}/taunts' => ['rooms.taunts.update', $roomA, static fn (array $w): array => ['on' => false]],
         // A seat's act in a board game (D3, ADR 034): a resignation needs no position.
-        'POST rooms/{room}/acts' => ['rooms.acts.store', $roomA, static fn (array $w): array => ['event_id' => '01kaqs3a1b2c3d4e5f6g7h8j9k', 'kind' => 'resign']],
+        'POST rooms/{room}/acts' => ['rooms.acts.store', $roomA, static fn (array $w): array => ['event_id' => '01kaqs3a1b2c3d4e5f6g7h8j9k', 'game_id' => '01kaqs3b1b2c3d4e5f6g7h8j9k', 'kind' => 'resign']],
         // Live voice (C3): the host's switch, the host's word on a player, a ticket (A's room has its voice on).
         'PUT rooms/{room}/voice' => ['rooms.voice.update', $roomA, static fn (array $w): array => ['on' => false]],
         'PUT rooms/{room}/members/{member}/voice' => ['rooms.members.voice.update', static fn (array $w): array => ['room' => $w['roomA']->id, 'member' => $w['memberA']->id], static fn (array $w): array => ['standing' => 'muted']],

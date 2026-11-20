@@ -12,6 +12,7 @@ import type { RoomMotion } from '@/components/rooms/use-motion';
 import type { RoomSound } from '@/components/rooms/use-room-sound';
 import type { ServerClock } from '@/rooms/clock';
 import type {
+    RoomBoardGame,
     RoomGame,
     RoomMatch,
     RoomRaceGame,
@@ -29,12 +30,15 @@ import type {
  * and never compare a kind or a mechanic themselves.
  */
 
-type BoardGame = Extract<RoomGame, { kind: 'board' }>;
-
 /** A live game with the part of the state it is drawn from: a race's round, a board game's match. */
 export type LiveGame =
     | { kind: 'race'; state: RoomState; game: RoomRaceGame; round: RoomRound }
-    | { kind: 'board'; state: RoomState; game: BoardGame; match: RoomMatch };
+    | {
+          kind: 'board';
+          state: RoomState;
+          game: RoomBoardGame;
+          match: RoomMatch;
+      };
 
 /** The state's live game, or null outside one. */
 export function liveGame(state: RoomState | null): LiveGame | null {

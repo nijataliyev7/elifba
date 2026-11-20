@@ -1,7 +1,7 @@
 import { Trophy } from 'lucide-react';
 import { gameSummary } from '@/components/rooms/catalog';
-import { FinalStanding } from '@/components/rooms/final-standing';
-import { carriesRoom } from '@/components/rooms/sound-cues';
+import { EndHead } from '@/components/rooms/end-head';
+import { GameFinal } from '@/components/rooms/final-standing';
 import type { RoomMotion } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
@@ -38,55 +38,23 @@ export function RaceEnd({
                 big ? 'gap-[2.4vh]' : 'gap-3',
             )}
         >
-            <div
-                className={cn(
-                    'flex items-center room-motion:animate-room-enter',
-                    big ? 'gap-[2vh]' : 'gap-3',
-                )}
-            >
-                <span
-                    className={cn(
-                        'flex shrink-0 items-center justify-center rounded-full bg-amber-400 text-amber-950 room-motion:animate-room-pop',
-                        big ? 'size-[8vh]' : 'size-11',
-                    )}
-                >
-                    <Trophy
-                        aria-hidden
-                        className={big ? 'size-[4.4vh]' : 'size-5'}
-                    />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                    <span
-                        className={cn(
-                            big
-                                ? 'text-[4.4vh] leading-tight font-bold'
-                                : 'font-semibold',
-                        )}
-                    >
-                        {t('rooms.game.over')}
-                    </span>
-                    <span
-                        className={cn(
-                            'truncate text-muted-foreground',
-                            big ? 'text-[2.4vh]' : 'text-sm',
-                        )}
-                    >
-                        {gameSummary(t, game)}
-                    </span>
-                </span>
-            </div>
+            <EndHead
+                icon={Trophy}
+                lines={[
+                    { text: t('rooms.game.over'), strong: true },
+                    { text: gameSummary(t, game) },
+                ]}
+                big={big}
+            />
             {big && (
                 <h2 className="text-[2.8vh] font-semibold">
                     {t('rooms.game.standing')}
                 </h2>
             )}
-            <FinalStanding
-                ranking={state.ranking}
-                players={state.players}
-                me={big ? null : state.me.player_id}
+            <GameFinal
+                state={state}
                 placeLabels={placeLabels}
                 animate={motion.phase}
-                forRoom={!big && carriesRoom(state)}
                 big={big}
             />
         </section>

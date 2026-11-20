@@ -84,39 +84,52 @@ export type ChoiceParts = {
 
 export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
     if (kindOf(choice.mechanic) === 'board') {
-        const seats = {
-            white: choice.white ?? null,
-            black: choice.black ?? null,
-        };
-
         return {
             second: 'seats',
             line:
                 choice.clock === undefined
                     ? ''
                     : clockLevelText(t, choice.clock),
-            seats,
+            seats: {
+                white: choice.white ?? null,
+                black: choice.black ?? null,
+            },
+            // Undefined seats are a tap's not yet answered: the room's seats, which the state will say.
             needs:
-                seats.white === null || seats.black === null
+                choice.white === null || choice.black === null
                     ? 'rooms.errors.needs_two'
                     : null,
         };
     }
 
+    const difficulty = t(`rooms.difficulty.${choice.difficulty}`);
+
     return {
         second: 'rounds',
-        line: `${t(`rooms.difficulty.${choice.difficulty}`)} · ${t('rooms.show.rounds', { count: roundsOf(choice) })}`,
+        // A tap's race after a board game has no rounds until the state says the room's.
+        line:
+            choice.rounds === undefined
+                ? difficulty
+                : `${difficulty} · ${t('rooms.show.rounds', { count: choice.rounds })}`,
         seats: { white: null, black: null },
         needs: null,
     };
 }
 
-/** «5+3»: a clock's minutes and seconds a move. */
-export function clockLevelText(t: Translate, clock: RoomClockLevel): string {
-    return t('rooms.clock.level', {
+/** A clock's whole minutes and seconds a move. */
+export function clockLevel(clock: RoomClockLevel): {
+    minutes: number;
+    seconds: number;
+} {
+    return {
         minutes: Math.round(clock.base_ms / 60_000),
         seconds: Math.round(clock.increment_ms / 1000),
-    });
+    };
+}
+
+/** «5+3»: a clock's minutes and seconds a move. */
+export function clockLevelText(t: Translate, clock: RoomClockLevel): string {
+    return t('rooms.clock.level', clockLevel(clock));
 }
 
 /**
@@ -133,17 +146,37 @@ export function gameSummary(
         clock?: RoomClockLevel;
     },
 ): string {
-    const name = t(`rooms.mechanics.${game.mechanic}.name`);
-
     if (game.clock !== undefined) {
-        return `${name} · ${clockLevelText(t, game.clock)}`;
+        return gameLabel(t, game);
     }
 
     return t('rooms.setup.summary', {
-        game: name,
+        game: t(`rooms.mechanics.${game.mechanic}.name`),
         difficulty: t(`rooms.difficulty.${game.difficulty}`),
         count: roundsOf(game),
     });
+}
+
+/**
+ * A game's short line, without rounds: «Söz tap · Orta», or a board game's
+ * «Şaşki · 5+3» by its clock («Keçmiş oyunlar»).
+ */
+export function gameLabel(
+    t: Translate,
+    game: {
+        mechanic: RoomMechanic;
+        difficulty: number;
+        clock?: RoomClockLevel;
+    },
+): string {
+    const name = t(`rooms.mechanics.${game.mechanic}.name`);
+
+    return game.clock !== undefined
+        ? `${name} · ${clockLevelText(t, game.clock)}`
+        : t('rooms.index.game', {
+              game: name,
+              difficulty: t(`rooms.difficulty.${game.difficulty}`),
+          });
 }
 
 /** A race's rounds, for the lines that count them; a board game has none. */
@@ -192,54 +225,43 @@ export function levelOf(
 }
 
 /**
- * What a choice of another kind needs that the state's choice does not
- * carry (ADR 034 decision 7): a race's rounds — the last a page saw — and
- * a board game's two seats — the first two present players in the order
- * they joined, as the room seats them when nobody chose; the host changes
- * them with «Oyunçular». Null seats while fewer than two are present.
- */
-export type ChoiceFill = { rounds: number; present: string[] };
-
-/**
  * The whole choice with another game: the difficulty kept where that game
- * has a level at it, else its lowest; a race's rounds, a board game's
- * clock and seats kept, or filled (`ChoiceFill`) when the choice was of
- * the other kind — the request the server checks again
- * (`RoomGameSetupData::rules()`); the page shows what the state then says.
+ * has a level at it, else its lowest; a race's rounds and a board game's
+ * seats kept when the choice was of the same kind. A choice of the other
+ * kind names neither: the room fills it — the rounds it keeps, its seats
+ * (`RoomGameSetupData::validate()`, ADR 034 as built in D5) — and the page
+ * shows what the state then says.
  */
-export function withGame(
-    choice: SetupChoice,
-    game: CatalogGame,
-    fill: ChoiceFill,
-): SetupChoice {
+export function withGame(choice: SetupChoice, game: CatalogGame): SetupChoice {
     const difficulty = game.difficulties.includes(choice.difficulty)
         ? choice.difficulty
         : (game.difficulties[0] ?? choice.difficulty);
 
-    if (kindOf(game.mechanic) === 'race') {
-        return {
-            mechanic: game.mechanic,
-            difficulty,
-            rounds: choice.rounds ?? fill.rounds,
-        };
-    }
+    return kindOf(game.mechanic) === 'race'
+        ? { mechanic: game.mechanic, difficulty, rounds: choice.rounds }
+        : withLevel(
+              {
+                  mechanic: game.mechanic,
+                  difficulty,
+                  white: choice.white,
+                  black: choice.black,
+              },
+              game,
+              difficulty,
+          );
+}
 
-    const kept = [choice.white, choice.black].filter(
-        (seat): seat is string =>
-            typeof seat === 'string' && fill.present.includes(seat),
-    );
-    const [white, black] =
-        kept.length === 2
-            ? kept
-            : [...kept, ...fill.present.filter((id) => !kept.includes(id))];
+/** The choice at another level of its game, with a board game's clock of that level. */
+export function withLevel(
+    choice: SetupChoice,
+    game: CatalogGame,
+    difficulty: number,
+): SetupChoice {
+    const clock = levelOf(game, difficulty)?.clock;
 
-    return {
-        mechanic: game.mechanic,
-        difficulty,
-        clock: levelOf(game, difficulty)?.clock,
-        white: white ?? null,
-        black: black ?? null,
-    };
+    return clock === undefined
+        ? { ...choice, difficulty }
+        : { ...choice, difficulty, clock };
 }
 
 /** Whether two choices are the same game, difficulty, rounds and seats. */
@@ -255,20 +277,24 @@ export function sameChoice(a: SetupChoice, b: SetupChoice): boolean {
 
 /**
  * The body a choice is sent as: a race's `{mechanic, difficulty, rounds}`
- * or a board game's `{mechanic, difficulty, white, black}` — never the
- * state's `kind`, `played` or `clock`.
+ * or a board game's `{mechanic, difficulty, white, black}` — the rounds or
+ * the seats left out while the page does not know them (a choice of the
+ * other kind: the room fills them) — never the state's `kind`, `played`
+ * or `clock`.
  */
 export function choiceBody(choice: SetupChoice): Record<string, unknown> {
-    return kindOf(choice.mechanic) === 'board'
-        ? {
-              mechanic: choice.mechanic,
-              difficulty: choice.difficulty,
-              white: choice.white ?? null,
-              black: choice.black ?? null,
-          }
-        : {
-              mechanic: choice.mechanic,
-              difficulty: choice.difficulty,
-              rounds: choice.rounds,
-          };
+    const body: Record<string, unknown> = {
+        mechanic: choice.mechanic,
+        difficulty: choice.difficulty,
+    };
+
+    if (kindOf(choice.mechanic) === 'race') {
+        return choice.rounds === undefined
+            ? body
+            : { ...body, rounds: choice.rounds };
+    }
+
+    return typeof choice.white === 'string' && typeof choice.black === 'string'
+        ? { ...body, white: choice.white, black: choice.black }
+        : body;
 }

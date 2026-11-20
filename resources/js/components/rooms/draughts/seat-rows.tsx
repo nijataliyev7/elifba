@@ -243,3 +243,31 @@ export function SeatPair({
         </span>
     );
 }
+
+/**
+ * «Növbəti oyunda :name ağlarla oynayır» (docs/frontend.md rule 15 "Board
+ * games" → "The end"): who plays white in the next game, under «Yenidən
+ * oyna» on the phone and the screen.
+ */
+export function SeatNext({
+    white,
+    players,
+    className,
+}: {
+    /** The next game's seat of white. */
+    white: string | null;
+    players: RoomPlayer[];
+    className?: string;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <span className={className}>
+            {t('rooms.seats.next', {
+                name:
+                    players.find((player) => player.id === white)?.name ??
+                    t('rooms.show.nameless'),
+            })}
+        </span>
+    );
+}

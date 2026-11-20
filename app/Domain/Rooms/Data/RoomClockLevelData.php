@@ -2,6 +2,7 @@
 
 namespace App\Domain\Rooms\Data;
 
+use App\Domain\Content\Data\RoomLevelData;
 use InvalidArgumentException;
 
 /**
@@ -23,6 +24,12 @@ final readonly class RoomClockLevelData
         if ($base_ms < 1 || $increment_ms < 0) {
             throw new InvalidArgumentException('A clock has some time, and an increment of 0 or more.');
         }
+    }
+
+    /** A level's clock (`content/rooms/levels.json`); null for a race's level, which has none. */
+    public static function ofLevel(RoomLevelData $level): ?self
+    {
+        return $level->clockMs === null ? null : new self($level->clockMs, $level->incrementMs ?? 0);
     }
 
     /**

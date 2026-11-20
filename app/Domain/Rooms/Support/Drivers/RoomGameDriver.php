@@ -12,7 +12,7 @@ use App\Domain\Rooms\Enums\RoomActStatus;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
-use App\Domain\Rooms\Models\RoomTaunt;
+use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
@@ -57,11 +57,13 @@ abstract class RoomGameDriver
 
     /**
      * The choice: what it holds beyond the game and its level, as rules
-     * (`RoomGameSetupData::rules()`).
+     * (`RoomGameSetupData::rules()`) — left out when `$kept`: the room's
+     * choice was of the other kind, whose state carried none of this kind's
+     * part, and the room fills it.
      *
      * @return array<string, mixed>
      */
-    abstract public function choiceRules(): array;
+    abstract public function choiceRules(bool $kept = false): array;
 
     /**
      * The start: fills `$game` — its room, position, mechanic, difficulty,
@@ -85,12 +87,13 @@ abstract class RoomGameDriver
     abstract public function earned(RoomGame $game, int $nowMs): array;
 
     /**
-     * The taunts of the game counted by `$nowMs`, by the thrower's row.
+     * A taunt's cost: whether a taunt of the game thrown at `$sentMs` counts
+     * by `$nowMs` — a race's from the first close after it, a board game's
+     * at its end (`RoomTauntCost::spent()` counts them).
      *
-     * @param  iterable<RoomTaunt>  $taunts  the game's
-     * @return array<string, int>
+     * @return Closure(int): bool
      */
-    abstract public function spent(RoomGame $game, int $nowMs, iterable $taunts): array;
+    abstract public function tauntCounts(RoomGame $game, int $nowMs): Closure;
 
     /** A taunt: whether the game is where one may be thrown at `$nowMs` (the room's being open is the caller's). */
     abstract public function tauntsOpen(RoomGame $game, int $nowMs): bool;
@@ -101,8 +104,11 @@ abstract class RoomGameDriver
     /** A taunt: whether the thrower may aim at this present row of the room, never its own. */
     abstract public function mayAim(RoomGame $game, RoomPlayer $thrower, string $targetId): bool;
 
-    /** A taunt: what a player may still spend on taunts in this game. */
-    abstract public function balance(RoomGame $game, RoomPlayer $row, int $nowMs): int;
+    /**
+     * A taunt: what a player's taunts in this game are paid from by
+     * `$nowMs`, before any of them (`RoomTauntBalance` takes them off).
+     */
+    abstract public function tauntBudget(RoomGame $game, RoomPlayer $row, int $nowMs): int;
 
     /**
      * The state's part of the room's latest game, as the viewer sees it:

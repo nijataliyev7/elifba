@@ -3,7 +3,6 @@ import { RoomState } from '@/rooms/contract';
 import type { RoomMatch } from '@/rooms/contract';
 import {
     cellOf,
-    clockLevel,
     clockText,
     crownedAt,
     isDark,
@@ -116,9 +115,5 @@ describe('the board', () => {
         expect(clockText(7_449, ',')).toBe('0:07,4');
         expect(clockText(7_449, '.')).toBe('0:07.4');
         expect(clockText(0, ',')).toBe('0:00,0');
-        expect(clockLevel({ base_ms: 300_000, increment_ms: 3_000 })).toEqual({
-            minutes: 5,
-            seconds: 3,
-        });
     });
 });

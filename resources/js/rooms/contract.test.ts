@@ -833,27 +833,28 @@ describe('a board game (D3)', () => {
         }
     });
 
-    it('posts an act of a seat and nothing of a person, never a leave', () => {
+    it('posts an act of a seat in its game and nothing of a person, never a leave', () => {
         const act = fixture('act') as z.infer<typeof RoomAct>;
-        const eventId = act.event_id;
+        const named = { event_id: act.event_id, game_id: act.game_id };
 
         expect(RoomAct.safeParse(act).success).toBe(true);
+        expect(act.game_id).toBe(play.game?.id);
+        expect(RoomAct.safeParse({ ...named, kind: 'resign' }).success).toBe(
+            true,
+        );
         expect(
-            RoomAct.safeParse({ event_id: eventId, kind: 'resign' }).success,
-        ).toBe(true);
-        expect(
-            RoomAct.safeParse({ event_id: eventId, kind: 'offer', ply: 3 })
-                .success,
+            RoomAct.safeParse({ ...named, kind: 'offer', ply: 3 }).success,
         ).toBe(true);
 
         for (const wrong of [
             { ...act, player_id: play.me.player_id },
             { ...act, path: ['d4'] },
             { ...act, path: ['d4', 'e4'] },
-            { event_id: eventId, kind: 'leave', ply: 2 },
-            { event_id: eventId, kind: 'resign', ply: 2 },
-            { event_id: eventId, kind: 'offer' },
-            { event_id: eventId, kind: 'decline', ply: 2, path: ['d4', 'f6'] },
+            { event_id: act.event_id, kind: 'resign' },
+            { ...named, kind: 'leave', ply: 2 },
+            { ...named, kind: 'resign', ply: 2 },
+            { ...named, kind: 'offer' },
+            { ...named, kind: 'decline', ply: 2, path: ['d4', 'f6'] },
             { ...act, acted_ms: 1 },
         ]) {
             expect(

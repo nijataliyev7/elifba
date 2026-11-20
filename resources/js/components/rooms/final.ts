@@ -1,5 +1,5 @@
 import type { StandingGroup } from '@/components/rooms/standing-groups';
-import type { RoomRankedPlayer, RoomState } from '@/rooms/contract';
+import type { RoomRankedPlayer, RoomSpent, RoomState } from '@/rooms/contract';
 
 /*
  * The final of a room game (docs/frontend.md rule 15 "The final", ADR
@@ -26,6 +26,17 @@ export function finalRows(
     return state.match.result.outcome === 'none'
         ? []
         : state.match.result.standing;
+}
+
+/**
+ * The taunts a game's final counts beside its rows: a match's, all counted
+ * at its end (`result.spent`, ADR 034 decision 22); none for a race, whose
+ * reveals told them round by round.
+ */
+export function finalSpent(state: Pick<RoomState, 'match'>): RoomSpent[] {
+    return state.match !== null && state.match.phase === 'over'
+        ? state.match.result.spent
+        : [];
 }
 
 /** How a place of the final stands out: the first three, by place. */

@@ -349,11 +349,13 @@ it('ends a match by each of its endings, its places by the outcome', function (s
 it('takes an act of each kind as the device sends it, and never a leave', function (): void {
     $move = roomFixture('act');
 
+    $named = ['event_id' => $move['event_id'], 'game_id' => $move['game_id']];
+
     expect(RoomActData::fromArray($move)->toArray())->toBe($move)
-        ->and(RoomActData::fromArray(['event_id' => $move['event_id'], 'kind' => 'resign'])->toArray())->toBe(['event_id' => $move['event_id'], 'kind' => 'resign'])
-        ->and(RoomActData::fromArray(['event_id' => $move['event_id'], 'kind' => 'offer', 'ply' => 3])->toArray())->toBe(['event_id' => $move['event_id'], 'kind' => 'offer', 'ply' => 3]);
+        ->and(RoomActData::fromArray([...$named, 'kind' => 'resign'])->toArray())->toBe([...$named, 'kind' => 'resign'])
+        ->and(RoomActData::fromArray([...$named, 'kind' => 'offer', 'ply' => 3])->toArray())->toBe([...$named, 'kind' => 'offer', 'ply' => 3]);
 
     foreach ([['kind' => 'leave', 'ply' => 2], ['kind' => 'move', 'ply' => 2], ['kind' => 'resign', 'ply' => 2], ['kind' => 'offer'], ['kind' => 'decline', 'ply' => 2, 'path' => ['d4', 'f6']]] as $wrong) {
-        expect(fn () => RoomActData::fromArray(['event_id' => $move['event_id'], ...$wrong]))->toThrow(InvalidArgumentException::class);
+        expect(fn () => RoomActData::fromArray([...$named, ...$wrong]))->toThrow(InvalidArgumentException::class);
     }
 });

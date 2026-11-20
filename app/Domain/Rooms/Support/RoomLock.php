@@ -32,6 +32,21 @@ final class RoomLock
     }
 
     /**
+     * The room's row, read again under a shared lock (`FOR SHARE` on
+     * PostgreSQL), by a reader inside a transaction: it waits for a writer
+     * that holds the row — an act stamped by the server's clock but not
+     * yet committed — and its own moment is read after that commit, so it
+     * never reports a flag fall that the commit takes back. Only such a
+     * read takes it (`RoomState::for()`): a shared lock held by every read
+     * would let readers jump a waiting move and charge the wait to its
+     * clock. Readers do not wait on each other. Null once the row is gone.
+     */
+    public static function shared(Room $room): ?Room
+    {
+        return Room::query()->whereKey($room->id)->sharedLock()->first();
+    }
+
+    /**
      * A round's row, read again under the lock, by a caller that holds its
      * room's row; null when there is none.
      */

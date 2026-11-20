@@ -49,6 +49,25 @@ export function nextDrawn(
 }
 
 /**
+ * Whether the move that arrived is the viewer's own, posted from this page
+ * at the ply before (`posted`): its piece already stands where it went, so
+ * it does not slide again — whatever the post's receipt said, since an
+ * answer lost on the way may hide a move the server took.
+ */
+export function ownArrival(
+    arrival: Arrival | null,
+    posted: { ply: number; path: string[] } | null,
+    ply: number,
+): boolean {
+    return (
+        arrival !== null &&
+        posted !== null &&
+        posted.ply + 1 === ply &&
+        arrival.last.path.join() === posted.path.join()
+    );
+}
+
+/**
  * The move the page saw arrive (`nextDrawn()`), or null: the page keeps
  * only what it drew; nothing here keeps a clock or a sound.
  */

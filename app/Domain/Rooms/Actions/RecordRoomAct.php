@@ -29,8 +29,9 @@ use Illuminate\Validation\ValidationException;
  * run in §12's order:
  *
  * 1. the `event_id` is already stored → `duplicate`;
- * 2. the room is closed, its game is not live, or the account is no
- *    present player → `late`;
+ * 2. the room is closed, its game is not live or not the game the act
+ *    names (`game_id`: an act sent again after its game ended), or the
+ *    account is no present player → `late`;
  * 3. the game's driver judges the act against the game as it stands now,
  *    replayed from its acts (`RoomGameDriver::act()`): a race takes none —
  *    `late`; in a board game a player without a seat → 403; a move before
@@ -79,11 +80,11 @@ final readonly class RecordRoomAct
                 return $receipt(RoomActStatus::Duplicate);
             }
 
-            // 2. A live game, and the account present in it.
+            // 2. The live game the act names, and the account present in it.
             $row = $locked->rowOf($account);
             $game = $locked->isOpen() && ($row?->isPresent() ?? false) ? $locked->runningGame($nowMs) : null;
 
-            if ($row === null || $game === null) {
+            if ($row === null || $game === null || $game->id !== $act->game_id) {
                 return $receipt(RoomActStatus::Late);
             }
 

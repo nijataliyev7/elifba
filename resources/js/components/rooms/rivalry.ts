@@ -194,6 +194,28 @@ export function stripMoment(
 }
 
 /**
+ * Whom a player's strip throws at (ADR 029 as amended, T4; ADR 034
+ * decision 22): the right side of a pair whose left is the viewer — the
+ * nearest rival in a race, the other seat in a match — with its name; none
+ * on a watcher's phone, the screen, or a pair with an empty side.
+ */
+export function rivalOf(
+    pair: RivalPair | null,
+    players: RoomState['players'],
+): { id: string; name: string | null } | null {
+    const right = pair !== null && pair.mine ? pair.right : null;
+
+    return right === null
+        ? null
+        : {
+              id: right.player_id,
+              name:
+                  players.find((player) => player.id === right.player_id)
+                      ?.name ?? null,
+          };
+}
+
+/**
  * The pair a device shows (ADR 027 decision 3), from the state's ranking
  * as the server ordered it. `viewer` is `me.player_id`: null on the screen
  * and on the phone of a host who does not play, who both see the

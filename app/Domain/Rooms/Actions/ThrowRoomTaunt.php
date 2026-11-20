@@ -90,9 +90,8 @@ final readonly class ThrowRoomTaunt
             // 2. A game running, before its last close, and the thrower in it.
             $row = $locked->rowOf($account);
             $game = $locked->latestGame();
-            $driver = $game === null ? null : RoomGameDriver::of($game->mechanic);
 
-            if ($row === null || ! $row->isPresent() || $game === null || $driver === null || ! RoomTauntWindow::open($locked, $game, $nowMs) || ! $driver->mayThrow($game, $row)) {
+            if ($row === null || ! $row->isPresent() || $game === null || ! RoomTauntWindow::open($locked, $game, $row, $nowMs)) {
                 return $receipt(RoomTauntStatus::Late);
             }
 
@@ -102,7 +101,7 @@ final readonly class ThrowRoomTaunt
             }
 
             // 4. Another present player of this room, at whom the game lets the thrower aim.
-            if ($taunt->target_id === $row->id || ! $driver->mayAim($game, $row, $taunt->target_id) || ! $locked->players()->present()->whereKey($taunt->target_id)->exists()) {
+            if ($taunt->target_id === $row->id || ! RoomGameDriver::of($game->mechanic)->mayAim($game, $row, $taunt->target_id) || ! $locked->players()->present()->whereKey($taunt->target_id)->exists()) {
                 throw ValidationException::withMessages(['target_id' => __('rooms.taunts.late')]);
             }
 

@@ -22,11 +22,13 @@ use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomAct;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
-use App\Domain\Rooms\Models\RoomTaunt;
 use App\Domain\Rooms\Support\Draughts\DraughtsAct;
 use App\Domain\Rooms\Support\Draughts\DraughtsMatch;
 use App\Domain\Rooms\Support\Draughts\DraughtsRules;
 use App\Domain\Rooms\Support\RoomPointsRule;
+use App\Domain\Rooms\Support\RoomRanking;
+use App\Domain\Rooms\Support\RoomTauntCost;
+use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
@@ -38,7 +40,8 @@ use WeakMap;
  * seats take turns on one board while the rest of the room watches.
  *
  * - The choice is a level — its clock — and two seats (`white`, `black`:
- *   two different present players, which `ChooseRoomGame` checks).
+ *   two different present players, which `ChooseRoomGame` checks) — or
+ *   neither, when the room's seats stand (`RoomSeats`).
  * - The start seats the two players and copies the level's clock to the
  *   game's row, so a running match keeps its clock when the content
  *   changes, and writes the room's seats the other way round for the next
@@ -64,11 +67,13 @@ final class BoardDriver extends RoomGameDriver
     /** @var WeakMap<RoomGame, array{key: string, match: DraughtsMatch}>|null */
     private ?WeakMap $replays = null;
 
-    public function choiceRules(): array
+    public function choiceRules(bool $kept = false): array
     {
+        // Both or neither: neither keeps the room's seats (`RoomSeats`) — a board game
+        // chosen after a race, or a room with fewer than two players to seat.
         return [
-            'white' => ['required', 'string', 'ulid'],
-            'black' => ['required', 'string', 'ulid', 'different:white'],
+            'white' => ['required_with:black', 'string', 'ulid'],
+            'black' => ['required_with:white', 'string', 'ulid', 'different:white'],
         ];
     }
 
@@ -105,19 +110,12 @@ final class BoardDriver extends RoomGameDriver
         return $match->phase === RoomMatchPhase::Over ? self::outcomePoints($game, $match) : [];
     }
 
-    public function spent(RoomGame $game, int $nowMs, iterable $taunts): array
+    /** Every taunt of the game counts at its one close, its end. */
+    public function tauntCounts(RoomGame $game, int $nowMs): Closure
     {
-        $spent = [];
+        $over = $this->isOver($game, $nowMs);
 
-        if (! $this->isOver($game, $nowMs)) {
-            return $spent;
-        }
-
-        foreach ($taunts as $taunt) {
-            $spent[$taunt->room_player_id] = ($spent[$taunt->room_player_id] ?? 0) + 1;
-        }
-
-        return $spent;
+        return static fn (int $sentMs): bool => $over;
     }
 
     public function tauntsOpen(RoomGame $game, int $nowMs): bool
@@ -137,18 +135,10 @@ final class BoardDriver extends RoomGameDriver
         return $side !== null && self::sideOf($game, $targetId) === $side->other();
     }
 
-    public function balance(RoomGame $game, RoomPlayer $row, int $nowMs): int
+    /** What the match can still pay a seat: a win; a watcher nothing. */
+    public function tauntBudget(RoomGame $game, RoomPlayer $row, int $nowMs): int
     {
-        if (self::sideOf($game, $row->id) === null) {
-            return 0;
-        }
-
-        $thrown = RoomTaunt::query()
-            ->where('room_game_id', $game->id)
-            ->where('room_player_id', $row->id)
-            ->count();
-
-        return max(0, RoomPointsRule::MATCH_WIN - RoomPointsRule::TAUNT_COST * $thrown);
+        return self::sideOf($game, $row->id) === null ? 0 : RoomPointsRule::MATCH_WIN;
     }
 
     /**
@@ -296,15 +286,11 @@ final class BoardDriver extends RoomGameDriver
     private function result(RoomGame $game, DraughtsMatch $match, int $nowMs): RoomMatchResultData
     {
         $outcome = $match->outcome ?? RoomMatchOutcome::None;
-        $earned = self::outcomePoints($game, $match);
-        $spent = $this->spent($game, $nowMs, RoomTaunt::query()->where('room_game_id', $game->id)->get(['room_player_id']));
+        $spent = RoomTauntCost::spent($game, $nowMs);
+        $points = RoomRanking::net(self::outcomePoints($game, $match), $spent);
         $white = (string) $game->white_player_id;
         $black = (string) $game->black_player_id;
-        $row = static fn (string $seat, ?int $place): RoomMatchStandingData => new RoomMatchStandingData(
-            $seat,
-            max(0, ($earned[$seat] ?? 0) - RoomPointsRule::TAUNT_COST * ($spent[$seat] ?? 0)),
-            $place,
-        );
+        $row = static fn (string $seat, ?int $place): RoomMatchStandingData => new RoomMatchStandingData($seat, $points[$seat] ?? 0, $place);
 
         return new RoomMatchResultData(
             $outcome,

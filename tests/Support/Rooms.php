@@ -193,14 +193,16 @@ final class Rooms
 
     /**
      * The body a seat's device posts for an act, with a new event id unless
-     * one is given: a move with its line's squares, or another kind.
+     * one is given: a move with its line's squares, or another kind, in the
+     * game `$gameId` — left out here when null, for the caller to name.
      *
      * @return array<string, mixed>
      */
-    public static function act(string $kind, ?int $ply = null, ?string $line = null, ?string $eventId = null): array
+    public static function act(string $kind, ?int $ply = null, ?string $line = null, ?string $eventId = null, ?string $gameId = null): array
     {
         return array_filter([
             'event_id' => $eventId ?? strtolower((string) Str::ulid()),
+            'game_id' => $gameId,
             'kind' => $kind,
             'ply' => $ply,
             'path' => $line === null ? null : Draughts::path($line),

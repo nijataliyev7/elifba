@@ -15,7 +15,7 @@ import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
 import { choiceParts } from '@/components/rooms/catalog';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
-import { SeatPair } from '@/components/rooms/draughts/seat-rows';
+import { SeatNext, SeatPair } from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import {
     GameSettings,
@@ -35,7 +35,7 @@ import { RoomQr, spacedCode, typedAddress } from '@/components/rooms/room-code';
 import type { JoinLink } from '@/components/rooms/room-code';
 import { SoundToggle } from '@/components/rooms/sound-toggle';
 import { useTauntsSwitch } from '@/components/rooms/taunts-switch';
-import { StandingCard, useChoiceLine } from '@/components/rooms/start-parts';
+import { StandingCard } from '@/components/rooms/start-parts';
 import { useLiveRoom } from '@/components/rooms/use-live-room';
 import { useRoomMotion } from '@/components/rooms/use-motion';
 import type { RoomMotion } from '@/components/rooms/use-motion';
@@ -285,8 +285,6 @@ function ScreenHost({
     const choice = useRoomChoice({
         roomId,
         choice: setup,
-        players: state.players,
-        options: catalog,
         onChanged: refresh,
     });
     const tauntsSwitch = useTauntsSwitch({
@@ -425,7 +423,6 @@ function ScreenStart({
     onChange: () => void;
 }) {
     const { t } = useTranslation();
-    const line = useChoiceLine();
     const present = state.players.filter((player) => player.present).length;
     const shown = choice.shown;
     const parts = choiceParts(t, shown);
@@ -494,7 +491,7 @@ function ScreenStart({
                         {t(`rooms.mechanics.${shown.mechanic}.name`)}
                     </span>
                     <span className="flex min-w-0 items-center gap-[2vh] text-[max(0.9375rem,2.4vh)] text-muted-foreground">
-                        <span className="shrink-0">{line(shown)}</span>
+                        <span className="shrink-0">{parts.line}</span>
                         {parts.second === 'seats' && (
                             <SeatPair
                                 seats={parts.seats}
@@ -580,6 +577,7 @@ function ScreenOver({
 }) {
     const { t } = useTranslation();
     const busy = start.starting || choice.pending !== null;
+    const parts = choiceParts(t, choice.shown);
 
     return (
         <main
@@ -598,9 +596,7 @@ function ScreenOver({
                 <Button
                     type="button"
                     className="h-[max(3.25rem,9vh)] text-[max(1.125rem,3vh)]"
-                    disabled={
-                        busy || choiceParts(t, choice.shown).needs !== null
-                    }
+                    disabled={busy || parts.needs !== null}
                     onClick={start.start}
                 >
                     {start.starting ? (
@@ -610,18 +606,12 @@ function ScreenOver({
                     )}
                     {t('rooms.start.replay')}
                 </Button>
-                {choiceParts(t, choice.shown).second === 'seats' && (
-                    <span className="text-[max(0.9375rem,2.2vh)] text-muted-foreground">
-                        {t('rooms.seats.next', {
-                            name:
-                                state.players.find(
-                                    (player) =>
-                                        player.id ===
-                                        choiceParts(t, choice.shown).seats
-                                            .white,
-                                )?.name ?? t('rooms.show.nameless'),
-                        })}
-                    </span>
+                {parts.second === 'seats' && (
+                    <SeatNext
+                        white={parts.seats.white}
+                        players={state.players}
+                        className="text-[max(0.9375rem,2.2vh)] text-muted-foreground"
+                    />
                 )}
                 {(start.failed || choice.failed) && (
                     <InputError

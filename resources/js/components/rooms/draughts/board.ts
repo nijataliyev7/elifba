@@ -159,15 +159,23 @@ export function clockText(ms: number, decimalMark: string): string {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-/** «5+3»: a level's clock in whole minutes and seconds. */
-export function clockLevel(clock: { base_ms: number; increment_ms: number }): {
-    minutes: number;
-    seconds: number;
-} {
-    return {
-        minutes: Math.round(clock.base_ms / 60_000),
-        seconds: Math.round(clock.increment_ms / 1000),
-    };
+/**
+ * The side whose draw offer stands for the viewer to answer, while the
+ * match is played: the viewer is a seat and the offer is the other seat's;
+ * null otherwise (ADR 034 decision 15).
+ */
+export function offerTo(
+    match: Pick<RoomMatch, 'phase' | 'offer' | 'sides'>,
+    viewer: string | null,
+): RoomSide | null {
+    const seat = seatOf(match, viewer);
+
+    return match.phase === 'play' &&
+        match.offer !== null &&
+        seat !== null &&
+        seat.color !== match.offer
+        ? (match.sides.find((side) => side.color === match.offer) ?? null)
+        : null;
 }
 
 /** The side a viewer plays, or null for a watcher. */

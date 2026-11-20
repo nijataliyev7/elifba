@@ -7,6 +7,7 @@ use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Enums\RoomSequenceRule;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomPlayable;
@@ -84,33 +85,48 @@ final readonly class RoomGameSetupData
      * (`RoomGameDriver::choiceRules()`): a race's rounds, a board game's
      * two seats.
      *
+     * @param  bool  $kept  the room's choice was of the other kind: the kind's part may be left out
      * @return array<string, mixed>
      */
-    public static function rules(?RoomMechanic $mechanic = null): array
+    public static function rules(?RoomMechanic $mechanic = null, bool $kept = false): array
     {
         $levels = self::playableLevels();
 
         return [
             'mechanic' => ['required', 'string', Rule::in(array_values(array_unique(array_map(static fn (RoomLevelData $level): string => $level->mechanic->value, $levels))))],
             'difficulty' => ['required', 'integer', Rule::in(array_values(array_unique(array_map(static fn (RoomLevelData $level): int => $level->difficulty, $levels))))],
-            ...($mechanic === null ? [] : RoomGameDriver::of($mechanic)->choiceRules()),
+            ...($mechanic === null ? [] : RoomGameDriver::of($mechanic)->choiceRules($kept)),
         ];
     }
 
     /**
+     * The choice as a page posts it. A choice of the other kind than the
+     * room's may name only the game and its level: a race chosen after a
+     * board game then takes the rounds `$room` keeps (`Room::roundsKept()`),
+     * a board game chosen after a race keeps the room's seats — so a page
+     * never fills what the state of the other kind did not carry.
+     *
      * @param  array<array-key, mixed>  $input
+     * @param  Room|null  $room  the room whose choice it is; without it a race must name its rounds
      *
      * @throws ValidationException
      */
-    public static function validate(array $input): self
+    public static function validate(array $input, ?Room $room = null): self
     {
         /** @var array{mechanic: string, difficulty: int|string} $named */
         $named = Validator::make($input, self::rules())->validate();
         $mechanic = RoomMechanic::from($named['mechanic']);
 
+        $kept = $room !== null && $room->setup()->mechanic->kind() !== $mechanic->kind();
+
         /** @var array{mechanic: string, difficulty: int|string, rounds?: int|string, white?: string, black?: string} $validated */
-        $validated = Validator::make($input, self::rules($mechanic))->validate();
+        $validated = Validator::make($input, self::rules($mechanic, $kept))->validate();
         $rounds = isset($validated['rounds']) ? (int) $validated['rounds'] : null;
+
+        if ($kept && $rounds === null && $mechanic->kind() === RoomGameKind::Race) {
+            $rounds = $room->roundsKept($mechanic);
+        }
+
         $seats = isset($validated['white'], $validated['black']) ? [strtolower($validated['white']), strtolower($validated['black'])] : [null, null];
         $setup = self::of($mechanic, (int) $validated['difficulty'], $rounds, static fn (): array => $seats);
 
@@ -191,7 +207,7 @@ final readonly class RoomGameSetupData
     {
         $level = app(ContentRepository::class)->roomLevel($this->mechanic, $this->difficulty);
 
-        return $level->clockMs === null ? null : new RoomClockLevelData($level->clockMs, $level->incrementMs ?? 0);
+        return RoomClockLevelData::ofLevel($level);
     }
 
     /**
@@ -290,6 +306,7 @@ final readonly class RoomGameSetupData
     private static function levelOption(RoomLevelData $level): array
     {
         $count = $level->length ?? $level->lit;
+        $clock = RoomClockLevelData::ofLevel($level);
 
         return [
             'difficulty' => $level->difficulty,
@@ -304,7 +321,7 @@ final readonly class RoomGameSetupData
             'options' => $level->options,
             'letters' => $level->wordLength === null ? null : ['min' => $level->wordLength->min, 'max' => $level->wordLength->max],
             'swaps' => $level->swaps,
-            ...($level->clockMs === null ? [] : ['clock' => (new RoomClockLevelData($level->clockMs, $level->incrementMs ?? 0))->toArray()]),
+            ...($clock === null ? [] : ['clock' => $clock->toArray()]),
         ];
     }
 

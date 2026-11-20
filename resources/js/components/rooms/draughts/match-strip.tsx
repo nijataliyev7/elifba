@@ -5,27 +5,29 @@ import {
     shownLeft,
 } from '@/components/rooms/draughts/board';
 import { PieceMark } from '@/components/rooms/draughts/piece';
-import { stripChange, stripRows } from '@/components/rooms/rivalry';
-import { RivalryStrip, useRivalry } from '@/components/rooms/rivalry-strip';
-import type { RivalryIcons, SideMarks } from '@/components/rooms/rivalry-strip';
+import type { ReactNode } from 'react';
+import { GameStrip } from '@/components/rooms/rivalry-strip';
+import type {
+    Rivalry,
+    RivalryIcons,
+    SideMarks,
+} from '@/components/rooms/rivalry-strip';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type { RoomMatch, RoomSide, RoomState } from '@/rooms/contract';
 
 /**
  * A match's rivalry strip (docs/frontend.md rule 15 "Board games" → "The
- * strip", ADR 034 decisions 23 and 24): `RivalryStrip` over the two seats
- * (`stripRows()`) — on a seat's phone «Siz» against the other seat, on a
+ * strip", ADR 034 decisions 23 and 24): the room's strip (`GameStrip`) over
+ * the two seats — on a seat's phone «Siz» against the other seat, on a
  * watcher's phone and the screen white against black — each side with a
  * piece of its colour and its clock in place of a place label, the totals
  * the pieces left. The side to move's clock counts down on the estimated
  * server clock, for show; under ten seconds it shows tenths in the wrong
- * colour beside `Timer`. After a capture the page saw arrive the split
- * slides and the totals count (`moves`); a change of the lead between two
- * pairs the page drew is an overtake. `children` lies over it: a seat's
- * throw, as T4 built it.
+ * colour beside `Timer`. `children` lies over it: a seat's throw.
  */
 export function MatchStrip({
+    rivalry,
     state,
     match,
     now,
@@ -35,6 +37,7 @@ export function MatchStrip({
     big = false,
     children,
 }: {
+    rivalry: Rivalry & { key: string };
     state: RoomState;
     match: RoomMatch;
     now: number | null;
@@ -43,15 +46,8 @@ export function MatchStrip({
     /** A move the page saw arrive (`RoomMotion.strip` and the board's arrival). */
     moves: boolean;
     big?: boolean;
-    children?: React.ReactNode;
+    children?: ReactNode;
 }) {
-    const rivalry = useRivalry(state, big ? null : state.me.player_id);
-
-    if (rivalry.pair === null) {
-        return null;
-    }
-
-    const change = stripChange(state);
     const marks: SideMarks = Object.fromEntries(
         match.sides.map((side) => [
             side.player_id,
@@ -70,24 +66,18 @@ export function MatchStrip({
     );
 
     return (
-        <div className="relative">
-            <RivalryStrip
-                key={`strip:${rivalry.key}`}
-                pair={rivalry.pair}
-                previous={rivalry.previous}
-                overtake={rivalry.overtake}
-                ranking={stripRows(state).rows}
-                results={change.results}
-                spent={change.spent}
-                players={state.players}
-                placeLabels={placeLabels}
-                icons={icons}
-                moves={moves}
-                marks={marks}
-                big={big}
-            />
+        <GameStrip
+            rivalry={rivalry}
+            state={state}
+            placeLabels={placeLabels}
+            icons={icons}
+            moves={moves}
+            marks={marks}
+            ribbonInGap
+            big={big}
+        >
             {children}
-        </div>
+        </GameStrip>
     );
 }
 
@@ -125,28 +115,4 @@ function SideClock({
             {clockText(left, t('rooms.decimal_mark'))}
         </span>
     );
-}
-
-/** The other seat of a match for a seat's phone: whom its strip's throw aims at. */
-export function rivalOf(
-    state: RoomState,
-    match: RoomMatch,
-): { id: string; name: string | null } | null {
-    const mine = match.sides.some(
-        (side) => side.player_id === state.me.player_id,
-    );
-    const other = match.sides.find(
-        (side) => side.player_id !== state.me.player_id,
-    );
-
-    if (!mine || other === undefined) {
-        return null;
-    }
-
-    return {
-        id: other.player_id,
-        name:
-            state.players.find((player) => player.id === other.player_id)
-                ?.name ?? null,
-    };
 }

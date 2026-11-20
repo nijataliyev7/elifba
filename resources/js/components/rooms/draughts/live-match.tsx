@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react';
 import { clockLevelText } from '@/components/rooms/catalog';
-import { seatOf } from '@/components/rooms/draughts/board';
+import { offerTo, seatOf } from '@/components/rooms/draughts/board';
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
 import { MatchActions } from '@/components/rooms/draughts/match-actions';
 import { MatchLine } from '@/components/rooms/draughts/match-line';
-import { MatchStrip, rivalOf } from '@/components/rooms/draughts/match-strip';
-import { useArrival } from '@/components/rooms/draughts/use-arrival';
+import { MatchStrip } from '@/components/rooms/draughts/match-strip';
+import {
+    ownArrival,
+    useArrival,
+} from '@/components/rooms/draughts/use-arrival';
 import { useMatchActs } from '@/components/rooms/draughts/use-match-acts';
+import { rivalOf } from '@/components/rooms/rivalry';
+import { useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
+import { FrameTitle, ScreenHead } from '@/components/rooms/game-head';
 import { RoomActionBar } from '@/components/rooms/room-action-bar';
 import { TauntReaction, TauntThrow } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
@@ -15,11 +21,8 @@ import type { RoomMotion } from '@/components/rooms/use-motion';
 import type { RoomSound } from '@/components/rooms/use-room-sound';
 import { useServerNow } from '@/components/rooms/use-server-now';
 import { useTranslation } from '@/hooks/use-translation';
-import { cn } from '@/lib/utils';
 import type { ServerClock } from '@/rooms/clock';
-import type { RoomGame, RoomMatch, RoomState } from '@/rooms/contract';
-
-type BoardGame = Extract<RoomGame, { kind: 'board' }>;
+import type { RoomBoardGame, RoomMatch, RoomState } from '@/rooms/contract';
 
 /**
  * A live match on a phone (docs/frontend.md rule 15 "Board games" → "A
@@ -54,7 +57,7 @@ export function LiveMatch({
 }: {
     roomId: string;
     state: RoomState;
-    game: BoardGame;
+    game: RoomBoardGame;
     match: RoomMatch;
     clock: ServerClock;
     placeLabels: string[];
@@ -68,27 +71,29 @@ export function LiveMatch({
     onTauntsHiddenChange: (hidden: boolean) => void;
     footer?: ReactNode;
 }) {
+    const { t } = useTranslation();
     const now = useServerNow(clock, true);
     const seat = seatOf(match, state.me.player_id);
     const arrival = useArrival(game.id, match);
-    const acts = useMatchActs({ roomId, match, clock, refresh, onGone, sound });
+    const rivalry = useRivalry(state, state.me.player_id);
+    const acts = useMatchActs({
+        roomId,
+        gameId: game.id,
+        match,
+        clock,
+        refresh,
+        onGone,
+        sound,
+    });
     // The viewer's own move is already standing where it went: only the other seat's slides.
-    const own =
-        arrival !== null &&
-        seat !== null &&
-        arrival.last.path.join() === acts.sentPath?.join();
+    const own = seat !== null && ownArrival(arrival, acts.posted, match.ply);
+    const offerer = offerTo(match, state.me.player_id);
+    // A nameless seat's offer still has its card.
     const offered =
-        match.phase === 'play' &&
-        match.offer !== null &&
-        seat !== null &&
-        seat.color !== match.offer
-            ? (state.players.find(
-                  (player) =>
-                      player.id ===
-                      match.sides.find((side) => side.color === match.offer)
-                          ?.player_id,
-              )?.name ?? null)
-            : null;
+        offerer === null
+            ? null
+            : (state.players.find((player) => player.id === offerer.player_id)
+                  ?.name ?? t('rooms.show.nameless'));
 
     return (
         <>
@@ -98,6 +103,7 @@ export function LiveMatch({
                 className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 pt-3 pb-2 md:px-6"
             >
                 <MatchStrip
+                    rivalry={rivalry}
                     state={state}
                     match={match}
                     now={now}
@@ -108,11 +114,11 @@ export function LiveMatch({
                     <TauntThrow
                         roomId={roomId}
                         state={state}
-                        rival={rivalOf(state, match)}
+                        rival={rivalOf(rivalry.pair, state.players)}
                         list={taunts}
                         clock={clock}
                         now={now}
-                        phase={`match:${game.id}`}
+                        phase={`match:${game.id}:${match.ply}`}
                         hidden={tauntsHidden}
                         onHiddenChange={onTauntsHiddenChange}
                         onThrown={refresh}
@@ -129,16 +135,19 @@ export function LiveMatch({
                 />
 
                 <div className="-mx-2 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                    <DraughtsBoard
-                        position={match.position}
-                        last={match.last}
-                        flipped={seat?.color === 'black'}
-                        arrival={own ? null : arrival}
-                        taps={acts.taps}
-                        marks={acts.marks}
-                        pending={acts.pending}
-                        onTap={acts.tap}
-                    />
+                    {/* No taller than the viewport leaves — 19.25rem: the frame's bar, the strip, the line and the action bar — and never under 44px squares. */}
+                    <div className="mx-auto max-w-[max(22rem,calc(100svh-19.25rem))]">
+                        <DraughtsBoard
+                            position={match.position}
+                            last={match.last}
+                            flipped={seat?.color === 'black'}
+                            arrival={own ? null : arrival}
+                            taps={acts.taps}
+                            marks={acts.marks}
+                            pending={acts.pending}
+                            onTap={acts.tap}
+                        />
+                    </div>
                 </div>
 
                 <MatchLine
@@ -167,38 +176,47 @@ export function LiveMatch({
 }
 
 /**
- * A match's title in the game frame's top bar (ADR 032 decision 4): the
- * page's `h1` «Şaşki» over «5+3 · :number-ci gediş», the move's number as
- * the record counts it.
+ * A match's title (ADR 032 decision 4): in the game frame's top bar the
+ * page's `h1` «Şaşki» over «5+3 · Gediş :number»; on the screen (`big`),
+ * as a round's head stands there, «Şaşki · 5+3» muted over «Gediş
+ * :number» — the move's number as the record counts it.
  */
 export function MatchTitle({
     game,
     match,
     motion = false,
+    big = false,
 }: {
-    game: BoardGame;
+    game: RoomBoardGame;
     match: RoomMatch;
     motion?: boolean;
+    big?: boolean;
 }) {
     const { t } = useTranslation();
-    const number = Math.floor(match.ply / 2) + 1;
+    const name = t(`rooms.mechanics.${game.mechanic}.name`);
+    const clock = clockLevelText(t, game.clock);
+    const move = t('rooms.match.move_number', {
+        number: Math.floor(match.ply / 2) + 1,
+    });
+
+    if (!big) {
+        return (
+            <FrameTitle
+                title={name}
+                titleKey={game.id}
+                line={`${clock} · ${move}`}
+                // «Şaşki» pops in once, at the match's start the page saw — not at a later move.
+                motion={motion && match.ply === 0}
+            />
+        );
+    }
 
     return (
-        <>
-            <h1
-                id="round-heading"
-                className={cn(
-                    'origin-left truncate text-base leading-tight font-semibold',
-                    motion && 'motion-safe:animate-room-pop',
-                )}
-            >
-                {t(`rooms.mechanics.${game.mechanic}.name`)}
-            </h1>
-            <p className="truncate text-xs text-muted-foreground tabular-nums">
-                {clockLevelText(t, game.clock)}
-                {' · '}
-                {t('rooms.match.move_number', { number })}
-            </p>
-        </>
+        <ScreenHead
+            line={`${name} · ${clock}`}
+            title={move}
+            titleKey={match.ply}
+            motion={motion}
+        />
     );
 }
