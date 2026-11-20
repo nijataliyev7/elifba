@@ -1,0 +1,4 @@
+{
+    "about": "The official answer for a position where pydraughts and the official text disagree on a move (ADR 034 decision 33), written by hand: make.py writes it into positions.json in place of the library's, and README.md records each case with its position, both answers and the article. Each entry is {fen, moves, article}, the FEN as the library writes it. None so far: on every position checked, the library and the official text agree.",
+    "positions": []
+}

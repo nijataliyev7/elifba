@@ -12,6 +12,13 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!-- The group "slow" runs only when asked for by name (Pest's group
+         option): perft 7 from the draughts start (ADR 034 decision 34). -->
+    <groups>
+        <exclude>
+            <group>slow</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>app</directory>
