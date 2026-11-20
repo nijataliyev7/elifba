@@ -6,6 +6,7 @@ use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
+use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomRound;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomPlayable;
@@ -68,6 +69,28 @@ class RoomGameFactory extends Factory
 
             $game->unsetRelation('rounds');
         });
+    }
+
+    /**
+     * A board game of draughts (ADR 034) at `$difficulty`, its two seats and
+     * its level's clock on the row as `StartRoomGame` copies them; no
+     * rounds, seed or reveal. Its clock starts after the countdown.
+     */
+    public function draughts(RoomPlayer $white, RoomPlayer $black, int $difficulty = 2): static
+    {
+        $level = app(ContentRepository::class)->roomLevel(RoomMechanic::Draughts, $difficulty);
+
+        return $this->state(fn (array $attributes) => [
+            'room_id' => $white->room_id,
+            'mechanic' => RoomMechanic::Draughts,
+            'difficulty' => $difficulty,
+            'seed' => 0,
+            'reveal_ms' => 0,
+            'white_player_id' => $white->id,
+            'black_player_id' => $black->id,
+            'clock_ms' => $level->clockMs,
+            'increment_ms' => $level->incrementMs,
+        ]);
     }
 
     public function ended(): static

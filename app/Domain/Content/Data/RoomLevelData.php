@@ -25,15 +25,20 @@ use App\Domain\Content\Enums\RoomSource;
  * - `anagram` (B6): `word_length` (`{min, max}` letters of the word).
  * - `spelling` (B6): `word_length` and `swaps` (1 or 2: how many letters
  *   at least tell two of the four spellings apart, `Content\Support\RoomWords`).
+ * - `draughts` (D3, ADR 034 decision 6), a board game: its level is its
+ *   clock — `clock_ms`, each side's time, and `increment_ms`, what a side
+ *   gains with each move — and nothing else; it has no rounds, so its
+ *   `study_ms` and `answer_ms` are 0 and not in the file. Its difficulties
+ *   are 1 to 3, a higher number a faster game.
  *
- * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms: int, answer_ms: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int}
+ * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms?: int, answer_ms?: int, clock_ms?: int, increment_ms?: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int}
  */
 final readonly class RoomLevelData
 {
     /**
      * @param  int  $difficulty  1–4
      * @param  int  $studyMs  how long the material is shown; 0 unless the mechanic `studies()`
-     * @param  int  $answerMs  the time to answer
+     * @param  int  $answerMs  the time to answer; 0 for a board game
      * @param  list<RoomItemKind>  $kinds  what a `recall_order` round may show
      * @param  RangeData|null  $length  items in a `recall_order` row
      * @param  GridData|null  $grid  a `recall_cells` round's grid
@@ -45,6 +50,8 @@ final readonly class RoomLevelData
      * @param  int|null  $options  how many options an `odd_one_out` round offers
      * @param  RangeData|null  $wordLength  the letters of a word game's word
      * @param  int|null  $swaps  a `spelling` level's: 1 or 2
+     * @param  int|null  $clockMs  a board game's: each side's time
+     * @param  int|null  $incrementMs  a board game's: what a side gains with each move
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -62,6 +69,8 @@ final readonly class RoomLevelData
         public ?int $options = null,
         public ?RangeData $wordLength = null,
         public ?int $swaps = null,
+        public ?int $clockMs = null,
+        public ?int $incrementMs = null,
     ) {}
 
     /**
@@ -72,8 +81,8 @@ final readonly class RoomLevelData
         return new self(
             mechanic: RoomMechanic::from($data['mechanic']),
             difficulty: $data['difficulty'],
-            studyMs: $data['study_ms'],
-            answerMs: $data['answer_ms'],
+            studyMs: $data['study_ms'] ?? 0,
+            answerMs: $data['answer_ms'] ?? 0,
             kinds: array_map(RoomItemKind::from(...), $data['kinds'] ?? []),
             length: isset($data['length']) ? RangeData::fromArray($data['length']) : null,
             grid: isset($data['grid']) ? GridData::fromArray($data['grid']) : null,
@@ -85,6 +94,8 @@ final readonly class RoomLevelData
             options: $data['options'] ?? null,
             wordLength: isset($data['word_length']) ? RangeData::fromArray($data['word_length']) : null,
             swaps: $data['swaps'] ?? null,
+            clockMs: $data['clock_ms'] ?? null,
+            incrementMs: $data['increment_ms'] ?? null,
         );
     }
 }

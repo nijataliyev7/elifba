@@ -1,5 +1,5 @@
 {
-    "v": 5,
+    "v": 6,
     "revision": 5,
     "server_ms": 1795534226900,
     "room": {
@@ -45,6 +45,7 @@
         }
     ],
     "game": {
+        "kind": "race",
         "id": "01kaqs0a1b2c3d4e5f6g7h8j9k",
         "mechanic": "next_in_sequence",
         "difficulty": 3,
@@ -140,6 +141,7 @@
         "present_count": 2,
         "reveal": null
     },
+    "match": null,
     "ranking": [
         {
             "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
@@ -163,6 +165,7 @@
         }
     ],
     "setup": {
+        "kind": "race",
         "mechanic": "next_in_sequence",
         "difficulty": 3,
         "rounds": 5,

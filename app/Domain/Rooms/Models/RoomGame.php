@@ -26,6 +26,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * start) and the host's end (`ended_ms`). The round and phase at a moment
  * are `RoomTimetable`'s, never stored. Moments are Unix milliseconds.
  *
+ * A board game (D3, ADR 034) is a row of the same table: its mechanic's
+ * kind says so (`RoomGameDriver`). It has no rounds, no seed and no
+ * reveal; it has its two seats and its clock, copied from the room's
+ * choice at the start, and its acts (`room_acts`). `started_ms` is when
+ * its clock starts. Whether it is over, and how, is replayed from the acts
+ * (`DraughtsMatch`), never stored.
+ *
  * @property string $id
  * @property string $room_id
  * @property int $position order in the room, 0-based
@@ -36,9 +43,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $reveal_ms
  * @property int $started_ms when round 0 opens
  * @property int|null $ended_ms the host ended the game, or the room closed under it
+ * @property string|null $white_player_id a board game's seat that plays white
+ * @property string|null $black_player_id a board game's seat that plays black
+ * @property int|null $clock_ms a board game's: each side's time
+ * @property int|null $increment_ms a board game's: what a side gains with each move
  * @property CarbonImmutable $created_at
  * @property-read Room $room
  * @property-read Collection<int, RoomRound> $rounds by position
+ * @property-read Collection<int, RoomAct> $acts a board game's, in the order received
  */
 #[UseFactory(RoomGameFactory::class)]
 class RoomGame extends Model
@@ -85,6 +97,16 @@ class RoomGame extends Model
     }
 
     /**
+     * A board game's acts, in the order they were received.
+     *
+     * @return HasMany<RoomAct, $this>
+     */
+    public function acts(): HasMany
+    {
+        return $this->hasMany(RoomAct::class)->orderBy('id');
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -98,6 +120,8 @@ class RoomGame extends Model
             'reveal_ms' => 'integer',
             'started_ms' => 'integer',
             'ended_ms' => 'integer',
+            'clock_ms' => 'integer',
+            'increment_ms' => 'integer',
         ];
     }
 }

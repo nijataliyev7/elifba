@@ -35,12 +35,24 @@ export type GameSetupOptions = {
     rounds: { min: number; max: number };
 };
 
-/** The room's choice of the next game: the state's `setup` without `played`. */
+/**
+ * The room's choice of the next game: the state's `setup` without `played`.
+ * A race's has its rounds; a board game's (D3, ADR 034 decision 7) has
+ * none, and its clock and seats are drawn by its own parts (D4).
+ */
 export type SetupChoice = {
     mechanic: RoomMechanic;
     difficulty: number;
-    rounds: number;
+    rounds?: number;
 };
+
+/** A race's rounds, for the lines that count them; a board game has none (D4 writes its clock there). */
+export function roundsOf(game: {
+    difficulty: number;
+    rounds?: number;
+}): number {
+    return game.rounds ?? 0;
+}
 
 /** The round counts offered: every multiple of 5 between the bounds, and the bounds. */
 export function roundSteps(bounds: { min: number; max: number }): number[] {

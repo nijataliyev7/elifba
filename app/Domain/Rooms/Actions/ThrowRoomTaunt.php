@@ -7,6 +7,7 @@ use App\Domain\Rooms\Data\RoomTauntReceiptData;
 use App\Domain\Rooms\Enums\RoomTauntStatus;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomTaunt;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
 use App\Domain\Rooms\Support\RoomPointsRule;
@@ -44,6 +45,11 @@ use Illuminate\Validation\ValidationException;
  * 7. otherwise it is stored with the server's moment, the room is active,
  *    the revision rises and the room is signalled after commit →
  *    `accepted`.
+ *
+ * Who throws at whom is the game's driver's (`RoomGameDriver::mayThrow()`,
+ * `mayAim()`): in a race any present player at any other; in a board game
+ * a seat at the other seat alone (ADR 034 decision 22) — a watcher's throw
+ * is `late`, a target that is not the other seat 422.
  *
  * Only `accepted` writes. A taunt never closes a round, never counts as an
  * answer and never as a read: no `RoomRoundClose`, no `seen_ms`, nothing
@@ -84,8 +90,9 @@ final readonly class ThrowRoomTaunt
             // 2. A game running, before its last close, and the thrower in it.
             $row = $locked->rowOf($account);
             $game = $locked->latestGame();
+            $driver = $game === null ? null : RoomGameDriver::of($game->mechanic);
 
-            if ($row === null || ! $row->isPresent() || $game === null || ! RoomTauntWindow::open($locked, $game, $nowMs)) {
+            if ($row === null || ! $row->isPresent() || $game === null || $driver === null || ! RoomTauntWindow::open($locked, $game, $nowMs) || ! $driver->mayThrow($game, $row)) {
                 return $receipt(RoomTauntStatus::Late);
             }
 
@@ -94,8 +101,8 @@ final readonly class ThrowRoomTaunt
                 return $receipt(RoomTauntStatus::Off);
             }
 
-            // 4. Another present player of this room.
-            if ($taunt->target_id === $row->id || ! $locked->players()->present()->whereKey($taunt->target_id)->exists()) {
+            // 4. Another present player of this room, at whom the game lets the thrower aim.
+            if ($taunt->target_id === $row->id || ! $driver->mayAim($game, $row, $taunt->target_id) || ! $locked->players()->present()->whereKey($taunt->target_id)->exists()) {
                 throw ValidationException::withMessages(['target_id' => __('rooms.taunts.late')]);
             }
 

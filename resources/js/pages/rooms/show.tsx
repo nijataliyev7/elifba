@@ -16,9 +16,7 @@ import {
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import InputError from '@/components/input-error';
-import { withGame } from '@/components/rooms/catalog';
-import { CheckersRoom } from '@/components/rooms/checkers/checkers-room';
-import type { RoomMatchState } from '@/components/rooms/checkers/match';
+import { roundsOf, withGame } from '@/components/rooms/catalog';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
 import { FinalStanding } from '@/components/rooms/final-standing';
 import { carriesRoom } from '@/components/rooms/sound-cues';
@@ -69,6 +67,7 @@ import { destroy as endGame } from '@/routes/rooms/game';
 import { voice as memberVoice } from '@/routes/rooms/members';
 import { destroy as forget } from '@/routes/rooms/name';
 import type {
+    RoomClockLevel,
     RoomGame,
     RoomMechanic,
     RoomRankedPlayer,
@@ -78,12 +77,13 @@ import type {
 import type { RoomFinishVoice, RoomSoundUrls } from '@/rooms/sound';
 import { roomRequest } from '@/rooms/http';
 
-/** A game of a closed room, with its ranking (`Rooms\Support\RoomResults`). */
+/** A game of a closed room, with its ranking (`Rooms\Support\RoomResults`): a race's rounds, a board game's clock (D3). */
 export type RoomResultGame = {
     id: string;
     mechanic: RoomMechanic;
     difficulty: number;
-    rounds: number;
+    rounds?: number;
+    clock?: RoomClockLevel;
     ranking: RoomRankedPlayer[];
 };
 
@@ -109,10 +109,6 @@ type Props = {
     taunts: TauntList | null;
     /** «Əla oynadın!» and «Əla oynadınız!», said after the final's fanfare in a room without a screen (ADR 030 as amended); null when it follows no open room. */
     finish: RoomFinishVoice | null;
-    /** The board game the room was opened for (ADR 034); null: the round games. */
-    board: 'checkers' | null;
-    /** Its match as the viewer sees it; null outside an open board room. */
-    match: RoomMatchState | null;
     can: Can;
 };
 
@@ -165,8 +161,6 @@ export default function RoomsShow({
     rivalry,
     taunts,
     finish,
-    board,
-    match,
     can,
 }: Props) {
     const { t } = useTranslation();
@@ -232,34 +226,17 @@ export default function RoomsShow({
         );
     }
 
-    if (board !== null) {
-        return (
-            <CheckersRoom
-                roomId={room.id}
-                state={state}
-                initial={match}
-                host={can.host}
-                canLeave={can.leave}
-                join={join}
-                refresh={refresh}
-                voice={voiceButton}
-                placeLabels={placeLabels}
-                sounds={sounds}
-                taunts={taunts}
-            />
-        );
-    }
-
     const game = state.game;
-    const round = state.round;
+    // A live race: the state that has a round (a board game has its match, D4).
+    const live = state.round !== null ? state : null;
 
-    if (game !== null && game.phase === 'live' && round !== null) {
+    if (live !== null) {
         return (
             <RoomFrame
                 heading={
                     <RoundTitle
-                        game={game}
-                        round={round}
+                        game={live.game}
+                        round={live.round}
                         motion={motion.round}
                     />
                 }
@@ -278,8 +255,8 @@ export default function RoomsShow({
                     <LiveRound
                         roomId={room.id}
                         state={state}
-                        game={game}
-                        round={round}
+                        game={live.game}
+                        round={live.round}
                         clock={clock}
                         placeLabels={placeLabels}
                         refresh={refresh}
@@ -802,7 +779,7 @@ function GameOver({
                             difficulty: t(
                                 `rooms.difficulty.${game.difficulty}`,
                             ),
-                            count: game.rounds,
+                            count: roundsOf(game),
                         })}
                     </span>
                 </span>
@@ -988,7 +965,7 @@ function GameResult({
                     <span className="text-sm text-muted-foreground">
                         {t(`rooms.difficulty.${game.difficulty}`)}
                         {' · '}
-                        {t('rooms.show.rounds', { count: game.rounds })}
+                        {t('rooms.show.rounds', { count: roundsOf(game) })}
                     </span>
                 </span>
                 <ChevronDown

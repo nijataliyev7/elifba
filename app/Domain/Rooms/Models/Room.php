@@ -4,11 +4,11 @@ namespace App\Domain\Rooms\Models;
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Data\RoomGameSetupData;
-use App\Domain\Rooms\Enums\RoomBoardGame;
 use App\Domain\Rooms\Enums\RoomStatus;
 use App\Domain\Rooms\Policies\RoomPolicy;
-use App\Domain\Rooms\Support\RoomClock;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomDefaults;
+use App\Domain\Rooms\Support\RoomSeats;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\RoomFactory;
@@ -38,8 +38,9 @@ use Illuminate\Support\Facades\Config;
  * (`isOpen()`) before `CloseIdleRooms` writes it.
  *
  * The `setup_*` columns are the host's choice of the next game (G2, ADR 026
- * decision 8), written only by `OpenRoom` and `ChooseRoomGame` and read
- * through `setup()`. `taunts` is the host's switch for taunts (T2, ADR
+ * decision 8), written only by `OpenRoom` and `ChooseRoomGame` — and the
+ * two seats of a board game also by `StartRoomGame` (D3, ADR 034 decisions
+ * 7–8) — and read through `setup()`. `taunts` is the host's switch for taunts (T2, ADR
  * 029 decision 12), on by default, written only by `SetRoomTaunts`.
  *
  * `voice_at` and `voice_epoch` are the room's live voice (§12 "Live voice",
@@ -56,18 +57,18 @@ use Illuminate\Support\Facades\Config;
  * @property CarbonImmutable|null $closed_at final
  * @property RoomMechanic|null $setup_mechanic the choice's game; null in a room opened before G2
  * @property int|null $setup_difficulty
- * @property int|null $setup_rounds
+ * @property int|null $setup_rounds kept for the next race while a board game is chosen
+ * @property string|null $setup_white_id the seat that plays white in the next board game (D3); read through `RoomSeats`
+ * @property string|null $setup_black_id the seat that plays black
  * @property bool $taunts the host's switch: players may throw taunts
  * @property int|null $screen_seen_ms when the big screen last read the state while shown, Unix ms (`RecordScreenRead`)
  * @property CarbonImmutable|null $voice_at the host turned the room's voice on; null: off
  * @property int $voice_epoch in the voice room's name; raised to close it for everyone
- * @property RoomBoardGame|null $board the board game the room was opened for (ADR 034); null: the round games
  * @property CarbonImmutable $created_at what the retention period counts from
  * @property CarbonImmutable $updated_at
  * @property-read User $host
  * @property-read Collection<int, RoomPlayer> $players
  * @property-read Collection<int, RoomGame> $games by position
- * @property-read Collection<int, RoomMatch> $matches by position
  */
 #[UseFactory(RoomFactory::class)]
 #[UsePolicy(RoomPolicy::class)]
@@ -130,30 +131,37 @@ class Room extends Model
     }
 
     /**
-     * The game being played at `$nowMs`: the latest, until its timetable
-     * says it is over (§12 "The race"). Whether the room is open is the
-     * caller's to ask.
+     * The game being played at `$nowMs`: the latest, until it is over — a
+     * race by its timetable (§12 "The race"), a board game by its outcome
+     * (§12 "Board games"), as its driver says. Whether the room is open is
+     * the caller's to ask.
      */
     public function runningGame(int $nowMs): ?RoomGame
     {
         $game = $this->latestGame();
 
-        return $game !== null && ! $game->timetable()->moment($nowMs)->isOver() ? $game : null;
+        return $game !== null && ! RoomGameDriver::of($game->mechanic)->isOver($game, $nowMs) ? $game : null;
     }
 
     /**
      * The host's choice of the next game (§12 "Games first", ADR 026
      * decision 8): the one stored, while it is still a level a room plays;
      * else — a room opened before G2 — its latest game's; else the first
-     * playable game at the host's defaults (`RoomDefaults`). `StartRoomGame`
-     * starts it, and the state shows it to every device.
+     * playable game at the host's defaults (`RoomDefaults`). A board game's
+     * choice has the room's two seats (`RoomSeats`, ADR 034 decision 7).
+     * `StartRoomGame` starts it, and the state shows it to every device.
      */
     public function setup(): RoomGameSetupData
     {
-        if ($this->setup_mechanic !== null && $this->setup_difficulty !== null && $this->setup_rounds !== null) {
-            $stored = new RoomGameSetupData($this->setup_mechanic, $this->setup_difficulty, $this->setup_rounds);
+        return $this->chosen()->seated(fn (): array => RoomSeats::of($this));
+    }
 
-            if ($stored->isPlayable()) {
+    private function chosen(): RoomGameSetupData
+    {
+        if ($this->setup_mechanic !== null && $this->setup_difficulty !== null) {
+            $stored = RoomGameSetupData::of($this->setup_mechanic, $this->setup_difficulty, $this->setup_rounds);
+
+            if ($stored?->isPlayable() === true) {
                 return $stored;
             }
         }
@@ -161,33 +169,14 @@ class Room extends Model
         $latest = $this->games()->reorder()->orderByDesc('position')->withCount('rounds')->first();
 
         if ($latest !== null) {
-            $played = new RoomGameSetupData($latest->mechanic, $latest->difficulty, (int) $latest->getAttribute('rounds_count'));
+            $played = RoomGameSetupData::of($latest->mechanic, $latest->difficulty, (int) $latest->getAttribute('rounds_count'));
 
-            if ($played->isPlayable()) {
+            if ($played?->isPlayable() === true) {
                 return $played;
             }
         }
 
         return RoomDefaults::for($this->host, $this->setup_mechanic ?? RoomGameSetupData::firstMechanic());
-    }
-
-    /**
-     * The room's latest board match as it stands now — a side out of time
-     * has lost (`RoomMatch::settled()`) — or null before the first (ADR 034).
-     */
-    public function latestMatch(): ?RoomMatch
-    {
-        return $this->matches()->reorder()->orderByDesc('position')->first()?->settled(RoomClock::nowMs());
-    }
-
-    /**
-     * The board match being played: the latest, until it ended.
-     */
-    public function runningMatch(): ?RoomMatch
-    {
-        $match = $this->latestMatch();
-
-        return $match !== null && ! $match->isOver() ? $match : null;
     }
 
     public function isHostedBy(User $account): bool
@@ -249,16 +238,6 @@ class Room extends Model
     }
 
     /**
-     * The board matches played in the room, one at a time, in order (ADR 034).
-     *
-     * @return HasMany<RoomMatch, $this>
-     */
-    public function matches(): HasMany
-    {
-        return $this->hasMany(RoomMatch::class)->orderBy('position');
-    }
-
-    /**
      * `{member}` is scoped under `{room}` through `players()`.
      *
      * @param  string  $childType
@@ -285,7 +264,6 @@ class Room extends Model
             'screen_seen_ms' => 'integer',
             'voice_at' => 'datetime',
             'voice_epoch' => 'integer',
-            'board' => RoomBoardGame::class,
         ];
     }
 

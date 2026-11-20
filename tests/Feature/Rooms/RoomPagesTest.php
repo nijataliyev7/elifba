@@ -123,7 +123,7 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
     $this->actingAs($this->resad)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/index')
-            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]])
+            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]])
             ->missing('past'));
     $this->get(route('rooms.past'))
         ->assertInertia(fn (Assert $page) => $page
@@ -140,7 +140,7 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
 
     $this->actingAs($this->aygun)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
+            ->where('open', [['id' => $open->id, 'code' => $open->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
     $this->get(route('rooms.past'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('past', [[
@@ -160,11 +160,11 @@ it('lists an account\'s open and past rooms and nobody else\'s', function (): vo
     // Tural sees his own room only; Nigar the same one; nobody else's.
     $this->actingAs($this->tural)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
+            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => true, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
     $this->get(route('rooms.past'))->assertInertia(fn (Assert $page) => $page->where('past', []));
     $this->actingAs($nigar)->get(route('rooms.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'board' => null, 'running' => false]]));
+            ->where('open', [['id' => $turals->id, 'code' => $turals->code, 'host' => false, 'players' => 2, 'mechanic' => 'recall_order', 'running' => false]]));
     $this->get(route('rooms.past'))->assertInertia(fn (Assert $page) => $page->where('past', []));
 
     // A player who left an open room finds it under the past ones, with what the room has played so far.
@@ -536,8 +536,8 @@ it('names the family of each game the setup offers and what each level holds', f
 
     $setup = pagesProps($this->actingAs($this->resad)->get(route('rooms.show', $room)))['catalog'];
 
-    expect(array_column($setup['mechanics'], 'mechanic'))->toBe(['recall_order', 'recall_cells', 'next_in_sequence', 'odd_one_out', 'anagram', 'spelling'])
-        ->and(array_column($setup['mechanics'], 'family'))->toBe(['memory', 'memory', 'logic', 'logic', 'words', 'words']);
+    expect(array_column($setup['mechanics'], 'mechanic'))->toBe(['recall_order', 'recall_cells', 'next_in_sequence', 'odd_one_out', 'anagram', 'spelling', 'draughts'])
+        ->and(array_column($setup['mechanics'], 'family'))->toBe(['memory', 'memory', 'logic', 'logic', 'words', 'words', 'board']);
 
     foreach ($setup['mechanics'] as $offer) {
         $mechanic = RoomMechanic::from($offer['mechanic']);
@@ -546,7 +546,8 @@ it('names the family of each game the setup offers and what each level holds', f
             ->and(array_column($offer['levels'], 'difficulty'))->toBe($offer['difficulties']);
 
         // Each level as levels.json holds it: the times, how many items a round asks to recall, a grid;
-        // a row's rules, terms and range; an odd one's source and options; a word's letters and a spelling's swaps.
+        // a row's rules, terms and range; an odd one's source and options; a word's letters and a spelling's swaps;
+        // a board game's clock (D3).
         foreach ($offer['levels'] as $described) {
             $level = $content->roomLevel($mechanic, $described['difficulty']);
             $count = $level->length ?? $level->lit;
@@ -564,6 +565,7 @@ it('names the family of each game the setup offers and what each level holds', f
                 'options' => $level->options,
                 'letters' => $level->wordLength === null ? null : ['min' => $level->wordLength->min, 'max' => $level->wordLength->max],
                 'swaps' => $level->swaps,
+                ...($level->clockMs === null ? [] : ['clock' => ['base_ms' => $level->clockMs, 'increment_ms' => $level->incrementMs]]),
             ]);
         }
     }
@@ -613,7 +615,7 @@ it('sends the home the catalog and the open rooms, and the past rooms to their o
         ->and($home)->not->toHaveKey('past')
         ->and($home['catalog'])->toBe(RoomGameSetupData::options())
         ->and(array_column($home['catalog']['mechanics'], 'mechanic'))->toBe(array_map(static fn (RoomMechanic $mechanic): string => $mechanic->value, RoomGameSetupData::mechanics()))
-        ->and($home['open'])->toBe([['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 1, 'mechanic' => 'spelling', 'board' => null, 'running' => false]])
+        ->and($home['open'])->toBe([['id' => $open->id, 'code' => $open->code, 'host' => true, 'players' => 1, 'mechanic' => 'spelling', 'running' => false]])
         ->and($home['entrance'])->toBe($root.'/oyun');
 
     // While a game runs there, the home says so.
@@ -647,7 +649,7 @@ it('sends the screen what it needs to choose and start', function (): void {
 
     expect($screen['catalog'])->toBe($phone['catalog'])
         ->and($screen['catalog'])->toBe(RoomGameSetupData::options())
-        ->and($screen['state']['setup'])->toBe(['mechanic' => 'recall_order', 'difficulty' => 2, 'rounds' => 10, 'played' => false])
+        ->and($screen['state']['setup'])->toBe(['kind' => 'race', 'mechanic' => 'recall_order', 'difficulty' => 2, 'rounds' => 10, 'played' => false])
         ->and($screen['state']['setup'])->toBe($phone['state']['setup']);
 
     // With them it changes the choice and starts, through the host's own routes.

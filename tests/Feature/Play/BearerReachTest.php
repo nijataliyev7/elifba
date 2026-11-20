@@ -130,6 +130,7 @@ function bearerSnapshot(): array
         'room_rounds' => $rows('room_rounds'),
         'room_answers' => $rows('room_answers'),
         'room_taunts' => $rows('room_taunts'),
+        'room_acts' => $rows('room_acts'),
     ];
 }
 

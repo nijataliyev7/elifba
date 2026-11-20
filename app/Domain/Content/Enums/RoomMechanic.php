@@ -13,7 +13,9 @@ namespace App\Domain\Content\Enums;
  * The enum grows with the steps that build each mechanic's builder and
  * its validator rules — B3 `recall_order`; B4 `recall_cells`; B5
  * `next_in_sequence`, `odd_one_out`; B6 `anagram`, `spelling` — so every
- * case has a builder and a level of it is checked in full.
+ * case of a race has a builder and a level of it is checked in full. D3
+ * adds `draughts`, a board game (ADR 034): its rules are
+ * `Rooms\Support\Draughts`, its level is a clock, and it builds no rounds.
  */
 enum RoomMechanic: string
 {
@@ -53,13 +55,26 @@ enum RoomMechanic: string
      */
     case Spelling = 'spelling';
 
+    /**
+     * «Şaşki»: Russian draughts on 8 × 8, two seats taking turns, a clock
+     * each (D3, ADR 034). A board game: no rounds, no answer.
+     */
+    case Draughts = 'draughts';
+
     public function family(): RoomFamily
     {
         return match ($this) {
             self::RecallOrder, self::RecallCells => RoomFamily::Memory,
             self::NextInSequence, self::OddOneOut => RoomFamily::Logic,
             self::Anagram, self::Spelling => RoomFamily::Words,
+            self::Draughts => RoomFamily::Board,
         };
+    }
+
+    /** A race of rounds or a board game: the family's (ADR 034 decision 1). */
+    public function kind(): RoomGameKind
+    {
+        return $this->family()->kind();
     }
 
     /**
@@ -77,7 +92,7 @@ enum RoomMechanic: string
      * `recall_cells` level names none: its items are the cells of its
      * grid; nor does a logic level: `next_in_sequence` shows numbers, and
      * `odd_one_out` what its `source` says; nor a word game: its items are
-     * what its word makes.
+     * what its word makes; nor a board game, which has no items.
      *
      * @return list<RoomItemKind>
      */
@@ -85,7 +100,7 @@ enum RoomMechanic: string
     {
         return match ($this) {
             self::RecallOrder => [RoomItemKind::Digit, RoomItemKind::Letter, RoomItemKind::Word, RoomItemKind::Shape],
-            self::RecallCells, self::NextInSequence, self::OddOneOut, self::Anagram, self::Spelling => [],
+            self::RecallCells, self::NextInSequence, self::OddOneOut, self::Anagram, self::Spelling, self::Draughts => [],
         };
     }
 }

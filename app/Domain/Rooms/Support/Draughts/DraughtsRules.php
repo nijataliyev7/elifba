@@ -7,7 +7,7 @@ use App\Domain\Rooms\Enums\RoomMatchColor;
 /**
  * The one judge of a move of Russian draughts (docs/architecture.md §12
  * "Board games", ADR 034 decision 4), reshaped from the contributor's
- * `Checkers` (pull request #9), whose capture search stands as written.
+ * rules of pull request #9, whose capture search stands as written.
  * PHP only, never mirrored in TypeScript: a page is sent the legal paths
  * and picks one. The articles are those of «Правила вида спорта "шашки"»
  * (2022), part 6.1; `tests/Fixtures/rooms/draughts/` holds what an

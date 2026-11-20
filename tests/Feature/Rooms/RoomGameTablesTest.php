@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Schema;
  * a solution no serialization of a round shows, one answer per player per
  * round and per event, and no column for a name or for text a person
  * typed. Run on SQLite and on PostgreSQL 17 (`composer test:pgsql`).
+ * From D3 a board game's seats and clock on its row, and its acts
+ * (`room_acts`, ADR 034 decision 20): squares by name, never a position.
  */
 
 beforeEach(function (): void {
@@ -26,7 +28,8 @@ beforeEach(function (): void {
 });
 
 it('holds the columns of the contract and nothing about a person', function (): void {
-    expect(Schema::getColumnListing('room_games'))->toEqualCanonicalizing(['id', 'room_id', 'position', 'mechanic', 'difficulty', 'content_version', 'seed', 'reveal_ms', 'started_ms', 'ended_ms', 'created_at'])
+    expect(Schema::getColumnListing('room_games'))->toEqualCanonicalizing(['id', 'room_id', 'position', 'mechanic', 'difficulty', 'content_version', 'seed', 'reveal_ms', 'started_ms', 'ended_ms', 'white_player_id', 'black_player_id', 'clock_ms', 'increment_ms', 'created_at'])
+        ->and(Schema::getColumnListing('room_acts'))->toEqualCanonicalizing(['id', 'event_id', 'room_game_id', 'room_player_id', 'kind', 'ply', 'path', 'acted_ms'])
         ->and(Schema::getColumnListing('room_rounds'))->toEqualCanonicalizing(['id', 'room_game_id', 'position', 'payload', 'solution', 'study_ms', 'answer_ms', 'closed_ms'])
         ->and(Schema::getColumnListing('room_answers'))->toEqualCanonicalizing(['id', 'event_id', 'room_round_id', 'room_player_id', 'picked', 'correct', 'elapsed_ms', 'points', 'created_at']);
 });

@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { past as pastRoute, show } from '@/routes/rooms';
-import type { RoomMechanic } from '@/rooms/contract';
+import type { RoomClockLevel, RoomMechanic } from '@/rooms/contract';
 
 /** A past room: its day, its games and the account's own row of its standing (null for a host who did not play). */
 type PastRoom = {
@@ -10,7 +10,12 @@ type PastRoom = {
     date: string;
     host: boolean;
     players: number;
-    games: { mechanic: RoomMechanic; difficulty: number }[];
+    /** A board game also its clock (D3). */
+    games: {
+        mechanic: RoomMechanic;
+        difficulty: number;
+        clock?: RoomClockLevel;
+    }[];
     mine: { points: number; place: string | null } | null;
 };
 

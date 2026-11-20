@@ -28,7 +28,7 @@ import {
 } from '@/components/rooms/mechanics/spelling';
 import type {
     RoomAsk,
-    RoomMechanic,
+    RoomRaceMechanic,
     RoomMine,
     RoomStudy,
 } from '@/rooms/contract';
@@ -70,7 +70,7 @@ export type MechanicView = {
     }>;
 };
 
-export const MECHANIC_VIEWS: Record<RoomMechanic, MechanicView> = {
+export const MECHANIC_VIEWS: Record<RoomRaceMechanic, MechanicView> = {
     recall_order: {
         Study: RecallOrderStudy,
         Ask: RecallOrderAsk,

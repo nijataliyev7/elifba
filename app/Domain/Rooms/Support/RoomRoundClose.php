@@ -38,20 +38,17 @@ final class RoomRoundClose
 {
     /**
      * After the present players changed: closes the round that is open for
-     * answers in the room's game, if everyone it waits for has answered it.
+     * answers in the room's running game, if everyone it waits for has
+     * answered it (`RaceDriver::whenPresenceChanges()`, which an open room's
+     * running race reaches).
      *
      * @return bool whether a round closed
      */
-    public static function whenPresenceChanges(Room $locked, int $nowMs): bool
+    public static function whenPresenceChanges(Room $locked, RoomGame $game, int $nowMs): bool
     {
-        if (! $locked->isOpen()) {
-            return false;
-        }
+        $moment = $game->timetable()->moment($nowMs);
 
-        $game = $locked->runningGame($nowMs);
-        $moment = $game?->timetable()->moment($nowMs);
-
-        if ($game === null || $moment?->phase !== RoomPhase::Answer || $moment->round === null) {
+        if ($moment->phase !== RoomPhase::Answer || $moment->round === null) {
             return false;
         }
 

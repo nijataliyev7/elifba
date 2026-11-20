@@ -2,10 +2,9 @@
 
 namespace App\Domain\Rooms\Support;
 
-use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
-use App\Domain\Rooms\Models\RoomTaunt;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 
 /**
  * What a player may spend on taunts now (docs/architecture.md §12 "Taunts
@@ -21,21 +20,16 @@ use App\Domain\Rooms\Models\RoomTaunt;
  * anybody answered; and every balance is 0 until the first round closes.
  * `ThrowRoomTaunt` reads it under the room row's lock, so one point is
  * never spent twice.
+ *
+ * That is a race's (`RaceDriver::balance()`); in a board game a seat's
+ * balance is what the match can still pay — `MATCH_WIN` less the taunts it
+ * threw — and a watcher's is 0 (ADR 034 decision 22): each as the game's
+ * driver says.
  */
 final class RoomTauntBalance
 {
     public static function of(RoomGame $game, RoomPlayer $row, int $nowMs): int
     {
-        $rounds = RoomRanking::closedRounds($game, $nowMs);
-        $points = $rounds === [] ? 0 : (int) RoomAnswer::query()
-            ->whereIn('room_round_id', $rounds)
-            ->where('room_player_id', $row->id)
-            ->sum('points');
-        $thrown = RoomTaunt::query()
-            ->where('room_game_id', $game->id)
-            ->where('room_player_id', $row->id)
-            ->count();
-
-        return max(0, $points - RoomPointsRule::TAUNT_COST * $thrown);
+        return RoomGameDriver::of($game->mechanic)->balance($game, $row, $nowMs);
     }
 }

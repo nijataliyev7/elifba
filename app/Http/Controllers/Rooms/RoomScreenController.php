@@ -8,7 +8,6 @@ use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\TauntVoices;
 use App\Domain\Rooms\Actions\RecordScreenRead;
 use App\Domain\Rooms\Data\RoomGameSetupData;
-use App\Domain\Rooms\Data\RoomMatchStateData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Support\RoomFinishVoice;
 use App\Domain\Rooms\Support\RoomJoinLink;
@@ -74,9 +73,6 @@ final class RoomScreenController extends Controller
             'taunts' => RoomTauntData::props($content->roomTaunts(), $tauntVoices),
             'finish' => $finish->urls(),
             'beat_ms' => RoomScreen::beatMs(),
-            // A room opened for a board game (ADR 034): the screen draws its board.
-            'board' => $room->board?->value,
-            'match' => $room->board !== null ? RoomMatchStateData::for($room, $account, screen: true) : null,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Rooms\Support;
 
+use App\Domain\Rooms\Data\RoomGameData;
 use App\Domain\Rooms\Data\RoomRankedPlayerData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
@@ -12,13 +13,14 @@ use Illuminate\Database\Eloquent\Collection;
  * A closed room's results page, game by game (docs/architecture.md §12
  * "Scoring and what is kept", ADR 022): each game's mechanic, difficulty
  * and number of rounds, and its ranking (`RoomRanking::ofGame()`), derived
- * now and never stored. A ranking names players by `room_players.id`; the
+ * now and never stored — a board game its clock in place of the rounds
+ * (D3, ADR 034 decision 17). A ranking names players by `room_players.id`; the
  * page reads their names from the state's `players`, read from the
  * accounts as they are now — a name taken out is null there.
  *
  * @phpstan-import-type RoomRankedPlayerArray from RoomRankedPlayerData
  *
- * @phpstan-type RoomResultGameArray array{id: string, mechanic: string, difficulty: int, rounds: int, ranking: list<RoomRankedPlayerArray>}
+ * @phpstan-type RoomResultGameArray array{id: string, mechanic: string, difficulty: int, rounds?: int, clock?: array{base_ms: int, increment_ms: int}, ranking: list<RoomRankedPlayerArray>}
  */
 final class RoomResults
 {
@@ -29,11 +31,11 @@ final class RoomResults
     {
         $players = RoomRanking::players($room);
 
-        return array_values($room->games()->with('rounds')->get()->map(static fn (RoomGame $game): array => [
+        return array_values($room->games()->with(['rounds', 'acts'])->get()->map(static fn (RoomGame $game): array => [
             'id' => $game->id,
             'mechanic' => $game->mechanic->value,
             'difficulty' => $game->difficulty,
-            'rounds' => $game->rounds->count(),
+            ...(($clock = RoomGameData::clockOf($game)) === null ? ['rounds' => $game->rounds->count()] : ['clock' => $clock->toArray()]),
             'ranking' => array_map(
                 static fn (RoomRankedPlayerData $row): array => $row->toArray(),
                 RoomRanking::ofGame($game, $nowMs, $players),

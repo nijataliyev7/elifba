@@ -192,6 +192,24 @@
             "answer_ms": 20000,
             "word_length": { "min": 5, "max": 5 },
             "swaps": 1
+        },
+        {
+            "mechanic": "draughts",
+            "difficulty": 1,
+            "clock_ms": 600000,
+            "increment_ms": 5000
+        },
+        {
+            "mechanic": "draughts",
+            "difficulty": 2,
+            "clock_ms": 300000,
+            "increment_ms": 3000
+        },
+        {
+            "mechanic": "draughts",
+            "difficulty": 3,
+            "clock_ms": 180000,
+            "increment_ms": 2000
         }
     ]
 }

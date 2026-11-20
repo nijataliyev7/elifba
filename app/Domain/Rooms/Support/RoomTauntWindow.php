@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Support;
 
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 
 /**
  * When a taunt may be thrown (docs/architecture.md §12 "Taunts (T2)", ADR
@@ -14,6 +15,10 @@ use App\Domain\Rooms\Models\RoomGame;
  * would count after the last close and change the final the room is about
  * to see. The host's switch, the balance and the cooldown are
  * `ThrowRoomTaunt`'s to check.
+ *
+ * That is a race's (`RaceDriver::tauntsOpen()`); a board game's window is
+ * the live match, its countdown included (ADR 034 decision 22) — each as
+ * the game's driver says.
  */
 final class RoomTauntWindow
 {
@@ -22,14 +27,6 @@ final class RoomTauntWindow
      */
     public static function open(Room $room, ?RoomGame $game, int $nowMs): bool
     {
-        if ($game === null || ! $room->isOpen()) {
-            return false;
-        }
-
-        $timetable = $game->timetable();
-
-        return $timetable->count() > 0
-            && ! $timetable->moment($nowMs)->isOver()
-            && $nowMs < $timetable->closes($timetable->count() - 1);
+        return $game !== null && $room->isOpen() && RoomGameDriver::of($game->mechanic)->tauntsOpen($game, $nowMs);
     }
 }

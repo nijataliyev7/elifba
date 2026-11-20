@@ -3,7 +3,6 @@ import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
-import { CheckersDrawing } from '@/components/rooms/checkers/checkers-drawing';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import { RoomActionBar } from '@/components/rooms/room-action-bar';
 import { RoomCodeField } from '@/components/rooms/room-code-field';
@@ -21,8 +20,6 @@ type OpenRoom = {
     host: boolean;
     players: number;
     mechanic: RoomMechanic;
-    /** The board game the room was opened for (ADR 034), else null. */
-    board: 'checkers' | null;
     running: boolean;
 };
 
@@ -46,14 +43,12 @@ type Props = {
 export default function RoomsIndex({ catalog, open, entrance }: Props) {
     const { t } = useTranslation();
     const { errors } = usePage<{ errors: Record<string, string> }>().props;
-    const [choosing, setChoosing] = useState<RoomMechanic | 'checkers' | null>(
-        null,
-    );
+    const [choosing, setChoosing] = useState<RoomMechanic | null>(null);
 
-    const choose = (mechanic: RoomMechanic | 'checkers') => {
+    const choose = (mechanic: RoomMechanic) => {
         router.post(
             store.url(),
-            mechanic === 'checkers' ? { board: mechanic } : { mechanic },
+            { mechanic },
             {
                 onStart: () => setChoosing(mechanic),
                 onFinish: () => setChoosing(null),
@@ -118,36 +113,8 @@ export default function RoomsIndex({ catalog, open, entrance }: Props) {
                             </button>
                         </li>
                     ))}
-                    <li>
-                        <button
-                            type="button"
-                            disabled={choosing !== null}
-                            onClick={() => choose('checkers')}
-                            className={cn(
-                                'group flex w-full flex-col gap-0.5 rounded-[18px] text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                                choosing !== null &&
-                                    choosing !== 'checkers' &&
-                                    'opacity-50',
-                            )}
-                        >
-                            <span className="relative mb-0.5 flex aspect-[2/1] w-full items-center justify-center rounded-[18px] bg-muted transition-colors group-hover:bg-accent motion-reduce:transition-none">
-                                <CheckersDrawing className="text-[56px]" />
-                                {choosing === 'checkers' && (
-                                    <span className="absolute top-2 right-2">
-                                        <Spinner />
-                                    </span>
-                                )}
-                            </span>
-                            <span className="text-[14.5px] leading-[18px] font-semibold">
-                                {t('rooms.boards.checkers.name')}
-                            </span>
-                            <span className="text-xs leading-4 text-muted-foreground">
-                                {t('rooms.boards.family')}
-                            </span>
-                        </button>
-                    </li>
                 </ul>
-                <InputError message={errors.mechanic ?? errors.board} />
+                <InputError message={errors.mechanic} />
             </div>
 
             <RoomActionBar>
@@ -199,14 +166,7 @@ function OpenRoomCard({ room }: { room: OpenRoom }) {
             className="flex flex-col gap-3 rounded-2xl border border-primary bg-card p-3"
         >
             <div className="flex items-center gap-3">
-                {room.board === 'checkers' ? (
-                    <CheckersDrawing framed className="text-[48px]" />
-                ) : (
-                    <GameDrawing
-                        mechanic={room.mechanic}
-                        className="text-[48px]"
-                    />
-                )}
+                <GameDrawing mechanic={room.mechanic} className="text-[48px]" />
                 <span className="flex min-w-0 flex-1 flex-col">
                     <span className="text-xs font-semibold text-muted-foreground">
                         {room.running
@@ -214,9 +174,7 @@ function OpenRoomCard({ room }: { room: OpenRoom }) {
                             : t('rooms.index.open_room')}
                     </span>
                     <span className="truncate font-semibold">
-                        {room.board === 'checkers'
-                            ? t('rooms.boards.checkers.name')
-                            : t(`rooms.mechanics.${room.mechanic}.name`)}
+                        {t(`rooms.mechanics.${room.mechanic}.name`)}
                     </span>
                     <span className="truncate text-sm text-muted-foreground">
                         {t('rooms.index.players', { count: room.players })}

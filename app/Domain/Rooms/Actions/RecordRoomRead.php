@@ -4,8 +4,8 @@ namespace App\Domain\Rooms\Actions;
 
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomPlayer;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
-use App\Domain\Rooms\Support\RoomWaits;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -21,7 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
  * room with a game running, for a present player whose last read is older
  * than the moment the round now ahead counts from
  * (`RoomWaits::readCountsFrom()`) — at most once a round, never in the
- * lobby or once the game is over. One conditional update of the player's
+ * lobby, once the game is over or in a board game, where no round waits
+ * (`RoomGameDriver::readCountsFrom()`). One conditional update of the player's
  * own row, without the room's lock: it neither raises the revision nor
  * signals, and it never closes a round, since a read only adds a player
  * to those a round waits for.
@@ -37,7 +38,7 @@ final readonly class RecordRoomRead
         $nowMs = RoomClock::nowMs();
         $row = $room->players()->present()->where('user_id', $account->id)->first();
         $game = $row === null ? null : $room->latestGame();
-        $since = $game === null ? null : RoomWaits::readCountsFrom($game, $nowMs);
+        $since = $game === null ? null : RoomGameDriver::of($game->mechanic)->readCountsFrom($game, $nowMs);
 
         if ($row === null || $since === null || ($row->seen_ms !== null && $row->seen_ms >= $since)) {
             return;

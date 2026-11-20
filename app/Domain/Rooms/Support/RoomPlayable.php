@@ -12,6 +12,7 @@ use App\Domain\Rooms\Support\Mechanics\RecallCellsBuilder;
 use App\Domain\Rooms\Support\Mechanics\RecallOrderBuilder;
 use App\Domain\Rooms\Support\Mechanics\RoomRoundBuilder;
 use App\Domain\Rooms\Support\Mechanics\SpellingBuilder;
+use InvalidArgumentException;
 
 /**
  * The room mechanics a room can play (docs/architecture.md §12 "Room
@@ -24,6 +25,8 @@ use App\Domain\Rooms\Support\Mechanics\SpellingBuilder;
  * `recall_cells`, with its view; B5 `next_in_sequence` and `odd_one_out`,
  * with theirs; B6 `anagram` and `spelling`, with theirs (part 2 designed
  * them: tiles under the word's places, four spellings in one column).
+ * D3 lists `draughts`, a board game (ADR 034), whose rules are
+ * `Rooms\Support\Draughts` and which builds no rounds; D4 draws it.
  */
 final class RoomPlayable
 {
@@ -32,7 +35,7 @@ final class RoomPlayable
      */
     public static function mechanics(): array
     {
-        return [RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling];
+        return [RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts];
     }
 
     public static function plays(RoomMechanic $mechanic): bool
@@ -41,7 +44,8 @@ final class RoomPlayable
     }
 
     /**
-     * The round builder of a mechanic; every mechanic has one.
+     * The round builder of a race's mechanic; every race has one, and a
+     * board game builds no rounds (`RaceDriver::start()` alone asks).
      */
     public static function builder(RoomMechanic $mechanic): RoomRoundBuilder
     {
@@ -52,6 +56,7 @@ final class RoomPlayable
             RoomMechanic::OddOneOut => new OddOneOutBuilder(app(ContentRepository::class)->roomCategories()),
             RoomMechanic::Anagram => new AnagramBuilder(self::words()),
             RoomMechanic::Spelling => new SpellingBuilder(self::words()),
+            default => throw new InvalidArgumentException("{$mechanic->value} builds no rounds."),
         };
     }
 

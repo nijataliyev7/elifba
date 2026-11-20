@@ -74,9 +74,9 @@ it('opens a room behind the chosen game', function (): void {
 
     $this->get(route('rooms.show', $room))->assertInertia(fn (Assert $page) => $page
         ->component('rooms/show')
-        ->where('state.setup', ['mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 10, 'played' => false])
+        ->where('state.setup', ['kind' => 'race', 'mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 10, 'played' => false])
         ->where('state.game', null)
-        ->has('catalog.mechanics', 6));
+        ->has('catalog.mechanics', 7));
 });
 
 it('takes the difficulty and the rounds of the host\'s newest game, else the defaults', function (): void {
@@ -128,7 +128,7 @@ it('gives the choice to the open room instead of opening a second', function ():
         ->and([$room->refresh()->setup_mechanic, $room->setup_difficulty, $room->setup_rounds])->toBe([RoomMechanic::Anagram, 3, 15])
         ->and($room->revision)->toBe($revision + 1)
         ->and($this->reverb->sent)->toHaveCount(1)
-        ->and(chosenFor($this->player, $room))->toBe(['mechanic' => 'anagram', 'difficulty' => 3, 'rounds' => 15, 'played' => false]);
+        ->and(chosenFor($this->player, $room))->toBe(['kind' => 'race', 'mechanic' => 'anagram', 'difficulty' => 3, 'rounds' => 15, 'played' => false]);
 
     // An account that only plays in someone else's room opens its own as before.
     $this->actingAs($this->player)->post(route('rooms.store'), ['mechanic' => 'spelling']);
@@ -191,7 +191,7 @@ it('lets only the host change the choice or start, from the phone or the screen'
     $screen = ['Referer' => route('rooms.screen', $room)];
     $this->actingAs($this->host)->get(route('rooms.screen', $room))->assertInertia(fn (Assert $page) => $page
         ->where('catalog', RoomGameSetupData::options())
-        ->where('state.setup', ['mechanic' => 'recall_order', 'difficulty' => 2, 'rounds' => 10, 'played' => false]));
+        ->where('state.setup', ['kind' => 'race', 'mechanic' => 'recall_order', 'difficulty' => 2, 'rounds' => 10, 'played' => false]));
     $this->putJson(route('rooms.setup.update', $room), $choice, $screen)->assertNoContent();
     $this->postJson(route('rooms.games.store', $room), [], $screen)->assertNoContent();
 
@@ -253,7 +253,7 @@ it('shows the choice to the host and a present player, and nothing of it before 
     $room = Rooms::open($this->host);
     $row = Rooms::join($room, $this->player);
     $this->actingAs($this->host)->putJson(route('rooms.setup.update', $room), ['mechanic' => 'recall_cells', 'difficulty' => 4, 'rounds' => 8]);
-    $chosen = ['mechanic' => 'recall_cells', 'difficulty' => 4, 'rounds' => 8, 'played' => false];
+    $chosen = ['kind' => 'race', 'mechanic' => 'recall_cells', 'difficulty' => 4, 'rounds' => 8, 'played' => false];
 
     // The host's phone, the screen and a present player read the same choice, in the page's props and the state.
     expect(chosenFor($this->host, $room))->toBe($chosen)
@@ -292,7 +292,7 @@ it('starts what the room\'s choice says', function (): void {
     // While it runs the choice is still there, not yet played; the room keeps it after the game.
     $this->travelTo(Rooms::at($game, RoomPhase::Answer));
     RoomPhones::read($room, $this->player);
-    expect(chosenFor($this->player, $room))->toBe(['mechanic' => 'odd_one_out', 'difficulty' => 3, 'rounds' => 7, 'played' => false]);
+    expect(chosenFor($this->player, $room))->toBe(['kind' => 'race', 'mechanic' => 'odd_one_out', 'difficulty' => 3, 'rounds' => 7, 'played' => false]);
     $this->travelTo(Rooms::at($game, RoomPhase::Over));
     expect([$room->refresh()->setup_mechanic, $room->setup_difficulty, $room->setup_rounds])->toBe([RoomMechanic::OddOneOut, 3, 7]);
 });
@@ -325,7 +325,7 @@ it('says played only while the choice is the game just played', function (): voi
 
     // Over: played — the page shows the final.
     $this->travelTo(Rooms::at($game, RoomPhase::Over));
-    expect(chosenFor($this->player, $room))->toBe([...$choice, 'played' => true]);
+    expect(chosenFor($this->player, $room))->toBe(['kind' => 'race', ...$choice, 'played' => true]);
 
     // Another game, other rounds, another difficulty: the start screen again; back to the same: the final again.
     foreach ([['mechanic' => 'anagram'], ['rounds' => 6], ['difficulty' => 2]] as $change) {
@@ -341,5 +341,5 @@ it('says played only while the choice is the game just played', function (): voi
     $played = RoomGame::factory()->for($old)->withRounds(5)->create(['started_ms' => 0]);
 
     expect($old->setup_mechanic)->toBeNull();
-    expect(chosenFor($this->host, $old))->toBe(['mechanic' => $played->mechanic->value, 'difficulty' => $played->difficulty, 'rounds' => 5, 'played' => true]);
+    expect(chosenFor($this->host, $old))->toBe(['kind' => 'race', 'mechanic' => $played->mechanic->value, 'difficulty' => $played->difficulty, 'rounds' => 5, 'played' => true]);
 });

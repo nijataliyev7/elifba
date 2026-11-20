@@ -5,15 +5,14 @@ namespace App\Domain\Rooms\Actions;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
-use App\Domain\Rooms\Models\RoomRound;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
-use App\Domain\Rooms\Support\RoomPlayable;
-use App\Domain\Rooms\Support\RoomSeed;
 use App\Domain\Rooms\Support\RoomSignal;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The host starts a game (docs/architecture.md §12 "The race", "Games
@@ -28,6 +27,13 @@ use Illuminate\Support\Facades\DB;
  * open `elifba.rooms.countdown_ms` from now, with the configured
  * `reveal_ms` kept as the game's. The choice stays as it is. The room is
  * active, its revision rises and it is signalled.
+ *
+ * What a start does beyond the game's row is its kind's (§12 "Board
+ * games", ADR 034 decisions 3 and 8; `RoomGameDriver::start()`): a race
+ * builds its rounds as above; a board game seats its two players and copies
+ * its level's clock — `started_ms` is then when its clock starts — refuses
+ * a choice with fewer than two seats (`rooms.errors.needs_two`), and turns
+ * the room's seats round for the next game.
  */
 final readonly class StartRoomGame
 {
@@ -35,6 +41,7 @@ final readonly class StartRoomGame
 
     /**
      * @throws AuthorizationException when the room is closed or a game is running in it
+     * @throws ValidationException when the choice cannot start: a board game with fewer than two seats
      */
     public function handle(Room $room): RoomGame
     {
@@ -48,34 +55,14 @@ final readonly class StartRoomGame
 
             $setup = $locked->setup();
 
-            $seed = RoomSeed::fresh();
-            $built = RoomPlayable::builder($setup->mechanic)->build(
-                $this->content->roomLevel($setup->mechanic, $setup->difficulty),
-                $setup->rounds,
-                RoomSeed::random($seed),
-            );
-
             $game = new RoomGame;
             $game->room_id = $locked->id;
             $game->position = $locked->games()->count();
             $game->mechanic = $setup->mechanic;
             $game->difficulty = $setup->difficulty;
             $game->content_version = $this->content->roomVersion();
-            $game->seed = $seed;
-            $game->reveal_ms = Config::integer('elifba.rooms.reveal_ms');
             $game->started_ms = $nowMs + Config::integer('elifba.rooms.countdown_ms');
-            $game->save();
-
-            foreach ($built as $position => $round) {
-                $row = new RoomRound;
-                $row->room_game_id = $game->id;
-                $row->position = $position;
-                $row->payload = $round->payload();
-                $row->solution = $round->solution->toArray();
-                $row->study_ms = $round->studyMs;
-                $row->answer_ms = $round->answerMs;
-                $row->save();
-            }
+            RoomGameDriver::of($setup->mechanic)->start($locked, $game, $setup);
 
             $locked->last_activity_at = now();
             RoomSignal::raise($locked);

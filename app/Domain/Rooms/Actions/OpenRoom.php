@@ -35,11 +35,6 @@ use Illuminate\Support\Facades\DB;
  *   signalled. Its voice stays as it is.
  * - It hosts an open room with a game running: nothing is written
  *   (`RoomGameRunning`).
- *
- * A board game (ADR 034 decision 2) is the room's `board`: a new room is
- * opened for it, and the host's open room turns to it — or back to the
- * round games when a round game is chosen — unless a game or a match is
- * running there.
  */
 final readonly class OpenRoom
 {
@@ -63,14 +58,13 @@ final readonly class OpenRoom
 
             $setup = RoomDefaults::for($host, $data->mechanic);
 
-            $room = $this->codes->issue(static fn (string $code): Room => DB::transaction(static function () use ($host, $code, $setup, $voice, $data): Room {
+            $room = $this->codes->issue(static fn (string $code): Room => DB::transaction(static function () use ($host, $code, $setup, $voice): Room {
                 $room = new Room;
                 $room->user_id = $host->id;
                 $room->code = $code;
                 $room->setup_mechanic = $setup->mechanic;
                 $room->setup_difficulty = $setup->difficulty;
                 $room->setup_rounds = $setup->rounds;
-                $room->board = $data->board;
                 $room->last_activity_at = now();
                 $room->voice_at = $voice ? now() : null;
                 $room->save();
@@ -98,23 +92,15 @@ final readonly class OpenRoom
     {
         $locked = RoomLock::room($open) ?? $open;
 
-        if ($locked->runningGame(RoomClock::nowMs()) !== null || $locked->runningMatch() !== null) {
+        if ($locked->runningGame(RoomClock::nowMs()) !== null) {
             throw new RoomGameRunning($locked);
-        }
-
-        $locked->board = $data->board;
-
-        if ($data->board !== null) {
-            $locked->last_activity_at = now();
-            RoomSignal::raise($locked);
-
-            return $locked;
         }
 
         $setup = $locked->setup()->withMechanic($data->mechanic) ?? RoomDefaults::for($locked->host, $data->mechanic);
         $locked->setup_mechanic = $setup->mechanic;
         $locked->setup_difficulty = $setup->difficulty;
-        $locked->setup_rounds = $setup->rounds;
+        // A board game's choice has no rounds: the room keeps its number for the next race.
+        $locked->setup_rounds = $setup->rounds ?? $locked->setup_rounds;
         $locked->last_activity_at = now();
         RoomSignal::raise($locked);
 

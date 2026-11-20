@@ -15,6 +15,7 @@ use App\Domain\Content\Enums\Effect;
 use App\Domain\Content\Enums\ItemStyle;
 use App\Domain\Content\Enums\License;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomItemKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Enums\RoomSequenceRule;
@@ -163,6 +164,14 @@ final class ContentValidator
     public const int MAX_ROOM_ANSWER_MS = 60_000;
 
     public const int MAX_ROOM_STUDY_MS = 60_000;
+
+    /** A board level's clock is whole minutes, from one to this many (ADR 034 decision 6). */
+    public const int MAX_BOARD_CLOCK_MINUTES = 30;
+
+    /** A board level's increment is whole seconds, from 0 to this many. */
+    public const int MAX_BOARD_INCREMENT_SECONDS = 30;
+
+    private const int MINUTE_MS = 60_000;
 
     /**
      * Items in a `recall_order` row: at least three, since the question
@@ -878,6 +887,13 @@ final class ContentValidator
      *   spellings with those swaps (`RoomWords::forSpelling()`) — counted
      *   per level, not merely words with a confusable letter.
      *
+     * A board mechanic (D3, ADR 034 decision 6) has other rules: its level is
+     * its clock, `{mechanic, difficulty, clock_ms, increment_ms}` and no key
+     * of a race level; `clock_ms` is whole minutes from 1 to 30 and
+     * `increment_ms` whole seconds from 0 to 30; it has two to four levels
+     * numbered from 1 without a gap, and a shorter clock at each higher
+     * number. A race mechanic keeps "all four or none".
+     *
      * The words are counted only when `words.json` is sound.
      *
      * @param  int|null  $shapes  how many shapes `shapes.json` holds; null when it has a problem
@@ -904,11 +920,14 @@ final class ContentValidator
 
         /** @var array<string, list<int>> $difficulties */
         $difficulties = [];
+        /** @var array<string, array<int, int|null>> $clocks a board mechanic's clocks, by difficulty */
+        $clocks = [];
 
         foreach ($levels as $index => $level) {
             $where = "levels[{$index}]";
             $mechanic = is_array($level) && is_string($level['mechanic'] ?? null) ? RoomMechanic::tryFrom($level['mechanic']) : null;
-            $every = ['mechanic', 'difficulty', 'study_ms', 'answer_ms'];
+            $board = $mechanic?->kind() === RoomGameKind::Board;
+            $every = $board ? ['mechanic', 'difficulty', 'clock_ms', 'increment_ms'] : ['mechanic', 'difficulty', 'study_ms', 'answer_ms'];
 
             // An unknown mechanic is reported once, not with each of its keys.
             $level = $mechanic === null
@@ -932,6 +951,16 @@ final class ContentValidator
                 $difficulties[$mechanic->value][] = $difficulty;
             }
 
+            if ($board) {
+                $clock = $this->boardLevel($level, $file, $where);
+
+                if (is_int($difficulty)) {
+                    $clocks[$mechanic->value][$difficulty] = $clock;
+                }
+
+                continue;
+            }
+
             $answer = $level['answer_ms'];
 
             if (! is_int($answer) || $answer < self::MIN_ROOM_ANSWER_MS || $answer > self::MAX_ROOM_ANSWER_MS) {
@@ -952,11 +981,17 @@ final class ContentValidator
                 RoomMechanic::NextInSequence => $this->nextInSequenceLevel($level, $file, $where),
                 RoomMechanic::OddOneOut => $this->oddOneOutLevel($level, $file, $where),
                 RoomMechanic::Anagram, RoomMechanic::Spelling => $this->wordLevel($mechanic, $level, $file, $where, $words),
-                null => null,
+                RoomMechanic::Draughts, null => null,
             };
         }
 
         foreach ($difficulties as $mechanic => $given) {
+            if (array_key_exists($mechanic, $clocks)) {
+                $this->boardLevels($mechanic, $given, $clocks[$mechanic], $file);
+
+                continue;
+            }
+
             foreach (range(1, self::ROOM_DIFFICULTIES) as $difficulty) {
                 if (! in_array($difficulty, $given, true)) {
                     $this->problem($file, "{$mechanic} has no level of difficulty {$difficulty}: a room game has all four or none");
@@ -966,7 +1001,60 @@ final class ContentValidator
     }
 
     /**
-     * The keys of a room level besides the four every level has.
+     * A board game's level: its clock (ADR 034 decision 6).
+     *
+     * @param  array<string, mixed>  $level
+     * @return int|null its `clock_ms` when it is sound
+     */
+    private function boardLevel(array $level, string $file, string $where): ?int
+    {
+        $clock = $level['clock_ms'];
+        $increment = $level['increment_ms'];
+        $sound = true;
+
+        if (! is_int($clock) || $clock < self::MINUTE_MS || $clock > self::MAX_BOARD_CLOCK_MINUTES * self::MINUTE_MS || $clock % self::MINUTE_MS !== 0) {
+            $this->problem($file, "{$where}.clock_ms must be whole minutes from 1 to ".self::MAX_BOARD_CLOCK_MINUTES);
+            $sound = false;
+        }
+
+        if (! is_int($increment) || $increment < 0 || $increment > self::MAX_BOARD_INCREMENT_SECONDS * 1_000 || $increment % 1_000 !== 0) {
+            $this->problem($file, "{$where}.increment_ms must be whole seconds from 0 to ".self::MAX_BOARD_INCREMENT_SECONDS);
+        }
+
+        return $sound ? $clock : null;
+    }
+
+    /**
+     * A board game's levels together: two to four, numbered from 1 without a
+     * gap, a shorter clock at each higher number.
+     *
+     * @param  list<int>  $given  the difficulties of its levels
+     * @param  array<int, int|null>  $clocks  each sound level's `clock_ms`, by difficulty
+     */
+    private function boardLevels(string $mechanic, array $given, array $clocks, string $file): void
+    {
+        $count = count($given);
+
+        if ($count < 2 || max($given) !== $count || count(array_unique($given)) !== $count) {
+            $this->problem($file, "{$mechanic} must have two to four levels numbered from 1 without a gap");
+
+            return;
+        }
+
+        ksort($clocks);
+        $previous = null;
+
+        foreach ($clocks as $difficulty => $clock) {
+            if ($clock !== null && $previous !== null && $clock >= $previous) {
+                $this->problem($file, "the level of difficulty {$difficulty} of {$mechanic} must have a shorter clock than the level before it");
+            }
+
+            $previous = $clock ?? $previous;
+        }
+    }
+
+    /**
+     * The keys of a room level besides the four every level of its kind has.
      *
      * @return list<string>
      */
@@ -979,6 +1067,7 @@ final class ContentValidator
             RoomMechanic::OddOneOut => ['source', 'options'],
             RoomMechanic::Anagram => ['word_length'],
             RoomMechanic::Spelling => ['word_length', 'swaps'],
+            RoomMechanic::Draughts => [],
         };
     }
 

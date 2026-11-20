@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Support;
 
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomTaunt;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 
 /**
  * When a taunt's cost counts (docs/architecture.md §12 "Taunts (T2)", ADR
@@ -15,6 +16,10 @@ use App\Domain\Rooms\Models\RoomTaunt;
  * a close, and the cost is told at the reveal where everything else of the
  * round is. A pure reading of the timetable and the taunts' moments; it
  * writes nothing and stores nothing.
+ *
+ * That is a race's: `countsAt()`, `counted()` and `spentAt()` read its
+ * timetable. A board game has one close, its end, where every taunt of it
+ * counts (ADR 034 decision 22); `spent()` asks the game's driver.
  */
 final class RoomTauntCost
 {
@@ -50,23 +55,15 @@ final class RoomTauntCost
     }
 
     /**
-     * The taunts counted at `$nowMs`, by the thrower's row.
+     * The taunts counted at `$nowMs`, by the thrower's row, as the game's
+     * driver counts them.
      *
      * @param  iterable<RoomTaunt>|null  $taunts  the game's taunts; read when null
      * @return array<string, int>
      */
     public static function spent(RoomGame $game, int $nowMs, ?iterable $taunts = null): array
     {
-        $timetable = $game->timetable();
-        $spent = [];
-
-        foreach ($taunts ?? self::of($game) as $taunt) {
-            if (self::counted($timetable, $taunt->sent_ms, $nowMs)) {
-                $spent[$taunt->room_player_id] = ($spent[$taunt->room_player_id] ?? 0) + 1;
-            }
-        }
-
-        return $spent;
+        return RoomGameDriver::of($game->mechanic)->spent($game, $nowMs, $taunts ?? self::of($game));
     }
 
     /**

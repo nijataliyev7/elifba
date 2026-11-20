@@ -1,5 +1,3 @@
-import { ScreenCheckers } from '@/components/rooms/checkers/screen-checkers';
-import type { RoomMatchState } from '@/components/rooms/checkers/match';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -16,7 +14,7 @@ import {
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
-import { withGame } from '@/components/rooms/catalog';
+import { roundsOf, withGame } from '@/components/rooms/catalog';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
 import { FinalStanding } from '@/components/rooms/final-standing';
 import { GameDrawing } from '@/components/rooms/game-drawing';
@@ -63,6 +61,7 @@ import { voice } from '@/routes/rooms/members';
 import type { ServerClock } from '@/rooms/clock';
 import type {
     RoomGame,
+    RoomRaceGame,
     RoomPlayer,
     RoomRound,
     RoomSetup,
@@ -91,10 +90,6 @@ type Props = {
     finish: RoomFinishVoice;
     /** How often the shown screen reads the state at least, so phones know the room has its screen (ADR 028 as amended). */
     beat_ms: number;
-    /** The board game the room was opened for (ADR 034); null: the round games. */
-    board: 'checkers' | null;
-    /** Its match as the screen sees it, every taunt with its target. */
-    match: RoomMatchState | null;
 };
 
 /**
@@ -144,8 +139,6 @@ export default function RoomsScreen({
     taunts,
     finish,
     beat_ms: beatMs,
-    board,
-    match,
 }: Props) {
     const { t } = useTranslation();
     // A closed room has no screen: its results are on the room's page.
@@ -181,8 +174,9 @@ export default function RoomsScreen({
         taunts: tauntSound,
     });
     const game = state?.game ?? null;
-    const round = state?.round ?? null;
-    const playing = game !== null && game.phase === 'live' && round !== null;
+    // A live race: the state that has a round (a board game has its match, D4).
+    const live = state !== null && state.round !== null ? state : null;
+    const playing = live !== null;
     // The live voice's facts from the state alone (the cheer's `voice` above is a route, another thing).
     const liveVoice = state === null ? null : screenVoiceView(state);
 
@@ -226,7 +220,7 @@ export default function RoomsScreen({
                         onChange={setTauntsHidden}
                     />
                 )}
-                {board === null && <SoundToggle sound={sound} big />}
+                <SoundToggle sound={sound} big />
                 <FullscreenToggle />
                 <Button asChild variant="ghost" className="h-11">
                     <Link href={show(room.id)}>
@@ -244,23 +238,12 @@ export default function RoomsScreen({
                         {t('rooms.show.closed')}
                     </p>
                 </main>
-            ) : board !== null ? (
-                <ScreenCheckers
-                    roomId={room.id}
-                    state={state}
-                    initial={match}
-                    join={join}
-                    sounds={sounds}
-                    taunts={taunts}
-                    tauntsHidden={tauntsHidden}
-                    placeLabels={placeLabels}
-                />
             ) : playing ? (
                 <main className="flex min-h-0 flex-1 flex-col px-[4vw] py-[3vh]">
                     <ScreenRound
-                        state={state}
-                        game={game}
-                        round={round}
+                        state={live}
+                        game={live.game}
+                        round={live.round}
                         clock={clock}
                         placeLabels={placeLabels}
                         motion={motion}
@@ -615,7 +598,7 @@ function ScreenOver({
                                 difficulty: t(
                                     `rooms.difficulty.${game.difficulty}`,
                                 ),
-                                count: game.rounds,
+                                count: roundsOf(game),
                             })}
                         </span>
                     </span>
@@ -725,7 +708,7 @@ function ScreenRound({
     tauntsHidden,
 }: {
     state: RoomState;
-    game: RoomGame;
+    game: RoomRaceGame;
     round: RoomRound;
     clock: ServerClock;
     placeLabels: string[];

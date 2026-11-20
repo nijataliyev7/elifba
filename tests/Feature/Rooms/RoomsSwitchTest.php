@@ -66,6 +66,7 @@ function roomsSwitchSnapshot(): array
         'room_rounds' => $rows('room_rounds', 'id'),
         'room_answers' => $rows('room_answers', 'id'),
         'room_taunts' => $rows('room_taunts', 'id'),
+        'room_acts' => $rows('room_acts', 'id'),
     ];
 }
 

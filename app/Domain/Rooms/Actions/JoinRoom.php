@@ -4,9 +4,9 @@ namespace App\Domain\Rooms\Actions;
 
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomPlayer;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
-use App\Domain\Rooms\Support\RoomRoundClose;
 use App\Domain\Rooms\Support\RoomSignal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -81,7 +81,7 @@ final readonly class JoinRoom
             }
 
             $row->save();
-            RoomRoundClose::whenPresenceChanges($locked, $nowMs);
+            RoomGameDriver::presenceChanged($locked, $row, $nowMs);
 
             $locked->last_activity_at = now();
             RoomSignal::raise($locked);

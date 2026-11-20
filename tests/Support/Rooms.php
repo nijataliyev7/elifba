@@ -12,9 +12,12 @@ use App\Domain\Rooms\Actions\StartRoomGame;
 use App\Domain\Rooms\Data\HostPlaysData;
 use App\Domain\Rooms\Data\OpenRoomData;
 use App\Domain\Rooms\Data\RoomGameSetupData;
+use App\Domain\Rooms\Enums\RoomActKind;
 use App\Domain\Rooms\Enums\RoomAnswerShape;
+use App\Domain\Rooms\Enums\RoomMatchColor;
 use App\Domain\Rooms\Enums\RoomPhase;
 use App\Domain\Rooms\Models\Room;
+use App\Domain\Rooms\Models\RoomAct;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomRound;
@@ -145,6 +148,63 @@ final class Rooms
         app(ChooseRoomGame::class)->handle($room, new RoomGameSetupData($mechanic, $difficulty, $rounds));
 
         return app(StartRoomGame::class)->handle($room)->load('rounds');
+    }
+
+    /**
+     * A match of draughts (ADR 034) chosen in `$room` with `$white` and
+     * `$black` as its seats through `ChooseRoomGame` and started through
+     * `StartRoomGame`; its clock starts after the countdown
+     * (`$game->started_ms`).
+     */
+    public static function match(Room $room, RoomPlayer $white, RoomPlayer $black, int $difficulty = 2): RoomGame
+    {
+        app(ChooseRoomGame::class)->handle($room, new RoomGameSetupData(RoomMechanic::Draughts, $difficulty, null, $white->id, $black->id));
+
+        return app(StartRoomGame::class)->handle($room);
+    }
+
+    /**
+     * Moves stored as `RecordRoomAct` stores them, for a long game a test
+     * does not post move by move: the lines from ply `$from` on, each by the
+     * seat of the side to move, the first at `$atMs` and one every
+     * `$everyMs` after it. Gives the moment of the last.
+     *
+     * @param  list<string>  $lines
+     */
+    public static function moves(RoomGame $game, array $lines, int $atMs, int $everyMs = 1000, int $from = 0): int
+    {
+        foreach ($lines as $offset => $line) {
+            $ply = $from + $offset;
+            $act = new RoomAct;
+            $act->event_id = strtolower((string) Str::ulid());
+            $act->room_game_id = $game->id;
+            $act->room_player_id = (string) (RoomMatchColor::toMove($ply) === RoomMatchColor::White ? $game->white_player_id : $game->black_player_id);
+            $act->kind = RoomActKind::Move;
+            $act->ply = $ply;
+            $act->path = Draughts::path($line);
+            $act->acted_ms = $atMs + $offset * $everyMs;
+            $act->save();
+        }
+
+        $game->unsetRelation('acts');
+
+        return $atMs + (count($lines) - 1) * $everyMs;
+    }
+
+    /**
+     * The body a seat's device posts for an act, with a new event id unless
+     * one is given: a move with its line's squares, or another kind.
+     *
+     * @return array<string, mixed>
+     */
+    public static function act(string $kind, ?int $ply = null, ?string $line = null, ?string $eventId = null): array
+    {
+        return array_filter([
+            'event_id' => $eventId ?? strtolower((string) Str::ulid()),
+            'kind' => $kind,
+            'ply' => $ply,
+            'path' => $line === null ? null : Draughts::path($line),
+        ], static fn (mixed $value): bool => $value !== null);
     }
 
     /**

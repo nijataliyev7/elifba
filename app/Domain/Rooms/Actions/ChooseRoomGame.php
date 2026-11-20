@@ -9,6 +9,7 @@ use App\Domain\Rooms\Support\RoomLock;
 use App\Domain\Rooms\Support\RoomSignal;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The host changes the room's choice of the next game (docs/architecture.md
@@ -20,11 +21,18 @@ use Illuminate\Support\Facades\DB;
  * active, raises its revision and signals it: every device, the one that
  * sent it too, learns the choice from the state. The choice the room
  * already has changes nothing and signals nothing.
+ *
+ * A board game's choice (D3, ADR 034 decision 7) is `{mechanic,
+ * difficulty, white, black}`: two different present players of the room,
+ * stored as its seats (`setup_white_id`, `setup_black_id`) — 422 when one
+ * of them is not present now. Its number of rounds stays as it is, for the
+ * next race; a race's choice leaves the seats as they are.
  */
 final readonly class ChooseRoomGame
 {
     /**
      * @throws AuthorizationException when the room is closed or a game is running in it
+     * @throws ValidationException on `white` or `black` when a seat is not a present player of the room
      */
     public function handle(Room $room, RoomGameSetupData $setup): void
     {
@@ -35,13 +43,26 @@ final readonly class ChooseRoomGame
                 throw new AuthorizationException;
             }
 
-            if ($locked->setup_mechanic === $setup->mechanic && $locked->setup_difficulty === $setup->difficulty && $locked->setup_rounds === $setup->rounds) {
+            foreach (['white' => $setup->white, 'black' => $setup->black] as $seat => $player) {
+                if ($player !== null && ! $locked->players()->present()->whereKey($player)->exists()) {
+                    throw ValidationException::withMessages([$seat => __('rooms.errors.seat_gone')]);
+                }
+            }
+
+            $rounds = $setup->rounds ?? $locked->setup_rounds;
+            $white = $setup->white ?? $locked->setup_white_id;
+            $black = $setup->black ?? $locked->setup_black_id;
+
+            if ($locked->setup_mechanic === $setup->mechanic && $locked->setup_difficulty === $setup->difficulty && $locked->setup_rounds === $rounds
+                && $locked->setup_white_id === $white && $locked->setup_black_id === $black) {
                 return;
             }
 
             $locked->setup_mechanic = $setup->mechanic;
             $locked->setup_difficulty = $setup->difficulty;
-            $locked->setup_rounds = $setup->rounds;
+            $locked->setup_rounds = $rounds;
+            $locked->setup_white_id = $white;
+            $locked->setup_black_id = $black;
             $locked->last_activity_at = now();
             RoomSignal::raise($locked);
         });

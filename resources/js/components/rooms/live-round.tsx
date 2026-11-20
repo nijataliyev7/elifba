@@ -38,6 +38,7 @@ import type { ServerClock } from '@/rooms/clock';
 import type {
     RoomAnswer,
     RoomGame,
+    RoomRaceGame,
     RoomMine,
     RoomRound,
     RoomState,
@@ -116,7 +117,7 @@ export function LiveRound({
 }: {
     roomId: string;
     state: RoomState;
-    game: RoomGame;
+    game: RoomRaceGame;
     round: RoomRound;
     clock: ServerClock;
     placeLabels: string[];

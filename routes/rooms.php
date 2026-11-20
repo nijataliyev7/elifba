@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Role;
+use App\Http\Controllers\Rooms\RoomActController;
 use App\Http\Controllers\Rooms\RoomAnswerController;
 use App\Http\Controllers\Rooms\RoomCloseController;
 use App\Http\Controllers\Rooms\RoomController;
@@ -8,7 +9,6 @@ use App\Http\Controllers\Rooms\RoomGameController;
 use App\Http\Controllers\Rooms\RoomInvitedController;
 use App\Http\Controllers\Rooms\RoomJoinController;
 use App\Http\Controllers\Rooms\RoomLeaveController;
-use App\Http\Controllers\Rooms\RoomMatchController;
 use App\Http\Controllers\Rooms\RoomMemberController;
 use App\Http\Controllers\Rooms\RoomMemberVoiceController;
 use App\Http\Controllers\Rooms\RoomNameController;
@@ -110,6 +110,13 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
         ->can('play', 'room')
         ->name('rooms.answers.store');
 
+    // A seat's own act in a board game: a move, a draw offer and its answer, resigning (D3, ADR 034).
+    Route::post('rooms/{room}/acts', RoomActController::class)
+        ->whereUlid('room')
+        ->middleware('throttle:room-acts')
+        ->can('play', 'room')
+        ->name('rooms.acts.store');
+
     // A present player's own taunt at another, for a point of their own (T2, ADR 029).
     Route::post('rooms/{room}/taunts', [RoomTauntController::class, 'store'])
         ->whereUlid('room')
@@ -181,35 +188,6 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
         ->name('rooms.game.destroy');
 
     // A closed room: the host deletes it, a player takes their name out.
-    // Board games (ADR 034): the match of a room opened for one.
-    Route::get('rooms/{room}/match', [RoomMatchController::class, 'show'])
-        ->whereUlid('room')
-        ->middleware('throttle:room-state')
-        ->can('watch', 'room')
-        ->name('rooms.match.show');
-    Route::post('rooms/{room}/match', [RoomMatchController::class, 'store'])
-        ->whereUlid('room')
-        ->can('startMatch', 'room')
-        ->name('rooms.match.store');
-    Route::delete('rooms/{room}/match', [RoomMatchController::class, 'destroy'])
-        ->whereUlid('room')
-        ->can('endMatch', 'room')
-        ->name('rooms.match.destroy');
-    Route::post('rooms/{room}/match/moves', [RoomMatchController::class, 'move'])
-        ->whereUlid('room')
-        ->middleware('throttle:room-answers')
-        ->can('play', 'room')
-        ->name('rooms.match.moves.store');
-    Route::post('rooms/{room}/match/resign', [RoomMatchController::class, 'resign'])
-        ->whereUlid('room')
-        ->can('play', 'room')
-        ->name('rooms.match.resign');
-    Route::post('rooms/{room}/match/taunts', [RoomMatchController::class, 'taunt'])
-        ->whereUlid('room')
-        ->middleware('throttle:room-taunts')
-        ->can('play', 'room')
-        ->name('rooms.match.taunts.store');
-
     Route::delete('rooms/{room}', [RoomController::class, 'destroy'])
         ->whereUlid('room')
         ->can('delete', 'room')

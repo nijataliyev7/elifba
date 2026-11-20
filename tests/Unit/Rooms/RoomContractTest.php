@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Rooms\Data\RoomActData;
+use App\Domain\Rooms\Data\RoomActReceiptData;
 use App\Domain\Rooms\Data\RoomAnswerData;
 use App\Domain\Rooms\Data\RoomAnswerReceiptData;
 use App\Domain\Rooms\Data\RoomStateData;
@@ -13,7 +15,8 @@ use App\Domain\Rooms\Data\RoomTauntReceiptData;
  * through its DTO and comes back byte for byte, and the DTOs refuse what
  * the zod schemas refuse: a key of the reveal, the material or the
  * question in a phase that may not serve it. judge.json is the judge's
- * (RoomJudgeTest), not a payload.
+ * (RoomJudgeTest), not a payload. From D3 (ADR 034 decision 17) a board
+ * game's match in each of its phases, a seat's act and its receipt.
  */
 
 const ROOM_FIXTURES = __DIR__.'/../../Fixtures/rooms';
@@ -50,6 +53,8 @@ it('round-trips every fixture', function (string $name): void {
         'receipt' => RoomAnswerReceiptData::fromArray($fixture)->toArray(),
         'taunt' => RoomTauntData::fromArray($fixture)->toArray(),
         'taunt-receipt' => RoomTauntReceiptData::fromArray($fixture)->toArray(),
+        'act' => RoomActData::fromArray($fixture)->toArray(),
+        'act-receipt' => RoomActReceiptData::fromArray($fixture)->toArray(),
     };
 
     expect($again)->toBe($fixture);
@@ -71,6 +76,8 @@ it('has every phase\'s fixture, the answer and the receipt', function (): void {
         'state.taunted', 'state.screen-taunted', 'taunt', 'taunt-receipt',
         // C3: the start screen with the voice on, a player of each standing; the host's view with it off.
         'state.voice', 'state.voice.off',
+        // D3: a board game chosen, its countdown, the seat to move with a capture to make, a watcher, a draw offered, its end; an act and its receipt.
+        'state.match.chosen', 'state.match.countdown', 'state.match.play', 'state.match.watch', 'state.match.offer', 'state.match.over', 'act', 'act-receipt',
     ]);
 });
 
@@ -142,16 +149,23 @@ it('has no solution in any state before the reveal', function (): void {
 it('says the choice of the next game in every open room\'s state, and nothing else in it', function (): void {
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
+        $setup = $state['setup'];
+        $game = $state['game'];
+        $board = $setup['kind'] === 'board';
 
         expect($state['v'])->toBe(RoomStateData::VERSION)
-            ->and(array_keys($state['setup']))->toBe(['mechanic', 'difficulty', 'rounds', 'played'], $name)
-            // Played only once the game is over and was this very choice.
-            ->and($state['setup']['played'])->toBe($state['game'] !== null && $state['game']['phase'] === 'over'
-                && [$state['game']['mechanic'], $state['game']['difficulty'], $state['game']['rounds']] === [$state['setup']['mechanic'], $state['setup']['difficulty'], $state['setup']['rounds']], $name);
+            ->and(array_keys($setup))->toBe($board ? ['kind', 'mechanic', 'difficulty', 'clock', 'white', 'black', 'played'] : ['kind', 'mechanic', 'difficulty', 'rounds', 'played'], $name)
+            // Played only once the game is over and was this very choice: a race's rounds, a board game's two players in either colour.
+            ->and($setup['played'])->toBe($game !== null && $game['phase'] === 'over'
+                && [$game['mechanic'], $game['difficulty']] === [$setup['mechanic'], $setup['difficulty']]
+                && ($board
+                    ? array_diff([$setup['white'], $setup['black']], array_column($state['match']['sides'], 'player_id')) === []
+                    : $game['rounds'] === $setup['rounds']), $name);
     }
 
     expect(roomFixture('state.over')['setup']['played'])->toBeTrue()
-        ->and(roomFixture('state.chosen')['setup'])->toBe(['mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 5, 'played' => false]);
+        ->and(roomFixture('state.chosen')['setup'])->toBe(['kind' => 'race', 'mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 5, 'played' => false])
+        ->and(roomFixture('state.match.over')['setup']['played'])->toBeTrue();
 
     // An open room has a choice and a closed one none; a state of another version is refused.
     $lobby = roomFixture('state.lobby');
@@ -210,8 +224,8 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
 
-        expect($state['v'])->toBe(5, $name)
-            ->and(RoomStateData::VERSION)->toBe(5)
+        expect($state['v'])->toBe(6, $name)
+            ->and(RoomStateData::VERSION)->toBe(6)
             ->and(array_key_last($state))->toBe('voice', $name);
 
         foreach ($state['players'] as $player) {
@@ -246,4 +260,100 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
         ->and(fn () => RoomStateData::fromArray($quiet($voice)))->toThrow(InvalidArgumentException::class, 'voice standing')
         ->and(fn () => RoomStateData::fromArray([...$voice, 'v' => 4]))->toThrow(InvalidArgumentException::class, 'version')
         ->and(fn () => RoomStateData::fromArray([...$voice, 'players' => [...array_slice($voice['players'], 0, 3), [...$voice['players'][3], 'voice' => 'open'], $voice['players'][4]]]))->toThrow(InvalidArgumentException::class, 'voice standing');
+});
+
+it('carries a board game\'s match in its game\'s state, shaped by its phase, and refuses one out of place', function (): void {
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+        $state = roomFixture($name);
+        $board = ($state['game']['kind'] ?? null) === 'board';
+
+        expect($state['match'] !== null)->toBe($board, $name)
+            ->and($state['round'] !== null)->toBe(! $board && ($state['game']['phase'] ?? null) === 'live', $name)
+            ->and(array_keys($state['game'] ?? ['kind' => 'race']))->toContain('kind');
+
+        if ($board) {
+            expect(array_keys($state['match']))->toBe(['phase', 'starts_ms', 'sides', 'turn', 'ply', 'since_ms', 'flag_ms', 'position', 'last', 'moves', 'legal', 'offer', 'can_offer', 'result'], $name)
+                ->and($state['match']['phase'] === 'over')->toBe($state['game']['phase'] === 'over', $name)
+                ->and(array_column($state['match']['sides'], 'color'))->toBe(['white', 'black'], $name)
+                ->and(count($state['match']['moves']))->toBe($state['match']['ply'], $name);
+        }
+    }
+
+    $play = roomFixture('state.match.play');
+    $watch = roomFixture('state.match.watch');
+    $offer = roomFixture('state.match.offer');
+    $over = roomFixture('state.match.over');
+
+    // The seat to move is offered the compulsory capture; the watcher sees the same board and nothing to play.
+    expect($play['match']['legal'])->toBe(['capture' => true, 'paths' => [['d4', 'f6']]])
+        ->and($watch['match']['legal'])->toBeNull()
+        ->and(array_diff_key($watch['match'], ['legal' => true]))->toBe(array_diff_key($play['match'], ['legal' => true]))
+        ->and([$offer['match']['offer'], $offer['match']['can_offer']])->toBe(['black', false])
+        ->and($over['match']['result']['ending'])->toBe('resigned')
+        ->and(roomFixture('state.match.countdown')['match']['phase'])->toBe('countdown');
+
+    // A key of a match in a phase that has none fails, as the zod schemas do.
+    $refused = static function (array $state, array $match, string $why): void {
+        expect(fn () => RoomStateData::fromArray([...$state, 'match' => [...$state['match'], ...$match]]))
+            ->toThrow(InvalidArgumentException::class, $why);
+    };
+
+    $refused($play, ['result' => $over['match']['result']], 'result');
+    $refused($over, ['legal' => $play['match']['legal']], 'Legal moves');
+    $refused($over, ['turn' => 'white'], 'side to move');
+    $refused(roomFixture('state.match.countdown'), ['offer' => 'black'], 'Before the clock starts');
+    $refused(roomFixture('state.match.countdown'), ['can_offer' => true], 'draw');
+    $refused($play, ['offer' => 'white'], 'just moved');
+    $refused($play, ['moves' => ['c3-d4']], 'moves made');
+    $refused($play, ['sides' => array_reverse($play['match']['sides'])], 'white and then black');
+
+    // A match only for a board game, and over exactly when its game is.
+    expect(fn () => RoomStateData::fromArray([...$play, 'match' => null]))->toThrow(InvalidArgumentException::class, 'match')
+        ->and(fn () => RoomStateData::fromArray([...roomFixture('state.answer'), 'match' => $play['match']]))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => RoomStateData::fromArray([...$over, 'game' => [...$over['game'], 'phase' => 'live'], 'taunts' => $play['taunts']]))->toThrow(InvalidArgumentException::class, 'over exactly')
+        ->and(fn () => RoomStateData::fromArray([...$play, 'round' => roomFixture('state.answer')['round']]))->toThrow(InvalidArgumentException::class, 'round')
+        ->and(fn () => RoomStateData::fromArray([...$play, 'game' => [...$play['game'], 'kind' => 'race']]))->toThrow(InvalidArgumentException::class, 'kind')
+        ->and(fn () => RoomStateData::fromArray([...$play, 'setup' => [...$play['setup'], 'rounds' => 5]]))->toThrow(InvalidArgumentException::class);
+});
+
+it('ends a match by each of its endings, its places by the outcome', function (string $ending, string $outcome, array $places): void {
+    $over = roomFixture('state.match.over');
+    $standing = $over['match']['result']['standing'];
+    $result = ['outcome' => $outcome, 'ending' => $ending, 'standing' => [[...$standing[0], 'place' => $places[0]], [...$standing[1], 'place' => $places[1]]], 'spent' => []];
+    $state = [...$over, 'match' => [...$over['match'], 'result' => $result]];
+
+    expect(RoomStateData::fromArray($state)->toArray())->toBe($state);
+
+    // The places follow the outcome, never the points; only a stopped game has none; an ending has its kind of outcome.
+    $wrongPlaces = $places === [1, 2] ? [2, 1] : [1, 2];
+    $misplaced = [[...$standing[0], 'place' => $wrongPlaces[0]], [...$standing[1], 'place' => $wrongPlaces[1]]];
+
+    foreach ([['standing' => $misplaced], ['outcome' => $outcome === 'none' ? 'white' : 'none'], ['outcome' => $outcome === 'draw' ? 'white' : 'draw']] as $wrong) {
+        expect(fn () => RoomStateData::fromArray([...$state, 'match' => [...$state['match'], 'result' => [...$result, ...$wrong]]]))
+            ->toThrow(InvalidArgumentException::class);
+    }
+})->with([
+    'no_moves' => ['no_moves', 'white', [1, 2]],
+    'resigned' => ['resigned', 'black', [1, 2]],
+    'left' => ['left', 'white', [1, 2]],
+    'time' => ['time', 'black', [1, 2]],
+    'agreed' => ['agreed', 'draw', [1, 1]],
+    'repetition' => ['repetition', 'draw', [1, 1]],
+    'three_kings' => ['three_kings', 'draw', [1, 1]],
+    'main_road' => ['main_road', 'draw', [1, 1]],
+    'balance' => ['balance', 'draw', [1, 1]],
+    'kings_only' => ['kings_only', 'draw', [1, 1]],
+    'stopped' => ['stopped', 'none', [null, null]],
+]);
+
+it('takes an act of each kind as the device sends it, and never a leave', function (): void {
+    $move = roomFixture('act');
+
+    expect(RoomActData::fromArray($move)->toArray())->toBe($move)
+        ->and(RoomActData::fromArray(['event_id' => $move['event_id'], 'kind' => 'resign'])->toArray())->toBe(['event_id' => $move['event_id'], 'kind' => 'resign'])
+        ->and(RoomActData::fromArray(['event_id' => $move['event_id'], 'kind' => 'offer', 'ply' => 3])->toArray())->toBe(['event_id' => $move['event_id'], 'kind' => 'offer', 'ply' => 3]);
+
+    foreach ([['kind' => 'leave', 'ply' => 2], ['kind' => 'move', 'ply' => 2], ['kind' => 'resign', 'ply' => 2], ['kind' => 'offer'], ['kind' => 'decline', 'ply' => 2, 'path' => ['d4', 'f6']]] as $wrong) {
+        expect(fn () => RoomActData::fromArray(['event_id' => $move['event_id'], ...$wrong]))->toThrow(InvalidArgumentException::class);
+    }
 });

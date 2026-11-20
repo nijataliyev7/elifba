@@ -320,6 +320,70 @@ it('keeps the domains apart', function (): void {
         ->and(File::isDirectory(app_path('Domain/Rooms')))->toBeTrue();
 });
 
+it('asks for a game\'s kind in one place on the server', function (): void {
+    // ADR 034 decision 3: the kind is read by `RoomGameDriver::of()` and by the
+    // data classes that hold a shape by kind; nothing else in Rooms asks for it,
+    // compares a mechanic with a board game's or looks at which driver it got.
+    $readers = [];
+    $compares = [];
+
+    foreach (phpFilesUnder(app_path('Domain/Rooms')) as $path) {
+        $file = str_replace(base_path().'/', '', $path);
+        $code = (string) file_get_contents($path);
+
+        // The game's kind, by its enum or a mechanic's `kind()` (an item's kind is another thing).
+        if (preg_match('/\bRoomGameKind\b|mechanic\??->kind\(\)/i', $code) === 1) {
+            $readers[] = $file;
+        }
+
+        if (! str_starts_with($file, 'app/Domain/Rooms/Support/Drivers/')
+            && preg_match('/[=!]==\s*RoomMechanic::Draughts|RoomMechanic::Draughts\s*([=!]==|=>)|instanceof\s+(RaceDriver|BoardDriver)|\b(RaceDriver|BoardDriver)::class/', $code) === 1) {
+            $compares[] = $file;
+        }
+    }
+
+    sort($readers);
+
+    expect($readers)->toBe([
+        'app/Domain/Rooms/Data/RoomGameData.php',
+        'app/Domain/Rooms/Data/RoomGameSetupData.php',
+        'app/Domain/Rooms/Data/RoomSetupData.php',
+        'app/Domain/Rooms/Data/RoomStateData.php',
+        'app/Domain/Rooms/Support/Drivers/RoomGameDriver.php',
+    ])->and($compares)->toBe([]);
+});
+
+it('takes no rules library and names no checkers on the server', function (): void {
+    // ADR 034 decisions 2 and 32: the oracle's library runs only in its script;
+    // the game is draughts. (The page side follows in D4.)
+    $wrong = [];
+    $roots = [app_path(), base_path('routes'), base_path('database'), config_path(), base_path('tests')];
+
+    foreach ($roots as $root) {
+        foreach (File::allFiles($root) as $file) {
+            $path = str_replace(base_path().'/', '', $file->getPathname());
+
+            if ($path === 'tests/Feature/Rooms/RoomsApartTest.php') {
+                continue;
+            }
+
+            $code = (string) file_get_contents($file->getPathname());
+
+            if ($file->getExtension() === 'py' || preg_match('/^\s*(import|from)\s+(py)?draughts\b/m', $code) === 1 || stripos($code, 'checkers') !== false) {
+                $wrong[] = $path;
+            }
+        }
+    }
+
+    foreach (['composer.json', 'package.json', 'Dockerfile'] as $manifest) {
+        if (stripos((string) file_get_contents(base_path($manifest)), 'pydraughts') !== false) {
+            $wrong[] = $manifest;
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
+
 it('keeps the room pages apart from the children\'s on the page side', function (): void {
     $wrong = [];
     $js = resource_path('js');

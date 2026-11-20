@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Support;
 
 use App\Domain\Language\Support\DateLabel;
 use App\Domain\Language\Support\Ordinal;
+use App\Domain\Rooms\Data\RoomGameData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
@@ -25,10 +26,12 @@ use Illuminate\Support\Facades\Config;
  * and the account's own row of the room's standing — its points and its
  * place, labelled here (`Ordinal::label()`), derived now by `RoomRanking`
  * and never stored; null for a host who did not play. No name is listed
- * here: a room has none, and its players are on its own page.
+ * here: a room has none, and its players are on its own page. A board
+ * game also gives its clock beside its mechanic and difficulty (D3, ADR
+ * 034 decision 17), so a page writes «Şaşki · 5+3» without a catalog.
  *
- * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, board: string|null, running: bool}
- * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int}>, mine: array{points: int, place: string|null}|null}
+ * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, running: bool}
+ * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int, clock?: array{base_ms: int, increment_ms: int}}>, mine: array{points: int, place: string|null}|null}
  */
 final class RoomList
 {
@@ -54,8 +57,7 @@ final class RoomList
                     'host' => $host,
                     'players' => (int) $room->getAttribute('present_count'),
                     'mechanic' => $room->setup()->mechanic->value,
-                    'board' => $room->board?->value,
-                    'running' => $room->runningGame($nowMs) !== null || $room->runningMatch() !== null,
+                    'running' => $room->runningGame($nowMs) !== null,
                 ];
             }
         }
@@ -93,6 +95,7 @@ final class RoomList
                 'games' => array_values($room->games->map(static fn (RoomGame $game): array => [
                     'mechanic' => $game->mechanic->value,
                     'difficulty' => $game->difficulty,
+                    ...self::clock($game),
                 ])->all()),
                 'mine' => $own === null ? null : [
                     'points' => $own['points'],
@@ -102,6 +105,18 @@ final class RoomList
         }
 
         return $past;
+    }
+
+    /**
+     * A board game's clock, as its row keeps it; nothing for a race.
+     *
+     * @return array{clock?: array{base_ms: int, increment_ms: int}}
+     */
+    private static function clock(RoomGame $game): array
+    {
+        $clock = RoomGameData::clockOf($game);
+
+        return $clock === null ? [] : ['clock' => $clock->toArray()];
     }
 
     /**
@@ -120,7 +135,7 @@ final class RoomList
                     ->with('user:id,name')
                     ->orderBy('joined_at')
                     ->orderBy('id'),
-                'games.rounds:id,room_game_id,position,study_ms,answer_ms,closed_ms',
+                ...array_map(static fn (string $relation): string => 'games.'.$relation, RoomRanking::GAME_RELATIONS),
             ])
             ->orderByDesc('created_at')
             ->orderByDesc('id')

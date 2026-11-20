@@ -1119,7 +1119,7 @@
     "rooms levels: an unknown mechanic": {
         "file": "rooms/levels.json",
         "set": { "levels.0.mechanic": "find" },
-        "problem": "rooms/levels.json: levels[0].mechanic must be one of recall_order, recall_cells, next_in_sequence, odd_one_out, anagram, spelling"
+        "problem": "rooms/levels.json: levels[0].mechanic must be one of recall_order, recall_cells, next_in_sequence, odd_one_out, anagram, spelling, draughts"
     },
     "rooms levels: a difficulty outside 1–4": {
         "file": "rooms/levels.json",
@@ -1135,6 +1135,51 @@
         "file": "rooms/levels.json",
         "keep": { "levels": 3 },
         "problem": "rooms/levels.json: recall_order has no level of difficulty 4: a room game has all four or none"
+    },
+    "rooms levels: a board level with a key of a race level": {
+        "file": "rooms/levels.json",
+        "set": { "levels.24.answer_ms": 10000 },
+        "problem": "rooms/levels.json: levels[24] has an unknown key `answer_ms`"
+    },
+    "rooms levels: a board level without its clock": {
+        "file": "rooms/levels.json",
+        "unset": ["levels.24.clock_ms"],
+        "problem": "rooms/levels.json: levels[24] needs `clock_ms`"
+    },
+    "rooms levels: a board clock that is not whole minutes": {
+        "file": "rooms/levels.json",
+        "set": { "levels.24.clock_ms": 90000 },
+        "problem": "rooms/levels.json: levels[24].clock_ms must be whole minutes from 1 to 30"
+    },
+    "rooms levels: a board clock above 30 minutes": {
+        "file": "rooms/levels.json",
+        "set": { "levels.24.clock_ms": 1860000 },
+        "problem": "rooms/levels.json: levels[24].clock_ms must be whole minutes from 1 to 30"
+    },
+    "rooms levels: a board increment that is not whole seconds": {
+        "file": "rooms/levels.json",
+        "set": { "levels.25.increment_ms": 1500 },
+        "problem": "rooms/levels.json: levels[25].increment_ms must be whole seconds from 0 to 30"
+    },
+    "rooms levels: a board increment above 30 seconds": {
+        "file": "rooms/levels.json",
+        "set": { "levels.25.increment_ms": 31000 },
+        "problem": "rooms/levels.json: levels[25].increment_ms must be whole seconds from 0 to 30"
+    },
+    "rooms levels: a board game of one level": {
+        "file": "rooms/levels.json",
+        "keep": { "levels": 25 },
+        "problem": "rooms/levels.json: draughts must have two to four levels numbered from 1 without a gap"
+    },
+    "rooms levels: a board game's levels with a gap": {
+        "file": "rooms/levels.json",
+        "set": { "levels.26.difficulty": 4 },
+        "problem": "rooms/levels.json: draughts must have two to four levels numbered from 1 without a gap"
+    },
+    "rooms levels: a board level no faster than the one before": {
+        "file": "rooms/levels.json",
+        "set": { "levels.25.clock_ms": 600000 },
+        "problem": "rooms/levels.json: the level of difficulty 2 of draughts must have a shorter clock than the level before it"
     },
     "rooms levels: too little time to answer": {
         "file": "rooms/levels.json",

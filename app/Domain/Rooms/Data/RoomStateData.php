@@ -2,7 +2,9 @@
 
 namespace App\Domain\Rooms\Data;
 
+use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Rooms\Enums\RoomGamePhase;
+use App\Domain\Rooms\Enums\RoomMatchPhase;
 use App\Domain\Rooms\Enums\RoomStatus;
 use InvalidArgumentException;
 
@@ -29,21 +31,28 @@ use InvalidArgumentException;
  * while it is on, for the host's row and the present players' only; a
  * closed room, and every room while the instance's voice is off, has none.
  *
+ * Version 6 (D3, ADR 034 decision 17) has a game's kind: `game` and `setup`
+ * are shaped by it (`RoomGameData`, `RoomSetupData`), and a board game —
+ * live or over — has its `match` where a live race has its `round`. A
+ * match is over exactly when its game is; a live game of either kind has
+ * its taunts.
+ *
  * @phpstan-import-type RoomSummaryArray from RoomSummaryData
  * @phpstan-import-type RoomViewerArray from RoomViewerData
  * @phpstan-import-type RoomPlayerArray from RoomPlayerData
  * @phpstan-import-type RoomGameArray from RoomGameData
  * @phpstan-import-type RoomRoundArray from RoomRoundData
+ * @phpstan-import-type RoomMatchArray from RoomMatchData
  * @phpstan-import-type RoomRankedPlayerArray from RoomRankedPlayerData
  * @phpstan-import-type RoomSetupArray from RoomSetupData
  * @phpstan-import-type RoomTauntsArray from RoomTauntsData
  * @phpstan-import-type RoomVoiceArray from RoomVoiceData
  *
- * @phpstan-type RoomStateArray array{v: int, revision: int, server_ms: int, room: RoomSummaryArray, me: RoomViewerArray, players: list<RoomPlayerArray>, game: RoomGameArray|null, round: RoomRoundArray|null, ranking: list<RoomRankedPlayerArray>, setup: RoomSetupArray|null, taunts: RoomTauntsArray|null, voice: RoomVoiceArray|null}
+ * @phpstan-type RoomStateArray array{v: int, revision: int, server_ms: int, room: RoomSummaryArray, me: RoomViewerArray, players: list<RoomPlayerArray>, game: RoomGameArray|null, round: RoomRoundArray|null, match: RoomMatchArray|null, ranking: list<RoomRankedPlayerArray>, setup: RoomSetupArray|null, taunts: RoomTauntsArray|null, voice: RoomVoiceArray|null}
  */
 final readonly class RoomStateData
 {
-    public const int VERSION = 5;
+    public const int VERSION = 6;
 
     /**
      * @param  list<RoomPlayerData>  $players
@@ -57,19 +66,29 @@ final readonly class RoomStateData
         public array $players,
         public ?RoomGameData $game = null,
         public ?RoomRoundData $round = null,
+        public ?RoomMatchData $match = null,
         public array $ranking = [],
         public ?RoomSetupData $setup = null,
         public ?RoomTauntsData $taunts = null,
         public ?RoomVoiceData $voice = null,
     ) {
         $live = $game?->phase === RoomGamePhase::Live;
+        $board = $game?->kind() === RoomGameKind::Board;
 
         if (($room->status === RoomStatus::Open) !== ($setup !== null)) {
             throw new InvalidArgumentException('An open room has its choice of the next game, and a closed one has none.');
         }
 
-        if ($live !== ($round !== null)) {
-            throw new InvalidArgumentException('A live game has its current round, and nothing else has one.');
+        if (($live && ! $board) !== ($round !== null)) {
+            throw new InvalidArgumentException('A live race has its current round, and nothing else has one.');
+        }
+
+        if ($board !== ($match !== null)) {
+            throw new InvalidArgumentException('A board game has its match, and nothing else has one.');
+        }
+
+        if ($match !== null && $live === ($match->phase === RoomMatchPhase::Over)) {
+            throw new InvalidArgumentException('A match is over exactly when its game is.');
         }
 
         if ($live !== ($taunts !== null)) {
@@ -109,6 +128,7 @@ final readonly class RoomStateData
             players: array_map(RoomPlayerData::fromArray(...), $data['players']),
             game: $data['game'] === null ? null : RoomGameData::fromArray($data['game']),
             round: $data['round'] === null ? null : RoomRoundData::fromArray($data['round']),
+            match: $data['match'] === null ? null : RoomMatchData::fromArray($data['match']),
             ranking: array_map(RoomRankedPlayerData::fromArray(...), $data['ranking']),
             setup: $data['setup'] === null ? null : RoomSetupData::fromArray($data['setup']),
             taunts: $data['taunts'] === null ? null : RoomTauntsData::fromArray($data['taunts']),
@@ -130,6 +150,7 @@ final readonly class RoomStateData
             'players' => array_map(static fn (RoomPlayerData $player): array => $player->toArray(), $this->players),
             'game' => $this->game?->toArray(),
             'round' => $this->round?->toArray(),
+            'match' => $this->match?->toArray(),
             'ranking' => array_map(static fn (RoomRankedPlayerData $row): array => $row->toArray(), $this->ranking),
             'setup' => $this->setup?->toArray(),
             'taunts' => $this->taunts?->toArray(),

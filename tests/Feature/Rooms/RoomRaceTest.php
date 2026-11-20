@@ -23,6 +23,7 @@ use App\Domain\Rooms\Support\RoomSeed;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\RoomPhones;
@@ -138,7 +139,7 @@ it('serves nothing of a round before it opens', function (): void {
     foreach ([$this->host, $this->aygun] as $account) {
         ['state' => $state, 'wire' => $wire] = raceRead($account, $this->room);
 
-        expect($state['game'])->toBe(['id' => $game->id, 'mechanic' => 'recall_order', 'difficulty' => 1, 'rounds' => 5, 'phase' => 'live'])
+        expect($state['game'])->toBe(['kind' => 'race', 'id' => $game->id, 'mechanic' => 'recall_order', 'difficulty' => 1, 'rounds' => 5, 'phase' => 'live'])
             ->and($state['round'])->toMatchArray([
                 'id' => $rounds[0]->id, 'index' => 0, 'total' => 5, 'phase' => 'countdown',
                 'opens_ms' => $game->started_ms, 'closes_ms' => null, 'next_ms' => null,
@@ -825,6 +826,7 @@ it('offers the setup of a game to the host of an open room alone, as the server 
         ['mechanic' => 'odd_one_out', 'family' => 'logic', 'difficulties' => [1, 2, 3, 4]],
         ['mechanic' => 'anagram', 'family' => 'words', 'difficulties' => [1, 2, 3, 4]],
         ['mechanic' => 'spelling', 'family' => 'words', 'difficulties' => [1, 2, 3, 4]],
+        ['mechanic' => 'draughts', 'family' => 'board', 'difficulties' => [1, 2, 3]],
     ], 'rounds' => ['min' => 5, 'max' => 20]];
     $setup = $this->actingAs($this->host)->get(route('rooms.show', $this->room))->viewData('page')['props']['catalog'];
     expect([
@@ -836,7 +838,9 @@ it('offers the setup of a game to the host of an open room alone, as the server 
 
     foreach ($offered['mechanics'] as $offer) {
         foreach ($offer['difficulties'] as $difficulty) {
-            expect(RoomGameSetupData::validate(['mechanic' => $offer['mechanic'], 'difficulty' => $difficulty, 'rounds' => 5])->difficulty)->toBe($difficulty);
+            // A race's rounds, a board game's two seats (D3): each kind reads its own.
+            $seats = ['white' => Str::lower((string) Str::ulid()), 'black' => Str::lower((string) Str::ulid())];
+            expect(RoomGameSetupData::validate(['mechanic' => $offer['mechanic'], 'difficulty' => $difficulty, 'rounds' => 5, ...$seats])->difficulty)->toBe($difficulty);
         }
     }
 

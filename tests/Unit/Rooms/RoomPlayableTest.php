@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Content\Data\RoomLevelData;
+use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Content\Support\ContentValidator;
@@ -12,32 +13,75 @@ use Illuminate\Support\Facades\Config;
  * What a room can play (docs/architecture.md §12 "Room games", "Room
  * content"): the validator, which may not name Rooms, gives a mechanic all
  * four difficulties or none; this test gives every mechanic RoomPlayable
- * lists its levels, so it plays at every difficulty, and a builder.
+ * lists its levels, so it plays at every difficulty, and a builder. A board
+ * game (D3, ADR 034 decision 6) has two to four levels, each its clock,
+ * and builds no rounds.
  */
 
+/**
+ * The mechanics a room plays of one kind.
+ *
+ * @return list<RoomMechanic>
+ */
+function playableOf(RoomGameKind $kind): array
+{
+    return array_values(array_filter(RoomPlayable::mechanics(), static fn (RoomMechanic $mechanic): bool => $mechanic->kind() === $kind));
+}
+
+/**
+ * @return list<int>
+ */
+function playableDifficulties(RoomMechanic $mechanic): array
+{
+    $difficulties = array_map(
+        static fn (RoomLevelData $level): int => $level->difficulty,
+        array_values(array_filter(app(ContentRepository::class)->roomLevels(), static fn (RoomLevelData $level): bool => $level->mechanic === $mechanic)),
+    );
+    sort($difficulties);
+
+    return $difficulties;
+}
+
 it('lists only mechanics with all four levels', function (): void {
-    $content = app(ContentRepository::class);
+    expect(playableOf(RoomGameKind::Race))->not->toBeEmpty();
 
-    expect(RoomPlayable::mechanics())->not->toBeEmpty();
-
-    foreach (RoomPlayable::mechanics() as $mechanic) {
-        $difficulties = array_map(
-            static fn (RoomLevelData $level): int => $level->difficulty,
-            array_values(array_filter($content->roomLevels(), static fn (RoomLevelData $level): bool => $level->mechanic === $mechanic)),
-        );
-        sort($difficulties);
-
-        expect($difficulties)->toBe(range(1, ContentValidator::ROOM_DIFFICULTIES), $mechanic->value)
+    foreach (playableOf(RoomGameKind::Race) as $mechanic) {
+        expect(playableDifficulties($mechanic))->toBe(range(1, ContentValidator::ROOM_DIFFICULTIES), $mechanic->value)
             ->and(RoomPlayable::plays($mechanic))->toBeTrue();
     }
 });
 
-it('has a builder for every mechanic', function (): void {
-    foreach (RoomMechanic::cases() as $mechanic) {
-        expect(RoomPlayable::builder($mechanic))->not->toBeNull();
+it('lists a board game with its clocks, two to four of them from 1, each shorter than the one before', function (): void {
+    expect(playableOf(RoomGameKind::Board))->toBe([RoomMechanic::Draughts]);
+
+    foreach (playableOf(RoomGameKind::Board) as $mechanic) {
+        $difficulties = playableDifficulties($mechanic);
+        $clocks = array_map(static fn (int $difficulty): ?int => app(ContentRepository::class)->roomLevel($mechanic, $difficulty)->clockMs, $difficulties);
+        $faster = $clocks;
+        rsort($faster);
+
+        expect($difficulties)->toBe(range(1, count($difficulties)))
+            ->and(count($difficulties))->toBeGreaterThanOrEqual(2)->toBeLessThanOrEqual(ContentValidator::ROOM_DIFFICULTIES)
+            ->and($clocks)->each->toBeInt()
+            ->and($clocks)->toBe(array_values(array_unique($clocks)))
+            ->and($clocks)->toBe($faster);
     }
 
-    expect(RoomPlayable::mechanics())->toBe([RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling]);
+    // 10+5, 5+3, 3+2 (ADR 034 decision 6).
+    expect(array_map(static fn (int $difficulty): array => [app(ContentRepository::class)->roomLevel(RoomMechanic::Draughts, $difficulty)->clockMs, app(ContentRepository::class)->roomLevel(RoomMechanic::Draughts, $difficulty)->incrementMs], [1, 2, 3]))
+        ->toBe([[600_000, 5_000], [300_000, 3_000], [180_000, 2_000]]);
+});
+
+it('has a builder for every race, and none for a board game', function (): void {
+    foreach (RoomMechanic::cases() as $mechanic) {
+        if ($mechanic->kind() === RoomGameKind::Race) {
+            expect(RoomPlayable::builder($mechanic))->not->toBeNull();
+        } else {
+            expect(fn () => RoomPlayable::builder($mechanic))->toThrow(InvalidArgumentException::class);
+        }
+    }
+
+    expect(RoomPlayable::mechanics())->toBe([RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts]);
 });
 
 // The validator may not reach a builder's arithmetic — whether a rule of
@@ -46,7 +90,7 @@ it('has a builder for every mechanic', function (): void {
 it('builds a game at every level of every mechanic it lists', function (): void {
     $content = app(ContentRepository::class);
 
-    foreach (RoomPlayable::mechanics() as $mechanic) {
+    foreach (playableOf(RoomGameKind::Race) as $mechanic) {
         foreach (range(1, ContentValidator::ROOM_DIFFICULTIES) as $difficulty) {
             $level = $content->roomLevel($mechanic, $difficulty);
 

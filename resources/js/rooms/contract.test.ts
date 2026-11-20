@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { z } from 'zod';
 import {
     ROOM_STATE_VERSION,
+    RoomAct,
+    RoomActReceipt,
     RoomAnswer,
     RoomAnswerReceipt,
     RoomChangedEvent,
@@ -30,6 +32,8 @@ const schemas: Record<string, z.ZodType> = {
     receipt: RoomAnswerReceipt,
     taunt: RoomTaunt,
     'taunt-receipt': RoomTauntReceipt,
+    act: RoomAct,
+    'act-receipt': RoomActReceipt,
 };
 
 function schemaOf(path: string): z.ZodType | undefined {
@@ -89,6 +93,14 @@ describe('room fixtures', () => {
             'taunt-receipt',
             'state.voice',
             'state.voice.off',
+            'state.match.chosen',
+            'state.match.countdown',
+            'state.match.play',
+            'state.match.watch',
+            'state.match.offer',
+            'state.match.over',
+            'act',
+            'act-receipt',
         ]) {
             expect(fixture(name), name).toBeDefined();
         }
@@ -373,6 +385,7 @@ describe('what a state never carries', () => {
 
         expect(lobby.v).toBe(ROOM_STATE_VERSION);
         expect(lobby.setup).toEqual({
+            kind: 'race',
             mechanic: 'recall_order',
             difficulty: 2,
             rounds: 10,
@@ -382,6 +395,7 @@ describe('what a state never carries', () => {
         expect(RoomState.safeParse(chosen).success).toBe(true);
         expect(chosen.game?.phase).toBe('over');
         expect(chosen.setup).toEqual({
+            kind: 'race',
             mechanic: 'anagram',
             difficulty: 2,
             rounds: 5,
@@ -395,6 +409,8 @@ describe('what a state never carries', () => {
             { ...lobby.setup, difficulty: 5 },
             { ...lobby.setup, mechanic: 'find' },
             { mechanic: 'recall_order', difficulty: 2, rounds: 10 },
+            { ...lobby.setup, kind: 'board' },
+            { ...lobby.setup, mechanic: 'draughts' },
         ]) {
             expect(RoomState.safeParse({ ...lobby, setup }).success).toBe(
                 false,
@@ -563,8 +579,8 @@ describe('the live voice (C3)', () => {
         players: state.players.map((player) => ({ ...player, voice: null })),
     });
 
-    it("reads every state at v 5, with the voice and each player's standing", () => {
-        expect(ROOM_STATE_VERSION).toBe(5);
+    it("reads every state at v 6, with the voice and each player's standing", () => {
+        expect(ROOM_STATE_VERSION).toBe(6);
 
         for (const [path, value] of payloads) {
             if (!path.includes('/state.')) {
@@ -573,7 +589,7 @@ describe('the live voice (C3)', () => {
 
             const state = value as State;
 
-            expect(state.v, path).toBe(5);
+            expect(state.v, path).toBe(6);
             expect('voice' in state, path).toBe(true);
             expect(
                 state.players.every((player) => 'voice' in player),
@@ -654,6 +670,202 @@ describe('the live voice (C3)', () => {
             }).success,
         ).toBe(false);
         expect(RoomState.safeParse({ ...voice, v: 4 }).success).toBe(false);
+    });
+});
+
+describe('a board game (D3)', () => {
+    type Match = NonNullable<State['match']>;
+    const play = fixture('state.match.play') as State;
+    const watch = fixture('state.match.watch') as State;
+    const offer = fixture('state.match.offer') as State;
+    const over = fixture('state.match.over') as State;
+    const countdown = fixture('state.match.countdown') as State;
+    const matchOf = (state: State): Match => state.match as Match;
+    const withMatch = (state: State, match: Record<string, unknown>) => ({
+        ...state,
+        match: { ...matchOf(state), ...match },
+    });
+
+    it('carries the match of a board game, live or over, and of nothing else', () => {
+        for (const [path, value] of payloads) {
+            if (!path.includes('/state.')) {
+                continue;
+            }
+
+            const state = value as State;
+            const board = state.game?.kind === 'board';
+
+            expect(state.match !== null, path).toBe(board);
+            expect(state.round === null || !board, path).toBe(true);
+
+            if (board) {
+                expect(matchOf(state).phase === 'over', path).toBe(
+                    state.game?.phase === 'over',
+                );
+            }
+        }
+
+        expect(RoomState.safeParse({ ...play, match: null }).success).toBe(
+            false,
+        );
+        expect(
+            RoomState.safeParse({
+                ...(fixture('state.answer') as State),
+                match: play.match,
+            }).success,
+        ).toBe(false);
+        expect(
+            RoomState.safeParse({
+                ...over,
+                game: { ...over.game, phase: 'live' },
+                taunts: play.taunts,
+            }).success,
+        ).toBe(false);
+        expect(
+            RoomState.safeParse({
+                ...play,
+                game: { ...play.game, kind: 'race' },
+            }).success,
+        ).toBe(false);
+    });
+
+    it('offers the legal paths to the seat to move alone, the same board to everyone', () => {
+        expect(matchOf(play).legal).toEqual({
+            capture: true,
+            paths: [['d4', 'f6']],
+        });
+        expect(matchOf(watch).legal).toBeNull();
+        expect({ ...matchOf(watch), legal: null }).toEqual({
+            ...matchOf(play),
+            legal: null,
+        });
+        expect([matchOf(offer).offer, matchOf(offer).can_offer]).toEqual([
+            'black',
+            false,
+        ]);
+        expect(matchOf(countdown).phase).toBe('countdown');
+        expect(matchOf(over).result?.ending).toBe('resigned');
+    });
+
+    it('refuses a key of a match in a phase that has none, and a square that is not one', () => {
+        for (const [state, match] of [
+            [play, { result: matchOf(over).result }],
+            [over, { legal: matchOf(play).legal }],
+            [over, { turn: 'white' }],
+            [countdown, { offer: 'black' }],
+            [countdown, { can_offer: true }],
+            [countdown, { moves: ['c3-d4'] }],
+            [play, { legal: { capture: false, paths: [] } }],
+            [play, { legal: { capture: false, paths: [['d4', 'd5']] } }],
+            [
+                play,
+                { position: [{ square: 'a2', color: 'white', king: false }] },
+            ],
+            [play, { moves: ['c3d4'] }],
+            [play, { sides: [matchOf(play).sides[0]] }],
+            [play, { player_id: play.me.player_id }],
+        ] as const) {
+            expect(
+                RoomState.safeParse(withMatch(state, match)).success,
+                JSON.stringify(match),
+            ).toBe(false);
+        }
+    });
+
+    it('ends a match by each ending, its places by the outcome', () => {
+        const result = matchOf(over).result;
+
+        if (result === null) {
+            throw new Error('The match is over.');
+        }
+
+        const ended = (
+            outcome: string,
+            ending: string,
+            places: [number | null, number | null],
+        ) =>
+            withMatch(over, {
+                result: {
+                    ...result,
+                    outcome,
+                    ending,
+                    spent: [],
+                    standing: result.standing.map((row, index) => ({
+                        ...row,
+                        place: places[index],
+                    })),
+                },
+            });
+
+        for (const [ending, outcome, places] of [
+            ['no_moves', 'white', [1, 2]],
+            ['resigned', 'black', [1, 2]],
+            ['left', 'white', [1, 2]],
+            ['time', 'black', [1, 2]],
+            ['agreed', 'draw', [1, 1]],
+            ['repetition', 'draw', [1, 1]],
+            ['three_kings', 'draw', [1, 1]],
+            ['main_road', 'draw', [1, 1]],
+            ['balance', 'draw', [1, 1]],
+            ['kings_only', 'draw', [1, 1]],
+            ['stopped', 'none', [null, null]],
+        ] as const) {
+            const wrong: [number | null, number | null] =
+                places[0] === 1 && places[1] === 2 ? [2, 1] : [1, 2];
+
+            expect(
+                RoomState.safeParse(ended(outcome, ending, [...places]))
+                    .success,
+                ending,
+            ).toBe(true);
+            expect(
+                RoomState.safeParse(ended(outcome, ending, wrong)).success,
+                ending,
+            ).toBe(false);
+            expect(
+                RoomState.safeParse(
+                    ended(outcome === 'draw' ? 'white' : 'draw', ending, [
+                        ...places,
+                    ]),
+                ).success,
+                ending,
+            ).toBe(false);
+        }
+    });
+
+    it('posts an act of a seat and nothing of a person, never a leave', () => {
+        const act = fixture('act') as z.infer<typeof RoomAct>;
+        const eventId = act.event_id;
+
+        expect(RoomAct.safeParse(act).success).toBe(true);
+        expect(
+            RoomAct.safeParse({ event_id: eventId, kind: 'resign' }).success,
+        ).toBe(true);
+        expect(
+            RoomAct.safeParse({ event_id: eventId, kind: 'offer', ply: 3 })
+                .success,
+        ).toBe(true);
+
+        for (const wrong of [
+            { ...act, player_id: play.me.player_id },
+            { ...act, path: ['d4'] },
+            { ...act, path: ['d4', 'e4'] },
+            { event_id: eventId, kind: 'leave', ply: 2 },
+            { event_id: eventId, kind: 'resign', ply: 2 },
+            { event_id: eventId, kind: 'offer' },
+            { event_id: eventId, kind: 'decline', ply: 2, path: ['d4', 'f6'] },
+            { ...act, acted_ms: 1 },
+        ]) {
+            expect(
+                RoomAct.safeParse(wrong).success,
+                JSON.stringify(wrong),
+            ).toBe(false);
+        }
+
+        expect(
+            RoomActReceipt.safeParse({ status: 'answered', revision: 1 })
+                .success,
+        ).toBe(false);
     });
 });
 

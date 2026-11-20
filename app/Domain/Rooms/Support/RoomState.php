@@ -3,14 +3,8 @@
 namespace App\Domain\Rooms\Support;
 
 use App\Domain\Rooms\Data\RoomGameData;
-use App\Domain\Rooms\Data\RoomMineData;
-use App\Domain\Rooms\Data\RoomMomentData;
 use App\Domain\Rooms\Data\RoomPlayerData;
-use App\Domain\Rooms\Data\RoomResultData;
-use App\Domain\Rooms\Data\RoomRevealData;
-use App\Domain\Rooms\Data\RoomRoundData;
 use App\Domain\Rooms\Data\RoomSetupData;
-use App\Domain\Rooms\Data\RoomSpentData;
 use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Data\RoomSummaryData;
 use App\Domain\Rooms\Data\RoomTauntsData;
@@ -18,16 +12,13 @@ use App\Domain\Rooms\Data\RoomTauntSeenData;
 use App\Domain\Rooms\Data\RoomViewerData;
 use App\Domain\Rooms\Data\RoomVoiceData;
 use App\Domain\Rooms\Enums\RoomGamePhase;
-use App\Domain\Rooms\Enums\RoomPhase;
 use App\Domain\Rooms\Models\Room;
-use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
-use App\Domain\Rooms\Models\RoomRound;
 use App\Domain\Rooms\Models\RoomTaunt;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -73,6 +64,11 @@ use Illuminate\Support\Facades\Config;
  * player's standing while it is on (`RoomVoice::stateOf()`). Reading it
  * asks the voice server nothing: who is in the voice, whose microphone is
  * open and who speaks are never in it.
+ *
+ * What depends on the latest game's kind is its driver's (§12 "Board
+ * games", ADR 034 decision 3): whether it is live, and its part — a live
+ * race's round, or a board game's match, live or over
+ * (`RoomGameDriver::part()`) — and who may throw a taunt in it.
  */
 final class RoomState
 {
@@ -86,8 +82,8 @@ final class RoomState
         $rows = RoomRanking::players($room);
         $mine = $rows->first(static fn (RoomPlayer $row): bool => $row->user_id === $viewer->id);
         $game = $room->latestGame();
-        $moment = $game === null || ! $room->isOpen() ? RoomMomentData::over() : $game->timetable()->moment($nowMs);
-        $live = $game !== null && ! $moment->isOver();
+        $part = $game === null ? ['live' => false, 'round' => null, 'match' => null] : RoomGameDriver::of($game->mechanic)->part($room, $game, $rows, $mine, $nowMs);
+        $live = $game !== null && $part['live'];
         $setup = $room->isOpen() ? $room->setup() : null;
         $voiceData = $voice && $room->isOpen() ? new RoomVoiceData($room->voiceIsOn(), $viewer->voice_agreed_at !== null) : null;
 
@@ -104,22 +100,15 @@ final class RoomState
                 voice: $voiceData === null ? null : RoomVoice::stateOf($room, $row),
             ))->all()),
             game: $game === null ? null : RoomGameData::of($game, $live ? RoomGamePhase::Live : RoomGamePhase::Over),
-            round: $live ? self::round($game, $moment, $rows, $mine) : null,
+            round: $part['round'],
+            match: $part['match'],
             ranking: match (true) {
-                $game === null => $room->board === null ? [] : RoomRanking::ofRoom($room, $nowMs, $rows),
+                $game === null => [],
                 $live => RoomRanking::ofGame($game, $nowMs, $rows),
                 default => RoomRanking::ofRoom($room, $nowMs, $rows),
             },
-            setup: $setup === null ? null : new RoomSetupData(
-                mechanic: $setup->mechanic,
-                difficulty: $setup->difficulty,
-                rounds: $setup->rounds,
-                played: $game !== null && ! $live
-                    && $game->mechanic === $setup->mechanic
-                    && $game->difficulty === $setup->difficulty
-                    && $game->rounds->count() === $setup->rounds,
-            ),
-            taunts: $live ? self::taunts($room, $game, $mine, $nowMs, $screen) : null,
+            setup: $setup === null ? null : RoomSetupData::of($setup, $game !== null && ! $live && $setup->playedIn($game)),
+            taunts: $game !== null && $live ? self::taunts($room, $game, $mine, $nowMs, $screen) : null,
             voice: $voiceData,
         );
     }
@@ -147,7 +136,7 @@ final class RoomState
             ->limit(RoomTauntsData::MAX_LISTED);
 
         return new RoomTauntsData(
-            open: $plays && $room->taunts && RoomTauntWindow::open($room, $game, $nowMs),
+            open: $plays && $room->taunts && RoomTauntWindow::open($room, $game, $nowMs) && RoomGameDriver::of($game->mechanic)->mayThrow($game, $mine),
             balance: $plays ? RoomTauntBalance::of($game, $mine, $nowMs) : null,
             ready_ms: $readyMs !== null && $readyMs > $nowMs ? $readyMs : null,
             received: ! $plays || ! $room->taunts ? [] : array_values($window()
@@ -160,65 +149,6 @@ final class RoomState
                 ->get()
                 ->map(static fn (RoomTaunt $taunt): RoomTauntSeenData => new RoomTauntSeenData($taunt->id, $taunt->room_player_id, $taunt->target_player_id, $taunt->taunt, $taunt->sent_ms))
                 ->all())),
-        );
-    }
-
-    /**
-     * The current round of a live game, as its phase allows.
-     *
-     * @param  Collection<int, RoomPlayer>  $rows  the room's players not removed, in order
-     */
-    private static function round(RoomGame $game, RoomMomentData $moment, Collection $rows, ?RoomPlayer $mine): RoomRoundData
-    {
-        $timetable = $game->timetable();
-        $index = $moment->round ?? 0;
-        /** @var RoomRound $round */
-        $round = $game->rounds->firstWhere('position', $index);
-        $phase = $moment->phase;
-        $asked = $phase === RoomPhase::Answer || $phase === RoomPhase::Reveal;
-        $revealed = $phase === RoomPhase::Reveal;
-
-        /** @var Collection<string, RoomAnswer> $answers */
-        $answers = $asked ? $round->answers()->get()->keyBy('room_player_id') : new Collection;
-        // Counted as the early close counts (`RoomWaits`): a full count is a closed round.
-        $since = RoomWaits::since($game, $index);
-        $waited = $rows->filter(static fn (RoomPlayer $row): bool => RoomWaits::waitsFor($row, $since, $answers->has($row->id)));
-        $own = $mine === null ? null : $answers->get($mine->id);
-        $spent = $revealed ? RoomTauntCost::spentAt($game, $index) : [];
-
-        return new RoomRoundData(
-            id: $round->id,
-            index: $index,
-            total: $timetable->count(),
-            phase: $phase,
-            opens_ms: $timetable->opens($index),
-            answer_from_ms: $timetable->answerFrom($index),
-            bell_ms: $timetable->bell($index),
-            closes_ms: $revealed ? $timetable->closes($index) : null,
-            next_ms: $revealed ? $timetable->next($index) : null,
-            study: $phase === RoomPhase::Study ? $round->studyData() : null,
-            ask: $asked ? $round->askData() : null,
-            answered: $own !== null,
-            answered_count: $waited->filter(static fn (RoomPlayer $row): bool => $answers->has($row->id))->count(),
-            present_count: $waited->count(),
-            reveal: $revealed ? new RoomRevealData(
-                solution: $round->solutionData()->ids,
-                word: $round->solutionData()->word,
-                mine: $own === null ? null : RoomMineData::of($own),
-                results: array_values($rows
-                    ->filter(static fn (RoomPlayer $row): bool => $answers->has($row->id))
-                    ->map(static function (RoomPlayer $row) use ($answers): RoomResultData {
-                        /** @var RoomAnswer $answer */
-                        $answer = $answers->get($row->id);
-
-                        return new RoomResultData($row->id, $answer->correct, $answer->points);
-                    })
-                    ->all()),
-                spent: array_values($rows
-                    ->filter(static fn (RoomPlayer $row): bool => ($spent[$row->id] ?? 0) > 0)
-                    ->map(static fn (RoomPlayer $row): RoomSpentData => new RoomSpentData($row->id, $spent[$row->id]))
-                    ->all()),
-            ) : null,
         );
     }
 }

@@ -4,9 +4,9 @@ namespace App\Domain\Rooms\Actions;
 
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomPlayer;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
-use App\Domain\Rooms\Support\RoomRoundClose;
 use App\Domain\Rooms\Support\RoomSignal;
 use App\Domain\Rooms\Support\RoomVoice;
 use App\Domain\Rooms\Support\RoomVoiceCut;
@@ -17,7 +17,10 @@ use Illuminate\Support\Facades\DB;
  * joining"): the row stays, with `left_at`, and the same account may come
  * back with the code to it. A round open for answers that everyone it
  * still waits for has answered closes now (`RoomRoundClose`): it never
- * waits for someone who left. Raises the revision and signals the room.
+ * waits for someone who left; a seat of a live match has lost (ADR 034
+ * decision 13) — whatever the running game's driver does about it
+ * (`RoomGameDriver::presenceChanged()`). Raises the revision and signals
+ * the room.
  *
  * While the room's voice is on, a player who leaves is then taken out of
  * the voice room (`RoomVoiceCut::remove()`, §12 "Live voice", ADR 031
@@ -40,8 +43,7 @@ final readonly class LeaveRoom
             $row->left_at = now();
             $row->save();
 
-            RoomRoundClose::whenPresenceChanges($locked, RoomClock::nowMs());
-            EndRoomMatch::whenPresenceChanges($locked, $row);
+            RoomGameDriver::presenceChanged($locked, $row, RoomClock::nowMs());
             RoomSignal::raise($locked);
 
             if ($locked->voiceIsOn() && ! RoomVoice::isHost($locked, $row)) {

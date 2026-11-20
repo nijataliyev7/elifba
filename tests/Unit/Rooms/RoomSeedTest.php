@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Rooms\Data\BuiltRoomRoundData;
@@ -35,7 +36,7 @@ it('tells the same rounds from the same seed, and other rounds under another key
 
     Config::set('app.key', 'base64:'.base64_encode(str_repeat('b', 32)));
     expect(seededRounds(1234, $mechanic))->not->toBe($rounds);
-})->with(RoomMechanic::cases());
+})->with(array_values(array_filter(RoomMechanic::cases(), static fn (RoomMechanic $mechanic): bool => $mechanic->kind() === RoomGameKind::Race)));
 
 it('draws new seeds within the column', function (): void {
     foreach (range(1, 50) as $_) {

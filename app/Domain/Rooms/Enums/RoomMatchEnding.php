@@ -7,10 +7,6 @@ namespace App\Domain\Rooms\Enums;
  * decision 14), beside its `RoomMatchOutcome`. Derived by `DraughtsMatch`
  * from the acts, never stored; the articles are those of the official
  * rules (ADR 034 decision 4).
- *
- * `Resign`, `Quiet` and `Host` are the pull request's: its `RoomMatch`
- * still stores them until D3 removes it with its callers (ADR 034 "PR #9:
- * keep, reshape, drop"). Nothing new names them.
  */
 enum RoomMatchEnding: string
 {
@@ -47,12 +43,12 @@ enum RoomMatchEnding: string
     /** The host ended the game or the room closed under it: no result. */
     case Stopped = 'stopped';
 
-    /** The pull request's resignation; `Resigned` from D3. */
-    case Resign = 'resign';
-
-    /** The pull request's only draw, thirty quiet king plies; `DraughtsDraws` from D3. */
-    case Quiet = 'quiet';
-
-    /** The pull request's host's end; `Stopped` from D3. */
-    case Host = 'host';
+    /** Whether the ending is a draw's: agreed, or declared by the server (decision 16). */
+    public function draws(): bool
+    {
+        return match ($this) {
+            self::Agreed, self::Repetition, self::ThreeKings, self::MainRoad, self::Balance, self::KingsOnly => true,
+            self::NoMoves, self::Resigned, self::Left, self::Time, self::Stopped => false,
+        };
+    }
 }
