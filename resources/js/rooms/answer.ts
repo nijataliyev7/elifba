@@ -11,6 +11,8 @@
 import { RoomAnswerReceipt } from './contract';
 import type { RoomAnswer } from './contract';
 import type { Reply } from './http';
+import { sendForReceipt } from './receipt';
+import type { WriteOutcome } from './receipt';
 
 const ALPHABET = '0123456789abcdefghjkmnpqrstvwxyz';
 
@@ -43,14 +45,7 @@ export function eventId(
     return time + rest;
 }
 
-export type AnswerOutcome =
-    | { kind: 'receipt'; receipt: RoomAnswerReceipt }
-    /** 422: not the round's items in the count it asks; nothing was stored. */
-    | { kind: 'refused' }
-    /** 401, 403, 404, 419: removed, the room gone or closed, the session over. */
-    | { kind: 'gone' }
-    /** Nothing usable came back, and retrying no longer makes sense. */
-    | { kind: 'failed' };
+export type AnswerOutcome = WriteOutcome<RoomAnswerReceipt>;
 
 /** Waits before each retry: a lost answer is sent again soon, then less often. */
 export const RETRY_MS = [500, 1000, 2000, 4000] as const;
@@ -58,45 +53,25 @@ export const RETRY_MS = [500, 1000, 2000, 4000] as const;
 /**
  * Sends the answer and retries the same body while nothing usable comes
  * back (no connection, a server error, the limiter) and `keepTrying()`
- * says the page still shows that round.
+ * says the page still shows that round. A 422 is an answer that is not the
+ * round's items in the count it asks.
  */
-export async function sendAnswer(options: {
+export function sendAnswer(options: {
     answer: RoomAnswer;
     post: (answer: RoomAnswer) => Promise<Reply>;
     wait: (ms: number) => Promise<void>;
     keepTrying: () => boolean;
 }): Promise<AnswerOutcome> {
-    for (let attempt = 0; ; attempt++) {
-        let reply: Reply | null = null;
+    return sendForReceipt({
+        body: options.answer,
+        post: options.post,
+        receipt: (body) => {
+            const parsed = RoomAnswerReceipt.safeParse(body);
 
-        try {
-            reply = await options.post(options.answer);
-        } catch {
-            reply = null;
-        }
-
-        if (reply !== null) {
-            if (reply.status === 200) {
-                const receipt = RoomAnswerReceipt.safeParse(reply.body);
-
-                if (receipt.success) {
-                    return { kind: 'receipt', receipt: receipt.data };
-                }
-            } else if (reply.status === 422) {
-                return { kind: 'refused' };
-            } else if ([401, 403, 404, 419].includes(reply.status)) {
-                return { kind: 'gone' };
-            }
-        }
-
-        if (attempt >= RETRY_MS.length || !options.keepTrying()) {
-            return { kind: 'failed' };
-        }
-
-        await options.wait(RETRY_MS[attempt]);
-
-        if (!options.keepTrying()) {
-            return { kind: 'failed' };
-        }
-    }
+            return parsed.success ? parsed.data : null;
+        },
+        wait: options.wait,
+        retries: RETRY_MS,
+        keepTrying: options.keepTrying,
+    });
 }

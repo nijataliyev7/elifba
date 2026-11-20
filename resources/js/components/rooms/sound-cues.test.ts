@@ -1213,3 +1213,230 @@ describe("roomCues and a taunt's voice (ADR 029 as amended 2026-11-19)", () => {
         expect(cues.filter((cue) => cue.sound === 'taunt')).toEqual([]);
     });
 });
+
+/*
+ * A match's cues (ADR 034 decision 31, docs/frontend.md rule 15 "Board
+ * games" → "Sound"): the room's speaker plays the countdown ending at
+ * `starts_ms`, `go`, each move the page saw arrive — `move` or `capture` as
+ * the piece lands and `crown` after it — the clock in the side to move's
+ * last seconds ending at its flag, and `close` then the match's own final
+ * at its end; a phone plays `offer` when a draw offer arrives at its seat,
+ * and never `sent`, `right` or `wrong`.
+ */
+describe('roomCues in a match', () => {
+    type Play = Extract<NonNullable<State['match']>, { phase: 'play' }>;
+
+    const matchCountdown = state('match.countdown');
+    const matchPlay = state('match.play');
+    const matchOffer = state('match.offer');
+    const matchWatch = state('match.watch');
+    const matchOver = state('match.over');
+    const playOf = (source: State): Play => {
+        if (source.match?.phase !== 'play') {
+            throw new Error('a match in play is needed');
+        }
+
+        return source.match;
+    };
+    const starts = playOf(matchPlay).starts_ms;
+    /** The same match at another ply, with its last move; the moment begins at `since_ms`. */
+    const atPly = (
+        source: State,
+        ply: number,
+        last: Play['last'],
+        since: number,
+    ): State =>
+        ({
+            ...source,
+            match: {
+                ...playOf(source),
+                ply,
+                last,
+                since_ms: since,
+                flag_ms: since + 290_000,
+                offer: null,
+            },
+        }) as State;
+    const begun = atPly(matchPlay, 0, null, starts);
+    const quiet = atPly(
+        matchPlay,
+        3,
+        { path: ['c3', 'd4'], captured: [], crowned: false },
+        starts + 9_000,
+    );
+    const taken = atPly(
+        matchPlay,
+        3,
+        { path: ['d4', 'f6', 'd8'], captured: ['e5', 'e7'], crowned: true },
+        starts + 9_000,
+    );
+
+    it('counts down to the clock, then plays go, once', () => {
+        const ears: RoomEar[] = [
+            { state: lobby, now: starts - 5_000 },
+            { state: matchCountdown, now: starts - 2_500 },
+            { state: matchCountdown, now: starts - 1_500 },
+            { state: begun, now: starts + 80 },
+            { state: begun, now: starts + 900 },
+        ];
+        const played = heard(ears, 'screen');
+
+        expect(names(played)).toEqual(['countdown', 'go']);
+        expect(played[0].cue).toMatchObject({ at: 2_500, ends: true });
+    });
+
+    it('plays a move the page saw arrive as its piece lands, a capture and a crowning as such', () => {
+        const step = (next: State) =>
+            roomCues(
+                { state: matchPlay, now: starts + 8_000 },
+                { state: next, now: starts + 9_050 },
+                'screen',
+            );
+
+        expect(step(quiet)).toEqual([{ sound: 'move', at: 160 }]);
+        expect(step(taken)).toEqual([
+            { sound: 'capture', at: 320 },
+            { sound: 'crown', at: 440 },
+        ]);
+        // The same ply again, a page opened on it, or heard long after: silent.
+        expect(
+            roomCues(
+                { state: taken, now: starts + 9_100 },
+                { state: taken, now: starts + 9_300 },
+                'screen',
+            ),
+        ).toEqual([]);
+        expect(
+            roomCues(null, { state: taken, now: starts + 9_100 }, 'screen'),
+        ).toEqual([]);
+        expect(
+            roomCues(
+                { state: matchPlay, now: starts + 8_000 },
+                { state: taken, now: starts + 9_000 + STALE_MS + 1 },
+                'screen',
+            ),
+        ).toEqual([]);
+    });
+
+    it("runs the clock in the side to move's last seconds, ending at its flag, and stops it with the move", () => {
+        const flag = playOf(matchPlay).flag_ms;
+        const near = { state: matchPlay, now: flag - CLOCK_MS - LEAD_MS + 100 };
+        const cues = roomCues(
+            { state: matchPlay, now: flag - 20_000 },
+            near,
+            'screen',
+        );
+
+        expect(cues).toEqual([
+            { sound: 'clock', at: CLOCK_MS + LEAD_MS - 100, ends: true },
+        ]);
+        expect(
+            sameMoment(near, { state: quiet, now: flag - 2_000 }, 'screen'),
+        ).toBe(false);
+    });
+
+    it('plays the offer on the phone of the seat it is made to, and nowhere else', () => {
+        const before = { state: withScreen(matchPlay), now: starts + 12_000 };
+        const after = { state: withScreen(matchOffer), now: starts + 12_500 };
+
+        expect(roomCues(before, after, 'phone')).toEqual([
+            { sound: 'offer', at: 0 },
+        ]);
+        expect(
+            roomCues(after, { ...after, now: starts + 13_000 }, 'phone'),
+        ).toEqual([]);
+        expect(roomCues(before, after, 'screen')).toEqual([]);
+        // A watcher's phone: no offer is made to it.
+        const watcher = { ...matchOffer, me: matchWatch.me } as State;
+
+        expect(
+            roomCues(
+                { ...before, state: withScreen(matchWatch) },
+                { ...after, state: withScreen(watcher) },
+                'phone',
+            ),
+        ).toEqual([]);
+    });
+
+    it('plays no move, sent, right or wrong on a phone of a room with its screen', () => {
+        const cues = roomCues(
+            { state: withScreen(matchPlay), now: starts + 8_000 },
+            { state: withScreen(taken), now: starts + 9_050 },
+            'phone',
+        );
+
+        expect(cues).toEqual([]);
+        // Without a screen, every phone carries the room's moves.
+        expect(
+            names(
+                heard(
+                    [
+                        { state: matchPlay, now: starts + 8_000 },
+                        { state: taken, now: starts + 9_050 },
+                    ],
+                    'phone',
+                ),
+            ),
+        ).toEqual(['capture', 'crown']);
+    });
+
+    it('closes the match, then opens its own final and cheers its winner', () => {
+        const cues = roomCues(
+            { state: matchPlay, now: starts + 15_000 },
+            { state: matchOver, now: starts + 16_000 },
+            'screen',
+        );
+        const standing =
+            matchOver.match?.phase === 'over'
+                ? matchOver.match.result.standing
+                : [];
+        const timeline = finalTimeline(standingGroups(standing, []), 'screen');
+
+        expect(cues.map((cue) => cue.sound)).toEqual([
+            'close',
+            'place',
+            'roll',
+            'fanfare',
+            'cheer',
+        ]);
+        expect(cues.find((cue) => cue.sound === 'cheer')).toEqual({
+            sound: 'cheer',
+            at: (timeline.winnerAt ?? 0) + FANFARE_MS,
+            players: [standing[0].player_id],
+            many: false,
+        });
+    });
+
+    it('closes a match the host stopped without a final', () => {
+        const over = matchOver.match;
+
+        if (over?.phase !== 'over') {
+            throw new Error('a match over is needed');
+        }
+
+        const stopped = {
+            ...matchOver,
+            match: {
+                ...over,
+                result: {
+                    ...over.result,
+                    outcome: 'none',
+                    ending: 'stopped',
+                    standing: over.result.standing.map((row) => ({
+                        ...row,
+                        points: 0,
+                        place: null,
+                    })),
+                },
+            },
+        } as State;
+
+        expect(
+            roomCues(
+                { state: matchPlay, now: starts + 15_000 },
+                { state: stopped, now: starts + 16_000 },
+                'screen',
+            ),
+        ).toEqual([{ sound: 'close', at: 0 }]);
+    });
+});

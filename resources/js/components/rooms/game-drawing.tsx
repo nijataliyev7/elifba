@@ -104,6 +104,46 @@ function Glyph({ mechanic }: { mechanic: RoomMechanic }) {
         );
     }
 
+    if (mechanic === 'draughts') {
+        // A corner of the board with a white and a black piece (ADR 034 decision 27).
+        const pieces: Record<number, 'white' | 'black'> = {
+            1: 'black',
+            5: 'white',
+            7: 'white',
+        };
+
+        return (
+            <span className="grid size-[0.6em] grid-cols-3 overflow-hidden rounded-[0.05em]">
+                {Array.from({ length: 9 }, (_, index) => {
+                    const dark =
+                        (Math.floor(index / 3) + (index % 3)) % 2 === 1;
+                    const piece = pieces[index];
+
+                    return (
+                        <span
+                            key={index}
+                            className={cn(
+                                'grid place-items-center',
+                                dark ? 'bg-draughts-dark' : 'bg-draughts-light',
+                            )}
+                        >
+                            {piece !== undefined && (
+                                <span
+                                    className={cn(
+                                        'size-[72%] rounded-full',
+                                        piece === 'white'
+                                            ? 'bg-draughts-white shadow-[inset_0_0_0_max(1px,0.012em)_var(--draughts-white-ring)]'
+                                            : 'bg-draughts-black shadow-[inset_0_0_0_max(1px,0.012em)_var(--draughts-black-ring)]',
+                                    )}
+                                />
+                            )}
+                        </span>
+                    );
+                })}
+            </span>
+        );
+    }
+
     if (mechanic === 'spelling') {
         // Four spellings, one of them stronger.
         return (

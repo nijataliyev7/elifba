@@ -585,3 +585,39 @@
         }
     }
 }
+
+/*
+ * Board games (docs/frontend.md rule 15 "Board games", ADR 034 decision
+ * 27): the draughts board's own colours in both themes — muted light and
+ * dark squares, and the two pieces, each a fill and a ring. Never the
+ * room's emerald or red (right, wrong), the lamp's amber, the strip's sky
+ * or orange, the taunt's violet or the voice's indigo; a seat's colour is
+ * its piece, never the strip's side. A white and a black piece differ by
+ * fill and by ring, and a king carries its crown: never colour alone.
+ */
+:root {
+    --draughts-light: var(--color-stone-100);
+    --draughts-dark: var(--color-stone-400);
+    --draughts-white: var(--color-white);
+    --draughts-white-ring: var(--color-stone-500);
+    --draughts-black: var(--color-stone-900);
+    --draughts-black-ring: var(--color-stone-300);
+}
+
+.dark {
+    --draughts-light: var(--color-stone-600);
+    --draughts-dark: var(--color-stone-800);
+    --draughts-white: var(--color-stone-100);
+    --draughts-white-ring: var(--color-stone-400);
+    --draughts-black: var(--color-stone-950);
+    --draughts-black-ring: var(--color-stone-500);
+}
+
+@theme inline {
+    --color-draughts-light: var(--draughts-light);
+    --color-draughts-dark: var(--draughts-dark);
+    --color-draughts-white: var(--draughts-white);
+    --color-draughts-white-ring: var(--draughts-white-ring);
+    --color-draughts-black: var(--draughts-black);
+    --color-draughts-black-ring: var(--draughts-black-ring);
+}

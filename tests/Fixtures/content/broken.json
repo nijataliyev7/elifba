@@ -1796,6 +1796,26 @@
         "write": { "assets/rooms/sounds/buzzer.mp3": "ID3" },
         "problem": "rooms/sounds.json: assets/rooms/sounds/buzzer.mp3 is no sound of the list"
     },
+    "rooms sounds: a board game's move without a file": {
+        "file": "rooms/sounds.json",
+        "unset": ["sounds.move"],
+        "problem": "rooms/sounds.json: sounds needs `move`"
+    },
+    "rooms sounds: a capture that is the move's file": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.capture": "rooms/sounds/move.mp3" },
+        "problem": "rooms/sounds.json: sounds.capture \"rooms/sounds/move.mp3\" is already the file of sounds.move"
+    },
+    "rooms sounds: a crown that is not there": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.crown": "rooms/sounds/king.mp3" },
+        "problem": "rooms/sounds.json: sounds.crown: content/assets/rooms/sounds/king.mp3 does not exist"
+    },
+    "rooms sounds: a draw offer in the children's chime": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.offer": "sounds/chime.mp3" },
+        "problem": "rooms/sounds.json: sounds.offer \"sounds/chime.mp3\" must be under content/assets/rooms/sounds/"
+    },
     "rooms rivalry: no file": {
         "file": "rooms/rivalry.json",
         "delete": ["rooms/rivalry.json"],

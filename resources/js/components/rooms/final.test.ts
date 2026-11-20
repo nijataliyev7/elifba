@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { RoomState } from '@/rooms/contract';
 import type { RoomRankedPlayer } from '@/rooms/contract';
-import { finalTier, finalTimeline, holdsFirst } from './final';
+import { finalRows, finalTier, finalTimeline, holdsFirst } from './final';
+import over from '../../../../tests/Fixtures/rooms/state.match.over.json';
+import raceOver from '../../../../tests/Fixtures/rooms/state.over.json';
 import { standingGroups } from './standing-groups';
 
 /*
@@ -111,5 +114,78 @@ describe('holdsFirst', () => {
         expect(holdsFirst(rows, 'p2')).toBe(false);
         expect(holdsFirst(rows, null)).toBe(false);
         expect(holdsFirst(rows, 'nobody')).toBe(false);
+    });
+});
+
+/*
+ * A match's final (ADR 034 decision 25): its own two places — the winner
+ * first, both first in a draw, by the outcome — never the room's standing,
+ * which stands under it; a match stopped without a result opens none. A
+ * race's final is the state's ranking, as it was.
+ */
+describe('finalRows', () => {
+    const match = RoomState.parse(over);
+
+    it("opens a match's own places, and a race's ranking", () => {
+        const result =
+            match.match?.phase === 'over' ? match.match.result : null;
+
+        expect(finalRows(match)).toEqual(result?.standing);
+        expect(finalRows(match)).not.toEqual(match.ranking);
+        expect(finalRows(match).map((row) => row.place)).toEqual([1, 2]);
+
+        const race = RoomState.parse(raceOver);
+
+        expect(finalRows(race)).toBe(race.ranking);
+    });
+
+    it('opens both first after a draw, and nothing after a stop', () => {
+        if (match.match?.phase !== 'over') {
+            throw new Error('a match over is needed');
+        }
+
+        const ended = match.match;
+        const draw = {
+            ...match,
+            match: {
+                ...ended,
+                result: {
+                    ...ended.result,
+                    outcome: 'draw' as const,
+                    ending: 'agreed' as const,
+                    standing: ended.result.standing.map((row) => ({
+                        ...row,
+                        points: 1,
+                        place: 1 as const,
+                    })),
+                },
+            },
+        };
+        const stopped = {
+            ...match,
+            match: {
+                ...ended,
+                result: {
+                    ...ended.result,
+                    outcome: 'none' as const,
+                    ending: 'stopped' as const,
+                    standing: ended.result.standing.map((row) => ({
+                        ...row,
+                        points: 0,
+                        place: null,
+                    })),
+                },
+            },
+        };
+        const groups = standingGroups(finalRows(draw), LABELS);
+
+        expect(groups).toHaveLength(1);
+        expect(groups[0].rows).toHaveLength(2);
+        expect(finalTimeline(groups, 'phone').winnerAt).not.toBeNull();
+        expect(finalRows(stopped)).toEqual([]);
+        expect(
+            finalTimeline(standingGroups(finalRows(stopped), LABELS), 'screen')
+                .winnerAt,
+        ).toBeNull();
     });
 });

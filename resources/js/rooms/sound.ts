@@ -58,8 +58,11 @@ export const ROOM_SOUNDS = {
         'roll',
         'fanfare',
         'join',
+        'move',
+        'capture',
+        'crown',
     ],
-    phone: ['tap', 'undo', 'sent', 'right', 'wrong'],
+    phone: ['tap', 'undo', 'sent', 'right', 'wrong', 'offer'],
 } as const;
 
 export type RoomSpeaker = keyof typeof ROOM_SOUNDS;

@@ -131,9 +131,9 @@ it('says «otaq» only where the thing itself is named', function (): void {
         ->and($az)->not->toHaveKey('rooms.show.title');
 });
 
-it('words the rivalry strip in exactly the strings ADR 027 lists, in both languages', function (): void {
-    // ADR 027 decision 19: the strip's and the lanes' words, nothing more.
-    $keys = ['ahead', 'away', 'behind', 'label', 'leads', 'level', 'level_others', 'more', 'more_short', 'no_points', 'took_lead', 'took_lead_you', 'you'];
+it('words the rivalry strip in exactly the strings ADR 027 and ADR 034 list, in both languages', function (): void {
+    // ADR 027 decision 19: the strip's and the lanes' words, nothing more; ADR 034 decision 23: a match's gap in pieces.
+    $keys = ['ahead', 'away', 'behind', 'label', 'leads', 'level', 'level_others', 'more', 'more_short', 'no_points', 'pieces_ahead', 'pieces_behind', 'pieces_leads', 'took_lead', 'took_lead_you', 'you'];
 
     foreach (['az', 'en'] as $locale) {
         /** @var array<string, string> $translations */

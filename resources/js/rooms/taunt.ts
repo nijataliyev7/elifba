@@ -11,52 +11,32 @@
 import { RoomTauntReceipt } from './contract';
 import type { RoomTaunt } from './contract';
 import type { Reply } from './http';
+import { sendForReceipt } from './receipt';
+import type { WriteOutcome } from './receipt';
 
-export type TauntOutcome =
-    | { kind: 'receipt'; receipt: RoomTauntReceipt }
-    /** 422: the rival is no present player of the room any more; nothing was stored. */
-    | { kind: 'refused' }
-    /** 401, 403, 404, 419: left, removed, the room closed, the session over. */
-    | { kind: 'gone' }
-    /** Nothing usable came back. */
-    | { kind: 'failed' };
+export type TauntOutcome = WriteOutcome<RoomTauntReceipt>;
 
 /** Waits before each retry: a taunt is sent again soon, twice at most. */
 export const TAUNT_RETRY_MS = [400, 1200] as const;
 
-/** Sends the taunt, and the same body again while nothing usable comes back. */
-export async function sendTaunt(options: {
+/**
+ * Sends the taunt, and the same body again while nothing usable comes
+ * back. A 422 is a rival who is no present player of the room any more.
+ */
+export function sendTaunt(options: {
     taunt: RoomTaunt;
     post: (taunt: RoomTaunt) => Promise<Reply>;
     wait: (ms: number) => Promise<void>;
 }): Promise<TauntOutcome> {
-    for (let attempt = 0; ; attempt++) {
-        let reply: Reply | null = null;
+    return sendForReceipt({
+        body: options.taunt,
+        post: options.post,
+        receipt: (body) => {
+            const parsed = RoomTauntReceipt.safeParse(body);
 
-        try {
-            reply = await options.post(options.taunt);
-        } catch {
-            reply = null;
-        }
-
-        if (reply !== null) {
-            if (reply.status === 200) {
-                const receipt = RoomTauntReceipt.safeParse(reply.body);
-
-                if (receipt.success) {
-                    return { kind: 'receipt', receipt: receipt.data };
-                }
-            } else if (reply.status === 422) {
-                return { kind: 'refused' };
-            } else if ([401, 403, 404, 419].includes(reply.status)) {
-                return { kind: 'gone' };
-            }
-        }
-
-        if (attempt >= TAUNT_RETRY_MS.length) {
-            return { kind: 'failed' };
-        }
-
-        await options.wait(TAUNT_RETRY_MS[attempt]);
-    }
+            return parsed.success ? parsed.data : null;
+        },
+        wait: options.wait,
+        retries: TAUNT_RETRY_MS,
+    });
 }

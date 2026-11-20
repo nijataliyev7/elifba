@@ -353,11 +353,51 @@ it('asks for a game\'s kind in one place on the server', function (): void {
     ])->and($compares)->toBe([]);
 });
 
-it('takes no rules library and names no checkers on the server', function (): void {
+it('asks for a game\'s kind in one place per concern on the page side', function (): void {
+    // ADR 034 decision 27: a page looks at the kind of a game through one
+    // function per concern — `roomMoment()`, `phaseEnds()` and
+    // `waitsForOthers()`, `roomCues()`, `stripRows()`, `finalRows()`,
+    // `GAME_VIEWS` and `choiceParts()` — and the draughts parts themselves;
+    // no other file compares a kind or a mechanic with a board game's, or
+    // reads the state's match (a game's drawing has a case per mechanic).
+    $js = resource_path('js');
+    $readers = [];
+    $pattern = "/\\.kind\\s*[!=]==\\s*'(race|board)'|kind:\\s*'(race|board)'|\\bkindOf\\(|\\bstate\\??\\.match\\b|(?<![.\\w])match\\??\\.(phase|ply|sides|position|legal|offer|can_offer|result|last|moves|turn|since_ms|flag_ms|starts_ms)\\b|'draughts'/";
+
+    foreach (File::allFiles($js) as $file) {
+        $path = str_replace($js.'/', '', $file->getPathname());
+
+        if (! in_array($file->getExtension(), ['ts', 'tsx'], true)
+            || str_ends_with($path, '.test.ts')
+            || str_starts_with($path, 'components/rooms/draughts/')) {
+            continue;
+        }
+
+        if (preg_match($pattern, (string) file_get_contents($file->getPathname())) === 1) {
+            $readers[] = $path;
+        }
+    }
+
+    sort($readers);
+
+    expect($readers)->toBe([
+        'components/rooms/catalog.ts',
+        'components/rooms/final.ts',
+        'components/rooms/game-drawing.tsx',
+        'components/rooms/kinds.ts',
+        'components/rooms/motion.ts',
+        'components/rooms/rivalry.ts',
+        'components/rooms/sound-cues.ts',
+        'rooms/clock.ts',
+        'rooms/contract.ts',
+    ]);
+});
+
+it('takes no rules library and names no checkers on the server or the pages', function (): void {
     // ADR 034 decisions 2 and 32: the oracle's library runs only in its script;
-    // the game is draughts. (The page side follows in D4.)
+    // the game is draughts, on the server and on the pages (D4).
     $wrong = [];
-    $roots = [app_path(), base_path('routes'), base_path('database'), config_path(), base_path('tests')];
+    $roots = [app_path(), base_path('routes'), base_path('database'), config_path(), base_path('tests'), resource_path('js'), base_path('lang')];
 
     foreach ($roots as $root) {
         foreach (File::allFiles($root) as $file) {

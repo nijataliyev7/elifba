@@ -84,9 +84,21 @@ it('sends a page only its own speaker\'s room sounds, as content URLs with the f
     $screen = $sounds->urls(RoomSpeaker::Screen);
     $phone = $sounds->urls(RoomSpeaker::Phone);
 
-    expect(array_keys($screen))->toBe(['countdown', 'go', 'study', 'question', 'clock', 'close', 'ranking', 'place', 'roll', 'fanfare', 'join'])
-        ->and(array_keys($phone))->toBe(['tap', 'undo', 'sent', 'right', 'wrong'])
+    expect(array_keys($screen))->toBe(['countdown', 'go', 'study', 'question', 'clock', 'close', 'ranking', 'place', 'roll', 'fanfare', 'join', 'move', 'capture', 'crown'])
+        ->and(array_keys($phone))->toBe(['tap', 'undo', 'sent', 'right', 'wrong', 'offer'])
         ->and($phone['tap'])->toBe(asset('content/rooms/sounds/tap.mp3').'?v='.$sounds->version);
+});
+
+it('keeps a board game\'s four sounds light: a move, a capture and a crown under 24 KB together, an offer under 8 KB', function (): void {
+    $bytes = static fn (RoomSound ...$sounds): int => array_sum(array_map(
+        static fn (RoomSound $sound): int => (int) filesize(base_path('content/assets/rooms/sounds/'.$sound->value.'.mp3')),
+        $sounds,
+    ));
+
+    expect($bytes(RoomSound::Move, RoomSound::Capture, RoomSound::Crown))->toBeLessThan(24 * 1024)
+        ->and($bytes(RoomSound::Offer))->toBeLessThan(8 * 1024)
+        ->and([RoomSound::Move->speaker(), RoomSound::Capture->speaker(), RoomSound::Crown->speaker(), RoomSound::Offer->speaker()])
+        ->toBe([RoomSpeaker::Screen, RoomSpeaker::Screen, RoomSpeaker::Screen, RoomSpeaker::Phone]);
 });
 
 it('names the same room sounds on the page as the content does, each for one speaker', function (): void {

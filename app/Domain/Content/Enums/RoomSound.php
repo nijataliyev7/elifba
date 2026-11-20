@@ -4,12 +4,13 @@ namespace App\Domain\Content\Enums;
 
 /**
  * The sounds of a room game (docs/architecture.md §12 "Room content", ADR
- * 025 "Sound", ADR 028), one file each in `content/rooms/sounds.json`. The
- * page decides when one plays (`components/rooms/sound-cues.ts`, which names
- * the same values); nothing audible before the reveal tells right from
- * wrong: `Clock` is the same for everyone and `Sent` one sound for every
- * answer, and `Right` and `Wrong` play only from the reveal, on the viewer's
- * own phone. Separate from the children's `Sound` and `content/sounds.json`.
+ * 025 "Sound", ADR 028; a board game's four, ADR 034 decision 31), one
+ * file each in `content/rooms/sounds.json`. The page decides when one
+ * plays (`components/rooms/sound-cues.ts`, which names the same values);
+ * nothing audible before the reveal tells right from wrong: `Clock` is the
+ * same for everyone and `Sent` one sound for every answer, and `Right` and
+ * `Wrong` play only from the reveal, on the viewer's own phone. Separate
+ * from the children's `Sound` and `content/sounds.json`.
  */
 enum RoomSound: string
 {
@@ -46,6 +47,15 @@ enum RoomSound: string
     /** The screen, between games: a player joined. */
     case Join = 'join';
 
+    /** The screen, in a board game: a move the page saw arrive, a piece put down. */
+    case Move = 'move';
+
+    /** The screen, in a board game: a move that took one piece or more, in place of `Move`. */
+    case Capture = 'capture';
+
+    /** The screen, in a board game: that move crowned a man, after its `Move` or `Capture`. */
+    case Crown = 'crown';
+
     /** A phone: the viewer's own tap, the same for every item. */
     case Tap = 'tap';
 
@@ -61,10 +71,13 @@ enum RoomSound: string
     /** A phone, from the reveal: the viewer's answer was wrong. */
     case Wrong = 'wrong';
 
+    /** A phone, in a board game: a draw offer arrives at the viewer. */
+    case Offer = 'offer';
+
     public function speaker(): RoomSpeaker
     {
         return match ($this) {
-            self::Tap, self::Undo, self::Sent, self::Right, self::Wrong => RoomSpeaker::Phone,
+            self::Tap, self::Undo, self::Sent, self::Right, self::Wrong, self::Offer => RoomSpeaker::Phone,
             default => RoomSpeaker::Screen,
         };
     }

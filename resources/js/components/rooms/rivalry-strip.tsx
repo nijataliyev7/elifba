@@ -8,18 +8,16 @@ import {
     overtakeOf,
     pairBefore,
     rivalPair,
+    stripMoment,
 } from '@/components/rooms/rivalry';
-import type { RivalPair } from '@/components/rooms/rivalry';
+import type { RivalPair, TotalChange } from '@/components/rooms/rivalry';
 import { useCountUp } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Translate } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type {
-    RoomGame,
     RoomPlayer,
     RoomRankedPlayer,
-    RoomResult,
-    RoomRound,
     RoomSpent,
     RoomState,
 } from '@/rooms/contract';
@@ -58,26 +56,26 @@ function signature(pair: RivalPair | null): string {
     const side = (row: RoomRankedPlayer | null) =>
         row === null ? '-' : `${row.player_id}:${row.points}:${row.place}`;
 
-    return `${pair.mode}|${pair.mine}|${side(pair.left)}|${side(pair.right)}|${pair.more}`;
+    return `${pair.mode}|${pair.unit}|${pair.mine}|${side(pair.left)}|${side(pair.right)}|${pair.more}`;
 }
 
 /**
  * The pair a page draws for a live round (ADR 027 decisions 3 and 15),
  * with the pair it drew last before this moment — the round's question,
- * or the reveal before — and, in a reveal, who took the lead. `viewer` is
- * the phone's `me.player_id`; the screen passes null, since it is the
- * host's session but has no viewer (decision 7). A page that drew nothing
- * before (opened on the reveal) has no previous pair, and so no overtake.
- * The pair is the state's; the page keeps only what it drew.
+ * or the reveal before — and, in a reveal, who took the lead; for a live
+ * match the same at each move (`stripMoment()`, ADR 034 decision 24).
+ * `viewer` is the phone's `me.player_id`; the screen passes null, since it
+ * is the host's session but has no viewer (decision 7). A page that drew
+ * nothing before (opened on the reveal) has no previous pair, and so no
+ * overtake. The pair is the state's; the page keeps only what it drew.
  */
 export function useRivalry(
     state: RoomState,
-    game: RoomGame,
-    round: RoomRound,
     viewer: string | null,
-): Rivalry {
+): Rivalry & { key: string } {
     const pair = rivalPair(state, viewer);
-    const key = `${game.id}|${round.index}|${round.phase === 'reveal' ? 'reveal' : 'open'}`;
+    const moment = stripMoment(state);
+    const key = moment.key;
     const sign = signature(pair);
     const [drawn, setDrawn] = useState<{
         key: string;
@@ -98,11 +96,19 @@ export function useRivalry(
     }, [key, sign, pair]);
 
     return {
+        key,
         pair,
         previous,
-        overtake: round.phase === 'reveal' ? overtakeOf(previous, pair) : null,
+        overtake: moment.moves ? overtakeOf(previous, pair) : null,
     };
 }
+
+/**
+ * What a side shows beside its name in place of a place label: a match's
+ * piece of its colour before the name and its clock after it (ADR 034
+ * decision 23), by `player_id`.
+ */
+export type SideMarks = Record<string, { lead?: ReactNode; tail?: ReactNode }>;
 
 /**
  * Rivals face to face (docs/frontend.md rule 15 "Rivals face to face",
@@ -134,22 +140,25 @@ export function RivalryStrip({
     placeLabels,
     icons,
     moves,
+    marks,
     big = false,
 }: {
     pair: RivalPair;
     previous: RivalPair | null;
     overtake: string | null;
-    /** The state's ranking: the totals now of the sides drawn before. */
+    /** The strip's rows now: the totals now of the sides drawn before (`stripRows()`). */
     ranking: RoomRankedPlayer[];
-    /** The round's results, in a reveal. */
-    results: RoomResult[] | null;
+    /** What the moment changed each total by: a reveal's results, a match's capture (`stripChange()`). */
+    results: TotalChange[] | null;
     /** The taunts counted at this close, in a reveal (T2): the count starts before their cost. */
     spent?: RoomSpent[];
     players: RoomPlayer[];
     placeLabels: string[];
     icons: RivalryIcons | null;
-    /** A reveal the page saw begin (`RoomMotion.strip`). */
+    /** A reveal the page saw begin (`RoomMotion.strip`), or a capture it saw arrive. */
     moves: boolean;
+    /** A match's piece and clock by each side's name. */
+    marks?: SideMarks;
     big?: boolean;
 }) {
     const { t } = useTranslation();
@@ -219,6 +228,7 @@ export function RivalryStrip({
                         players={names}
                         placeLabels={placeLabels}
                         icons={icons}
+                        marks={marks}
                         big={big}
                     />
                     <Side
@@ -230,6 +240,7 @@ export function RivalryStrip({
                         players={names}
                         placeLabels={placeLabels}
                         icons={icons}
+                        marks={marks}
                         big={big}
                     />
                 </div>
@@ -303,17 +314,27 @@ function gapWords(
         return t('rooms.rivalry.no_points');
     }
 
+    // A match counts pieces: «:count daş öndəsiniz» (ADR 034 decision 23).
+    const pieces = pair.unit === 'pieces';
+
     if (pair.mine) {
         return pair.gap > 0
-            ? t('rooms.rivalry.ahead', { count: pair.gap })
+            ? t(pieces ? 'rooms.rivalry.pieces_ahead' : 'rooms.rivalry.ahead', {
+                  count: pair.gap,
+              })
             : pair.gap < 0
-              ? t('rooms.rivalry.behind', { count: -pair.gap })
+              ? t(
+                    pieces
+                        ? 'rooms.rivalry.pieces_behind'
+                        : 'rooms.rivalry.behind',
+                    { count: -pair.gap },
+                )
               : t('rooms.rivalry.level');
     }
 
     return pair.gap === 0
         ? t('rooms.rivalry.level_others')
-        : t('rooms.rivalry.leads', {
+        : t(pieces ? 'rooms.rivalry.pieces_leads' : 'rooms.rivalry.leads', {
               name: nameOf(pair.leader),
               count: Math.abs(pair.gap),
           });
@@ -347,6 +368,7 @@ function Side({
     players,
     placeLabels,
     icons,
+    marks,
     big,
 }: {
     row: RoomRankedPlayer | null;
@@ -357,6 +379,7 @@ function Side({
     players: Map<string, RoomPlayer>;
     placeLabels: string[];
     icons: RivalryIcons | null;
+    marks?: SideMarks;
     big: boolean;
 }) {
     const { t } = useTranslation();
@@ -377,7 +400,13 @@ function Side({
             ? (placeLabels[row.place - 1] ?? null)
             : null;
     const extra = big ? 'text-[2.2vh]' : 'text-xs';
+    const mark = marks?.[row.player_id];
     const parts: ReactNode[] = [
+        mark?.lead !== undefined && (
+            <span key="lead" className="flex shrink-0 items-center">
+                {mark.lead}
+            </span>
+        ),
         label !== null && (
             <span
                 key="place"
@@ -401,6 +430,11 @@ function Side({
                 src={icons.leader}
                 className={cn(big ? 'size-[3.6vh]' : '-mt-0.5 size-[18px]')}
             />
+        ),
+        mark?.tail !== undefined && (
+            <span key="tail" className="flex shrink-0 items-center">
+                {mark.tail}
+            </span>
         ),
         players.get(row.player_id)?.present === false && (
             <span

@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
+import { clockLevelText } from '@/components/rooms/catalog';
 import { useTranslation } from '@/hooks/use-translation';
 import { past as pastRoute, show } from '@/routes/rooms';
 import type { RoomClockLevel, RoomMechanic } from '@/rooms/contract';
@@ -76,14 +77,22 @@ export default function RoomsPast({ past, retention_days: days }: Props) {
                                                         key={position}
                                                         className="rounded-md bg-muted px-1.5 py-0.5 text-xs"
                                                     >
-                                                        {t('rooms.index.game', {
-                                                            game: t(
-                                                                `rooms.mechanics.${game.mechanic}.name`,
-                                                            ),
-                                                            difficulty: t(
-                                                                `rooms.difficulty.${game.difficulty}`,
-                                                            ),
-                                                        })}
+                                                        {/* A board game's level is its clock: «Şaşki · 5+3» (ADR 034 decision 17). */}
+                                                        {game.clock !==
+                                                        undefined
+                                                            ? `${t(`rooms.mechanics.${game.mechanic}.name`)} · ${clockLevelText(t, game.clock)}`
+                                                            : t(
+                                                                  'rooms.index.game',
+                                                                  {
+                                                                      game: t(
+                                                                          `rooms.mechanics.${game.mechanic}.name`,
+                                                                      ),
+                                                                      difficulty:
+                                                                          t(
+                                                                              `rooms.difficulty.${game.difficulty}`,
+                                                                          ),
+                                                                  },
+                                                              )}
                                                     </span>
                                                 ),
                                             )}

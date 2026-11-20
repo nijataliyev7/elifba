@@ -100,7 +100,15 @@ export function phaseEnds(state: RoomState): number | null {
     const round = state.round;
 
     if (round === null) {
-        return null;
+        // A live match ends its phase at two moments only: the clock's start and the flag (ADR 034 decision 18).
+        switch (state.match?.phase) {
+            case 'countdown':
+                return state.match.starts_ms;
+            case 'play':
+                return state.match.flag_ms;
+            default:
+                return null;
+        }
     }
 
     switch (round.phase) {
@@ -140,6 +148,11 @@ export function waitsForSignal(state: RoomState, answers = true): boolean {
  */
 export function waitsForOthers(state: RoomState, answers = true): boolean {
     const round = state.round;
+
+    // A live match waits for the other seat's act, which only a signal or a state tells (ADR 034 decision 18).
+    if (state.match !== null && state.match.phase !== 'over') {
+        return true;
+    }
 
     return (
         round !== null &&
@@ -284,7 +297,8 @@ export function followRoom(options: {
     return {
         show: (state) => {
             const round = state.round;
-            const key = `${state.game?.id ?? ''}.${round?.id ?? ''}.${round?.phase ?? ''}`;
+            // A match's phase is its ply's: each move begins another (ADR 034 decision 29).
+            const key = `${state.game?.id ?? ''}.${round?.id ?? state.match?.ply ?? ''}.${round?.phase ?? state.match?.phase ?? ''}`;
             const ends = phaseEnds(state);
             const now = options.clock.now();
             const ended = ends !== null && now !== null && ends - now <= 0;

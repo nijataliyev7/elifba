@@ -8,6 +8,9 @@ import {
     pairBefore,
     rivalPair,
     splitOf,
+    stripChange,
+    stripMoment,
+    stripRows,
 } from './rivalry';
 import type { RivalPair } from './rivalry';
 
@@ -468,5 +471,150 @@ describe('interimPair', () => {
         expect(paid.left?.points).toBe(26);
         expect(paid.right?.points).toBe(38);
         expect(paid.gap).toBe(-12);
+    });
+});
+
+/*
+ * A match's strip (ADR 034 decisions 23 and 24): always its two seats, the
+ * totals their pieces left; a seat's phone «Siz» against the other seat,
+ * a watcher and the screen white against black; 👑 by the side with more
+ * pieces and by neither when level; a capture's count starts from the
+ * pieces before it; a change of the lead at a move is an overtake.
+ */
+describe('a match on the strip', () => {
+    type Match = NonNullable<RoomState['match']>;
+
+    const play = RoomState.parse(
+        fixtures['../../../../tests/Fixtures/rooms/state.match.play.json'],
+    );
+    const watch = RoomState.parse(
+        fixtures['../../../../tests/Fixtures/rooms/state.match.watch.json'],
+    );
+    const match = play.match as Match;
+    const [white, black] = match.sides;
+    /** The same match with these pieces left and this last move. */
+    const pieces = (
+        source: RoomState,
+        counts: [number, number],
+        last: Match['last'] = match.last,
+        ply = match.ply,
+    ): RoomState =>
+        ({
+            ...source,
+            match: {
+                ...(source.match as Match),
+                ply,
+                last,
+                sides: [
+                    { ...white, pieces: counts[0] },
+                    { ...black, pieces: counts[1] },
+                ],
+            },
+        }) as RoomState;
+
+    it('takes the two seats with their pieces, the side with more first-placed', () => {
+        expect(stripRows(play)).toEqual({
+            rows: [
+                { player_id: white.player_id, points: 12, place: null },
+                { player_id: black.player_id, points: 12, place: null },
+            ],
+            seats: true,
+        });
+        expect(
+            stripRows(pieces(play, [9, 11])).rows.map((row) => row.place),
+        ).toEqual([2, 1]);
+        // A race's rows are its ranking.
+        expect(stripRows({ ranking: play.ranking, match: null }).rows).toBe(
+            play.ranking,
+        );
+    });
+
+    it("puts a seat on the left of its own phone, white on a watcher's and the screen's", () => {
+        const mine = rivalPair(pieces(play, [11, 12]), play.me.player_id);
+
+        expect(mine).toMatchObject({
+            mode: 'duel',
+            unit: 'pieces',
+            mine: true,
+            gap: -1,
+        });
+        expect(mine?.left?.player_id).toBe(white.player_id);
+        expect(mine?.leader).toBe(black.player_id);
+
+        // Black's own phone: black on the left, the board turned round elsewhere.
+        expect(rivalPair(play, black.player_id)?.left?.player_id).toBe(
+            black.player_id,
+        );
+
+        for (const viewer of [watch.me.player_id, null]) {
+            const pair = rivalPair(watch, viewer);
+
+            expect(pair?.mine).toBe(false);
+            expect([pair?.left?.player_id, pair?.right?.player_id]).toEqual([
+                white.player_id,
+                black.player_id,
+            ]);
+            expect(pair?.leader).toBeNull();
+        }
+    });
+
+    it('counts a capture from the pieces before it, and nothing for a quiet move', () => {
+        const capture = pieces(
+            play,
+            [12, 10],
+            {
+                path: ['d4', 'f6', 'd8'],
+                captured: ['e5', 'e7'],
+                crowned: false,
+            },
+            3,
+        );
+        // The piece that moved is white's (it stands on the path's end).
+        const moved = {
+            ...capture,
+            match: {
+                ...(capture.match as Match),
+                position: [
+                    ...(capture.match as Match).position.filter(
+                        (piece) => piece.square !== 'd8',
+                    ),
+                    { square: 'd8', color: 'white', king: true },
+                ],
+            },
+        } as RoomState;
+        const change = stripChange(moved);
+
+        expect(change.results).toEqual([
+            { player_id: black.player_id, points: -2 },
+        ]);
+
+        const pair = rivalPair(moved, null);
+
+        expect(pair).not.toBeNull();
+        expect(
+            pairBefore(pair as RivalPair, change.results, change.spent),
+        ).toMatchObject({
+            left: { points: 12 },
+            right: { points: 12 },
+            gap: 0,
+        });
+        expect(stripChange(play).results).toBeNull();
+    });
+
+    it('is an overtake when the lead changes at a move, each ply its own moment', () => {
+        const level = rivalPair(play, null);
+        const ahead = rivalPair(pieces(play, [12, 11], match.last, 3), null);
+        const behind = rivalPair(pieces(play, [10, 11], match.last, 4), null);
+
+        expect(overtakeOf(level, ahead)).toBe(white.player_id);
+        expect(overtakeOf(ahead, behind)).toBe(black.player_id);
+        expect(overtakeOf(behind, behind)).toBeNull();
+        expect(stripMoment(play)).toEqual({
+            key: `${play.game?.id}|ply:2`,
+            moves: true,
+        });
+        expect(stripMoment(pieces(play, [12, 12], match.last, 3)).key).not.toBe(
+            stripMoment(play).key,
+        );
     });
 });

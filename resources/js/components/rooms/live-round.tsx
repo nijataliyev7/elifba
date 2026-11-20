@@ -139,7 +139,7 @@ export function LiveRound({
     const now = useServerNow(clock, true);
     const view = MECHANIC_VIEWS[game.mechanic];
     const previous = usePreviousReveal(game, round, state.ranking);
-    const rivalry = useRivalry(state, game, round, state.me.player_id);
+    const rivalry = useRivalry(state, state.me.player_id);
     const spent = round.reveal?.spent ?? [];
     const rival =
         rivalry.pair !== null &&
@@ -256,7 +256,7 @@ export function LiveRound({
             {rivalry.pair !== null && (
                 <div className="relative">
                     <RivalryStrip
-                        key={`strip:${round.index}:${round.phase === 'reveal' ? 'reveal' : 'open'}`}
+                        key={`strip:${rivalry.key}`}
                         pair={rivalry.pair}
                         previous={rivalry.previous}
                         overtake={rivalry.overtake}

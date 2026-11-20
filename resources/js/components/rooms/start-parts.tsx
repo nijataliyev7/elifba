@@ -1,6 +1,6 @@
 import { Pencil, Trophy, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { roundsOf } from '@/components/rooms/catalog';
+import { choiceParts } from '@/components/rooms/catalog';
 import type { SetupChoice } from '@/components/rooms/catalog';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import { RoomConfirm } from '@/components/rooms/room-confirm';
@@ -52,15 +52,11 @@ export function useTopOnTurn(view: string): void {
     }, [view]);
 }
 
-/** «Orta · 10 raund»: the choice's difficulty and rounds. */
-export function useChoiceLine(): (choice: {
-    difficulty: number;
-    rounds?: number;
-}) => string {
+/** «Orta · 10 raund», or a board game's «5+3»: the choice's line (`choiceParts()`). */
+export function useChoiceLine(): (choice: SetupChoice) => string {
     const { t } = useTranslation();
 
-    return (choice) =>
-        `${t(`rooms.difficulty.${choice.difficulty}`)} · ${t('rooms.show.rounds', { count: roundsOf(choice) })}`;
+    return (choice) => choiceParts(t, choice).line;
 }
 
 /**

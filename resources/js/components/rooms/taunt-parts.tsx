@@ -463,6 +463,7 @@ export function TauntThrow({
     hidden,
     onHiddenChange,
     onThrown,
+    noPoints = 'rooms.taunts.no_points',
 }: {
     roomId: string;
     state: RoomState;
@@ -479,6 +480,8 @@ export function TauntThrow({
     onHiddenChange: (hidden: boolean) => void;
     /** After a receipt: the page asks for the state now. */
     onThrown: () => void;
+    /** What the fan says at a balance of 0: a match's «Bu oyunda atmaca haqqınız qalmayıb» (ADR 034 decision 22). */
+    noPoints?: 'rooms.taunts.no_points' | 'rooms.taunts.none_left';
 }) {
     const { t } = useTranslation();
     // The fan is open in the phase it was opened in only.
@@ -565,7 +568,7 @@ export function TauntThrow({
             : view.reason === 'first_round'
               ? t('rooms.taunts.first_round')
               : view.reason === 'no_points'
-                ? t('rooms.taunts.no_points')
+                ? t(noPoints)
                 : null;
 
     const send = (key: string) => {

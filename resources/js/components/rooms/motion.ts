@@ -1,4 +1,9 @@
-import type { RoomRankedPlayer, RoomRound, RoomState } from '@/rooms/contract';
+import type {
+    RoomMatch,
+    RoomRankedPlayer,
+    RoomRound,
+    RoomState,
+} from '@/rooms/contract';
 
 /*
  * A room game's motion (docs/frontend.md rule 15 "Motion", ADR 025), the
@@ -8,16 +13,23 @@ import type { RoomRankedPlayer, RoomRound, RoomState } from '@/rooms/contract';
  * adds up: a moment is what the state says, a place is the server's.
  */
 
-/** The moment of a room a state shows: the game, the round's index and its phase. */
+/**
+ * The moment of a room a state shows: the game, the round's index and its
+ * phase — or, in a board game, the ply and the match's phase (ADR 034
+ * decision 29).
+ */
 export type RoomMoment = {
     game: string | null;
     round: number | null;
-    phase: 'none' | 'lobby' | RoomRound['phase'] | 'over';
+    phase: 'none' | 'lobby' | RoomRound['phase'] | RoomMatch['phase'];
 };
 
 /**
  * What the page draws for a state: nothing (no live state), the lobby
- * before a game, a round of a live game in its phase, or a game's end.
+ * before a game, a round of a live race in its phase, a live match at its
+ * ply — every move is a moment — or a game's end. This is the one place
+ * the moment looks at the game's kind (ADR 034 decision 27): a live race
+ * has its `round`, a live board game its `match`.
  */
 export function roomMoment(state: RoomState | null): RoomMoment {
     if (state === null) {
@@ -34,15 +46,23 @@ export function roomMoment(state: RoomState | null): RoomMoment {
         return { game: game.id, round: null, phase: 'over' };
     }
 
-    if (state.round === null) {
-        return { game: game.id, round: null, phase: 'lobby' };
+    if (state.round !== null) {
+        return {
+            game: game.id,
+            round: state.round.index,
+            phase: state.round.phase,
+        };
     }
 
-    return {
-        game: game.id,
-        round: state.round.index,
-        phase: state.round.phase,
-    };
+    if (state.match !== null) {
+        return {
+            game: game.id,
+            round: state.match.ply,
+            phase: state.match.phase,
+        };
+    }
+
+    return { game: game.id, round: null, phase: 'lobby' };
 }
 
 /**
@@ -81,10 +101,14 @@ export function sawBegin(
  * reveal the page saw begin. During the countdown, the study and the
  * question it stands still, whatever changed, since nothing on it may say
  * anything about the open round; on a reveal the page opened on it is
- * drawn complete and still.
+ * drawn complete and still. A match hides nothing (ADR 034 decision 24):
+ * its strip moves at a move the page saw arrive.
  */
 export function stripMoves(first: RoomMoment, current: RoomMoment): boolean {
-    return current.phase === 'reveal' && sawBegin(first, current, 'phase');
+    return (
+        (current.phase === 'reveal' || current.phase === 'play') &&
+        sawBegin(first, current, 'phase')
+    );
 }
 
 /**

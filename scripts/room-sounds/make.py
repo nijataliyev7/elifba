@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 The sounds of a room game (docs/architecture.md §12 "Room content", ADR
-025 "Sound", ADR 028): the screen's — the room's speaker — and a phone's
-quiet cues of its own. Each file is made here from recordings of the VS
-Chamber Orchestra: Community Edition (CC0-1.0, downloaded from a pinned
-commit and checked by SHA-256) and from our own synthesis (MIT); ffmpeg
-levels the set to one loudness and writes the mono MP3 files a room page
-plays. Plain Python 3 (standard library only) and ffmpeg.
+025 "Sound", ADR 028; a board game's four, ADR 034 decision 31): the
+screen's — the room's speaker — and a phone's quiet cues of its own. Each
+file is made here from recordings of the VS Chamber Orchestra: Community
+Edition (CC0-1.0, downloaded from a pinned commit and checked by
+SHA-256) and from our own synthesis (MIT); ffmpeg levels the set to one
+loudness and writes the mono MP3 files a room page plays. Plain Python 3
+(standard library only) and ffmpeg.
 
     python3 scripts/room-sounds/make.py            # writes content/assets/rooms/sounds/*.mp3
     python3 scripts/room-sounds/make.py --out DIR  # writes them elsewhere, to listen first
@@ -394,6 +395,19 @@ def reverb(signal, size, wet, damp=0.35, predelay=0.012):
 
 MARIMBA = ((1.0, 1.0, 1.0), (3.9, 0.22, 0.25), (2.0, 0.12, 0.6), (9.2, 0.03, 0.08))
 ROUND_NOTE = ((1.0, 1.0, 1.0), (2.0, 0.18, 0.5), (3.0, 0.04, 0.3))
+# A board game's (ADR 034 decision 31): a wooden piece's inharmonic modes, a
+# small bell's (a glockenspiel bar's) and a vibraphone bar's partials.
+WOOD = ((1.0, 1.0, 1.0), (1.68, 0.55, 0.7), (2.71, 0.3, 0.45), (3.73, 0.15, 0.3))
+GLOCK = ((1.0, 1.0, 1.0), (2.76, 0.18, 0.35), (5.40, 0.06, 0.15), (2.0, 0.04, 0.5))
+VIBES = ((1.0, 1.0, 1.0), (4.0, 0.12, 0.25), (10.0, 0.02, 0.08))
+
+
+def wood(r, f0, length, decay, body=0.45):
+    """A piece put down on a wooden board: four damped wooden modes from `f0`, a short 210 Hz body of the board, a soft click; its last 30 ms fade."""
+    out = tone(f0, length, attack=0.0004, decay=decay, partials=WOOD)
+    place(out, 0.0, tone(210.0, length, attack=0.0008, decay=0.02), body)
+    place(out, 0.0, shaped(bandpass(noise(0.012, r), 3000.0, 0.8), 0.0002, 0.0015), 0.25)
+    return fade_out(lowpass(out, 5000), 0.03)
 
 
 # ── the screen: the room's moments ───────────────────────────────────────
@@ -517,6 +531,36 @@ def join():
     return fade_out(out, 0.02)
 
 
+# ── the screen: a board game's moments (ADR 034 decision 31) ─────────────
+
+
+def move():
+    """A move the page saw arrive (our synthesis): a piece put down on a wooden board, its modes from 820 Hz — above the clock's tick, below the tap."""
+    return wood(rng("move"), 820.0, 0.11, decay=0.022)
+
+
+def capture():
+    """A move that took pieces (our synthesis): the move's knock, then a lower, fuller one 70 ms later over a short low thud."""
+    r = rng("capture")
+    length = 0.24
+    out = silence(length)
+    place(out, 0.0, wood(r, 820.0, 0.12, decay=0.022), 0.75)
+    place(out, 0.07, wood(r, 700.0, 0.16, decay=0.028, body=0.7), 1.0)
+    place(out, 0.07, fade_out(kick(0.16, 130.0, 62.0, 0.03, 0.05, 0.0, r), 0.06), 0.55)
+    return fade_out(out[: seconds(length)], 0.05)
+
+
+def crown():
+    """A man becomes a king, after the move's sound (our synthesis): four small bells up C6–E6–G6–C7, 55 ms apart, the last ringing, a small room — no fanfare."""
+    length = 0.5
+    out = silence(length)
+    for n, name in enumerate(("C6", "E6", "G6", "C7")):
+        at = n * 0.055
+        place(out, at, tone(note(name), length - at, attack=0.0015, decay=0.07 if n < 3 else 0.2, partials=GLOCK), 0.55 + 0.12 * n)
+    out = reverb(out, size=0.4, wet=0.16)
+    return fade_out(out[: seconds(length)], 0.12)
+
+
 # ── a phone's quiet cues ─────────────────────────────────────────────────
 
 
@@ -549,6 +593,16 @@ def wrong():
     out = silence(length)
     for f, at in ((note("E4"), 0.0), (note("C4"), 0.12)):
         place(out, at, tone(f, length - at, attack=0.006, decay=0.11, partials=ROUND_NOTE), 0.9)
+    return fade_out(out[: seconds(length)], 0.08)
+
+
+def offer():
+    """A draw offer arrives at the viewer (our synthesis): two soft vibraphone-like notes up a fourth, E5 then A5 — never an alarm."""
+    length = 0.36
+    out = silence(length)
+    for at, name, gain in ((0.0, "E5", 0.7), (0.11, "A5", 0.85)):
+        place(out, at, tone(note(name), length - at, attack=0.008, decay=0.13, partials=VIBES), gain)
+    out = reverb(out, size=0.35, wet=0.12)
     return fade_out(out[: seconds(length)], 0.08)
 
 
@@ -624,11 +678,15 @@ CUES = {
     "roll": roll,
     "fanfare": fanfare,
     "join": join,
+    "move": move,
+    "capture": capture,
+    "crown": crown,
     "tap": tap,
     "undo": undo,
     "sent": sent,
     "right": right,
     "wrong": wrong,
+    "offer": offer,
 }
 
 

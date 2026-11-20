@@ -4,12 +4,13 @@ import type { CSSProperties } from 'react';
 import { finalTier, finalTimeline, holdsFirst } from '@/components/rooms/final';
 import type { FinalTier } from '@/components/rooms/final';
 import { celebrate } from '@/components/rooms/motion-dom';
+import { SpentMark } from '@/components/rooms/taunt-parts';
 import { standingGroups } from '@/components/rooms/standing-groups';
 import type { StandingGroup } from '@/components/rooms/standing-groups';
 import { useCountUp } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import type { RoomPlayer, RoomRankedPlayer } from '@/rooms/contract';
+import type { RoomPlayer, RoomRankedPlayer, RoomSpent } from '@/rooms/contract';
 
 /**
  * The final of a room game (docs/frontend.md rule 15 "The final", ADR
@@ -36,6 +37,7 @@ export function FinalStanding({
     animate,
     big = false,
     forRoom = false,
+    spent = [],
 }: {
     ranking: RoomRankedPlayer[];
     players: RoomPlayer[];
@@ -47,10 +49,13 @@ export function FinalStanding({
     big?: boolean;
     /** A phone in a room without a screen: its confetti is the room's, whoever won. */
     forRoom?: boolean;
+    /** The taunts counted at the game's end, by row: a match's «−1» beside its points (ADR 034 decision 22). */
+    spent?: RoomSpent[];
 }) {
     const groups = standingGroups(ranking, placeLabels);
     const timeline = finalTimeline(groups, big ? 'screen' : 'phone');
     const names = new Map(players.map((player) => [player.id, player.name]));
+    const costs = new Map(spent.map((cost) => [cost.player_id, cost.count]));
     const winnerAt = timeline.winnerAt;
     const cheers =
         animate &&
@@ -93,6 +98,7 @@ export function FinalStanding({
             group={group}
             tier={finalTier(group.place)}
             names={names}
+            costs={costs}
             me={me}
             opensAt={animate ? timeline.opensAt[index] : null}
             big={big}
@@ -164,6 +170,7 @@ function Place({
     group,
     tier,
     names,
+    costs,
     me,
     opensAt,
     big,
@@ -171,6 +178,7 @@ function Place({
     group: StandingGroup;
     tier: FinalTier;
     names: Map<string, string | null>;
+    costs: Map<string, number>;
     me: string | null;
     opensAt: number | null;
     big: boolean;
@@ -261,6 +269,12 @@ function Place({
                                 <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                     {t('rooms.show.you')}
                                 </span>
+                            )}
+                            {(costs.get(row.player_id) ?? 0) > 0 && (
+                                <SpentMark
+                                    count={costs.get(row.player_id) ?? 0}
+                                    className={big ? 'text-[0.6em]' : 'text-sm'}
+                                />
                             )}
                             <FinalPoints
                                 points={row.points}

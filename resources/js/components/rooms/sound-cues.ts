@@ -1,8 +1,14 @@
-import { finalTier, finalTimeline } from '@/components/rooms/final';
+import { slideOf } from '@/components/rooms/draughts/board';
+import { finalRows, finalTier, finalTimeline } from '@/components/rooms/final';
 import { momentKey, REVEAL_MS, roomMoment } from '@/components/rooms/motion';
 import { standingGroups } from '@/components/rooms/standing-groups';
 import { TAUNT_REACTION_MS } from '@/components/rooms/taunts';
-import type { RoomState } from '@/rooms/contract';
+import type {
+    RoomLastMove,
+    RoomMatch,
+    RoomMatchResult,
+    RoomState,
+} from '@/rooms/contract';
 import type { RoomSoundName, RoomSpeaker } from '@/rooms/sound';
 
 /*
@@ -30,6 +36,15 @@ import type { RoomSoundName, RoomSpeaker } from '@/rooms/sound';
  * false, ADR 028 and ADR 030 as amended 2026-11-19) a phone carries the
  * room: it plays the screen's cues as well as its own, the cheer
  * included, its final at a phone's pace (`carriesRoom()`).
+ *
+ * A match (ADR 034 decision 31) is the room's too: its countdown ending at
+ * `starts_ms`, `go` as the clock starts, then for each move the page saw
+ * arrive `move` — or `capture` — as the piece lands and `crown` after it
+ * when a man was crowned; the clock in the side to move's last
+ * `CLOCK_MS`, ending at its flag and stopped by the move; at its end
+ * `close` and the final of its own two places (`finalRows()`). A phone
+ * plays `offer` when a draw offer arrives at its viewer; never `sent`,
+ * `right` or `wrong`.
  *
  * A taunt is said (ADR 029 as amended 2026-11-19, decisions 47 and 48) by
  * the devices that draw its reaction: the target's phone, for a taunt of
@@ -107,7 +122,7 @@ type Heard = {
     moment: string;
     began: number | null;
     cues: RoomCue[];
-    beats: Partial<Record<'clock' | 'sent', RoomCue[]>>;
+    beats: Partial<Record<'clock' | 'sent' | 'offer', RoomCue[]>>;
     players: string[] | null;
 };
 
@@ -115,11 +130,12 @@ const now0 = (sound: RoomSoundName): RoomCue => ({ sound, at: 0 });
 
 /**
  * The cheer after the fanfare: who holds the final's first place, in the
- * state's ranking order (the server's, never re-sorted) — none named when
+ * order of the final's rows (the server's, never re-sorted: a race's
+ * ranking, a match's own standing — ADR 034 decision 26) — none named when
  * more than `MAX_NAMES` share it — and whether it is shared.
  */
 function cheer(state: RoomState, at: number): RoomCue {
-    const first = state.ranking
+    const first = finalRows(state)
         .filter((row) => row.place === 1)
         .map((row) => row.player_id);
 
@@ -138,7 +154,7 @@ function cheer(state: RoomState, at: number): RoomCue {
  * is quicker (`finalTimeline()`).
  */
 function finalCues(state: RoomState, pace: RoomSpeaker): RoomCue[] {
-    const groups = standingGroups(state.ranking, []);
+    const groups = standingGroups(finalRows(state), []);
     const timeline = finalTimeline(groups, pace);
 
     if (timeline.winnerAt === null) {
@@ -160,6 +176,94 @@ function finalCues(state: RoomState, pace: RoomSpeaker): RoomCue[] {
         { sound: 'fanfare', at: timeline.winnerAt },
         cheer(state, timeline.winnerAt + FANFARE_MS),
     ];
+}
+
+/** The endings a move made: the move that ended the game is heard before its close. */
+const MOVE_ENDINGS: ReadonlySet<RoomMatchResult['ending']> = new Set([
+    'no_moves',
+    'repetition',
+    'three_kings',
+    'main_road',
+    'balance',
+    'kings_only',
+]);
+
+/**
+ * A move's cues: `move`, or `capture` when it took a piece, as the piece
+ * lands (the board's slide, rule 15 "Motion"), then `crown` when a man was
+ * crowned.
+ */
+function moveCues(last: RoomLastMove): RoomCue[] {
+    const lands = slideOf(last).ms;
+
+    return [
+        { sound: last.captured.length > 0 ? 'capture' : 'move', at: lands },
+        ...(last.crowned ? [{ sound: 'crown' as const, at: lands + 120 }] : []),
+    ];
+}
+
+/** A match's end: the move that made it, then `close` (ADR 034 decision 31); a race's end has the final alone. */
+function endCues(match: RoomMatch | null): RoomCue[] {
+    if (match === null || match.phase !== 'over') {
+        return [];
+    }
+
+    if (match.last !== null && MOVE_ENDINGS.has(match.result.ending)) {
+        const moved = moveCues(match.last);
+
+        return [
+            ...moved,
+            {
+                sound: 'close',
+                at: Math.max(...moved.map((cue) => cue.at)) + 300,
+            },
+        ];
+    }
+
+    return [now0('close')];
+}
+
+/**
+ * A live match's moments, as the room's speaker plays them: the countdown
+ * ending at `starts_ms`; `go` as the clock starts; each later ply's move
+ * as it arrives; and, in the side to move's last `CLOCK_MS`, the clock
+ * ending at its flag — a beat of the ply, stopped by the next move.
+ */
+function hearMatch(match: RoomMatch, now: number | null, quiet: Heard): Heard {
+    if (match.phase === 'countdown') {
+        return now === null
+            ? quiet
+            : {
+                  ...quiet,
+                  cues: [
+                      {
+                          sound: 'countdown',
+                          at: match.starts_ms - now,
+                          ends: true,
+                      },
+                  ],
+              };
+    }
+
+    if (match.phase !== 'play') {
+        return quiet;
+    }
+
+    const left = now === null ? null : match.flag_ms - now;
+    const clock = left !== null && left > 0 && left <= CLOCK_MS + LEAD_MS;
+
+    return {
+        ...quiet,
+        began: match.since_ms,
+        cues:
+            match.ply === 0 || match.last === null
+                ? [now0('go')]
+                : moveCues(match.last),
+        beats:
+            clock && left !== null
+                ? { clock: [{ sound: 'clock', at: left, ends: true }] }
+                : {},
+    };
 }
 
 /** The room's moments, as the screen plays them — or a carrying phone, at its final's pace. */
@@ -189,13 +293,19 @@ function hearScreen(
     }
 
     if (state.game.phase === 'over') {
-        return { ...quiet, cues: finalCues(state, pace), players };
+        return {
+            ...quiet,
+            cues: [...endCues(state.match), ...finalCues(state, pace)],
+            players,
+        };
     }
 
     const round = state.round;
 
     if (round === null) {
-        return quiet;
+        return state.match === null
+            ? quiet
+            : hearMatch(state.match, now, quiet);
     }
 
     switch (round.phase) {
@@ -256,6 +366,25 @@ function hearPhone(state: RoomState | null): Heard {
         beats: {},
         players: null,
     };
+    const match = state?.game?.phase === 'live' ? state.match : null;
+
+    if (match !== null && match.phase === 'play') {
+        // A draw offer made to the viewer's seat: the side to move, whose offer it is not.
+        const seat = match.sides.find(
+            (side) => side.player_id === state?.me.player_id,
+        );
+        const toMe =
+            match.offer !== null &&
+            seat !== undefined &&
+            seat.color !== match.offer;
+
+        return {
+            ...quiet,
+            began: match.since_ms,
+            beats: toMe ? { offer: [now0('offer')] } : {},
+        };
+    }
+
     const round = state?.game?.phase === 'live' ? state.round : null;
 
     if (state === null || round === null) {

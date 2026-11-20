@@ -1,5 +1,5 @@
 {
-    "version": 2,
+    "version": 3,
     "sounds": {
         "countdown": "rooms/sounds/countdown.mp3",
         "go": "rooms/sounds/go.mp3",
@@ -12,10 +12,14 @@
         "roll": "rooms/sounds/roll.mp3",
         "fanfare": "rooms/sounds/fanfare.mp3",
         "join": "rooms/sounds/join.mp3",
+        "move": "rooms/sounds/move.mp3",
+        "capture": "rooms/sounds/capture.mp3",
+        "crown": "rooms/sounds/crown.mp3",
         "tap": "rooms/sounds/tap.mp3",
         "undo": "rooms/sounds/undo.mp3",
         "sent": "rooms/sounds/sent.mp3",
         "right": "rooms/sounds/right.mp3",
-        "wrong": "rooms/sounds/wrong.mp3"
+        "wrong": "rooms/sounds/wrong.mp3",
+        "offer": "rooms/sounds/offer.mp3"
     }
 }

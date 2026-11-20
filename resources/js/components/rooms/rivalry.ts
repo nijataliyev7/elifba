@@ -6,6 +6,9 @@ import type {
     RoomState,
 } from '@/rooms/contract';
 
+/** What a moment changed one row's total by: a round's result, or a match's capture (`stripChange()`). */
+export type TotalChange = RoomResult | { player_id: string; points: number };
+
 /*
  * Rivals face to face (docs/architecture.md §12 "Rivals face to face (P2)",
  * ADR 027 decisions 3–5 and 15), the part that is pure: which two rows of
@@ -14,6 +17,12 @@ import type {
  * pairs the page drew. The rows are taken in the order the server gave
  * them: nothing here sorts, sums or judges. The gap is the difference of
  * two of the server's totals and the split their ratio, both for show.
+ *
+ * A match (ADR 034 decisions 23 and 24) is always a duel of its two seats,
+ * its totals their pieces left, white then black; it hides nothing, so its
+ * strip moves at every move the page saw arrive. `stripRows()`,
+ * `stripChange()` and `stripMoment()` are the one place the strip looks at
+ * the game's kind.
  */
 
 /** Two contenders face to face, or a race of three and more. */
@@ -22,6 +31,8 @@ export type RivalMode = 'duel' | 'race';
 /** The two sides a device shows (`rivalPair()`). */
 export type RivalPair = {
     mode: RivalMode;
+    /** What the totals count: a race's points, a match's pieces left. */
+    unit: 'points' | 'pieces';
     /** The viewer plays and stands on the left: the left side is «Siz». */
     mine: boolean;
     /** The left side (sky); null for an empty side. */
@@ -83,6 +94,106 @@ export function contenders(
 }
 
 /**
+ * The rows a strip draws: a race's are the state's ranking, in the
+ * server's order; a match's are its two sides, white then black, each with
+ * its pieces left as its total and 👑 (`place` 1) by the side with more —
+ * neither when they are level (ADR 034 decision 23). `seats` says the rows
+ * are a match's: always both, in their own order.
+ */
+export function stripRows(
+    state: Pick<RoomState, 'ranking'> & { match?: RoomState['match'] },
+): { rows: RoomRankedPlayer[]; seats: boolean } {
+    if (state.match === null || state.match === undefined) {
+        return { rows: state.ranking, seats: false };
+    }
+
+    const [white, black] = state.match.sides;
+
+    return {
+        rows: state.match.sides.map((side) => ({
+            player_id: side.player_id,
+            points: side.pieces,
+            place:
+                white.pieces === black.pieces
+                    ? null
+                    : side.pieces === Math.max(white.pieces, black.pieces)
+                      ? 1
+                      : 2,
+        })),
+        seats: true,
+    };
+}
+
+/** What the moment changed a row's total by: where a strip's count starts from (`pairBefore()`). */
+export type StripChange = {
+    results: TotalChange[] | null;
+    spent: RoomSpent[];
+};
+
+/**
+ * What the moment the state shows changed the strip's totals by: a
+ * reveal's results and the taunts counted at its close; a match's last
+ * move, which took `captured` pieces from the side that did not make it.
+ * Nothing in a race's question, nothing in a quiet move.
+ */
+export function stripChange(
+    state: Pick<RoomState, 'round' | 'match'>,
+): StripChange {
+    const match = state.match;
+
+    if (match !== null) {
+        const last = match.last;
+        const mover = last?.path[last.path.length - 1];
+        const color = match.position.find(
+            (piece) => piece.square === mover,
+        )?.color;
+        const taken = match.sides.find((side) => side.color !== color);
+
+        return {
+            results:
+                last === null ||
+                last.captured.length === 0 ||
+                taken === undefined
+                    ? null
+                    : [
+                          {
+                              player_id: taken.player_id,
+                              points: -last.captured.length,
+                          },
+                      ],
+            spent: [],
+        };
+    }
+
+    const reveal = state.round?.phase === 'reveal' ? state.round.reveal : null;
+
+    return { results: reveal?.results ?? null, spent: reveal?.spent ?? [] };
+}
+
+/**
+ * The strip's moment: its key — a race's round and whether it is revealed,
+ * a match's ply — and whether a change of the lead within it is an
+ * overtake (a race's reveal; every move of a match).
+ */
+export function stripMoment(
+    state: Pick<RoomState, 'game' | 'round' | 'match'>,
+): { key: string; moves: boolean } {
+    const game = state.game?.id ?? '-';
+
+    if (state.match !== null) {
+        return { key: `${game}|ply:${state.match.ply}`, moves: true };
+    }
+
+    const round = state.round;
+    const reveal = round?.phase === 'reveal';
+
+    return {
+        key: `${game}|${round?.index ?? '-'}|${reveal ? 'reveal' : 'open'}`,
+        moves: reveal,
+    };
+}
+
+/**
  * The pair a device shows (ADR 027 decision 3), from the state's ranking
  * as the server ordered it. `viewer` is `me.player_id`: null on the screen
  * and on the phone of a host who does not play, who both see the
@@ -98,10 +209,15 @@ export function contenders(
  *   screen either side — only while its row holds a place.
  */
 export function rivalPair(
-    state: Pick<RoomState, 'ranking' | 'players'>,
+    state: Pick<RoomState, 'ranking' | 'players'> & {
+        match?: RoomState['match'];
+    },
     viewer: string | null,
 ): RivalPair | null {
-    const rows = contenders(state.ranking, state.players);
+    const strip = stripRows(state);
+    const rows = strip.seats
+        ? strip.rows
+        : contenders(strip.rows, state.players);
 
     if (rows.length < 2) {
         return null;
@@ -127,6 +243,9 @@ export function rivalPair(
             other === undefined || (mode === 'race' && other.place === null)
                 ? null
                 : other;
+    } else if (strip.seats) {
+        // A match's watcher and the screen: white on the left.
+        [left, right] = [rows[0], rows[1]];
     } else if (mode === 'duel') {
         const joined = state.players.map((player) => player.id);
         const order = (row: RoomRankedPlayer) => joined.indexOf(row.player_id);
@@ -141,6 +260,7 @@ export function rivalPair(
 
     return withNumbers({
         mode,
+        unit: strip.seats ? 'pieces' : 'points',
         mine: own !== undefined,
         left,
         right,
@@ -158,7 +278,10 @@ export function rivalPair(
 
 /** A pair's gap, leader and split from its two sides. */
 function withNumbers(
-    sides: Pick<RivalPair, 'mode' | 'mine' | 'left' | 'right' | 'more'>,
+    sides: Pick<
+        RivalPair,
+        'mode' | 'unit' | 'mine' | 'left' | 'right' | 'more'
+    >,
 ): RivalPair {
     const { left, right } = sides;
     const gap =
@@ -255,6 +378,7 @@ export function interimPair(
 
     return withNumbers({
         mode: previous.mode,
+        unit: previous.unit,
         mine: previous.mine,
         left: { ...left, place: previous.left.place },
         right: { ...right, place: previous.right.place },
@@ -266,11 +390,12 @@ export function interimPair(
  * The same pair at the totals before the round — each side's points less
  * its result of the round, with the taunts counted at this close added
  * back (`points − result.points + spent`, ADR 025's count as ADR 029
- * amends it) — where a reveal's movement starts from.
+ * amends it) — where a reveal's movement starts from; a match's before the
+ * move (`stripChange()`).
  */
 export function pairBefore(
     pair: RivalPair,
-    results: RoomResult[] | null,
+    results: TotalChange[] | null,
     spent: RoomSpent[] = [],
 ): RivalPair {
     if (results === null) {
@@ -294,6 +419,7 @@ export function pairBefore(
 
     return withNumbers({
         mode: pair.mode,
+        unit: pair.unit,
         mine: pair.mine,
         left: before(pair.left),
         right: before(pair.right),

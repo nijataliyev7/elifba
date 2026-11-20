@@ -2,6 +2,9 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import {
+    choiceBody,
+    choiceParts,
+    clockLevelText,
     gameOf,
     levelOf,
     roundSteps,
@@ -14,6 +17,7 @@ import type {
     SetupChoice,
     SetupLevel,
 } from '@/components/rooms/catalog';
+import { SeatRows } from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import { seconds } from '@/components/rooms/seconds';
 import { TauntsSwitchRow } from '@/components/rooms/taunts-switch';
@@ -30,10 +34,11 @@ import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { store as startGame } from '@/routes/rooms/games';
 import { update as chooseGame } from '@/routes/rooms/setup';
+import type { RoomPlayer } from '@/rooms/contract';
 import { roomRequest } from '@/rooms/http';
 
 /** Which control a tap went through: it shows pressed while the others wait. */
-export type ChoiceControl = 'mechanic' | 'difficulty' | 'rounds';
+export type ChoiceControl = 'mechanic' | 'difficulty' | 'rounds' | 'seats';
 
 /** The room's choice as a page shows it and changes it (`useRoomChoice()`). */
 export type RoomChoice = {
@@ -43,6 +48,8 @@ export type RoomChoice = {
     pending: ChoiceControl | null;
     failed: boolean;
     choose: (next: SetupChoice, control: ChoiceControl) => void;
+    /** Another game, with what a choice of its kind needs (`withGame()`). */
+    pick: (game: CatalogGame) => void;
 };
 
 /**
@@ -58,15 +65,28 @@ export type RoomChoice = {
 export function useRoomChoice({
     roomId,
     choice,
+    players,
+    options,
     onChanged,
 }: {
     roomId: string;
     /** The room's choice, from the state. */
     choice: SetupChoice;
+    /** The room's players, in the order they joined: who a board game may seat. */
+    players: RoomPlayer[];
+    /** The catalog: the rounds' bounds. */
+    options: GameSetupOptions;
     /** After a write: the page asks for the state now rather than wait for the signal. */
     onChanged: () => void;
 }): RoomChoice {
-    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}`;
+    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}`;
+    // A board game's choice has no rounds: a race chosen after it takes the last the page saw.
+    const [rounds, setRounds] = useState<number | null>(choice.rounds ?? null);
+
+    if (choice.rounds !== undefined && choice.rounds !== rounds) {
+        setRounds(choice.rounds);
+    }
+
     // The tap, and the state's choice it was made over: once that moves, the state has answered.
     const [tap, setTap] = useState<{
         choice: SetupChoice;
@@ -85,7 +105,7 @@ export function useRoomChoice({
         setPending(control);
         setFailed(false);
 
-        void roomRequest('PUT', chooseGame.url(roomId), next)
+        void roomRequest('PUT', chooseGame.url(roomId), choiceBody(next))
             .then((reply) => {
                 if (reply.status !== 204) {
                     // 403: a game started meanwhile; 422: not a level the room plays. The state says what is.
@@ -103,7 +123,19 @@ export function useRoomChoice({
             });
     };
 
-    return { shown, pending, failed, choose };
+    const steps = roundSteps(options.rounds);
+    const pick = (game: CatalogGame) =>
+        choose(
+            withGame(shown, game, {
+                rounds: rounds ?? steps[Math.floor(steps.length / 2)],
+                present: players
+                    .filter((player) => player.present)
+                    .map((player) => player.id),
+            }),
+            'mechanic',
+        );
+
+    return { shown, pending, failed, choose, pick };
 }
 
 /**
@@ -182,12 +214,7 @@ export function GamePicker({
                         type="button"
                         aria-pressed={pressed}
                         disabled={choice.pending !== null}
-                        onClick={() =>
-                            choice.choose(
-                                withGame(choice.shown, game),
-                                'mechanic',
-                            )
-                        }
+                        onClick={() => choice.pick(game)}
                         className={cn(
                             pressable,
                             'flex items-center gap-2.5 rounded-xl border bg-card text-left',
@@ -223,7 +250,11 @@ export function GamePicker({
     );
 }
 
-/** «Çətinlik»: four segments over one muted line of what the level holds, from the server's `levels`. */
+/**
+ * «Çətinlik»: four segments over one muted line of what the level holds,
+ * from the server's `levels`; a board game's «Vaxt» (ADR 034 decision 6):
+ * each segment its level's clock («5+3», tabular), never «Asan».
+ */
 export function DifficultySegments({
     game,
     choice,
@@ -241,6 +272,7 @@ export function DifficultySegments({
             <div className="grid grid-cols-4 gap-1 rounded-xl bg-muted p-1">
                 {game.difficulties.map((difficulty) => {
                     const pressed = difficulty === choice.shown.difficulty;
+                    const clock = levelOf(game, difficulty)?.clock;
 
                     return (
                         <button
@@ -263,9 +295,12 @@ export function DifficultySegments({
                                 pressed
                                     ? 'bg-background text-foreground shadow-sm'
                                     : 'text-muted-foreground',
+                                clock !== undefined && 'tabular-nums',
                             )}
                         >
-                            {t(`rooms.difficulty.${difficulty}`)}
+                            {clock !== undefined
+                                ? clockLevelText(t, clock)
+                                : t(`rooms.difficulty.${difficulty}`)}
                         </button>
                     );
                 })}
@@ -344,7 +379,12 @@ export function LevelLine({
     const answer = seconds(level.answer_ms, mark);
     let line: string | null = null;
 
-    if (level.rules !== null) {
+    if (level.clock !== undefined) {
+        line = t('rooms.clock.line', {
+            minutes: Math.round(level.clock.base_ms / 60_000),
+            seconds: Math.round(level.clock.increment_ms / 1000),
+        });
+    } else if (level.rules !== null) {
         line = t('rooms.setup.levels.sequence', {
             terms: level.terms ?? 0,
             min: level.range?.min ?? 0,
@@ -407,7 +447,8 @@ export function LevelLine({
 /**
  * «Oyun ayarları» (`GameSettings`, docs/frontend.md rule 15; ADR 026
  * decisions 8 and 16–17): the game, the difficulty and the rounds of the
- * room's choice, each tap sent as the whole choice (`useRoomChoice()`), and
+ * room's choice — a board game's clock and its two seats (`SeatRows`,
+ * ADR 034 decision 27) — each tap sent as the whole choice (`useRoomChoice()`), and
  * «Hazırdır», which closes. On a phone a sheet from the bottom below `sm`
  * and a dialog from there; on the screen (`big`) a centred dialog with the
  * games three by two and «Çətinlik» beside «Raund sayı»; from T2 the
@@ -419,6 +460,7 @@ export function GameSettings({
     choice,
     open,
     onOpenChange,
+    players,
     big = false,
     taunts,
 }: {
@@ -426,12 +468,15 @@ export function GameSettings({
     choice: RoomChoice;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    /** The room's players: a board game's seats are chosen among the present ones. */
+    players: RoomPlayer[];
     big?: boolean;
     /** The host's switch «Atmacalar» (T2), under the choice. */
     taunts?: TauntsSwitch;
 }) {
     const { t } = useTranslation();
     const game = gameOf(options, choice.shown.mechanic);
+    const parts = choiceParts(t, choice.shown);
 
     if (game === undefined) {
         return null;
@@ -520,7 +565,9 @@ export function GameSettings({
                     >
                         <fieldset className="flex min-w-0 flex-col">
                             <legend className={legend}>
-                                {t('rooms.setup.difficulty')}
+                                {parts.second === 'seats'
+                                    ? t('rooms.clock.label')
+                                    : t('rooms.setup.difficulty')}
                             </legend>
                             <DifficultySegments
                                 game={game}
@@ -530,13 +577,24 @@ export function GameSettings({
                         </fieldset>
                         <fieldset className="flex min-w-0 flex-col">
                             <legend className={legend}>
-                                {t('rooms.setup.rounds')}
+                                {parts.second === 'seats'
+                                    ? t('rooms.seats.title')
+                                    : t('rooms.setup.rounds')}
                             </legend>
-                            <RoundStepButtons
-                                options={options}
-                                choice={choice}
-                                big={big}
-                            />
+                            {parts.second === 'seats' ? (
+                                <SeatRows
+                                    seats={parts.seats}
+                                    players={players}
+                                    choice={choice}
+                                    big={big}
+                                />
+                            ) : (
+                                <RoundStepButtons
+                                    options={options}
+                                    choice={choice}
+                                    big={big}
+                                />
+                            )}
                         </fieldset>
                     </div>
 

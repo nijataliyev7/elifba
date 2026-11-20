@@ -1,5 +1,5 @@
 import type { StandingGroup } from '@/components/rooms/standing-groups';
-import type { RoomRankedPlayer } from '@/rooms/contract';
+import type { RoomRankedPlayer, RoomState } from '@/rooms/contract';
 
 /*
  * The final of a room game (docs/frontend.md rule 15 "The final", ADR
@@ -8,6 +8,25 @@ import type { RoomRankedPlayer } from '@/rooms/contract';
  * who share a place are one group: they open together and are emphasised
  * together. Nothing here ranks or adds up.
  */
+
+/**
+ * The rows a game's final opens (ADR 034 decision 25), the one place the
+ * final looks at the game's kind: a race's are the state's ranking — the
+ * room's standing once it is over; a board game's are its match's own two
+ * places, the winner first or both first in a draw, by the outcome; a
+ * match stopped without a result opens none.
+ */
+export function finalRows(
+    state: Pick<RoomState, 'ranking' | 'match'>,
+): RoomRankedPlayer[] {
+    if (state.match === null || state.match.phase !== 'over') {
+        return state.ranking;
+    }
+
+    return state.match.result.outcome === 'none'
+        ? []
+        : state.match.result.standing;
+}
 
 /** How a place of the final stands out: the first three, by place. */
 export type FinalTier = 'first' | 'second' | 'third' | null;

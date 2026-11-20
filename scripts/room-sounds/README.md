@@ -1,6 +1,6 @@
 # Room sounds
 
-`content/assets/rooms/sounds/*.mp3` are the sounds of a room game (docs/architecture.md §12 "Room content", ADR 025 "Sound", ADR 028): the big screen's — the room's speaker — and a phone's quiet cues of its own. The owner chose each by ear on 2026-11-18 from three candidates (ADR 028 "As chosen"). `make.py` makes every file: nine from recordings of the **VS Chamber Orchestra: Community Edition** (VSCO-2-CE, CC0-1.0), seven by our own synthesis (MIT). `content/rooms/sounds.json` names one file per cue, `content/credits.json` credits each source, and the page decides when each plays (`resources/js/components/rooms/sound-cues.ts`).
+`content/assets/rooms/sounds/*.mp3` are the sounds of a room game (docs/architecture.md §12 "Room content", ADR 025 "Sound", ADR 028, ADR 034 decision 31): the big screen's — the room's speaker — and a phone's quiet cues of its own. The owner chose the first sixteen by ear on 2026-11-18 from three candidates (ADR 028 "As chosen"); a board game's four — `move`, `capture`, `crown` and `offer` — were taken on 2026-11-20 from three candidates each under the owner's standing rule, to be auditioned when the owner next listens ("Draughts (D4, 2026-11-20)" below). `make.py` makes every file: nine from recordings of the **VS Chamber Orchestra: Community Edition** (VSCO-2-CE, CC0-1.0), eleven by our own synthesis (MIT). `content/rooms/sounds.json` names one file per cue, `content/credits.json` credits each source, and the page decides when each plays (`resources/js/components/rooms/sound-cues.ts`).
 
 | File            | Device | Plays                                                      | Made of                                                                                                                       | Length | Size    |
 | --------------- | ------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
@@ -15,13 +15,17 @@
 | `roll.mp3`      | screen | the final, placed to end where the first place opens       | VSCO snare roll and timpani roll, swelling 22 and 27 dB                                                                       | 2.50 s | 30.0 KB |
 | `fanfare.mp3`   | screen | the final's first place opens — **2.30 s** from `winnerAt` | VSCO trumpets: G4 ×3 (staccato), then G4, C5, E5 held, with horn and trombone C4, crash and timpani                           | 2.30 s | 27.9 KB |
 | `join.mp3`      | screen | between games, a player appears                            | ours: a bubble pop, 380 → 1150 Hz                                                                                             | 0.14 s | 2.4 KB  |
+| `move.mp3`      | screen | a board game: a move the page saw arrive                   | ours: a piece put down on a wooden board — four damped wooden modes from 820 Hz, a short 210 Hz body, a soft click            | 0.11 s | 2.1 KB  |
+| `capture.mp3`   | screen | a board game: a move that took pieces, in place of `move`  | ours: the move's knock, then a lower, fuller one from 700 Hz 70 ms later over a short thud 130 → 62 Hz                        | 0.24 s | 3.7 KB  |
+| `crown.mp3`     | screen | a board game: that move crowned a man, after its sound     | ours: four small bells (a glockenspiel bar's partials) up C6–E6–G6–C7, 55 ms apart, a small room                              | 0.50 s | 6.7 KB  |
 | `tap.mp3`       | phone  | the viewer's tap, the same for every item                  | VSCO claves, low-passed at 6 kHz                                                                                              | 0.08 s | 1.8 KB  |
 | `undo.mp3`      | phone  | «Geri», or a cell tapped again                             | ours: a 1450 → 1050 Hz «tock» played backwards                                                                                | 0.07 s | 1.5 KB  |
 | `sent.mp3`      | phone  | the viewer's answer is in, the same for every answer       | ours, the first set's: noise rising through a band, 700 → 3600 Hz, and a soft click                                           | 0.24 s | 3.7 KB  |
 | `right.mp3`     | phone  | from the reveal: the viewer's answer was right             | VSCO harp C5–E5–G5, 60 ms apart                                                                                               | 0.70 s | 8.9 KB  |
 | `wrong.mp3`     | phone  | from the reveal: the viewer's answer was wrong             | ours: E4 then C4, round and low, never a buzzer                                                                               | 0.45 s | 6.1 KB  |
+| `offer.mp3`     | phone  | a board game: a draw offer arrives at the viewer           | ours: two soft vibraphone-like notes up a fourth, E5 then A5, 110 ms apart, a small room                                      | 0.36 s | 4.9 KB  |
 
-The screen's set holds 225.9 KB (at most 320 KB), a phone's 22.0 KB (at most 64 KB); no file above 64 KB (`ContentValidator`). No voice, no speech, no music bed and no loop: each file is one event, played once for its moment; the clock is the same for everyone, and `sent` says nothing of right or wrong.
+The screen's set holds 238.5 KB (at most 320 KB), a phone's 26.9 KB (at most 64 KB); no file above 64 KB (`ContentValidator`). A board game's `move`, `capture` and `crown` hold 12.5 KB together (at most 24 KB) and `offer` 4.9 KB (at most 8 KB), ADR 034 decision 31. No voice, no speech, no music bed and no loop: each file is one event, played once for its moment; the clock is the same for everyone, and `sent` says nothing of right or wrong.
 
 The fanfare's length is `FANFARE_MS` in `resources/js/components/rooms/sound-cues.ts`: the screen's cheer — the winner's first name, then «Əla oynadın!» — starts there, after the fanfare (ADR 030). A new fanfare of another length changes that number in the same change. The cheer is not a room sound: the name list's clip (`content/voice-names/`) and the board's phrase (`content/assets/voice/`), ADR 016, never made here.
 
@@ -63,23 +67,40 @@ What `make.py` does to a recording: mixes it to mono at 44.1 kHz; cuts it from i
 - **Kept from the first set.** `ranking` and `sent` are the first set's files (ADR 025): their recipes, their seeded noise and their levelling (three passes, no limiter) are kept as `a48e56c` made them, so the files do not change.
 - **On the device.** How loud a device plays them is the page's (`SPEAKER_GAIN` in `resources/js/rooms/sound.ts`: the screen at full level, a phone at half), never the files'.
 
-## The set as made (2026-11-18)
+## The set as made (2026-11-18; a board game's four 2026-11-20)
 
-| File            | Length  | Size    | Loudness                     | True peak |
-| --------------- | ------- | ------- | ---------------------------- | --------- |
-| `countdown.mp3` | 3000 ms | 35.8 KB | −20.0 LUFS (its last second) | −3.3 dBFS |
-| `go.mp3`        | 1500 ms | 18.4 KB | −20.0 LUFS                   | −3.1 dBFS |
-| `study.mp3`     | 1000 ms | 12.6 KB | −20.0 LUFS                   | −6.8 dBFS |
-| `question.mp3`  | 550 ms  | 7.3 KB  | −20.0 LUFS                   | −7.3 dBFS |
-| `clock.mp3`     | 5000 ms | 59.4 KB | −20.0 LUFS (its last second) | −3.4 dBFS |
-| `close.mp3`     | 1300 ms | 15.9 KB | −20.0 LUFS                   | −3.2 dBFS |
-| `ranking.mp3`   | 450 ms  | 6.1 KB  | −20.0 LUFS                   | −6.2 dBFS |
-| `place.mp3`     | 800 ms  | 10.1 KB | −20.0 LUFS                   | −3.4 dBFS |
-| `roll.mp3`      | 2500 ms | 30.0 KB | −20.0 LUFS (its last second) | −5.8 dBFS |
-| `fanfare.mp3`   | 2300 ms | 27.9 KB | −20.0 LUFS                   | −6.8 dBFS |
-| `join.mp3`      | 140 ms  | 2.4 KB  | −20.0 LUFS                   | −9.4 dBFS |
-| `tap.mp3`       | 80 ms   | 1.8 KB  | −20.3 LUFS                   | −6.6 dBFS |
-| `undo.mp3`      | 70 ms   | 1.5 KB  | −20.0 LUFS                   | −8.2 dBFS |
-| `sent.mp3`      | 240 ms  | 3.7 KB  | −20.0 LUFS                   | −4.1 dBFS |
-| `right.mp3`     | 700 ms  | 8.9 KB  | −20.0 LUFS                   | −6.7 dBFS |
-| `wrong.mp3`     | 450 ms  | 6.1 KB  | −20.0 LUFS                   | −9.0 dBFS |
+| File            | Length  | Size    | Loudness                     | True peak  |
+| --------------- | ------- | ------- | ---------------------------- | ---------- |
+| `countdown.mp3` | 3000 ms | 35.8 KB | −20.0 LUFS (its last second) | −3.3 dBFS  |
+| `go.mp3`        | 1500 ms | 18.4 KB | −20.0 LUFS                   | −3.1 dBFS  |
+| `study.mp3`     | 1000 ms | 12.6 KB | −20.0 LUFS                   | −6.8 dBFS  |
+| `question.mp3`  | 550 ms  | 7.3 KB  | −20.0 LUFS                   | −7.3 dBFS  |
+| `clock.mp3`     | 5000 ms | 59.4 KB | −20.0 LUFS (its last second) | −3.4 dBFS  |
+| `close.mp3`     | 1300 ms | 15.9 KB | −20.0 LUFS                   | −3.2 dBFS  |
+| `ranking.mp3`   | 450 ms  | 6.1 KB  | −20.0 LUFS                   | −6.2 dBFS  |
+| `place.mp3`     | 800 ms  | 10.1 KB | −20.0 LUFS                   | −3.4 dBFS  |
+| `roll.mp3`      | 2500 ms | 30.0 KB | −20.0 LUFS (its last second) | −5.8 dBFS  |
+| `fanfare.mp3`   | 2300 ms | 27.9 KB | −20.0 LUFS                   | −6.8 dBFS  |
+| `join.mp3`      | 140 ms  | 2.4 KB  | −20.0 LUFS                   | −9.4 dBFS  |
+| `move.mp3`      | 110 ms  | 2.1 KB  | −20.0 LUFS                   | −3.4 dBFS  |
+| `capture.mp3`   | 240 ms  | 3.7 KB  | −20.1 LUFS                   | −3.4 dBFS  |
+| `crown.mp3`     | 500 ms  | 6.7 KB  | −20.0 LUFS                   | −10.4 dBFS |
+| `tap.mp3`       | 80 ms   | 1.8 KB  | −20.3 LUFS                   | −6.6 dBFS  |
+| `undo.mp3`      | 70 ms   | 1.5 KB  | −20.0 LUFS                   | −8.2 dBFS  |
+| `sent.mp3`      | 240 ms  | 3.7 KB  | −20.0 LUFS                   | −4.1 dBFS  |
+| `right.mp3`     | 700 ms  | 8.9 KB  | −20.0 LUFS                   | −6.7 dBFS  |
+| `wrong.mp3`     | 450 ms  | 6.1 KB  | −20.0 LUFS                   | −9.0 dBFS  |
+| `offer.mp3`     | 360 ms  | 4.9 KB  | −20.0 LUFS                   | −9.5 dBFS  |
+
+## Draughts (D4, 2026-11-20)
+
+ADR 034 decision 31 adds four cues for a board game. No one has listened to them yet: under the owner's standing rule this step made three candidates of each outside the repository, with `make.py`'s own parts and levelling, compared them by their numbers — length, size, loudness, true peak, the envelope every 10 ms, the spectrum's centroid and bands, the strongest frequency every 15 ms — and by their waveforms and spectrograms, and kept its recommended one. A match's cues sound among the set's: the clock's log-drum tick is near 500 Hz and stops at a move, a phone's clave `tap` is near 2 kHz, and the same players hear the countdown's marimba and `wrong`'s falling round notes.
+
+| Cue       | Candidates                                                                                                                                                                                   | Kept, and why                                                                                                                                                                                                                                                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `move`    | a: VSCO claves nine semitones down, dried; b: ours, damped wooden modes, a board's body and a click; c: VSCO high log drum, its strike only                                                  | b: a dry knock centred near 0.8 kHz — between the clock's tick and the tap — that falls 20 dB in 55 ms with nothing ringing after it, so a hundred of them never tire; a was the tap's own clave a little lower, with the recording's room coming back at 40 ms; c was the clock's own tick at 495 Hz                                |
+| `capture` | a: ours, the move's knock and a lower, fuller one 70 ms later over a low thud; b: VSCO claves twice over a soft bass drum; c: ours, one heavier knock with a thud and a small knock after it | a: two onsets 70 ms apart, plain in its envelope, and a quarter of its energy below 150 Hz where the move has none — the move's board struck harder, never mistaken for it; b was the tap's clave again; c had one onset and read as a louder move                                                                                   |
+| `crown`   | a: ours, four small bells up C6–E6–G6–C7; b: VSCO marimba pitched up to C6–E6–G6; c: VSCO glockenspiel run, 0.45 s from 1 s into it                                                          | a: bright (centroid 1.9 kHz), rising step by step in its pitch track, a true peak of −10.4 dBFS and half a second — a flourish, not the final's fanfare; b was the countdown's marimba with 9 % of its energy above 6 kHz from being pitched up 19 semitones; c did not climb within its window and stopped in the middle of the run |
+| `offer`   | a: ours, two round notes up a fourth, A5 then D6; b: ours, two soft vibraphone-like notes up a fourth, E5 then A5; c: VSCO marimba G5 then C6                                                | b: a slow 8 ms attack, a crest of 10 dB and all its energy between 400 Hz and 1 kHz, rising, in a timbre no other cue has — a notice, never an alarm; a was `wrong`'s own round notes turned upward; c opened on the countdown's very marimba G5                                                                                     |
+
+The synthesised candidates moved once after their first numbers, before the choice: the wooden modes from 520 to 820 Hz (520 Hz sat on the clock's tick), the crown from G5–G6 up to C6–C7, and the vibraphone from C6–E6 down to E5–A5 (off the crown's notes); the move's modes then decay in 22 ms, not 16, so the limiter lets it reach −20.0 LUFS. All four are our synthesis, credited with the rest of it. A cue the owner changes by ear later is a new audition of that cue (ADR 028).

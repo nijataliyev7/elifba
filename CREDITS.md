@@ -96,9 +96,9 @@ The app shows the same list on its `/credits` page.
 - Source: <https://github.com/sgossner/VSCO-2-CE>
 - Changes: Downloaded from commit 440300901dfe9275fd84e0b7763af1f8443ae62e and checked by SHA-256; mixed down to mono, trimmed, faded, some pitched by resampling, layered, given a small synthetic room where noted and levelled to one loudness, then encoded as 96 kb/s MP3 by scripts/room-sounds/make.py, whose README lists each cue's recordings
 
-### Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, and a phone's undo, «answer sent» and «wrong»
+### Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's move, capture and crown, and a phone's undo, «answer sent», «wrong» and a draw offer
 
-- Files: `content/assets/rooms/sounds/question.mp3`, `content/assets/rooms/sounds/ranking.mp3`, `content/assets/rooms/sounds/place.mp3`, `content/assets/rooms/sounds/join.mp3`, `content/assets/rooms/sounds/undo.mp3`, `content/assets/rooms/sounds/sent.mp3`, `content/assets/rooms/sounds/wrong.mp3`
+- Files: `content/assets/rooms/sounds/question.mp3`, `content/assets/rooms/sounds/ranking.mp3`, `content/assets/rooms/sounds/place.mp3`, `content/assets/rooms/sounds/join.mp3`, `content/assets/rooms/sounds/move.mp3`, `content/assets/rooms/sounds/capture.mp3`, `content/assets/rooms/sounds/crown.mp3`, `content/assets/rooms/sounds/undo.mp3`, `content/assets/rooms/sounds/sent.mp3`, `content/assets/rooms/sounds/wrong.mp3`, `content/assets/rooms/sounds/offer.mp3`
 - Author: Elifba contributors
 - License: [MIT License](https://opensource.org/license/mit) (`MIT`)
 - Source: <https://github.com/nijataliyev7/elifba>

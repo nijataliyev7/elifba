@@ -364,3 +364,19 @@ it('says what the live voice is, that it is not recorded and what the operator c
         'no name and no voice',
     ], 'The live voice is not stored either', "this instance's own voice server", 'cut from the live voice at once'],
 ]);
+
+it('names what a board game keeps: its moves, its offers and a resignation', function (?string $locale, string $moves): void {
+    Rooms::on();
+    $request = $locale === null ? $this : $this->withSession(['locale' => $locale]);
+
+    // ADR 034 decision 34: the acts of a match are stored; the notice names them, on the answers' line.
+    $request->get(route('privacy'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('privacy')
+            ->where('translations', static fn ($translations): bool => str_contains($translations['privacy.rooms.stored'], $moves)
+                && substr_count($translations['privacy.rooms.stored'], "\n") === 3));
+})->with([
+    'az' => [null, 'Şaşkidə: hər gediş xanaları ilə, nə vaxt edildiyi, heç-heçə təklifləri və onların cavabı, təslim olma.'],
+    'en' => ['en', 'In draughts: each move with its squares and when it was made, draw offers and their answers, and resigning.'],
+]);
