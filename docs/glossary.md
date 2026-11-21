@@ -332,6 +332,16 @@ Russian draughts in a room (ADR 034, architecture §12 "Board games (D2–D4)", 
 | matçın yekunu                   | a match's result                 | the state's `match.result`, `RoomMatchResultData`, `RoomMatchStandingData`                                                             | Its two seats with the points the match gave each, less its counted taunts, placed by the outcome — never by the points.                                                                                                           |
 | yoxlayıcı                       | oracle                           | `scripts/draughts-oracle/make.py`, `tests/Fixtures/rooms/draughts/`                                                                    | `pydraughts` 0.6.7 run offline to make fixtures; never a dependency. The official text decides a disagreement.                                                                                                                     |
 
+### Ready for the next game
+
+A player's «Hazıram» between games, seen by the host and the screen (ADR 035, architecture §12 "Ready for the next game (2026-11-21)", docs/frontend.md rule 15 "Ready for the next game").
+
+| Azərbaycanca               | English     | Code                                                                                                  | Notes                                                                                                                                                    |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| «Hazıram»                  | ready mark  | `room_players.ready_for`, `SetRoomPlayerReady`, `PUT /rooms/{room}/ready` `{on}`, `RoomPolicy::ready` | A present player who is not the host, while no game runs. The position of the game it is for; a leave clears it. Never gates or starts a game.           |
+| hazırdır                   | ready       | `RoomReady::counts()`, the state's `players[].ready`                                                  | Derived: open room, present, not the host, `ready_for` is the next game's position (`RoomReady::next()`). A start takes every mark down without a write. |
+| «:ready / :total hazırdır» | ready count | `readyTally()`, `ReadyCount`                                                                          | `:total` is the present players who are not the host; by «Başla» and «Yenidən oyna» on the host's phone and the screen.                                  |
+
 ## Project
 
 | Azərbaycanca        | English               | Code                                             | Notes                                                                                                  |
