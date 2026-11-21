@@ -14,6 +14,7 @@ use App\Http\Controllers\Rooms\RoomMemberVoiceController;
 use App\Http\Controllers\Rooms\RoomNameController;
 use App\Http\Controllers\Rooms\RoomPlayerVoiceController;
 use App\Http\Controllers\Rooms\RoomPlaysController;
+use App\Http\Controllers\Rooms\RoomReadyController;
 use App\Http\Controllers\Rooms\RoomScreenController;
 use App\Http\Controllers\Rooms\RoomSetupController;
 use App\Http\Controllers\Rooms\RoomStateController;
@@ -123,6 +124,13 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
         ->middleware('throttle:room-taunts')
         ->can('play', 'room')
         ->name('rooms.taunts.store');
+
+    // A player's «Hazıram» between games, or taking it back; never the host's (ADR 035).
+    Route::put('rooms/{room}/ready', RoomReadyController::class)
+        ->whereUlid('room')
+        ->middleware('throttle:room-ready')
+        ->can('ready', 'room')
+        ->name('rooms.ready.update');
 
     // The host's tools.
     Route::patch('rooms/{room}', [RoomController::class, 'update'])

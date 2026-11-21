@@ -45,6 +45,11 @@ import {
     LockedBadge,
     RoomFrame,
 } from '@/components/rooms/room-frame';
+import {
+    ReadyCount,
+    ReadyToggle,
+    useRoomReady,
+} from '@/components/rooms/ready-parts';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import { tauntVoices, useTauntsHidden } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
@@ -328,6 +333,7 @@ export default function RoomsShow({
             placeLabels={placeLabels}
             motion={motion}
             canLeave={can.leave}
+            refresh={refresh}
             voice={voiceButton}
         />
     );
@@ -427,6 +433,19 @@ function HostRoom({
                             placeLabels={placeLabels}
                             motion={motion}
                         />
+                        {/* Who is ready for the next game (ADR 035): the chips without a ✕. */}
+                        <section className="flex flex-col gap-2 pt-1">
+                            <h2 className="text-sm font-semibold">
+                                {t('rooms.start.joined_count', {
+                                    count: present,
+                                })}
+                            </h2>
+                            <JoinedChips
+                                roomId={roomId}
+                                state={state}
+                                removable={false}
+                            />
+                        </section>
                         <div className="flex justify-center pt-1">
                             <RoomConfirm
                                 trigger={
@@ -512,6 +531,7 @@ function HostRoom({
                         />
                     )
                 )}
+                <ReadyCount players={state.players} />
                 {over !== null ? (
                     <>
                         <div className="flex gap-2">
@@ -627,8 +647,10 @@ function OtherGames({
  * A player's page outside a game: «Qoşuldunuz» with the choice's row,
  * which nobody but the host changes, how many have joined, «Dostunu
  * çağır» and the waiting line; after a game its final and «Aparıcı
- * növbəti oyunu seçir.». A host's change of the choice reaches it with
- * the state, and no control here suggests otherwise.
+ * növbəti oyunu seçir.». Under the waiting line, «Oynamağa hazırsınız?»
+ * or «Yenidən oynamağa hazırsınız?» and the toggle «Hazıram» (ADR 035).
+ * A host's change of the choice reaches it with the state, and no control
+ * here suggests otherwise.
  */
 function PlayerRoom({
     roomId,
@@ -639,6 +661,7 @@ function PlayerRoom({
     placeLabels,
     motion,
     canLeave,
+    refresh,
     voice,
 }: {
     roomId: string;
@@ -649,6 +672,8 @@ function PlayerRoom({
     placeLabels: string[];
     motion: RoomMotion;
     canLeave: boolean;
+    /** After a «Hazıram»: the page asks for the state now. */
+    refresh: () => void;
     /** The live voice's button in the top bar, while the host has the voice on. */
     voice?: ReactNode;
 }) {
@@ -656,6 +681,13 @@ function PlayerRoom({
     const setupParts = choiceParts(t, setup);
     const present = state.players.filter((player) => player.present).length;
     const me = state.players.find((player) => player.id === state.me.player_id);
+    // «Hazıram» between games (ADR 035): a present player who is not the host.
+    const ready = useRoomReady({
+        roomId,
+        ready: me?.ready ?? false,
+        onChanged: refresh,
+    });
+    const mayMark = me !== undefined && me.present && !me.host;
     useTopOnTurn(over === null ? 'start' : over.id);
     const leaving = canLeave && (
         <Form {...leave.form(roomId)} className="flex justify-center">
@@ -775,6 +807,9 @@ function PlayerRoom({
                         ? t('rooms.show.waiting_next')
                         : t('rooms.show.waiting')}
                 </p>
+                {mayMark && (
+                    <ReadyToggle ready={ready} again={state.game !== null} />
+                )}
             </RoomActionBar>
         </RoomFrame>
     );

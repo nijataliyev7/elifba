@@ -66,6 +66,15 @@ final class RoomPolicy
         return $this->host($user, $room) && $room->isOpen() && $room->runningGame(RoomClock::nowMs()) === null;
     }
 
+    /**
+     * `play`, not the host, with no game running: a player's «Hazıram»
+     * between games (§12 "Ready for the next game", ADR 035 decision 4).
+     */
+    public function ready(User $user, Room $room): bool
+    {
+        return $this->play($user, $room) && ! $room->isHostedBy($user) && $room->runningGame(RoomClock::nowMs()) === null;
+    }
+
     /** `host` of an open room, while a game is running in it: ending the game (B3). */
     public function end(User $user, Room $room): bool
     {

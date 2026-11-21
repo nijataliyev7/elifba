@@ -29,7 +29,7 @@ const fixtures = import.meta.glob<unknown>(
 );
 
 function player(id: string, present = true, host = false): RoomPlayer {
-    return { id, name: id, present, host, voice: null };
+    return { id, name: id, present, host, voice: null, ready: false };
 }
 
 function row(

@@ -35,6 +35,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * in, and muted until the host lifts it. The standing they give is
  * derived (`RoomVoice::standingOf()`); a device never gets them.
  *
+ * `ready_for` is the position of the game the player said «Hazıram» for
+ * between games (§12 "Ready for the next game", ADR 035): written only by
+ * `SetRoomPlayerReady`, cleared by `LeaveRoom`. Whether it counts is
+ * derived (`RoomReady::counts()`); a device gets only that.
+ *
  * @property string $id
  * @property string $room_id
  * @property int|null $user_id null = no account any more, or the name was taken out
@@ -44,6 +49,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $seen_ms Unix ms; null = the page has not read a running game's state
  * @property CarbonImmutable|null $voice_admitted_at let into the room's voice; null: waiting
  * @property CarbonImmutable|null $voice_muted_at muted by the host; null: may speak
+ * @property int|null $ready_for the position of the game the player said «Hazıram» for; null: no mark
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read Room $room
@@ -99,6 +105,7 @@ class RoomPlayer extends Model
             'seen_ms' => 'integer',
             'voice_admitted_at' => 'datetime',
             'voice_muted_at' => 'datetime',
+            'ready_for' => 'integer',
         ];
     }
 

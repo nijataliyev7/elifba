@@ -19,8 +19,9 @@ use Illuminate\Support\Facades\DB;
  * still waits for has answered closes now (`RoomRoundClose`): it never
  * waits for someone who left; a seat of a live match has lost (ADR 034
  * decision 13) — whatever the running game's driver does about it
- * (`RoomGameDriver::presenceChanged()`). Raises the revision and signals
- * the room.
+ * (`RoomGameDriver::presenceChanged()`). The player's «Hazıram» is cleared
+ * with the leave, so a return starts unmarked (§12 "Ready for the next
+ * game", ADR 035 decision 5). Raises the revision and signals the room.
  *
  * While the room's voice is on, a player who leaves is then taken out of
  * the voice room (`RoomVoiceCut::remove()`, §12 "Live voice", ADR 031
@@ -41,6 +42,8 @@ final readonly class LeaveRoom
             }
 
             $row->left_at = now();
+            // A «Hazıram» goes with the presence: a return starts unmarked (ADR 035 decision 5).
+            $row->ready_for = null;
             $row->save();
 
             RoomGameDriver::presenceChanged($locked, $row, RoomClock::nowMs());

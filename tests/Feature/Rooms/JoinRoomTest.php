@@ -87,7 +87,7 @@ it('joins with the code and an account', function (): void {
         ->assertJsonPath('players.0.name', 'Rəşad Quliyev')
         ->assertJsonPath('players.1.name', 'Aygün Məmmədova');
     $this->actingAs($this->host)->getJson(route('rooms.state', $this->room))
-        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Məmmədova', 'present' => true, 'host' => false, 'voice' => null]);
+        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Məmmədova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => false]);
 
     // A present player is sent on to the room; joining again changes nothing.
     $before = joinSnapshot();

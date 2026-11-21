@@ -220,17 +220,40 @@ it('carries a live game\'s taunts, and nothing of them anywhere else', function 
         ->and(fn () => RoomStateData::fromArray([...$answer, 'taunts' => [...$answer['taunts'], 'balance' => -1]]))->toThrow(InvalidArgumentException::class, 'below 0');
 });
 
+it('says each player\'s «Hazıram» at v 7: never the host\'s, an absent player\'s, in a closed room or while a game is live', function (): void {
+    // ADR 035 decision 6: `ready` is derived; a fixture never says it where it cannot count.
+    $marked = [];
+
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+        $state = roomFixture($name);
+
+        foreach ($state['players'] as $player) {
+            expect($player['ready'])->toBeBool();
+
+            if ($player['ready']) {
+                expect($player['host'])->toBeFalse($name)
+                    ->and($player['present'])->toBeTrue($name)
+                    ->and($state['room']['status'])->toBe('open', $name)
+                    ->and($state['game']['phase'] ?? null)->not->toBe('live', $name);
+                $marked[] = $name;
+            }
+        }
+    }
+
+    expect($marked)->toBe(['state.lobby', 'state.over']);
+});
+
 it('says the room\'s voice at v 5, each player\'s standing only while it is on, and nothing of it in a closed room', function (): void {
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
 
-        expect($state['v'])->toBe(6, $name)
-            ->and(RoomStateData::VERSION)->toBe(6)
+        expect($state['v'])->toBe(7, $name)
+            ->and(RoomStateData::VERSION)->toBe(7)
             ->and(array_key_last($state))->toBe('voice', $name);
 
         foreach ($state['players'] as $player) {
             // A standing, never whether they are in the voice, their microphone or whether they speak.
-            expect(array_keys($player))->toBe(['id', 'name', 'present', 'host', 'voice'], $name)
+            expect(array_keys($player))->toBe(['id', 'name', 'present', 'host', 'voice', 'ready'], $name)
                 ->and($player['voice'] !== null)->toBe(($state['voice']['on'] ?? false) && ($player['host'] || $player['present']), $name);
         }
 

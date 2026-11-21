@@ -83,7 +83,7 @@ it('removes a player for good', function (): void {
 
     // Gone from the lobby.
     $this->getJson(route('rooms.state', $this->room))
-        ->assertJsonPath('players', [['id' => $this->hostRow->id, 'name' => 'Rəşad Quliyev', 'present' => true, 'host' => true, 'voice' => null]]);
+        ->assertJsonPath('players', [['id' => $this->hostRow->id, 'name' => 'Rəşad Quliyev', 'present' => true, 'host' => true, 'voice' => null, 'ready' => false]]);
 
     // The removed account finds the room nowhere and cannot come back.
     $before = hostSnapshot();
@@ -206,7 +206,7 @@ it('lets the host step out of playing and back in', function (): void {
     expect($this->hostRow->refresh()->left_at)->not->toBeNull()
         ->and($this->room->refresh()->revision)->toBe(2);
     $this->getJson(route('rooms.state', $this->room))
-        ->assertJsonPath('players.0', ['id' => $this->hostRow->id, 'name' => 'Rəşad Quliyev', 'present' => false, 'host' => true, 'voice' => null]);
+        ->assertJsonPath('players.0', ['id' => $this->hostRow->id, 'name' => 'Rəşad Quliyev', 'present' => false, 'host' => true, 'voice' => null, 'ready' => false]);
     $this->get(route('rooms.show', $this->room))->assertInertia(fn (Assert $page) => $page->where('can.host', true)->where('can.leave', false));
 
     // Asking for what already is changes nothing.

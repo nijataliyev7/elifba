@@ -346,7 +346,7 @@ it('takes a player\'s name out of a closed room and keeps the points', function 
     // The host still sees her points and her place, without a name.
     $props = pagesProps($this->actingAs($this->resad)->get(route('rooms.show', $room)));
 
-    expect($props['state']['players'][1])->toBe(['id' => $aygun->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null])
+    expect($props['state']['players'][1])->toBe(['id' => $aygun->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null, 'ready' => false])
         ->and($props['games'][0]['ranking'][0])->toBe(['player_id' => $aygun->id, 'points' => $points, 'place' => 1])
         ->and($props['state']['ranking'][0])->toBe(['player_id' => $aygun->id, 'points' => $points, 'place' => 1])
         ->and(json_encode($props, JSON_UNESCAPED_UNICODE))->not->toContain('Aygün');

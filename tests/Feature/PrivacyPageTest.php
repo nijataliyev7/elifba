@@ -380,3 +380,22 @@ it('names what a board game keeps: its moves, its offers and a resignation', fun
     'az' => [null, 'Şaşkidə: hər gediş xanaları ilə, nə vaxt edildiyi, heç-heçə təklifləri və onların cavabı, təslim olma.'],
     'en' => ['en', 'In draughts: each move with its squares and when it was made, draw offers and their answers, and resigning.'],
 ]);
+
+it('says a player\'s «Hazıram» is kept in the room\'s line, and until when it counts', function (?string $locale, string $clause): void {
+    Rooms::on();
+    $request = $locale === null ? $this : $this->withSession(['locale' => $locale]);
+
+    // ADR 035 decision 11: the «Otaq:» line names the mark; the four lines stay four.
+    $request->get(route('privacy'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('privacy')
+            ->where('translations', static function ($translations) use ($clause): bool {
+                $lines = explode("\n", $translations['privacy.rooms.stored']);
+
+                return count($lines) === 4 && str_contains($lines[1], $clause);
+            }));
+})->with([
+    'az' => [null, 'oyunlar arasında kimin «Hazıram» dediyi (növbəti oyun başlayana qədər sayılır, oyunçu çıxanda silinir)'],
+    'en' => ['en', 'who said “I\'m ready” between games (it counts until the next game starts and is erased when the player leaves)'],
+]);

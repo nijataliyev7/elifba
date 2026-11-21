@@ -579,8 +579,8 @@ describe('the live voice (C3)', () => {
         players: state.players.map((player) => ({ ...player, voice: null })),
     });
 
-    it("reads every state at v 6, with the voice and each player's standing", () => {
-        expect(ROOM_STATE_VERSION).toBe(6);
+    it("reads every state at v 7, with the voice and each player's standing", () => {
+        expect(ROOM_STATE_VERSION).toBe(7);
 
         for (const [path, value] of payloads) {
             if (!path.includes('/state.')) {
@@ -589,7 +589,7 @@ describe('the live voice (C3)', () => {
 
             const state = value as State;
 
-            expect(state.v, path).toBe(6);
+            expect(state.v, path).toBe(7);
             expect('voice' in state, path).toBe(true);
             expect(
                 state.players.every((player) => 'voice' in player),
@@ -878,6 +878,39 @@ describe('room.changed', () => {
         expect(
             RoomChangedEvent.safeParse({ v: 1, revision: 4, name: 'Aygün' })
                 .success,
+        ).toBe(false);
+    });
+});
+
+describe("a player's «Hazıram» (ADR 035)", () => {
+    it("is every player's, a boolean the server derived, and never missing", () => {
+        const lobby = fixture('state.lobby') as z.infer<typeof RoomState>;
+        const viewer = lobby.players.find(
+            (player) => player.id === lobby.me.player_id,
+        );
+
+        expect(viewer?.ready).toBe(true);
+        expect(
+            lobby.players
+                .filter((player) => player.ready)
+                .map((player) => player.id),
+        ).toEqual([lobby.me.player_id]);
+
+        const players = lobby.players.map((player) => {
+            const { ready, ...rest } = player;
+
+            return ready ? rest : player;
+        });
+
+        expect(RoomState.safeParse({ ...lobby, players }).success).toBe(false);
+        expect(
+            RoomState.safeParse({
+                ...lobby,
+                players: lobby.players.map((player) => ({
+                    ...player,
+                    ready: 'yes',
+                })),
+            }).success,
         ).toBe(false);
     });
 });

@@ -37,6 +37,9 @@ use InvalidArgumentException;
  * match is over exactly when its game is; a live game of either kind has
  * its taunts.
  *
+ * Version 7 (ADR 035 decision 6) has each player's `ready`: whether their
+ * «Hazıram» between games counts.
+ *
  * @phpstan-import-type RoomSummaryArray from RoomSummaryData
  * @phpstan-import-type RoomViewerArray from RoomViewerData
  * @phpstan-import-type RoomPlayerArray from RoomPlayerData
@@ -52,7 +55,7 @@ use InvalidArgumentException;
  */
 final readonly class RoomStateData
 {
-    public const int VERSION = 6;
+    public const int VERSION = 7;
 
     /**
      * @param  list<RoomPlayerData>  $players

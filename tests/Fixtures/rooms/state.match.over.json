@@ -1,5 +1,5 @@
 {
-    "v": 6,
+    "v": 7,
     "revision": 12,
     "server_ms": 1795534818000,
     "room": {
@@ -20,21 +20,24 @@
             "name": "Rəşad Quliyev",
             "present": true,
             "host": true,
-            "voice": null
+            "voice": null,
+            "ready": false
         },
         {
             "id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
             "name": "Aygün Məmmədova",
             "present": true,
             "host": false,
-            "voice": null
+            "voice": null,
+            "ready": false
         },
         {
             "id": "01kaqrx4bc5d6e7f8g9h0jkmnp",
             "name": "Tural Əliyev",
             "present": true,
             "host": false,
-            "voice": null
+            "voice": null,
+            "ready": false
         }
     ],
     "game": {

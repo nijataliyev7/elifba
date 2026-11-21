@@ -154,6 +154,9 @@ class AppServiceProvider extends ServiceProvider
         // A player's taunts (T2, ADR 029 decision 11): the server's cooldown is the brake, this the bound.
         RateLimiter::for('room-taunts', static fn (Request $request): Limit => Limit::perMinute(20)->by($account($request)));
 
+        // A player's «Hazıram» and taking it back (ADR 035 decision 4): a tap, a change of mind, never a stream.
+        RateLimiter::for('room-ready', static fn (Request $request): Limit => Limit::perMinute(30)->by($account($request)));
+
         // The live voice's tickets (C3, ADR 031 decision 19): a join, a rejoin after a new epoch, a retry.
         RateLimiter::for('room-voice', static fn (Request $request): Limit => Limit::perMinute(12)->by($account($request)));
 

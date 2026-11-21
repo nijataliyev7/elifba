@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { choiceParts } from '@/components/rooms/catalog';
 import type { SetupChoice } from '@/components/rooms/catalog';
 import { GameDrawing } from '@/components/rooms/game-drawing';
+import { ReadyMark } from '@/components/rooms/ready-parts';
 import { RoomConfirm } from '@/components/rooms/room-confirm';
 import { Standing } from '@/components/rooms/standing';
 import { standingGroups } from '@/components/rooms/standing-groups';
@@ -135,7 +136,8 @@ export function ChoiceRow({
  * The present players as chips (docs/frontend.md rule 15 "Games first"):
  * the viewer's own tinted with «siz»; for the host each other player with
  * a ✕ whose target is 44px and which asks first, naming the player. A
- * chip pops in when its player joins after the page first drew.
+ * chip pops in when its player joins after the page first drew. A player
+ * whose «Hazıram» counts has `Check` and «Hazır» after the name (ADR 035).
  */
 export function JoinedChips({
     roomId,
@@ -206,6 +208,7 @@ function JoinedChip({
                     {t('rooms.show.you')}
                 </span>
             )}
+            {player.ready && <ReadyMark />}
             {removable && (
                 <RoomConfirm
                     trigger={

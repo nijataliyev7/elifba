@@ -24,6 +24,7 @@ import {
 } from '@/components/rooms/game-settings';
 import type { RoomChoice } from '@/components/rooms/game-settings';
 import { GameEnd, liveGame, ScreenGame } from '@/components/rooms/kinds';
+import { ReadyCount, ReadyMark } from '@/components/rooms/ready-parts';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import {
     ScreenTauntsToggle,
@@ -339,7 +340,8 @@ type Start = ReturnType<typeof useRoomStart>;
 /**
  * The present players as chips; one who joins after the screen first drew
  * pops in. While the live voice is on, a player who waits to be let in or
- * whom the host muted says so on the chip, an icon with its word (C4).
+ * whom the host muted says so on the chip, an icon with its word (C4). A
+ * player whose «Hazıram» counts has `Check` and «Hazır» (ADR 035).
  */
 function PlayerChips({
     players,
@@ -376,6 +378,7 @@ function PlayerChips({
                             {t('rooms.show.host')}
                         </span>
                     )}
+                    {player.ready && <ReadyMark big />}
                     {voice?.marks[player.id] !== undefined && (
                         <VoiceMark mark={voice.marks[player.id]} />
                     )}
@@ -516,6 +519,10 @@ function ScreenStart({
                         {t(needs)}
                     </span>
                 )}
+                <ReadyCount
+                    players={state.players}
+                    className="shrink-0 text-[max(0.9375rem,2.2vh)]"
+                />
                 <Button
                     type="button"
                     variant="outline"
@@ -551,8 +558,9 @@ function ScreenStart({
 
 /**
  * After a game: its end and its final (the room's standing, ADR 025) at
- * the left, and a right column with «Yenidən oyna», «Başqa oyun:» over the
- * five other games and the code for whoever comes next.
+ * the left with who has joined under it, each ready player marked (ADR
+ * 035), and a right column with «Yenidən oyna», how many are ready,
+ * «Başqa oyun:» over the other games and the code for whoever comes next.
  */
 function ScreenOver({
     state,
@@ -578,19 +586,29 @@ function ScreenOver({
     const { t } = useTranslation();
     const busy = start.starting || choice.pending !== null;
     const parts = choiceParts(t, choice.shown);
+    const present = state.players.filter((player) => player.present).length;
 
     return (
         <main
             data-motion={motion.phase ? 'on' : undefined}
             className="grid flex-1 grid-cols-[minmax(0,1fr)_27vw] gap-[4vw] px-[4vw] py-[3vh]"
         >
-            <GameEnd
-                state={state}
-                game={game}
-                placeLabels={placeLabels}
-                motion={motion}
-                big
-            />
+            <div className="flex min-w-0 flex-col gap-[3vh]">
+                <GameEnd
+                    state={state}
+                    game={game}
+                    placeLabels={placeLabels}
+                    motion={motion}
+                    big
+                />
+                {/* Who is ready for the next game, under the final where the row is wide (ADR 035). */}
+                <section className="flex flex-col gap-[1.2vh]">
+                    <h2 className="text-[max(1rem,2.6vh)] font-semibold">
+                        {t('rooms.start.joined_count', { count: present })}
+                    </h2>
+                    <PlayerChips players={state.players} />
+                </section>
+            </div>
 
             <aside className="flex min-w-0 flex-col gap-[1.6vh] self-start">
                 <Button
@@ -613,6 +631,11 @@ function ScreenOver({
                         className="text-[max(0.9375rem,2.2vh)] text-muted-foreground"
                     />
                 )}
+                {/* How many are ready for the next game, by the start (ADR 035). */}
+                <ReadyCount
+                    players={state.players}
+                    className="justify-start text-[max(0.9375rem,2.2vh)]"
+                />
                 {(start.failed || choice.failed) && (
                     <InputError
                         className="text-[max(0.875rem,1.8vh)]"

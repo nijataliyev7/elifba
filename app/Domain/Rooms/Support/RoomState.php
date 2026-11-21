@@ -67,6 +67,9 @@ use Illuminate\Support\Facades\DB;
  * asks the voice server nothing: who is in the voice, whose microphone is
  * open and who speaks are never in it.
  *
+ * Each player's `ready` says whether their «Hazıram» between games counts
+ * (§12 "Ready for the next game", ADR 035 decision 6; `RoomReady`).
+ *
  * What depends on the latest game's kind is its driver's (§12 "Board
  * games", ADR 034 decision 3): whether it is live, and its part — a live
  * race's round, or a board game's match, live or over
@@ -115,6 +118,7 @@ final class RoomState
                 present: $row->isPresent(),
                 host: $row->user_id !== null && $row->user_id === $room->user_id,
                 voice: $voiceData === null ? null : RoomVoice::stateOf($room, $row),
+                ready: RoomReady::counts($room, $row, $game),
             ))->all()),
             game: $game === null ? null : RoomGameData::of($game, $live ? RoomGamePhase::Live : RoomGamePhase::Over),
             round: $part['round'],

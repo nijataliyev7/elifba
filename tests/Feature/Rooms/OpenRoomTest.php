@@ -55,7 +55,7 @@ it('opens a room with a code and the host as its first player', function (): voi
             ->component('rooms/show')
             ->where('state.room.code', $room->code)
             ->where('state.me', ['player_id' => $player->id, 'host' => true])
-            ->where('state.players', [['id' => $player->id, 'name' => 'Rəşad Quliyev', 'present' => true, 'host' => true, 'voice' => null]])
+            ->where('state.players', [['id' => $player->id, 'name' => 'Rəşad Quliyev', 'present' => true, 'host' => true, 'voice' => null, 'ready' => false]])
             ->where('can', ['host' => true, 'leave' => true, 'delete' => false, 'forget' => false]));
 
     // No room table holds a name.

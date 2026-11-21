@@ -13,9 +13,11 @@ use App\Domain\Rooms\Enums\RoomVoiceStanding;
  * the player's standing in the room's live voice (C3, ADR 031) — exactly
  * for the host's row and the present players' while the room's voice is
  * on, null otherwise; never whether they are in it, their microphone or
- * whether they speak.
+ * whether they speak. `ready` is whether the player's «Hazıram» between
+ * games counts (ADR 035 decision 6, `RoomReady::counts()`): false for the
+ * host's row, an absent player and in a closed room.
  *
- * @phpstan-type RoomPlayerArray array{id: string, name: string|null, present: bool, host: bool, voice: string|null}
+ * @phpstan-type RoomPlayerArray array{id: string, name: string|null, present: bool, host: bool, voice: string|null, ready: bool}
  */
 final readonly class RoomPlayerData
 {
@@ -25,6 +27,7 @@ final readonly class RoomPlayerData
         public bool $present,
         public bool $host,
         public ?RoomVoiceStanding $voice = null,
+        public bool $ready = false,
     ) {}
 
     /**
@@ -32,7 +35,7 @@ final readonly class RoomPlayerData
      */
     public static function fromArray(array $data): self
     {
-        return new self($data['id'], $data['name'], $data['present'], $data['host'], $data['voice'] === null ? null : RoomVoiceStanding::from($data['voice']));
+        return new self($data['id'], $data['name'], $data['present'], $data['host'], $data['voice'] === null ? null : RoomVoiceStanding::from($data['voice']), $data['ready']);
     }
 
     /**
@@ -46,6 +49,7 @@ final readonly class RoomPlayerData
             'present' => $this->present,
             'host' => $this->host,
             'voice' => $this->voice?->value,
+            'ready' => $this->ready,
         ];
     }
 }

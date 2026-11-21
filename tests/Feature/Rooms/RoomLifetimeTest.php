@@ -199,7 +199,7 @@ it('deletes a host\'s rooms with the account and leaves a player\'s rows without
     // The other room shows the row without a name.
     $this->actingAs($this->player)->getJson(route('rooms.state', $elsewhere))
         ->assertOk()
-        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null]);
+        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null, 'ready' => false]);
 });
 
 it('schedules closing every hour and pruning every day', function (): void {

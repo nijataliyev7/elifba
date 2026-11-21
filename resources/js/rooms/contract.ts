@@ -83,6 +83,12 @@ export const RoomPlayer = z.strictObject({
     host: z.boolean(),
     /** While the room's voice is on, for the host and the present players; null otherwise. */
     voice: RoomVoiceStanding.nullable(),
+    /**
+     * Whether the player's «Hazıram» between games counts (ADR 035 decision
+     * 6): derived by the server; false for the host, an absent player and
+     * in a closed room.
+     */
+    ready: z.boolean(),
 });
 
 /**
@@ -545,7 +551,7 @@ export const RoomTaunts = z.strictObject({
 });
 
 /** The state's version: a page that meets another reloads itself (`fetchState`). */
-export const ROOM_STATE_VERSION = 6;
+export const ROOM_STATE_VERSION = 7;
 
 const stateBase = {
     v: z.literal(ROOM_STATE_VERSION),

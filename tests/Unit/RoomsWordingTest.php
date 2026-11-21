@@ -335,3 +335,37 @@ it('words the invitation link in exactly the strings ADR 033 lists, in both lang
         }
     }
 });
+
+it('words the ready mark in exactly the strings ADR 035 lists, in both languages', function (): void {
+    // ADR 035 decision 12: each new or changed key, az and en, as its table writes it (a line break as `\n`).
+    $adr = (string) file_get_contents(base_path('docs/decisions/035-ready-for-the-next-game.md'));
+    preg_match_all('/^\s*\| [+~] `([a-z_.]+)`\s*\|(.*)\|(.*)\|\s*$/mu', $adr, $rows, PREG_SET_ORDER);
+    $listed = ['az' => [], 'en' => []];
+
+    foreach ($rows as [, $key, $az, $en]) {
+        [$listed['az'][$key], $listed['en'][$key]] = [str_replace('\n', "\n", trim($az)), str_replace('\n', "\n", trim($en))];
+    }
+
+    expect(array_keys($listed['az']))->toContain('rooms.ready.button', 'rooms.ready.count', 'privacy.rooms.stored');
+
+    foreach (['az', 'en'] as $locale) {
+        /** @var array<string, string> $translations */
+        $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+        $own = array_filter($translations, static fn (string $key): bool => str_starts_with($key, 'rooms.ready.'), ARRAY_FILTER_USE_KEY);
+
+        // The mark's keys are the table's, nothing more.
+        expect(array_keys($own))->toEqualCanonicalizing(array_values(array_filter(array_keys($listed[$locale]), static fn (string $key): bool => ! str_starts_with($key, 'privacy.'))), $locale);
+
+        foreach ($listed[$locale] as $key => $text) {
+            expect($translations[$key] ?? null)->toBe($text, "{$locale}: {$key}")
+                ->and(promisesInRoomText($text))->toBe([], "{$locale}: {$key}");
+        }
+    }
+
+    // «oyun» for what a person does; «otaq» only on `/privacy` (ADR 026 decision 2).
+    foreach ($listed['az'] as $key => $text) {
+        if (! str_starts_with($key, 'privacy.')) {
+            expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
+        }
+    }
+});

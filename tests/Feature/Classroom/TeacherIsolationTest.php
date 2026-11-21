@@ -52,7 +52,7 @@ const ISOLATED_PARAMETERS = ['class', 'student', 'game', 'word', 'child', 'room'
  * factories (`OpenRoom` gives a host one open room), since starting a game
  * needs a room without one and ending it a room with one.
  *
- * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord, childA: Child, secondChildA: Child, homeGameA: GameSession, childB: Child, homeGameB: GameSession, roomA: Room, memberA: RoomPlayer, closedRoomA: Room, roomB: Room, memberB: RoomPlayer, playingRoomA: Room, roomGameA: RoomGame}
+ * @return array{a: User, b: User, classA: SchoolClass, otherClassA: SchoolClass, archivedClassA: SchoolClass, studentA: Student, secondStudentA: Student, archivedStudentA: Student, otherStudentA: Student, gameA: GameSession, classB: SchoolClass, studentB: Student, gameB: GameSession, wordA: CustomWord, wordB: CustomWord, childA: Child, secondChildA: Child, homeGameA: GameSession, childB: Child, homeGameB: GameSession, roomA: Room, memberA: RoomPlayer, closedRoomA: Room, roomB: Room, memberB: RoomPlayer, playingRoomA: Room, roomGameA: RoomGame, joinedRoomA: Room}
  */
 function isolationWorld(): array
 {
@@ -111,6 +111,13 @@ function isolationWorld(): array
         'memberB' => Rooms::join($roomB),
         'playingRoomA' => $playingRoomA,
         'roomGameA' => $roomGameA->load('rounds'),
+        // A room A plays in and does not host: «Hazıram» is a player's, never the host's (ADR 035).
+        'joinedRoomA' => (static function () use ($a): Room {
+            $room = Rooms::open(User::factory()->player()->create(['name' => 'Aysel Həsənova']));
+            Rooms::join($room, $a);
+
+            return $room->refresh();
+        })(),
     ];
 }
 
@@ -199,6 +206,8 @@ function isolationCases(): array
             'taunt' => 'turtle',
         ]],
         'PUT rooms/{room}/taunts' => ['rooms.taunts.update', $roomA, static fn (array $w): array => ['on' => false]],
+        // A player's «Hazıram» between games (ADR 035).
+        'PUT rooms/{room}/ready' => ['rooms.ready.update', static fn (array $w): array => ['room' => $w['joinedRoomA']->id], static fn (array $w): array => ['on' => true]],
         // A seat's act in a board game (D3, ADR 034): a resignation needs no position.
         'POST rooms/{room}/acts' => ['rooms.acts.store', $roomA, static fn (array $w): array => ['event_id' => '01kaqs3a1b2c3d4e5f6g7h8j9k', 'game_id' => '01kaqs3b1b2c3d4e5f6g7h8j9k', 'kind' => 'resign']],
         // Live voice (C3): the host's switch, the host's word on a player, a ticket (A's room has its voice on).

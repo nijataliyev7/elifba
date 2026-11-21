@@ -52,9 +52,10 @@ it('builds the lobby fixture from rows, and the DTOs round-trip it', function ()
     [$hostRow, $viewerRow, $leftRow, $namelessRow] = array_column($fixture['players'], 'id');
     $at = static fn (int $minutes): CarbonImmutable => CarbonImmutable::now()->subMinutes(10 - $minutes);
 
-    RoomPlayer::factory()->for($room)->for($host)->create(['id' => $hostRow, 'joined_at' => $at(0)]);
-    RoomPlayer::factory()->for($room)->for($viewer)->create(['id' => $viewerRow, 'joined_at' => $at(1)]);
-    RoomPlayer::factory()->for($room)->for($left)->left()->create(['id' => $leftRow, 'joined_at' => $at(2)]);
+    // «Hazıram» for the first game (ADR 035): the viewer's counts; the host's and an absent player's never do.
+    RoomPlayer::factory()->for($room)->for($host)->create(['id' => $hostRow, 'joined_at' => $at(0), 'ready_for' => 0]);
+    RoomPlayer::factory()->for($room)->for($viewer)->create(['id' => $viewerRow, 'joined_at' => $at(1), 'ready_for' => 0]);
+    RoomPlayer::factory()->for($room)->for($left)->left()->create(['id' => $leftRow, 'joined_at' => $at(2), 'ready_for' => 0]);
     RoomPlayer::factory()->for($room)->create(['id' => $namelessRow, 'user_id' => null, 'joined_at' => $at(3)]);
     // Removed: not in the lobby at all.
     RoomPlayer::factory()->for($room)->removed()->create(['joined_at' => $at(4)]);
@@ -93,7 +94,7 @@ it('gives the lobby its players by name and never an account id or an address', 
     // The name is the account's as it is now.
     $player->forceFill(['name' => 'Aygün Həsənova'])->save();
     $this->actingAs($host)->getJson(route('rooms.state', $room))
-        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Həsənova', 'present' => true, 'host' => false, 'voice' => null]);
+        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Həsənova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => false]);
 });
 
 it('names no one who took their name out', function (): void {
@@ -116,7 +117,7 @@ it('names no one who took their name out', function (): void {
     // The others see the row without a name.
     $this->actingAs($host)->get(route('rooms.show', $room))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('state.players.1', ['id' => $row->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null])
+            ->where('state.players.1', ['id' => $row->id, 'name' => null, 'present' => false, 'host' => false, 'voice' => null, 'ready' => false])
             ->where('state.me.player_id', RoomPlayer::query()->where('user_id', $host->id)->value('id'))
             // A closed room has no choice of a next game (G2).
             ->where('state.setup', null));
