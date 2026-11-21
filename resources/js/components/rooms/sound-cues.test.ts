@@ -8,6 +8,7 @@ import {
     carriesRoom,
     CLOCK_MS,
     FANFARE_MS,
+    holdsSeat,
     LEAD_MS,
     MAX_NAMES,
     roomCues,
@@ -1358,26 +1359,211 @@ describe('roomCues in a match', () => {
         ).toEqual([]);
     });
 
-    it('plays no move, sent, right or wrong on a phone of a room with its screen', () => {
-        const cues = roomCues(
-            { state: withScreen(matchPlay), now: starts + 8_000 },
-            { state: withScreen(taken), now: starts + 9_050 },
-            'phone',
+    /*
+     * Whose turn it is (ADR 034 "Amended 2026-11-21 — whose turn it is"):
+     * the seat whose turn begins hears that moment's cues and its own clock
+     * on its phone, with a screen too, and feels one buzz; the seat that
+     * just moved, a watcher and the screen hear nothing new, and a phone
+     * that carries the room hears nothing twice.
+     */
+    const [whiteSide, blackSide] = playOf(matchPlay).sides;
+    /** The match at `ply` with `turn` to move after `last`, seen by `viewer`; the room's screen `screen`. */
+    const turnAt = (
+        ply: number,
+        turn: 'white' | 'black',
+        last: Play['last'],
+        viewer: string,
+        screen: boolean,
+    ): State =>
+        withScreen(
+            {
+                ...matchPlay,
+                me: { ...matchPlay.me, player_id: viewer },
+                match: {
+                    ...playOf(matchPlay),
+                    ply,
+                    turn,
+                    last,
+                    since_ms: starts + ply * 4_000,
+                    flag_ms: starts + ply * 4_000 + 290_000,
+                    offer: null,
+                    legal: null,
+                },
+            } as State,
+            screen,
         );
+    const whiteMoves = { path: ['c3', 'd4'], captured: [], crowned: false };
+    const blackTakes = {
+        path: ['e5', 'c3', 'a1'],
+        captured: ['d4', 'b2'],
+        crowned: true,
+    };
+    const watcher = matchWatch.me.player_id ?? 'a-watcher';
+    /** White moves (ply 2 → 3), then black takes and crowns (ply 3 → 4), each heard 50 ms after its moment began. */
+    const twoMoves = (viewer: string, screen: boolean): RoomEar[] => [
+        {
+            state: turnAt(2, 'white', null, viewer, screen),
+            now: starts + 8_100,
+        },
+        {
+            state: turnAt(3, 'black', whiteMoves, viewer, screen),
+            now: starts + 12_050,
+        },
+        {
+            state: turnAt(4, 'white', blackTakes, viewer, screen),
+            now: starts + 16_050,
+        },
+    ];
+    const cuesOf = (ears: RoomEar[]) => ({
+        whiteMoved: roomCues(ears[0], ears[1], 'phone'),
+        blackTook: roomCues(ears[1], ears[2], 'phone'),
+    });
 
-        expect(cues).toEqual([]);
-        // Without a screen, every phone carries the room's moves.
+    it("plays the other seat's move and one buzz on the phone of the seat whose turn begins, with a screen too", () => {
+        // White's phone: its own move is silent; black's capture lands on its turn.
+        expect(cuesOf(twoMoves(whiteSide.player_id, true))).toEqual({
+            whiteMoved: [],
+            blackTook: [
+                { sound: 'capture', at: 320 },
+                { sound: 'crown', at: 440 },
+                { sound: 'buzz', at: 320 },
+            ],
+        });
+        // Black's phone: white's move lands on its turn; its own capture is silent.
+        expect(cuesOf(twoMoves(blackSide.player_id, true))).toEqual({
+            whiteMoved: [
+                { sound: 'move', at: 160 },
+                { sound: 'buzz', at: 160 },
+            ],
+            blackTook: [],
+        });
+        // A watcher's phone hears neither, and the screen what it always heard.
+        expect(cuesOf(twoMoves(watcher, true))).toEqual({
+            whiteMoved: [],
+            blackTook: [],
+        });
         expect(
-            names(
-                heard(
-                    [
-                        { state: matchPlay, now: starts + 8_000 },
-                        { state: taken, now: starts + 9_050 },
-                    ],
-                    'phone',
-                ),
+            heard(twoMoves(watcher, true), 'screen').map(({ cue }) => cue),
+        ).toEqual([
+            { sound: 'move', at: 160 },
+            { sound: 'capture', at: 320 },
+            { sound: 'crown', at: 440 },
+        ]);
+    });
+
+    it('adds only the buzz on a phone that carries the room, so nothing is heard twice', () => {
+        expect(cuesOf(twoMoves(whiteSide.player_id, false))).toEqual({
+            whiteMoved: [{ sound: 'move', at: 160 }],
+            blackTook: [
+                { sound: 'capture', at: 320 },
+                { sound: 'crown', at: 440 },
+                { sound: 'buzz', at: 320 },
+            ],
+        });
+        expect(cuesOf(twoMoves(blackSide.player_id, false))).toEqual({
+            whiteMoved: [
+                { sound: 'move', at: 160 },
+                { sound: 'buzz', at: 160 },
+            ],
+            blackTook: [
+                { sound: 'capture', at: 320 },
+                { sound: 'crown', at: 440 },
+            ],
+        });
+        expect(cuesOf(twoMoves(watcher, false))).toEqual({
+            whiteMoved: [{ sound: 'move', at: 160 }],
+            blackTook: [
+                { sound: 'capture', at: 320 },
+                { sound: 'crown', at: 440 },
+            ],
+        });
+    });
+
+    it("begins white's first turn with go and a buzz as the clock starts, on white's phone alone", () => {
+        const start = (viewer: string, screen: boolean) =>
+            roomCues(
+                {
+                    state: withScreen(
+                        {
+                            ...matchCountdown,
+                            me: { ...matchCountdown.me, player_id: viewer },
+                        } as State,
+                        screen,
+                    ),
+                    now: starts - 1_500,
+                },
+                {
+                    state: withScreen(
+                        {
+                            ...begun,
+                            me: { ...begun.me, player_id: viewer },
+                        } as State,
+                        screen,
+                    ),
+                    now: starts + 80,
+                },
+                'phone',
+            );
+
+        expect(start(whiteSide.player_id, true)).toEqual([
+            { sound: 'go', at: 0 },
+            { sound: 'buzz', at: 0 },
+        ]);
+        expect(start(blackSide.player_id, true)).toEqual([]);
+        expect(start(watcher, true)).toEqual([]);
+        // Without a screen every phone hears go; white's alone feels it.
+        expect(start(whiteSide.player_id, false)).toEqual([
+            { sound: 'go', at: 0 },
+            { sound: 'buzz', at: 0 },
+        ]);
+        expect(start(blackSide.player_id, false)).toEqual([
+            { sound: 'go', at: 0 },
+        ]);
+    });
+
+    it('runs the clock on the phone of the seat to move alone, ending at its flag, with a screen too', () => {
+        const flagOf = (state: State) => playOf(state).flag_ms;
+        const clockFor = (viewer: string) => {
+            const state = turnAt(4, 'white', blackTakes, viewer, true);
+            const flag = flagOf(state);
+
+            return roomCues(
+                { state, now: flag - 20_000 },
+                { state, now: flag - CLOCK_MS - LEAD_MS + 100 },
+                'phone',
+            );
+        };
+
+        expect(clockFor(whiteSide.player_id)).toEqual([
+            { sound: 'clock', at: CLOCK_MS + LEAD_MS - 100, ends: true },
+        ]);
+        expect(clockFor(blackSide.player_id)).toEqual([]);
+        expect(clockFor(watcher)).toEqual([]);
+    });
+
+    it('plays nothing again for the same turn, a page opened on it or a turn heard long after', () => {
+        const ears = twoMoves(blackSide.player_id, true);
+
+        expect(
+            roomCues(ears[1], { ...ears[1], now: starts + 12_400 }, 'phone'),
+        ).toEqual([]);
+        expect(roomCues(null, ears[1], 'phone')).toEqual([]);
+        expect(
+            roomCues(
+                ears[0],
+                { ...ears[1], now: starts + 12_000 + STALE_MS + 1 },
+                'phone',
             ),
-        ).toEqual(['capture', 'crown']);
+        ).toEqual([]);
+    });
+
+    it('fetches the seat files for a seat of a live match, not for a watcher or after the end', () => {
+        expect(holdsSeat(matchCountdown)).toBe(true);
+        expect(holdsSeat(matchPlay)).toBe(true);
+        expect(holdsSeat(matchWatch)).toBe(false);
+        expect(holdsSeat(matchOver)).toBe(false);
+        expect(holdsSeat(answered)).toBe(false);
+        expect(holdsSeat(null)).toBe(false);
     });
 
     it('closes the match, then opens its own final and cheers its winner', () => {

@@ -185,3 +185,21 @@ export function seatOf(
 ): RoomSide | null {
     return match.sides.find((side) => side.player_id === viewer) ?? null;
 }
+
+/**
+ * Whether it is the viewer's turn now (ADR 034 "Amended 2026-11-21 — whose
+ * turn it is"): the match is played and the viewer holds the side to move.
+ * False in the countdown and after the end, for the other seat, a watcher
+ * and the screen (no viewer). The band under the board, the strip's ringed
+ * clock, the tab's title, the wake lock and the seat's cues read it alone.
+ */
+export function yourTurn(
+    match: Pick<RoomMatch, 'phase' | 'turn' | 'sides'>,
+    viewer: string | null,
+): boolean {
+    return (
+        match.phase === 'play' &&
+        viewer !== null &&
+        seatOf(match, viewer)?.color === match.turn
+    );
+}

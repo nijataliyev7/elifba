@@ -11,6 +11,7 @@ import {
     shownLeft,
     slideOf,
     squareAt,
+    yourTurn,
 } from './board';
 import play from '../../../../../tests/Fixtures/rooms/state.match.play.json';
 
@@ -115,5 +116,29 @@ describe('the board', () => {
         expect(clockText(7_449, ',')).toBe('0:07,4');
         expect(clockText(7_449, '.')).toBe('0:07.4');
         expect(clockText(0, ',')).toBe('0:00,0');
+    });
+
+    it("says it is the viewer's turn only while the match is played and the viewer holds the side to move", () => {
+        const shown = match();
+        const [white, black] = shown.sides;
+
+        expect(shown.turn).toBe('white');
+        expect(yourTurn(shown, white.player_id)).toBe(true);
+        // The other seat, a watcher and the screen (no viewer).
+        expect(yourTurn(shown, black.player_id)).toBe(false);
+        expect(yourTurn(shown, 'a-watcher')).toBe(false);
+        expect(yourTurn(shown, null)).toBe(false);
+        // Black's turn: black's, not white's.
+        const blacks = { ...shown, turn: 'black' as const };
+
+        expect(yourTurn(blacks, black.player_id)).toBe(true);
+        expect(yourTurn(blacks, white.player_id)).toBe(false);
+        // White moves first, but not before the clock starts, and nobody after the end.
+        expect(
+            yourTurn({ ...shown, phase: 'countdown' }, white.player_id),
+        ).toBe(false);
+        expect(
+            yourTurn({ ...shown, phase: 'over', turn: null }, white.player_id),
+        ).toBe(false);
     });
 });

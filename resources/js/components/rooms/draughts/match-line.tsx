@@ -7,6 +7,7 @@ import {
     Undo2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { yourTurn } from '@/components/rooms/draughts/board';
 import { secondsUntil } from '@/components/rooms/use-server-now';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
@@ -25,6 +26,13 @@ import type { RoomMatch, RoomPlayer, RoomSide } from '@/rooms/contract';
  * 44px row — at most two parts, each on a line of its own, or one part in
  * two lines, beside «Geri» — so the match still fits 375 × 667. On the
  * screen (`big`) whose turn it is and a standing offer, larger.
+ *
+ * For the seat to move (`yourTurn()`, ADR 034 "Amended 2026-11-21 — whose
+ * turn it is") «Sizin növbənizdir» is a band the seat cannot miss: the
+ * row's 44px filled in the left side's deep colour (where «Siz» stands in
+ * the strip), `Hand` and the words in white. It pops in once when the page
+ * saw the turn begin (`motion`), and stands still otherwise and under
+ * reduced motion.
  */
 export function MatchLine({
     match,
@@ -34,6 +42,7 @@ export function MatchLine({
     begun = false,
     failed = false,
     onUndo,
+    motion = false,
     big = false,
 }: {
     match: RoomMatch;
@@ -45,6 +54,8 @@ export function MatchLine({
     begun?: boolean;
     failed?: boolean;
     onUndo?: () => void;
+    /** The page saw this moment begin: the seat's band pops in. */
+    motion?: boolean;
     big?: boolean;
 }) {
     const { t } = useTranslation();
@@ -79,14 +90,16 @@ export function MatchLine({
             </Part>,
         );
     } else if (match.phase === 'play') {
-        const mine = seat !== null && seat.color === match.turn;
+        const mine = yourTurn(match, seat?.player_id ?? null);
 
         parts.push(
             mine ? (
+                // A new turn is a new band: it pops in when the page saw it begin.
                 <Part
-                    key="turn"
+                    key={`turn:${match.ply}`}
                     icon={<Hand aria-hidden className={icon} />}
-                    strong
+                    band
+                    pop={motion}
                 >
                     {match.legal?.capture === true
                         ? t('rooms.match.your_turn_capture')
@@ -181,20 +194,27 @@ export function MatchLine({
 
 function Part({
     icon,
-    strong = false,
+    band = false,
+    pop = false,
     wrong = false,
     children,
 }: {
     icon: ReactNode;
-    strong?: boolean;
+    /** The seat's turn: the whole row, filled in its side's deep colour. */
+    band?: boolean;
+    pop?: boolean;
     wrong?: boolean;
     children: ReactNode;
 }) {
     return (
         <span
+            data-turn-band={band ? '' : undefined}
             className={cn(
                 'flex min-w-0 items-center gap-1.5',
-                strong ? 'font-semibold' : 'text-muted-foreground',
+                band
+                    ? 'min-h-11 rounded-lg bg-rival-left-deep px-3 leading-tight font-semibold text-white'
+                    : 'text-muted-foreground',
+                band && pop && 'motion-safe:animate-room-pop',
                 wrong && 'text-red-600 dark:text-red-400',
             )}
         >

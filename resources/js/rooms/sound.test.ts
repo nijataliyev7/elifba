@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+    BUZZ_MS,
     MIN_TAIL_MS,
     MUTE_STORAGE_KEYS,
     NAME_GAP_MS,
@@ -8,6 +9,7 @@ import {
     readMuted,
     ROOM_SOUNDS,
     roomSoundPlayer,
+    SEAT_SOUNDS,
     SPEAKER_GAIN,
     STOP_MS,
     VOICE_GAIN,
@@ -447,6 +449,109 @@ describe('roomSoundPlayer', () => {
         expect(files.asked).toHaveLength(
             ROOM_SOUNDS.phone.length + ROOM_SOUNDS.screen.length,
         );
+    });
+
+    it("fetches a match's seat files once asked, not the room's whole set, and plays them at a phone's level", async () => {
+        const audio = fakeAudio();
+        const files = loader();
+        const player = roomSoundPlayer({
+            speaker: 'phone',
+            urls: { ...urls.phone, ...urls.screen },
+            storage: memoryStorage,
+            createContext: audio.create,
+            load: files.load,
+        });
+
+        player.unlock();
+        player.seat();
+        player.seat();
+        await settle();
+
+        expect(files.asked).toEqual(
+            [...ROOM_SOUNDS.phone, ...SEAT_SOUNDS].map(
+                (name) => `/content/${name}.mp3`,
+            ),
+        );
+        player.play('capture');
+        player.play('fanfare');
+        expect(audio.started.map(({ sound, gain }) => [sound, gain])).toEqual([
+            ['capture', SPEAKER_GAIN.phone],
+        ]);
+
+        // Carrying the room later fetches the rest, nothing twice.
+        player.carry();
+        await settle();
+        expect(new Set(files.asked).size).toBe(files.asked.length);
+        expect(files.asked).toHaveLength(
+            ROOM_SOUNDS.phone.length + ROOM_SOUNDS.screen.length,
+        );
+    });
+
+    it('buzzes once, when asked, only while unlocked, unmuted and shown, and drops a buzz whose moment ended', async () => {
+        const audio = fakeAudio();
+        const timers = manualLater();
+        const storage = memoryStorage();
+        const buzzed: number[] = [];
+        const player = roomSoundPlayer({
+            speaker: 'phone',
+            urls: urls.phone,
+            storage: () => storage,
+            createContext: audio.create,
+            load: loader().load,
+            later: timers.later,
+            vibrate: (ms) => buzzed.push(ms),
+        });
+
+        // Locked: no gesture yet.
+        player.buzz(0);
+        expect(timers.asked).toHaveLength(0);
+
+        player.unlock();
+        await settle();
+        player.buzz(160);
+        expect(timers.asked.map(({ ms }) => ms)).toEqual([160]);
+        expect(buzzed).toEqual([]);
+        timers.asked[0].run();
+        expect(buzzed).toEqual([BUZZ_MS]);
+        expect(BUZZ_MS).toBeLessThanOrEqual(50);
+
+        // The moment ended before the piece landed: dropped.
+        player.buzz(160);
+        player.cancel();
+        expect(timers.asked[1].cancelled).toBe(true);
+
+        // Hidden: none asked for. Muted: one waiting is dropped, and one that runs anyway stays still.
+        player.hide();
+        player.buzz(0);
+        player.resume();
+        player.buzz(0);
+        player.setMuted(true);
+        player.buzz(0);
+        expect(timers.asked).toHaveLength(3);
+        expect(timers.asked[2].cancelled).toBe(true);
+        timers.asked[2].run();
+        expect(buzzed).toEqual([BUZZ_MS]);
+
+        // A device without vibration never throws.
+        const bare = roomSoundPlayer({
+            speaker: 'phone',
+            urls: urls.phone,
+            storage: memoryStorage,
+            createContext: fakeAudio().create,
+            load: loader().load,
+            later: (run) => {
+                run();
+
+                return () => {};
+            },
+            vibrate: () => {
+                throw new Error('no vibration');
+            },
+        });
+
+        bare.unlock();
+        await settle();
+        expect(() => bare.buzz(0)).not.toThrow();
     });
 
     it("never carries on the screen: it already is the room's speaker", async () => {

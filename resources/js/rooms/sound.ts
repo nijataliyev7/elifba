@@ -42,6 +42,15 @@
  * to the round's moment: `cancel()` leaves it, and only `hush()` — the
  * game over, the room closed, the taunts hidden or switched off — the
  * mute, a hidden page or the page's end stop it, fading within `STOP_MS`.
+ *
+ * A seat in a match (ADR 034 "Amended 2026-11-21 — whose turn it is"): its
+ * phone plays the room's cues of the moment its turn begins, and its own
+ * clock, also when a screen carries the room — so once it holds a seat it
+ * fetches those files of the room's (`seat()`, `SEAT_SOUNDS`), not the
+ * whole set — and vibrates once as the turn begins (`buzz()`, `BUZZ_MS`):
+ * where the browser has `navigator.vibrate`, under the same mute, only
+ * once sound is unlocked and never on a hidden page; a buzz waiting for its
+ * moment is dropped when the moment ends, as a cue is.
  */
 
 /** Each speaker's sounds, as `content/rooms/sounds.json` and `RoomSound` name them. */
@@ -66,6 +75,20 @@ export const ROOM_SOUNDS = {
 } as const;
 
 export type RoomSpeaker = keyof typeof ROOM_SOUNDS;
+
+/**
+ * The room's files a match's seat plays on its own phone, with a screen
+ * too: the cues of the moment its turn begins — `go`, the other seat's
+ * `move` or `capture` and `crown` — and its own `clock` (ADR 034 "Amended
+ * 2026-11-21 — whose turn it is").
+ */
+export const SEAT_SOUNDS = [
+    'go',
+    'move',
+    'capture',
+    'crown',
+    'clock',
+] as const satisfies readonly (typeof ROOM_SOUNDS.screen)[number][];
 export type ScreenSound = (typeof ROOM_SOUNDS.screen)[number];
 export type PhoneSound = (typeof ROOM_SOUNDS.phone)[number];
 export type RoomSoundName = ScreenSound | PhoneSound;
@@ -100,6 +123,12 @@ export const STOP_MS = 40;
 
 /** A cue placed to end at a moment plays nothing when less than this is left of it: a fragment is noise. */
 export const MIN_TAIL_MS = 250;
+
+/**
+ * The one vibration in a room (ADR 034 "Amended 2026-11-21 — whose turn it
+ * is", ADR 025 decisions 2 and 14 as amended): as a seat's turn begins.
+ */
+export const BUZZ_MS = 50;
 
 /**
  * The voice's level beside the room's files (ADR 030): the name and phrase
@@ -217,9 +246,17 @@ export type RoomSoundPlayer = {
     unlock: () => void;
     /** A phone in a room without a screen: it fetches and plays the room's files too, from now on. */
     carry: () => void;
+    /** A phone that holds a seat in a live match: it fetches the room's `SEAT_SOUNDS` too, from now on. */
+    seat: () => void;
     /** The mute toggle (a gesture: turning sound on also unlocks it). */
     setMuted: (muted: boolean) => void;
     play: (sound: RoomSoundName, when?: PlayAt) => void;
+    /**
+     * A seat's turn begins: one vibration of `BUZZ_MS`, `at` ms from now,
+     * where the browser can; nothing while muted, hidden or locked. The
+     * moment's end drops it.
+     */
+    buzz: (at: number) => void;
     /** The moment the cues belonged to is over: drops those scheduled, fades out those sounding. */
     cancel: () => void;
     /** The page is hidden: everything stops, and nothing plays until `resume()`. */
@@ -274,6 +311,7 @@ export function roomSoundPlayer({
     createContext = browserContext,
     load = fetchBytes,
     later = browserLater,
+    vibrate = browserVibrate,
 }: {
     speaker: RoomSpeaker;
     urls: RoomSoundUrls;
@@ -281,12 +319,16 @@ export function roomSoundPlayer({
     createContext?: () => AudioContextLike | null;
     load?: (url: string) => Promise<ArrayBuffer>;
     later?: Later;
+    /** One vibration of `ms`; nothing where the device has none. */
+    vibrate?: (ms: number) => void;
 }): RoomSoundPlayer {
     const listeners = new Set<() => void>();
     const buffers = new Map<RoomSoundName, AudioBufferLike>();
     const scheduled = new Set<Scheduled>();
     /** The names waiting for their time: each one's cancel. */
     const sayings = new Set<() => void>();
+    /** The buzzes waiting for their time, each with its cancel. */
+    const buzzes = new Set<{ cancel: () => void }>();
     // A file asked for once is not asked again: decoded, or silent if it failed.
     const requested = new Set<RoomSoundName>();
     /** The taunts' clips by key: their URLs, the decoded ones, and those asked for. */
@@ -299,6 +341,7 @@ export function roomSoundPlayer({
     let waiting: { key: string; dropAt: number }[] = [];
     let context: AudioContextLike | null = null;
     let carrying = false;
+    let seated = false;
     let hidden = false;
     let muted = readMuted(storage(), speaker);
     let state: RoomSoundState = { muted, locked: true };
@@ -314,11 +357,20 @@ export function roomSoundPlayer({
         }
     };
 
-    /** The files this page plays: its speaker's, and a carrying phone the room's too. */
-    const wanted = (): readonly RoomSoundName[] =>
-        speaker === 'phone' && carrying
-            ? [...ROOM_SOUNDS.phone, ...ROOM_SOUNDS.screen]
-            : ROOM_SOUNDS[speaker];
+    /** The files this page plays: its speaker's, a carrying phone the room's too, and a seat's phone its turn's. */
+    const wanted = (): readonly RoomSoundName[] => {
+        if (speaker !== 'phone') {
+            return ROOM_SOUNDS[speaker];
+        }
+
+        if (carrying) {
+            return [...ROOM_SOUNDS.phone, ...ROOM_SOUNDS.screen];
+        }
+
+        return seated
+            ? [...ROOM_SOUNDS.phone, ...SEAT_SOUNDS]
+            : ROOM_SOUNDS.phone;
+    };
 
     const fetchAll = () => {
         if (context === null) {
@@ -439,9 +491,11 @@ export function roomSoundPlayer({
         const now = context?.currentTime ?? 0;
         const end = now + STOP_MS / 1000;
 
-        // Names not yet due are dropped with their clips.
+        // Names not yet due are dropped with their clips, and a buzz not yet due.
         sayings.forEach((cancel) => cancel());
         sayings.clear();
+        buzzes.forEach((waiting) => waiting.cancel());
+        buzzes.clear();
 
         for (const cue of scheduled) {
             try {
@@ -548,6 +602,14 @@ export function roomSoundPlayer({
             carrying = true;
             fetchAll();
         },
+        seat: () => {
+            if (speaker !== 'phone' || seated) {
+                return;
+            }
+
+            seated = true;
+            fetchAll();
+        },
         setMuted: (next) => {
             muted = next;
             writeMuted(storage(), speaker, next);
@@ -590,6 +652,34 @@ export function roomSoundPlayer({
                 start(audio, buffer, audio.currentTime + wait, offset, 1);
             } catch {
                 // A cue that cannot play is skipped.
+            }
+        },
+        buzz: (at) => {
+            if (muted || hidden || !running()) {
+                return;
+            }
+
+            const waiting = { cancel: () => {} };
+            let due = false;
+
+            waiting.cancel = later(
+                () => {
+                    due = true;
+                    buzzes.delete(waiting);
+
+                    if (!muted && !hidden) {
+                        try {
+                            vibrate(BUZZ_MS);
+                        } catch {
+                            // No vibration on this device.
+                        }
+                    }
+                },
+                Math.max(0, at),
+            );
+
+            if (!due) {
+                buzzes.add(waiting);
             }
         },
         cancel: stopAll,
@@ -753,6 +843,13 @@ function browserContext(): AudioContextLike | null {
             : (new Context() as unknown as AudioContextLike);
     } catch {
         return null;
+    }
+}
+
+/** The browser's vibration, where there is one (Android's Chrome; not Safari on iOS). */
+function browserVibrate(ms: number): void {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(ms);
     }
 }
 

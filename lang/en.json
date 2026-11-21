@@ -713,6 +713,7 @@
     "rooms.match.stop_description": "The game will end without a result.",
     "rooms.match.stopped": "The game was stopped",
     "rooms.match.their_turn": ":name to move",
+    "rooms.match.turn_title": "● Your move",
     "rooms.match.undo": "Back",
     "rooms.match.watching": "You are watching",
     "rooms.match.won": ":name won",

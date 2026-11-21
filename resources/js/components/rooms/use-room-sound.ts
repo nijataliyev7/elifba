@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
     carriesRoom,
+    holdsSeat,
     roomCues,
     sameMoment,
     tauntsLive,
@@ -96,6 +97,11 @@ function allowedWithoutGesture(): boolean {
  * fanfare — the screen's, and a phone's while it carries a room without
  * a screen (as amended 2026-11-19). A page without it says nothing.
  *
+ * A match's seat (ADR 034 "Amended 2026-11-21 — whose turn it is") hears
+ * its own turns on its phone, with a screen too: the player fetches their
+ * files once the viewer holds a seat (`holdsSeat()`), and a `buzz` cue is
+ * the player's one vibration.
+ *
  * `taunts` (ADR 029 as amended 2026-11-19): the taunts' clips and the
  * device's choice to hide them. The page says each taunt it draws and saw
  * arrive — the target's phone, the screen — fetching the clips only while
@@ -157,9 +163,13 @@ export function useRoomSound({
             const ear = { state: stateRef.current, now: clock.now() };
             const previous = heard.current;
 
-            // A phone in a room without a screen fetches the room's files too.
+            // A phone in a room without a screen fetches the room's files too; a match's seat, its turn's.
             if (speaker === 'phone' && carriesRoom(ear.state)) {
                 player.carry();
+            }
+
+            if (speaker === 'phone' && holdsSeat(ear.state)) {
+                player.seat();
             }
 
             // The taunts' clips while this device draws taunts; a taunt being said stops when it no longer does.
@@ -187,6 +197,8 @@ export function useRoomSound({
 
                 if (cue.sound === 'taunt') {
                     player.taunt(cue.key, cue.until);
+                } else if (cue.sound === 'buzz') {
+                    player.buzz(cue.at);
                 } else if (cue.sound !== 'cheer') {
                     player.play(cue.sound, cue);
                 } else if (voice !== undefined) {

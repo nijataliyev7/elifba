@@ -412,10 +412,14 @@
  * 027 decision 8): the rivalry strip's two sides, the left sky and the
  * right orange in both themes — a fill, its highlight, the side's text and
  * a tint. They mean a side, never a person, never right or wrong (the
- * room's emerald and red) and never the study's amber lamp.
+ * room's emerald and red) and never the study's amber lamp. The left
+ * side's deep shade fills the band of a match's seat whose turn it is,
+ * white words on it (5.9 : 1), in both themes (ADR 034 "Amended 2026-11-21
+ * — whose turn it is"): on a seat's phone «Siz» stands on the left.
  */
 :root {
     --rival-left: var(--color-sky-600);
+    --rival-left-deep: var(--color-sky-700);
     --rival-left-hi: var(--color-sky-400);
     --rival-left-text: var(--color-sky-700);
     --rival-left-tint: color-mix(
@@ -450,6 +454,7 @@
 
 @theme inline {
     --color-rival-left: var(--rival-left);
+    --color-rival-left-deep: var(--rival-left-deep);
     --color-rival-left-hi: var(--rival-left-hi);
     --color-rival-left-text: var(--rival-left-text);
     --color-rival-left-tint: var(--rival-left-tint);

@@ -713,6 +713,7 @@
     "rooms.match.stop_description": "Oyun nəticəsiz bitəcək.",
     "rooms.match.stopped": "Oyun dayandırıldı",
     "rooms.match.their_turn": ":name oynayır",
+    "rooms.match.turn_title": "● Sizin növbənizdir",
     "rooms.match.undo": "Geri",
     "rooms.match.watching": "Oyunu izləyirsiniz",
     "rooms.match.won": ":name qalib gəldi",

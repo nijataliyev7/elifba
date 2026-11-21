@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 
 /**
  * Holds a Screen Wake Lock while `active`, so the projector laptop does not
- * sleep mid-game (docs/architecture.md §4, "Reconnects"). The browser drops
+ * sleep mid-game (docs/architecture.md §4, "Reconnects") — nor a match's
+ * seat's phone while the other seat thinks (ADR 034 "Amended 2026-11-21 —
+ * whose turn it is"). The browser drops
  * the lock when the page is hidden; it is taken again when the page is
  * visible. Browsers without the API simply sleep as before.
  */

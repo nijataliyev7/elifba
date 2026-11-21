@@ -1,4 +1,9 @@
-import { offerTo, slideOf } from '@/components/rooms/draughts/board';
+import {
+    offerTo,
+    seatOf,
+    slideOf,
+    yourTurn,
+} from '@/components/rooms/draughts/board';
 import { finalRows, finalTier, finalTimeline } from '@/components/rooms/final';
 import { momentKey, REVEAL_MS, roomMoment } from '@/components/rooms/motion';
 import { standingGroups } from '@/components/rooms/standing-groups';
@@ -44,7 +49,12 @@ import type { RoomSoundName, RoomSpeaker } from '@/rooms/sound';
  * `CLOCK_MS`, ending at its flag and stopped by the move; at its end
  * `close` and the final of its own two places (`finalRows()`). A phone
  * plays `offer` when a draw offer arrives at its viewer; never `sent`,
- * `right` or `wrong`.
+ * `right` or `wrong`. The seat whose turn begins (`yourTurn()`, ADR 034
+ * "Amended 2026-11-21 — whose turn it is") hears it on its own phone, with
+ * a screen too: the room's cues of that moment — `go`, or the other seat's
+ * move as it lands — and its own clock, and one `buzz` as the turn begins;
+ * a phone that carries the room already plays the cues, so it adds the
+ * buzz alone. The seat that just moved and a watcher hear nothing new.
  *
  * A taunt is said (ADR 029 as amended 2026-11-19, decisions 47 and 48) by
  * the devices that draw its reaction: the target's phone, for a taunt of
@@ -73,7 +83,9 @@ export type RoomCue =
     | { sound: RoomSoundName; at: number; ends?: boolean }
     | { sound: 'cheer'; at: number; players: string[]; many: boolean }
     /** A taunt's voice: its id and key, said now; `until`, ms from now, is when its reaction ends. */
-    | { sound: 'taunt'; at: number; id: string; key: string; until: number };
+    | { sound: 'taunt'; at: number; id: string; key: string; until: number }
+    /** A seat's turn begins: one vibration (`BUZZ_MS`), on its phone alone. */
+    | { sound: 'buzz'; at: number };
 
 /** What the page itself decided: whether this device hides taunts (its «Mənə atılanları gizlət», the screen's «Atmacalar»). */
 export type CueOptions = { tauntsHidden?: boolean };
@@ -200,6 +212,11 @@ function moveCues(last: RoomLastMove): RoomCue[] {
         { sound: last.captured.length > 0 ? 'capture' : 'move', at: lands },
         ...(last.crowned ? [{ sound: 'crown' as const, at: lands + 120 }] : []),
     ];
+}
+
+/** When a seat's turn begins, in ms from the moment's start: as the clock starts, or as the other seat's piece lands. */
+function turnBegins(match: RoomMatch): number {
+    return match.ply === 0 || match.last === null ? 0 : slideOf(match.last).ms;
 }
 
 /** A match's end: the move that made it, then `close` (ADR 034 decision 31); a race's end has the final alone. */
@@ -357,7 +374,15 @@ function hearScreen(
     }
 }
 
-function hearPhone(state: RoomState | null): Heard {
+/**
+ * A phone's own: `carried` when it carries the room, whose cues it already
+ * hears (`hearBoth()`).
+ */
+function hearPhone(
+    state: RoomState | null,
+    now: number | null,
+    carried: boolean,
+): Heard {
     const moment = momentKey(roomMoment(state), 'phase');
     const quiet: Heard = {
         moment,
@@ -369,14 +394,24 @@ function hearPhone(state: RoomState | null): Heard {
     const match = state?.game?.phase === 'live' ? state.match : null;
 
     if (match !== null && match.phase === 'play') {
-        // A draw offer made to the viewer's seat: the side to move, whose offer it is not.
+        const viewer = state?.me.player_id ?? null;
+        const turn = yourTurn(match, viewer);
+        // The seat whose turn began hears that moment's cues and its own clock, with a screen too; and feels it once.
+        const room = turn && !carried ? hearMatch(match, now, quiet) : quiet;
+
         return {
             ...quiet,
             began: match.since_ms,
-            beats:
-                offerTo(match, state?.me.player_id ?? null) !== null
+            cues: turn
+                ? [...room.cues, { sound: 'buzz', at: turnBegins(match) }]
+                : [],
+            beats: {
+                ...room.beats,
+                // A draw offer made to the viewer's seat: the side to move, whose offer it is not.
+                ...(offerTo(match, viewer) !== null
                     ? { offer: [now0('offer')] }
-                    : {},
+                    : {}),
+            },
         };
     }
 
@@ -422,7 +457,7 @@ export function carriesRoom(state: RoomState | null): boolean {
 /** A carrying phone hears as the screen does, at its own final's pace, and as itself. */
 function hearBoth(state: RoomState | null, now: number | null): Heard {
     const room = hearScreen(state, now, 'phone');
-    const own = hearPhone(state);
+    const own = hearPhone(state, now, true);
 
     return {
         moment: room.moment,
@@ -441,7 +476,22 @@ function hear(ear: RoomEar, speaker: RoomSpeaker): Heard {
 
     return carriesRoom(ear.state)
         ? hearBoth(ear.state, ear.now)
-        : hearPhone(ear.state);
+        : hearPhone(ear.state, ear.now, false);
+}
+
+/**
+ * Whether a phone's viewer holds a seat in the state's live match: its
+ * phone then fetches the room's files of its turns (the player's `seat()`,
+ * `SEAT_SOUNDS`), before the first one begins.
+ */
+export function holdsSeat(state: RoomState | null): boolean {
+    const match = state?.game?.phase === 'live' ? state.match : null;
+
+    return (
+        match !== null &&
+        match.phase !== 'over' &&
+        seatOf(match, state?.me.player_id ?? null) !== null
+    );
 }
 
 /** The cues of every beat in `heard`, or only of those `before` did not have. */

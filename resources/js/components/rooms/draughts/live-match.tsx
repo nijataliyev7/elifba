@@ -1,6 +1,7 @@
+import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { clockLevelText } from '@/components/rooms/catalog';
-import { offerTo, seatOf } from '@/components/rooms/draughts/board';
+import { offerTo, seatOf, yourTurn } from '@/components/rooms/draughts/board';
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
 import { MatchActions } from '@/components/rooms/draughts/match-actions';
 import { MatchLine } from '@/components/rooms/draughts/match-line';
@@ -21,6 +22,7 @@ import type { RoomMotion } from '@/components/rooms/use-motion';
 import type { RoomSound } from '@/components/rooms/use-room-sound';
 import { useServerNow } from '@/components/rooms/use-server-now';
 import { useTranslation } from '@/hooks/use-translation';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 import type { ServerClock } from '@/rooms/clock';
 import type { RoomBoardGame, RoomMatch, RoomState } from '@/rooms/contract';
 
@@ -37,6 +39,13 @@ import type { RoomBoardGame, RoomMatch, RoomState } from '@/rooms/contract';
  * page's (`roomCues()` and `sound.tap`). A taunt aimed at the viewer is
  * its reaction in the middle of the viewport, as in a round. `footer`
  * stands under the line: the host's «Oyunu bitir».
+ *
+ * A seat knows whose turn it is without reading (ADR 034 "Amended
+ * 2026-11-21 — whose turn it is"): on its turn (`yourTurn()`) the line is
+ * a band and its clock is ringed, its sounds and its one vibration are the
+ * page's (`roomCues()`), and the tab's title says «● Sizin növbənizdir»;
+ * its phone holds a screen wake lock while the match is live, so it does
+ * not sleep while the other seat thinks. A watcher's page has none of it.
  */
 export function LiveMatch({
     roomId,
@@ -74,6 +83,7 @@ export function LiveMatch({
     const { t } = useTranslation();
     const now = useServerNow(clock, true);
     const seat = seatOf(match, state.me.player_id);
+    const turn = yourTurn(match, state.me.player_id);
     const arrival = useArrival(game.id, match);
     const rivalry = useRivalry(state, state.me.player_id);
     const acts = useMatchActs({
@@ -95,8 +105,13 @@ export function LiveMatch({
             : (state.players.find((player) => player.id === offerer.player_id)
                   ?.name ?? t('rooms.show.nameless'));
 
+    // A seat's phone stays awake through the countdown and the play.
+    useWakeLock(seat !== null && match.phase !== 'over');
+
     return (
         <>
+            {/* While it is the viewer's turn the tab says so; the room's title comes back when it passes. */}
+            {turn && <Head title={t('rooms.match.turn_title')} />}
             <div
                 data-phase={match.phase}
                 data-ply={match.ply}
@@ -158,6 +173,7 @@ export function LiveMatch({
                     begun={acts.taps.length > 0}
                     failed={acts.failed}
                     onUndo={acts.undo}
+                    motion={motion.phase}
                 />
 
                 {footer}
