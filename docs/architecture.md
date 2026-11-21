@@ -3062,6 +3062,8 @@ The limiter `room-acts` is 90 a minute per account. No `/match` route exists.
 
 **Rejected.** A table and a lifecycle of its own for a match; a board game outside `RoomMechanic`; a second state endpoint; a stored position, turn, clock or result; squares as numbers; moves judged or generated on the phone; the device's time for a move; free taunts, or a taunt that costs time; a weighted count on the strip; the draws as claims; a rules library at run time or in CI (ADR 034).
 
+**The countdown over the board (2026-11-21; ADR 034 "Amended 2026-11-21 — the countdown over the board").** A match's 3 s before `starts_ms` were only a muted line under the board. Now `Countdown` — the race's ring, given the moment it counts to (`until`: a round's `opens_ms`, a match's `starts_ms`) — lies over the board while `match.phase` is `countdown`, on the phones and the screen, with the race's motion in a countdown the page saw begin. No state field, word or sound.
+
 ### Ready for the next game (2026-11-21)
 
 **Decision** (ADR 035; the owner's words of 2026-11-21: «bütün oyunlarda otaqda yenidən oynamağa hazırsanmı düyməsi gəlsin ki, misal oyunçu oynamaq istədiyini otaq quran bilsin»). Between games — before a room's first game, and after a race's end or a match's — a present player who is not the host may say «Hazıram» on their phone and take it back, and the host's phone and the screen show who is ready and how many. It is a fact in a row that reaches devices through the state, in every room game, races and draughts alike. It never gates the start: the host may start with nobody ready, and nothing starts by itself.
