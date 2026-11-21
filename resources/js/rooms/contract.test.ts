@@ -588,8 +588,8 @@ describe('the live voice (C3)', () => {
         players: state.players.map((player) => ({ ...player, voice: null })),
     });
 
-    it("reads every state at v 8, with the voice and each player's standing", () => {
-        expect(ROOM_STATE_VERSION).toBe(8);
+    it("reads every state at v 9, with the voice and each player's standing", () => {
+        expect(ROOM_STATE_VERSION).toBe(9);
 
         for (const [path, value] of payloads) {
             if (!path.includes('/state.')) {
@@ -598,7 +598,7 @@ describe('the live voice (C3)', () => {
 
             const state = value as State;
 
-            expect(state.v, path).toBe(8);
+            expect(state.v, path).toBe(9);
             expect('voice' in state, path).toBe(true);
             expect(
                 state.players.every((player) => 'voice' in player),

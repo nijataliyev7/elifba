@@ -57,7 +57,7 @@ use InvalidArgumentException;
  */
 final readonly class RoomStateData
 {
-    public const int VERSION = 8;
+    public const int VERSION = 9;
 
     /**
      * @param  list<RoomPlayerData>  $players

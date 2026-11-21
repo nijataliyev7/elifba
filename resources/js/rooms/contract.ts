@@ -712,7 +712,7 @@ export const RoomTaunts = z.strictObject({
 });
 
 /** The state's version: a page that meets another reloads itself (`fetchState`). */
-export const ROOM_STATE_VERSION = 8;
+export const ROOM_STATE_VERSION = 9;
 
 const stateBase = {
     v: z.literal(ROOM_STATE_VERSION),

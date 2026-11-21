@@ -24,7 +24,8 @@ use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
  * question in a phase that may not serve it. judge.json is the judge's
  * (RoomJudgeTest), not a payload. From D3 (ADR 034 decision 17) a board
  * game's match in each of its phases, a seat's act and its receipt. From
- * ADR 037 an anagram's question with its clue and its orders (`v: 8`),
+ * ADR 037 an anagram's question with its clue and its orders (`v: 9`,
+ * after ADR 036's `v: 8`),
  * and from its part 2 a buyer's letters, a purchase and its receipt.
  */
 
@@ -349,8 +350,8 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
 
-        expect($state['v'])->toBe(8, $name)
-            ->and(RoomStateData::VERSION)->toBe(8)
+        expect($state['v'])->toBe(9, $name)
+            ->and(RoomStateData::VERSION)->toBe(9)
             ->and(array_key_last($state))->toBe('voice', $name);
 
         foreach ($state['players'] as $player) {
