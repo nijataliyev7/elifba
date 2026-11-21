@@ -341,6 +341,7 @@ A player's «Hazıram» between games, seen by the host and the screen (ADR 035,
 | «Hazıram»                  | ready mark  | `room_players.ready_for`, `SetRoomPlayerReady`, `PUT /rooms/{room}/ready` `{on}`, `RoomPolicy::ready` | A present player who is not the host, while no game runs. The position of the game it is for; a leave clears it. Never gates or starts a game.           |
 | hazırdır                   | ready       | `RoomReady::counts()`, the state's `players[].ready`                                                  | Derived: open room, present, not the host, `ready_for` is the next game's position (`RoomReady::next()`). A start takes every mark down without a write. |
 | «:ready / :total hazırdır» | ready count | `readyTally()`, `ReadyCount`                                                                          | `:total` is the present players who are not the host; by «Başla» and «Yenidən oyna» on the host's phone and the screen.                                  |
+| çağırış (Hazıram)          | the call    | `ReadyCall`, `readyCallAt()`, the phone's `offer` cue                                                 | From 2026-11-21 (ADR 035 as amended): a player's bar as one raised card that rises with a chime after a game's show and pulses until pressed.            |
 
 ## Project
 
