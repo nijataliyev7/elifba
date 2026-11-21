@@ -1,5 +1,5 @@
-import { Check, Hand } from 'lucide-react';
-import { useState } from 'react';
+import { Check, Hand, Hourglass } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import { readyTally } from '@/components/rooms/ready';
 import { Button } from '@/components/ui/button';
@@ -78,34 +78,119 @@ export function useRoomReady({
 }
 
 /**
- * The question and the toggle in a player's bar: «Oynamağa hazırsınız?»
- * before the room's first game, «Yenidən oynamağa hazırsınız?» after one;
- * «Hazıram» with `Hand`, pressed «Hazırsınız» with `Check`, 52px and the
- * bar's width. A tap on the pressed one takes the mark back.
+ * The call (ADR 035 decisions 14–18 as amended 2026-11-21, docs/frontend.md
+ * rule 15 "Ready for the next game" → "The call"): a player's bar as one
+ * raised card in the room's right colour — a round badge with `Hand`, the
+ * question («Oynamağa hazırsınız?» before the room's first game,
+ * «Yenidən oynamağa hazırsınız?» after one) with the waiting line under
+ * it, and the toggle, 56px: filled «Hazıram» with `Hand`; pressed,
+ * `outline` «Hazırsınız» with `Check`, the badge's `Check` and «Aparıcı
+ * hazır olduğunuzu görür.». A tap on the pressed one takes the mark back.
+ *
+ * `entrance`, on a page that saw the game end: the ms after which the card
+ * comes — until then the bar holds the waiting line alone — and rises,
+ * its hand waving (the phone's chime is `roomCues()`'s, at the same
+ * `readyCallAt()`). Null: the page opened on it, so it stands at once and
+ * still. Not pressed, its halo pulses; under reduced motion nothing moves.
  */
-export function ReadyToggle({
+export function ReadyCall({
     ready,
     again,
+    waiting,
+    entrance,
 }: {
     ready: RoomReady;
     /** A game has been played in the room. */
     again: boolean;
+    /** The waiting line: «Aparıcı başladanda oyun başlayacaq.» or «Aparıcı növbəti oyunu seçir.». */
+    waiting: string;
+    entrance: number | null;
 }) {
     const { t } = useTranslation();
+    const [come, setCome] = useState(entrance === null);
+
+    useEffect(() => {
+        if (entrance === null) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => setCome(true), entrance);
+
+        return () => window.clearTimeout(timer);
+    }, [entrance]);
+
+    const line = (
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Hourglass aria-hidden className="size-3.5 shrink-0" />
+            {waiting}
+        </span>
+    );
+
+    if (!come) {
+        return (
+            <p className="flex min-h-11 items-center justify-center">{line}</p>
+        );
+    }
+
+    const rises = entrance !== null;
 
     return (
-        <div className="flex flex-col gap-2">
-            <p className="text-center text-sm font-medium">
-                {t(again ? 'rooms.ready.ask_again' : 'rooms.ready.ask')}
-            </p>
+        <div
+            data-ready-call={ready.on ? 'pressed' : 'waiting'}
+            className={cn(
+                'flex flex-col gap-3 rounded-2xl border-2 p-3 shadow-[0_-6px_24px_rgb(0_0_0/0.10)] dark:shadow-[0_-6px_24px_rgb(0_0_0/0.5)]',
+                ready.on
+                    ? 'border-emerald-500/35 bg-emerald-50/60 dark:border-emerald-400/30 dark:bg-emerald-950/30'
+                    : 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950/50',
+                rises && 'motion-safe:animate-room-call-rise',
+            )}
+        >
+            <div className="flex items-center gap-3">
+                <span
+                    aria-hidden
+                    className="grid size-11 shrink-0 place-items-center rounded-full bg-emerald-700 text-white"
+                >
+                    {ready.on ? (
+                        <Check className="size-6" />
+                    ) : (
+                        <Hand
+                            className={cn(
+                                'size-6 origin-[60%_90%]',
+                                rises && 'motion-safe:animate-room-call-wave',
+                            )}
+                        />
+                    )}
+                </span>
+                <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-[1.0625rem] leading-snug font-semibold">
+                        {ready.on
+                            ? t('rooms.ready.seen')
+                            : t(
+                                  again
+                                      ? 'rooms.ready.ask_again'
+                                      : 'rooms.ready.ask',
+                              )}
+                    </span>
+                    {line}
+                </span>
+            </div>
             <Button
                 type="button"
-                variant={ready.on ? 'default' : 'outline'}
+                variant={ready.on ? 'outline' : 'default'}
                 aria-pressed={ready.on}
-                className="h-13 w-full text-base"
+                className={cn(
+                    'h-14 w-full rounded-xl text-lg font-semibold',
+                    ready.on
+                        ? 'border-emerald-600/50 dark:border-emerald-400/40'
+                        : 'bg-emerald-700 text-white hover:bg-emerald-800 motion-safe:animate-room-call-halo dark:bg-emerald-700 dark:hover:bg-emerald-600',
+                )}
                 onClick={ready.toggle}
             >
-                {ready.on ? <Check /> : <Hand />}
+                {ready.on ? (
+                    <Check className="size-5" />
+                ) : (
+                    <Hand className="size-5" />
+                )}
                 {t(ready.on ? 'rooms.ready.pressed' : 'rooms.ready.button')}
             </Button>
             {ready.failed && (

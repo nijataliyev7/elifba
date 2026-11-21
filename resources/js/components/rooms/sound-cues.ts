@@ -125,6 +125,58 @@ export const FANFARE_MS = 2300;
 export const MAX_NAMES = 3;
 
 /**
+ * The cheer's room after the fanfare — the first name's clip and «Əla
+ * oynadın!» — before a player's phone calls for «Hazıram» (ADR 035
+ * decision 15 as amended 2026-11-21), so the call never sounds over it.
+ */
+export const CALL_AFTER_CHEER_MS = 3000;
+
+/** The call after a final with nobody in first place: this long after its last place opened. */
+export const CALL_GAP_MS = 800;
+
+/**
+ * When a player's phone calls for «Hazıram» after a game (ADR 035
+ * decisions 15–16 as amended 2026-11-21), in ms from the moment the page
+ * drew the final: after the room's show — the final at `pace` (the
+ * screen's, or a carrying phone's own), the fanfare and the cheer — or,
+ * with nobody in first place, a little after the last place opened.
+ */
+export function readyCallAt(
+    state: Pick<RoomState, 'ranking' | 'match'>,
+    pace: RoomSpeaker,
+): number {
+    const timeline = finalTimeline(standingGroups(finalRows(state), []), pace);
+
+    return timeline.winnerAt === null
+        ? timeline.endsAt + CALL_GAP_MS
+        : Math.max(
+              timeline.endsAt,
+              timeline.winnerAt + FANFARE_MS + CALL_AFTER_CHEER_MS,
+          );
+}
+
+/**
+ * Whether the viewer's phone calls for «Hazıram» (ADR 035 decision 16 as
+ * amended): an open room, after a game, for a present player who is not
+ * the host and has not marked.
+ */
+export function callsReady(state: RoomState | null): boolean {
+    const me = state?.players.find(
+        (player) => player.id === state.me.player_id,
+    );
+
+    return (
+        state !== null &&
+        state.room.status === 'open' &&
+        state.game?.phase === 'over' &&
+        me !== undefined &&
+        me.present &&
+        !me.host &&
+        !me.ready
+    );
+}
+
+/**
  * What one ear means for a speaker: the moment (the game, the round and
  * its phase) with when it began and its cues; the beats within it — the
  * clock, the viewer's answer sent — each with its own cues; and, between
@@ -412,6 +464,19 @@ function hearPhone(
                     ? { offer: [now0('offer')] }
                     : {}),
             },
+        };
+    }
+
+    // After a game: the call for «Hazıram» once the room's show is over (ADR 035 as amended 2026-11-21).
+    if (state !== null && callsReady(state)) {
+        return {
+            ...quiet,
+            cues: [
+                {
+                    sound: 'offer',
+                    at: readyCallAt(state, carried ? 'phone' : 'screen'),
+                },
+            ],
         };
     }
 

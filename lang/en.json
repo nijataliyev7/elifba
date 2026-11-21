@@ -759,6 +759,7 @@
     "rooms.ready.failed": "Not sent — tap again.",
     "rooms.ready.mark": "Ready",
     "rooms.ready.pressed": "You're ready",
+    "rooms.ready.seen": "The host can see you're ready.",
     "rooms.rivalry.ahead": "{one}You lead by :count point|{other}You lead by :count points",
     "rooms.rivalry.away": "left",
     "rooms.rivalry.behind": "{one}You trail by :count point|{other}You trail by :count points",

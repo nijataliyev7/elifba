@@ -5,12 +5,16 @@ import type { RoomSpeaker } from '@/rooms/sound';
 import { finalTimeline } from './final';
 import { REVEAL_MS } from './motion';
 import {
+    CALL_AFTER_CHEER_MS,
+    CALL_GAP_MS,
+    callsReady,
     carriesRoom,
     CLOCK_MS,
     FANFARE_MS,
     holdsSeat,
     LEAD_MS,
     MAX_NAMES,
+    readyCallAt,
     roomCues,
     sameMoment,
     STALE_MS,
@@ -781,6 +785,130 @@ describe('roomCues on a phone in a room without a screen', () => {
                 'phone',
             ),
         ).toEqual([{ sound: 'countdown', at: 2500, ends: true }]);
+    });
+});
+
+describe('roomCues and the call for «Hazıram» (ADR 035 as amended 2026-11-21)', () => {
+    /** The fixture's final with the viewer — a present player who is not the host — not yet marked. */
+    const unmarked = {
+        ...over,
+        players: over.players.map((player) =>
+            player.id === over.me.player_id
+                ? { ...player, ready: false }
+                : player,
+        ),
+    } as State;
+    const before: RoomEar = {
+        state: revealWith('right'),
+        now: closes + 3000,
+    };
+    const end: RoomEar = { state: unmarked, now: over.server_ms + 50 };
+    const screenedEar = (ear: RoomEar): RoomEar => ({
+        ...ear,
+        state: ear.state === null ? null : withScreen(ear.state),
+    });
+    const calls = (cues: RoomCue[]) =>
+        cues.filter((cue) => cue.sound === 'offer');
+
+    it("comes after the room's show: the final at its pace, the fanfare and the cheer", () => {
+        const screenAt = readyCallAt(over, 'screen');
+        const phone = finalTimeline(standingGroups(over.ranking, []), 'phone');
+
+        expect(screenAt).toBe(winnerAt + FANFARE_MS + CALL_AFTER_CHEER_MS);
+        expect(screenAt).toBeGreaterThanOrEqual(overTimeline.endsAt);
+        expect(readyCallAt(over, 'phone')).toBe(
+            (phone.winnerAt ?? -1) + FANFARE_MS + CALL_AFTER_CHEER_MS,
+        );
+
+        // Nobody in first place: a little after the last place opened.
+        const nobody = {
+            ...over,
+            ranking: over.ranking.map((row) => ({
+                ...row,
+                points: 0,
+                place: null,
+            })),
+        } as State;
+        const empty = finalTimeline(
+            standingGroups(nobody.ranking, []),
+            'screen',
+        );
+
+        expect(empty.winnerAt).toBeNull();
+        expect(readyCallAt(nobody, 'screen')).toBe(empty.endsAt + CALL_GAP_MS);
+    });
+
+    it("chimes once on a player's phone that saw the game end, with a screen or without one", () => {
+        expect(
+            calls(roomCues(screenedEar(before), screenedEar(end), 'phone')),
+        ).toEqual([{ sound: 'offer', at: readyCallAt(unmarked, 'screen') }]);
+
+        // Without a screen the phone plays the room's final itself, then the call at its own pace.
+        const carrying = roomCues(before, end, 'phone');
+
+        expect(names(carrying.map((cue) => ({ cue })))).toContain('fanfare');
+        expect(calls(carrying)).toEqual([
+            { sound: 'offer', at: readyCallAt(unmarked, 'phone') },
+        ]);
+
+        // The state fetched again is the same moment: no second chime.
+        expect(
+            calls(
+                roomCues(
+                    screenedEar(end),
+                    screenedEar({ ...end, now: end.now! + 4000 }),
+                    'phone',
+                ),
+            ),
+        ).toEqual([]);
+    });
+
+    it('calls nobody but a present, unmarked player of an open room who is not the host, and never on the screen or a page opened on the final', () => {
+        expect(callsReady(unmarked)).toBe(true);
+        // The fixture's viewer has marked already.
+        expect(callsReady(over)).toBe(false);
+        expect(
+            calls(
+                roomCues(
+                    screenedEar(before),
+                    screenedEar({ ...end, state: over }),
+                    'phone',
+                ),
+            ),
+        ).toEqual([]);
+
+        const host = {
+            ...unmarked,
+            me: { player_id: unmarked.players[0].id, host: true },
+        } as State;
+        const watching = {
+            ...unmarked,
+            me: { player_id: null, host: true },
+        } as State;
+        const closed = {
+            ...unmarked,
+            room: { ...unmarked.room, status: 'closed', code: null },
+            voice: null,
+        } as State;
+
+        for (const other of [host, watching, closed]) {
+            expect(callsReady(other)).toBe(false);
+            expect(
+                calls(
+                    roomCues(
+                        screenedEar(before),
+                        screenedEar({ ...end, state: other }),
+                        'phone',
+                    ),
+                ),
+            ).toEqual([]);
+        }
+
+        expect(calls(roomCues(null, screenedEar(end), 'phone'))).toEqual([]);
+        expect(
+            calls(roomCues(screenedEar(before), screenedEar(end), 'screen')),
+        ).toEqual([]);
+        expect(callsReady(lobby)).toBe(false);
     });
 });
 

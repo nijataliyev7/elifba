@@ -47,10 +47,11 @@ import {
 } from '@/components/rooms/room-frame';
 import {
     ReadyCount,
-    ReadyToggle,
+    ReadyCall,
     useRoomReady,
 } from '@/components/rooms/ready-parts';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
+import { carriesRoom, readyCallAt } from '@/components/rooms/sound-cues';
 import { tauntVoices } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
 import { RoomTools } from '@/components/rooms/room-tools';
@@ -685,6 +686,9 @@ function PlayerRoom({
         onChanged: refresh,
     });
     const mayMark = me !== undefined && me.present && !me.host;
+    const waiting = t(
+        over !== null ? 'rooms.show.waiting_next' : 'rooms.show.waiting',
+    );
     useTopOnTurn(over === null ? 'start' : over.id);
     const leaving = canLeave && (
         <Form {...leave.form(roomId)} className="flex justify-center">
@@ -798,14 +802,27 @@ function PlayerRoom({
             </div>
 
             <RoomActionBar framed>
-                <p className="flex min-h-11 items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-                    <Hourglass aria-hidden className="size-4 shrink-0" />
-                    {over !== null
-                        ? t('rooms.show.waiting_next')
-                        : t('rooms.show.waiting')}
-                </p>
-                {mayMark && (
-                    <ReadyToggle ready={ready} again={state.game !== null} />
+                {mayMark ? (
+                    <ReadyCall
+                        key={over?.id ?? 'start'}
+                        ready={ready}
+                        again={state.game !== null}
+                        waiting={waiting}
+                        // After a game the page saw end: the call comes once the room's show is over.
+                        entrance={
+                            over !== null && motion.phase
+                                ? readyCallAt(
+                                      state,
+                                      carriesRoom(state) ? 'phone' : 'screen',
+                                  )
+                                : null
+                        }
+                    />
+                ) : (
+                    <p className="flex min-h-11 items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                        <Hourglass aria-hidden className="size-4 shrink-0" />
+                        {waiting}
+                    </p>
                 )}
             </RoomActionBar>
         </RoomFrame>

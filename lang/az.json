@@ -759,6 +759,7 @@
     "rooms.ready.failed": "Göndərilmədi — yenidən toxunun.",
     "rooms.ready.mark": "Hazır",
     "rooms.ready.pressed": "Hazırsınız",
+    "rooms.ready.seen": "Aparıcı hazır olduğunuzu görür.",
     "rooms.rivalry.ahead": "{one}:count xal öndəsiniz|{other}:count xal öndəsiniz",
     "rooms.rivalry.away": "çıxıb",
     "rooms.rivalry.behind": "{one}:count xal geridəsiniz|{other}:count xal geridəsiniz",
