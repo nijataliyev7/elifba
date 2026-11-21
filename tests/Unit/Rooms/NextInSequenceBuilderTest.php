@@ -150,7 +150,10 @@ it('offers four different numbers with one right', function (RoomLevelData $leve
             }
 
             // Nothing a player may see holds the solution.
-            expect(array_keys($round->payload()['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items']);
+            // ADR 037: an anagram's clue and orders, none here.
+            expect(array_keys($round->payload()['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items', 'clue', 'orders'])
+                ->and($round->ask->clue)->toBeNull()
+                ->and($round->ask->orders)->toBe([]);
 
             $places[array_search($round->solution->ids[0], $ask->ids(), true)] = true;
             $sorted = $options;

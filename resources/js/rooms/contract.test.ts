@@ -1078,3 +1078,79 @@ describe("a player's «Hazıram» (ADR 035)", () => {
         ).toBe(false);
     });
 });
+
+describe("an anagram's clue and orders (ADR 037)", () => {
+    const answer = fixture('state.answer.anagram') as State;
+    const ask = (answer.round as Round).ask as NonNullable<Round['ask']>;
+    const reading = (order: string[]): string =>
+        order
+            .map((id) => ask.items.find((item) => item.id === id)?.text)
+            .join('');
+    const asked = (state: State): NonNullable<Round['ask']>[] =>
+        state.round?.ask ? [state.round.ask] : [];
+
+    it('carries a clue and orders in every question, null and empty but in an anagram', () => {
+        for (const [path, value] of payloads) {
+            for (const question of path.includes('/state.')
+                ? asked(value as State)
+                : []) {
+                expect(Object.keys(question), path).toEqual([
+                    'shape',
+                    'pick',
+                    'layout',
+                    'grid',
+                    'shown',
+                    'items',
+                    'clue',
+                    'orders',
+                ]);
+
+                if (!path.includes('.anagram.')) {
+                    expect(question.clue, path).toBeNull();
+                    expect(question.orders, path).toEqual([]);
+                }
+            }
+        }
+
+        expect(ask.clue).toBe('Meyvə, Quba bağlarının məşhuru');
+        expect(ask.orders[0]).toEqual(ask.items.map((item) => item.id));
+        expect(ask.orders.map(reading)).toEqual([
+            'MALA',
+            'LAMA',
+            'AMLA',
+            'LMAA',
+        ]);
+    });
+
+    it('refuses orders that are not the tiles laid out anew', () => {
+        const refused = (orders: string[][]): boolean =>
+            !RoomState.safeParse({
+                ...answer,
+                round: { ...answer.round, ask: { ...ask, orders } },
+            }).success;
+        const [first, second] = ask.orders;
+
+        // The first is the items' own; each holds every tile once; no two read alike; at most six.
+        expect(refused([second, first])).toBe(true);
+        expect(refused([first, second.slice(1)])).toBe(true);
+        expect(refused([first, [first[0], first[0], first[2], first[3]]])).toBe(
+            true,
+        );
+        expect(refused([first, [first[0], first[3], first[2], first[1]]])).toBe(
+            true,
+        );
+        expect(refused(Array.from({ length: 7 }, () => first))).toBe(true);
+        expect(refused([first])).toBe(false);
+        expect(refused([])).toBe(false);
+    });
+
+    it('refuses an empty clue and names no word', () => {
+        expect(
+            RoomState.safeParse({
+                ...answer,
+                round: { ...answer.round, ask: { ...ask, clue: '' } },
+            }).success,
+        ).toBe(false);
+        expect(JSON.stringify(answer)).not.toMatch(/"(word|accept|solution)":/);
+    });
+});

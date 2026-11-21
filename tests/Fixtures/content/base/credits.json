@@ -47,6 +47,13 @@
             "license": "MIT"
         },
         {
+            "files": ["content/rooms/clues.json"],
+            "title": "Sample clues",
+            "author": "Elifba",
+            "source": "https://github.com/nijataliyev7/elifba",
+            "license": "MIT"
+        },
+        {
             "files": ["content/assets/rooms/sounds/*"],
             "title": "Sample room sounds",
             "author": "Elifba",

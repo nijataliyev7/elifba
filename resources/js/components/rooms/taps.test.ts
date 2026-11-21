@@ -36,6 +36,8 @@ function ask(shape: RoomAsk['shape'], pick: number): RoomAsk {
                     shape === 'set' ? [index % 2, Math.floor(index / 2)] : null,
             }),
         ),
+        clue: null,
+        orders: [],
     };
 }
 

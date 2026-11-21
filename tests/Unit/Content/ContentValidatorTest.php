@@ -292,3 +292,49 @@ it('lets a taunt whose clip is not made yet play silent, and its folder go uncre
 
     expect((new ContentValidator($root))->validate())->toBe([]);
 });
+
+it('keeps the clues in the word list\'s order, so a word and its clue change in one place', function (): void {
+    $root = ContentFixture::make();
+    $path = "{$root}/rooms/clues.json";
+    $file = json_decode((string) file_get_contents($path), true, 16, JSON_THROW_ON_ERROR);
+    $file['clues'] = array_reverse($file['clues'], preserve_keys: true);
+    file_put_contents($path, json_encode($file, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    expect((new ContentValidator($root))->validate())->toBe([
+        'rooms/clues.json: clues must follow the order of rooms/words.json: "zirvə" stands where "axşam" does',
+    ]);
+});
+
+it('rejects a clue that names a listed word its word is built on, and leaves a shorter part to the hand', function (): void {
+    // «balıqçı» is built on «balıq», a word of the list: its clue may not say it.
+    $root = ContentFixture::make();
+    $write = static function (string $path, array $data): void {
+        file_put_contents($path, json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    };
+    $words = json_decode((string) file_get_contents("{$root}/rooms/words.json"), true, 16, JSON_THROW_ON_ERROR);
+    $clues = json_decode((string) file_get_contents("{$root}/rooms/clues.json"), true, 16, JSON_THROW_ON_ERROR);
+    $at = array_search('balıq', $words['words'], true) + 1;
+    array_splice($words['words'], $at, 0, ['balıqçı']);
+    $write("{$root}/rooms/words.json", $words);
+    $withClue = static function (string $clue) use ($words, $clues, $root, $write): void {
+        $write("{$root}/rooms/clues.json", [...$clues, 'clues' => array_combine($words['words'], array_map(static fn (string $word): string => $word === 'balıqçı' ? $clue : $clues['clues'][$word], $words['words']))]);
+    };
+
+    $withClue('Peşə, göldən balıq tutur');
+
+    expect((new ContentValidator($root))->validate())->toBe(['rooms/clues.json: clues "balıqçı" holds "balıq": a clue never names its word']);
+
+    $withClue('Peşə, tilovla göl kənarında oturur');
+
+    expect((new ContentValidator($root))->validate())->toBe([]);
+});
+
+it('gives every word of the real list a clue that fits two lines of a phone', function (): void {
+    $content = app(ContentRepository::class);
+    $clues = $content->roomClues();
+
+    expect(array_keys($clues->clues))->toBe($content->roomWords()->words)
+        ->and(max(array_map(mb_strlen(...), $clues->clues)))->toBeLessThanOrEqual(ContentValidator::MAX_ROOM_CLUE_LENGTH)
+        ->and($clues->of('qarpız'))->toBe('Yay meyvəsi, bostanda yetişir')
+        ->and($clues->of('babam'))->toBeNull();
+});

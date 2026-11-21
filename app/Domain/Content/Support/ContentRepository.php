@@ -8,6 +8,7 @@ use App\Domain\Content\Data\NameListData;
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\PromptTemplateData;
 use App\Domain\Content\Data\RoomCategoryData;
+use App\Domain\Content\Data\RoomClueData;
 use App\Domain\Content\Data\RoomLevelData;
 use App\Domain\Content\Data\RoomRivalryData;
 use App\Domain\Content\Data\RoomShapeData;
@@ -32,7 +33,8 @@ use RuntimeException;
  * content under `rooms/` (§12 "Room content", ADR 023): from B3 the room
  * levels (`rooms/levels.json`), from B4 the shapes (`rooms/shapes.json`),
  * from B5 the groups of words (`rooms/categories.json`), from B6 the
- * adults' word list (`rooms/words.json`), the sounds of a room game
+ * adults' word list (`rooms/words.json`) and, from ADR 037, the
+ * anagram's clues (`rooms/clues.json`), the sounds of a room game
  * (`rooms/sounds.json`, ADR 025), the rivalry strip's emoji
  * (`rooms/rivalry.json`, ADR 027) and, from T2, the taunts' list
  * (`rooms/taunts.json`, ADR 029; from T4 with each taunt's audio tag and
@@ -51,6 +53,7 @@ use RuntimeException;
  * @phpstan-import-type VoiceArray from VoiceData
  * @phpstan-import-type RoomLevelArray from RoomLevelData
  * @phpstan-import-type RoomWordArray from RoomWordData
+ * @phpstan-import-type RoomClueArray from RoomClueData
  * @phpstan-import-type RoomTauntArray from RoomTauntData
  * @phpstan-import-type RoomTauntVoiceArray from RoomTauntVoiceData
  */
@@ -87,6 +90,12 @@ final class ContentRepository
     public const string ROOM_WORDS = 'rooms/words.json';
 
     /**
+     * The anagram's clues, one per word of the list (§12 "Room content",
+     * ADR 037).
+     */
+    public const string ROOM_CLUES = 'rooms/clues.json';
+
+    /**
      * The sounds of a room game (§12 "Room content", ADR 025 "Sound").
      */
     public const string ROOM_SOUNDS = 'rooms/sounds.json';
@@ -102,7 +111,7 @@ final class ContentRepository
     public const string ROOM_TAUNTS = 'rooms/taunts.json';
 
     /**
-     * @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}|null
+     * @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, clues: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}|null
      */
     private ?array $data = null;
 
@@ -138,6 +147,8 @@ final class ContentRepository
     private ?array $roomShapes = null;
 
     private ?RoomWordData $roomWords = null;
+
+    private ?RoomClueData $roomClues = null;
 
     private ?RoomSoundsData $roomSounds = null;
 
@@ -373,6 +384,21 @@ final class ContentRepository
     }
 
     /**
+     * The anagram's clues, one per word of the list (§12 "Room content",
+     * ADR 037): what `AnagramBuilder` puts in a round's `ask.clue`.
+     */
+    public function roomClues(): RoomClueData
+    {
+        if ($this->roomClues === null) {
+            /** @var RoomClueArray $data checked by `ContentValidator` */
+            $data = $this->data()['rooms']['clues'];
+            $this->roomClues = RoomClueData::fromArray($data);
+        }
+
+        return $this->roomClues;
+    }
+
+    /**
      * The sounds of a room game, one file for every `RoomSound` (ADR 025).
      */
     public function roomSounds(): RoomSoundsData
@@ -458,7 +484,7 @@ final class ContentRepository
      * The content as the JSON files hold it now, ignoring any compiled file:
      * what `content:cache` compiles.
      *
-     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}
+     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, clues: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}
      *
      * @throws RuntimeException when a file is missing or not valid JSON
      */
@@ -482,6 +508,7 @@ final class ContentRepository
                 'shapes' => self::decode($this->root.'/'.self::ROOM_SHAPES),
                 'categories' => self::decode($this->root.'/'.self::ROOM_CATEGORIES),
                 'words' => self::decode($this->root.'/'.self::ROOM_WORDS),
+                'clues' => self::decode($this->root.'/'.self::ROOM_CLUES),
                 'sounds' => self::decode($this->root.'/'.self::ROOM_SOUNDS),
                 'rivalry' => self::decode($this->root.'/'.self::ROOM_RIVALRY),
                 'taunts' => self::decode($this->root.'/'.self::ROOM_TAUNTS),
@@ -526,12 +553,12 @@ final class ContentRepository
     }
 
     /**
-     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}
+     * @return array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, clues: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}}
      */
     private function data(): array
     {
         if ($this->data === null) {
-            /** @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}} $compiled */
+            /** @var array{levels: list<mixed>, prompts: list<mixed>, credits: list<mixed>, packs: array<string, mixed>, voice: array<string, mixed>, names: mixed, rooms: array{levels: mixed, shapes: mixed, categories: mixed, words: mixed, clues: mixed, sounds: mixed, rivalry: mixed, taunts: mixed}} $compiled */
             $compiled = $this->readsCompiled() ? require $this->compiled : $this->sources();
             $this->data = $compiled;
         }

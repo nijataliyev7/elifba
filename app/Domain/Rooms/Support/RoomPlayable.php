@@ -54,7 +54,7 @@ final class RoomPlayable
             RoomMechanic::RecallCells => new RecallCellsBuilder,
             RoomMechanic::NextInSequence => new NextInSequenceBuilder,
             RoomMechanic::OddOneOut => new OddOneOutBuilder(app(ContentRepository::class)->roomCategories()),
-            RoomMechanic::Anagram => new AnagramBuilder(self::words()),
+            RoomMechanic::Anagram => new AnagramBuilder(self::words(), app(ContentRepository::class)->roomClues()->clues),
             RoomMechanic::Spelling => new SpellingBuilder(self::words()),
             default => throw new InvalidArgumentException("{$mechanic->value} builds no rounds."),
         };

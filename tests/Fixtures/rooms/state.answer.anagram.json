@@ -102,6 +102,13 @@
                     "asset": null,
                     "cell": null
                 }
+            ],
+            "clue": "Meyvə, Quba bağlarının məşhuru",
+            "orders": [
+                ["t4k9m2xa", "b7q1w8ne", "r2z6c0lu", "h5y3j9dp"],
+                ["r2z6c0lu", "h5y3j9dp", "t4k9m2xa", "b7q1w8ne"],
+                ["b7q1w8ne", "t4k9m2xa", "r2z6c0lu", "h5y3j9dp"],
+                ["r2z6c0lu", "t4k9m2xa", "h5y3j9dp", "b7q1w8ne"]
             ]
         },
         "answered": true,

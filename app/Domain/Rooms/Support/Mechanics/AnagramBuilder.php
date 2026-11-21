@@ -17,9 +17,9 @@ use Random\Randomizer;
 
 /**
  * Rounds of `anagram`, «Anaqram» (docs/architecture.md §12 "Room games",
- * ADR 023): the letters of a word of `content/rooms/words.json`, shuffled;
- * tap them into a word (`sequence`, `pick` = its letters). Nothing is
- * studied.
+ * ADR 023; from ADR 037 its clue and its orders): the letters of a word of
+ * `content/rooms/words.json`, shuffled; tap them into a word (`sequence`,
+ * `pick` = its letters). Nothing is studied.
  *
  * - The word is drawn from the level's `word_length` among the words an
  *   anagram can be drawn from (`RoomWords::forAnagram()`), none twice in a
@@ -31,16 +31,20 @@ use Random\Randomizer;
  *   tiles' capitals, so two tiles of one letter are interchangeable; its
  *   ids are the tiles in the drawn word's order, and its `word` the drawn
  *   word in capitals, which the reveal shows.
- * - The tiles are never in the order of an accepted spelling, not only of
- *   the drawn word: a shuffle that reads like one is turned by one place
- *   at a time, and if every turn reads like one, the orders of its letters
- *   are walked from the first until one reads like none
- *   (`RoomWords::forAnagram()` draws only words that have such an order).
+ * - The question carries the word's clue as `content/rooms/clues.json`
+ *   writes it (`ask.clue`; null for a word the clues given here lack) and
+ *   a bounded list of the tiles' orders (`ask.orders`, `AnagramOrders`):
+ *   none reads an accepted spelling, not only the drawn word, no two read
+ *   alike, and the first is the order of the question's `items`.
  */
 final readonly class AnagramBuilder implements RoomRoundBuilder
 {
+    /**
+     * @param  array<string, string>  $clues  word → its clue (`RoomClueData::$clues`)
+     */
     public function __construct(
         private RoomWords $words,
+        private array $clues = [],
     ) {}
 
     public function build(RoomLevelData $level, int $count, Randomizer $random): array
@@ -80,104 +84,23 @@ final readonly class AnagramBuilder implements RoomRoundBuilder
             Az::upper($word),
         );
 
-        /** @var list<RoomItemData> $shuffled */
-        $shuffled = $random->shuffleArray($tiles);
+        $orders = AnagramOrders::draw($tiles, $accept, 0, $random);
 
         return new BuiltRoomRoundData(
             study: null,
-            ask: new RoomAskData(RoomAnswerShape::Sequence, count($tiles), RoomLayout::Row, null, self::outOfOrder($shuffled, $accept)),
+            ask: new RoomAskData(
+                RoomAnswerShape::Sequence,
+                count($tiles),
+                RoomLayout::Row,
+                null,
+                $orders[0],
+                clue: $this->clues[$word] ?? null,
+                orders: array_map(static fn (array $order): array => array_map(static fn (RoomItemData $tile): string => $tile->id, $order), $orders),
+            ),
             solution: $solution,
             studyMs: 0,
             answerMs: $level->answerMs,
         );
-    }
-
-    /**
-     * The tiles in an order no accepted spelling reads: the shuffle, or a
-     * turn of it, or else the first order of the letters (by their bytes)
-     * that reads like none.
-     *
-     * @param  list<RoomItemData>  $tiles
-     * @param  list<list<string>>  $accept
-     * @return list<RoomItemData>
-     */
-    private static function outOfOrder(array $tiles, array $accept): array
-    {
-        foreach (array_keys($tiles) as $turn) {
-            $turned = [...array_slice($tiles, $turn), ...array_slice($tiles, 0, $turn)];
-
-            if (! in_array(self::reading($turned), $accept, true)) {
-                return $turned;
-            }
-        }
-
-        $reading = self::reading($tiles);
-        sort($reading, SORT_STRING);
-
-        do {
-            if (! in_array($reading, $accept, true)) {
-                return self::laidOut($tiles, $reading);
-            }
-        } while (($reading = self::nextOrder($reading)) !== null);
-
-        throw new InvalidArgumentException('These letters spell an accepted word in every order.');
-    }
-
-    /**
-     * The tiles laid out to read `$reading`, each letter's tiles in their
-     * order.
-     *
-     * @param  list<RoomItemData>  $tiles
-     * @param  list<string>  $reading
-     * @return list<RoomItemData>
-     */
-    private static function laidOut(array $tiles, array $reading): array
-    {
-        $left = $tiles;
-        $laid = [];
-
-        foreach ($reading as $letter) {
-            foreach ($left as $index => $tile) {
-                if ($tile->says() === $letter) {
-                    $laid[] = $tile;
-                    unset($left[$index]);
-
-                    break;
-                }
-            }
-        }
-
-        return $laid;
-    }
-
-    /**
-     * The next order of the letters in lexicographic order, or null after
-     * the last: each different order once, however often a letter comes.
-     *
-     * @param  list<string>  $letters
-     * @return list<string>|null
-     */
-    private static function nextOrder(array $letters): ?array
-    {
-        $pivot = count($letters) - 2;
-
-        while ($pivot >= 0 && strcmp($letters[$pivot], $letters[$pivot + 1]) >= 0) {
-            $pivot--;
-        }
-
-        if ($pivot < 0) {
-            return null;
-        }
-
-        $swap = count($letters) - 1;
-
-        while (strcmp($letters[$swap], $letters[$pivot]) <= 0) {
-            $swap--;
-        }
-
-        [$letters[$pivot], $letters[$swap]] = [$letters[$swap], $letters[$pivot]];
-
-        return [...array_slice($letters, 0, $pivot + 1), ...array_reverse(array_slice($letters, $pivot + 1))];
     }
 
     /**
@@ -188,14 +111,5 @@ final readonly class AnagramBuilder implements RoomRoundBuilder
     private static function capitals(string $spelling): array
     {
         return array_map(Az::upper(...), mb_str_split($spelling));
-    }
-
-    /**
-     * @param  list<RoomItemData>  $tiles
-     * @return list<string>
-     */
-    private static function reading(array $tiles): array
-    {
-        return array_map(static fn (RoomItemData $tile): string => $tile->says(), $tiles);
     }
 }

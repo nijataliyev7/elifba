@@ -102,7 +102,9 @@
                     "asset": null,
                     "cell": null
                 }
-            ]
+            ],
+            "clue": null,
+            "orders": []
         },
         "answered": true,
         "answered_count": 2,

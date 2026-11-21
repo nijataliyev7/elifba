@@ -1745,6 +1745,88 @@
         "set": { "credits.5.files": ["content/assets/rooms/*"] },
         "problem": "credits.json: content/rooms/words.json has no entry"
     },
+    "rooms clues: no file": {
+        "file": "rooms/clues.json",
+        "delete": ["rooms/clues.json"],
+        "problem": "rooms/clues.json: is missing"
+    },
+    "rooms clues: no version": {
+        "file": "rooms/clues.json",
+        "unset": ["version"],
+        "problem": "rooms/clues.json: the file needs `version`"
+    },
+    "rooms clues: a version below 1": {
+        "file": "rooms/clues.json",
+        "set": { "version": 0 },
+        "problem": "rooms/clues.json: version must be a whole number from 1"
+    },
+    "rooms clues: a list, not an object by word": {
+        "file": "rooms/clues.json",
+        "set": { "clues": ["Meyvə, Quba bağlarının məşhuru"] },
+        "problem": "rooms/clues.json: clues must be an object from each word of rooms/words.json to its clue"
+    },
+    "rooms clues: a word without a clue": {
+        "file": "rooms/clues.json",
+        "unset": ["clues.alma"],
+        "problem": "rooms/clues.json: clues has no clue for \"alma\"; every word of rooms/words.json has one"
+    },
+    "rooms clues: a clue for no word of the list": {
+        "file": "rooms/clues.json",
+        "set": { "clues.babam": "Qohum, ailənin ağsaqqalı" },
+        "problem": "rooms/clues.json: clues \"babam\" is no word of rooms/words.json; a clue belongs to a word the games draw"
+    },
+    "rooms clues: an empty clue": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "" },
+        "problem": "rooms/clues.json: clues \"alma\" must be a line of text"
+    },
+    "rooms clues: a clue too long for two lines": {
+        "file": "rooms/clues.json",
+        "set": {
+            "clues.alma": "Meyvə, Quba bağlarının məşhuru, qırmızısı da var, sarısı da"
+        },
+        "problem": "rooms/clues.json: clues \"alma\" has 59 characters; a clue has at most 56, two lines of a 375px phone"
+    },
+    "rooms clues: a clue with a full stop": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "Meyvə, Quba bağlarının məşhuru." },
+        "problem": "rooms/clues.json: clues \"alma\" \"Meyvə, Quba bağlarının məşhuru.\" may hold only the alphabet's letters, spaces, commas and hyphens"
+    },
+    "rooms clues: a clue in lowercase": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "meyvə, Quba bağlarının məşhuru" },
+        "problem": "rooms/clues.json: clues \"alma\" \"meyvə, Quba bağlarının məşhuru\" must begin with a capital letter"
+    },
+    "rooms clues: two spaces together": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "Meyvə,  Quba bağlarının məşhuru" },
+        "problem": "rooms/clues.json: clues \"alma\" \"Meyvə,  Quba bağlarının məşhuru\" must have no space at either end and no two together"
+    },
+    "rooms clues: a clue that names its word": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "Meyvə, qırmızı Alma kimi" },
+        "problem": "rooms/clues.json: clues \"alma\" holds \"alma\": a clue never names its word"
+    },
+    "rooms clues: a clue that names another spelling the letters make": {
+        "file": "rooms/clues.json",
+        "set": { "clues.alma": "Meyvə, amalı Quba bağlarıdır" },
+        "problem": "rooms/clues.json: clues \"alma\" holds \"amal\": a clue never names its word"
+    },
+    "rooms clues: a clue with the word's softened stem": {
+        "file": "rooms/clues.json",
+        "set": { "clues.bulaq": "Təbiət, bulağın suyu sərindir" },
+        "problem": "rooms/clues.json: clues \"bulaq\" holds \"bulağ\": a clue never names its word"
+    },
+    "rooms clues: a clue with the word's stem without its narrow vowel": {
+        "file": "rooms/clues.json",
+        "set": { "clues.burun": "Bədən üzvü, burnu iy bilir" },
+        "problem": "rooms/clues.json: clues \"burun\" holds \"burn\": a clue never names its word"
+    },
+    "rooms clues: no credit": {
+        "file": "credits.json",
+        "set": { "credits.6.files": ["content/assets/rooms/*"] },
+        "problem": "credits.json: content/rooms/clues.json has no entry"
+    },
     "rooms sounds: no file": {
         "file": "rooms/sounds.json",
         "delete": ["rooms/sounds.json"],
@@ -2072,7 +2154,7 @@
     },
     "taunt clips: the folder without its credits entry": {
         "file": "credits.json",
-        "set": { "credits.10.files": ["content/assets/sample/alma.svg"] },
+        "set": { "credits.11.files": ["content/assets/sample/alma.svg"] },
         "problem": "credits.json: content/assets/rooms/taunts/61f456c92efd186b.mp3 has no entry"
     }
 }

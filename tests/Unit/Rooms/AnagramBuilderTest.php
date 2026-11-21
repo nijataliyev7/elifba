@@ -12,6 +12,7 @@ use App\Domain\Rooms\Data\RoomItemData;
 use App\Domain\Rooms\Enums\RoomAnswerShape;
 use App\Domain\Rooms\Enums\RoomLayout;
 use App\Domain\Rooms\Support\Mechanics\AnagramBuilder;
+use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
 use App\Domain\Rooms\Support\RoomJudge;
 use App\Domain\Rooms\Support\RoomPlayable;
 use Random\Engine\Mt19937;
@@ -21,7 +22,9 @@ use Random\Randomizer;
  * «Anaqram» (docs/architecture.md §12 "Room games", ADR 023): the letters
  * of a word of the list, shuffled, to tap into a word. The tiles never
  * read like any word they spell, the solution accepts every one of them,
- * and the letters are cased by Azerbaijani rules on the server.
+ * and the letters are cased by Azerbaijani rules on the server. From ADR
+ * 037 the question carries the word's clue and the orders «Qarışdır»
+ * cycles through, the first the tiles' own (`AnagramOrdersTest`).
  */
 
 /**
@@ -31,7 +34,7 @@ function anagramRounds(RoomLevelData $level, int $seed, int $count = 20, ?RoomWo
 {
     $content = app(ContentRepository::class);
 
-    return (new AnagramBuilder($words ?? RoomWords::of($content->roomWords(), $content->names()->names)))
+    return (new AnagramBuilder($words ?? RoomWords::of($content->roomWords(), $content->names()->names), $words === null ? $content->roomClues()->clues : []))
         ->build($level, $count, new Randomizer(new Mt19937($seed)));
 }
 
@@ -93,6 +96,21 @@ it('never shows the letters in the word\'s own order', function (RoomLevelData $
 
             foreach ($ids as $id) {
                 expect($id)->toMatch('/^[a-z0-9]{8}$/');
+            }
+
+            // ADR 037: the word's clue, and orders of these tiles, the first theirs, none reading a word they spell.
+            $says = array_column(array_map(static fn (RoomItemData $item): array => $item->toArray(), $round->ask->items), 'text', 'id');
+            $read = array_map(static fn (array $order): string => implode('', array_map(static fn (string $id): string => $says[$id], $order)), $round->ask->orders);
+
+            expect($round->ask->clue)->toBe($content->roomClues()->of($word))
+                ->and($round->ask->clue)->not->toBeNull()
+                ->and($round->ask->orders[0])->toBe($ids)
+                ->and(count($round->ask->orders))->toBe(AnagramOrders::count(RoomWords::arrangements($word), count($accepted)))
+                ->and(array_intersect($read, $accepted))->toBe([])
+                ->and(array_unique($read))->toBe($read);
+
+            foreach ($round->ask->orders as $order) {
+                expect($order)->toEqualCanonicalizing($ids);
             }
 
             expect(array_unique($ids))->toBe($ids)

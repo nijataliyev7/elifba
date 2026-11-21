@@ -41,7 +41,7 @@ use SplFileInfo;
  * `avatars.json`, `sounds.json`, `levels.json`, `prompts.json`, `names.json`,
  * `voice.json` with `voice-clips.json`, `credits.json`, `packs/*.json`,
  * `rooms/levels.json`, `rooms/shapes.json`, `rooms/categories.json`,
- * `rooms/words.json`, `rooms/sounds.json`, `rooms/rivalry.json` and
+ * `rooms/words.json`, `rooms/clues.json`, `rooms/sounds.json`, `rooms/rivalry.json` and
  * `rooms/taunts.json` (§12 "Room content", with the taunts' clips of
  * `assets/rooms/taunts/`), `tests/syllables.json` and every file under
  * `assets/`, `voice-names/` and `resources/fonts/` (credits; SVG files are
@@ -279,9 +279,18 @@ final class ContentValidator
     /**
      * Content written as lists rather than drawn or recorded that carries a
      * licence of its own and so a credits entry (§8): the adults' word list
-     * (ADR 023 decision 10), relative to the content root.
+     * (ADR 023 decision 10) and its clues (ADR 037), relative to the
+     * content root.
      */
-    public const array CREDITED_LISTS = ['rooms/words.json'];
+    public const array CREDITED_LISTS = ['rooms/words.json', 'rooms/clues.json'];
+
+    /**
+     * The longest clue of `rooms/clues.json` (ADR 037 decision 2): two
+     * lines of a 375px phone at 17px with an icon before them — the
+     * longest of the file, 50 characters, measures 387px in Inter Medium,
+     * and a line holds 315px.
+     */
+    public const int MAX_ROOM_CLUE_LENGTH = 56;
 
     private const string KEY = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
@@ -296,6 +305,25 @@ final class ContentValidator
     private const array AUDIO_EXTENSIONS = ['ogg', 'mp3', 'wav'];
 
     private const string SHAPE = '/^C*VC*$/';
+
+    /**
+     * What a clue holds besides the alphabet's letters (ADR 037 decision 2):
+     * one line, no stop, no quotes.
+     */
+    private const array CLUE_SIGNS = [' ', ',', '-'];
+
+    /**
+     * The narrow vowels, which a closed last syllable drops when a suffix
+     * starting with a vowel follows (burun → burnu, ağız → ağzı).
+     */
+    private const array NARROW_VOWELS = ['ı', 'i', 'u', 'ü'];
+
+    /**
+     * A listed word inside another is the other's stem from this many
+     * letters (balıq in balıqçı); a shorter one is too often a chance
+     * (ana in banan) and is reviewed by hand.
+     */
+    private const int CLUE_STEM_LETTERS = 4;
 
     private const string COLOUR = '/^#[0-9A-F]{6}$/';
 
@@ -385,7 +413,10 @@ final class ContentValidator
         $this->prompts($levels);
         $this->names();
         $this->roomCategories();
-        $this->roomLevels($this->roomShapes(), $this->roomWords());
+        $shapes = $this->roomShapes();
+        $roomWords = $this->roomWords();
+        $this->roomLevels($shapes, $roomWords);
+        $this->roomClues($roomWords);
         $this->roomSounds();
         $this->roomRivalry();
         $this->roomTaunts();
@@ -1381,6 +1412,173 @@ final class ContentValidator
                 return;
             }
         }
+    }
+
+    // ── rooms/clues.json ────────────────────────────────────────────────
+
+    /**
+     * The anagram's clues (§12 "Room content", ADR 037 decisions 1–2):
+     * `version` and `clues`, an object from each word of `words.json`'s
+     * `words` to its clue, in the list's order — a clue for every word and
+     * no key that is no word. Each clue is the alphabet's letters, spaces,
+     * `,` and `-`, from a capital letter, with no space at either end and
+     * no two together, of at most `MAX_ROOM_CLUE_LENGTH` characters; and it
+     * never holds, by `Az::lower`, a form of its word (`giveaways()`). What
+     * a substring cannot see — a three-letter part of a compound, a synonym
+     * — is reviewed by hand. The file needs a `credits.json` entry
+     * (`CREDITED_LISTS`).
+     *
+     * @param  RoomWords|null  $words  the word list; null when `words.json` has a problem
+     */
+    private function roomClues(?RoomWords $words): void
+    {
+        $file = ContentRepository::ROOM_CLUES;
+        $data = $this->object($this->read($file), $file, '', ['version', 'clues']);
+
+        if ($data === null) {
+            return;
+        }
+
+        if (! is_int($data['version']) || $data['version'] < 1) {
+            $this->problem($file, 'version must be a whole number from 1');
+        }
+
+        $clues = $data['clues'];
+
+        if (! is_array($clues) || ($clues !== [] && array_is_list($clues))) {
+            $this->problem($file, 'clues must be an object from each word of '.ContentRepository::ROOM_WORDS.' to its clue');
+
+            return;
+        }
+
+        $listed = $words === null ? null : array_flip($words->words());
+        /** @var list<string> $keys */
+        $keys = [];
+
+        foreach ($clues as $word => $clue) {
+            $word = (string) $word;
+            $keys[] = $word;
+            $where = "clues \"{$word}\"";
+
+            if ($listed !== null && ! isset($listed[$word])) {
+                $this->problem($file, "{$where} is no word of ".ContentRepository::ROOM_WORDS.'; a clue belongs to a word the games draw');
+
+                continue;
+            }
+
+            if (! is_string($clue) || $clue === '') {
+                $this->problem($file, "{$where} must be a line of text");
+
+                continue;
+            }
+
+            $this->clue($clue, $file, $where, $words === null ? [] : $this->giveaways($word, $words));
+        }
+
+        if ($words === null) {
+            return;
+        }
+
+        $missing = array_values(array_diff($words->words(), $keys));
+
+        foreach ($missing as $word) {
+            $this->problem($file, "clues has no clue for \"{$word}\"; every word of ".ContentRepository::ROOM_WORDS.' has one');
+        }
+
+        if ($missing === [] && count($keys) === count($words->words()) && $keys !== $words->words()) {
+            foreach ($words->words() as $at => $word) {
+                if ($keys[$at] !== $word) {
+                    $this->problem($file, 'clues must follow the order of '.ContentRepository::ROOM_WORDS.": \"{$keys[$at]}\" stands where \"{$word}\" does");
+
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * One clue's line (see `roomClues()`), and none of `$giveaways` in it.
+     *
+     * @param  list<string>  $giveaways
+     */
+    private function clue(string $clue, string $file, string $where, array $giveaways): void
+    {
+        $first = mb_substr($clue, 0, 1);
+        $length = mb_strlen($clue);
+
+        if (array_filter(mb_str_split($clue), static fn (string $character): bool => ! Alphabet::isLetter($character) && ! in_array($character, self::CLUE_SIGNS, true)) !== []) {
+            $this->problem($file, "{$where} \"{$clue}\" may hold only the alphabet's letters, spaces, commas and hyphens");
+        } elseif (! Alphabet::isLetter($first) || Az::upper($first) !== $first) {
+            $this->problem($file, "{$where} \"{$clue}\" must begin with a capital letter");
+        } elseif (trim($clue) !== $clue || str_contains($clue, '  ')) {
+            $this->problem($file, "{$where} \"{$clue}\" must have no space at either end and no two together");
+        }
+
+        if ($length > self::MAX_ROOM_CLUE_LENGTH) {
+            $this->problem($file, "{$where} has {$length} characters; a clue has at most ".self::MAX_ROOM_CLUE_LENGTH.', two lines of a 375px phone');
+        }
+
+        $lower = Az::lower($clue);
+
+        foreach ($giveaways as $form) {
+            if (str_contains($lower, $form)) {
+                $this->problem($file, "{$where} holds \"{$form}\": a clue never names its word");
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * What a word's clue may not hold, lowercase: the word and every
+     * spelling an anagram of it accepts (`RoomWords::accepted()`), each
+     * with its stem as Azerbaijani bends it — a last `q` or `k` softened
+     * (ayaq → ayağ, çörək → çörəy) and the narrow vowel of a closed last
+     * syllable dropped (burun → burn, ağız → ağz) — and every listed word
+     * of `CLUE_STEM_LETTERS` letters or more inside it (balıq in balıqçı).
+     *
+     * @return list<string>
+     */
+    private function giveaways(string $word, RoomWords $words): array
+    {
+        $forms = [];
+
+        foreach ($words->accepted($word) as $spelling) {
+            $forms = [...$forms, $spelling, ...self::stems($spelling)];
+        }
+
+        foreach ($words->words() as $other) {
+            if ($other !== $word && mb_strlen($other) >= self::CLUE_STEM_LETTERS && str_contains($word, $other)) {
+                $forms[] = $other;
+            }
+        }
+
+        return array_values(array_unique($forms));
+    }
+
+    /**
+     * A spelling's stems as a suffix bends it (see `giveaways()`).
+     *
+     * @return list<string>
+     */
+    private static function stems(string $spelling): array
+    {
+        $letters = mb_str_split($spelling);
+        $count = count($letters);
+        $last = $letters[$count - 1];
+        $stems = [];
+
+        if ($last === 'q' || $last === 'k') {
+            $stems[] = implode('', array_slice($letters, 0, -1)).($last === 'q' ? 'ğ' : 'y');
+        }
+
+        $vowels = count(array_filter($letters, Alphabet::isVowel(...)));
+
+        if ($count >= 3 && $vowels >= 2 && ! Alphabet::isVowel($last) && in_array($letters[$count - 2], self::NARROW_VOWELS, true) && ! Alphabet::isVowel($letters[$count - 3])) {
+            $stems[] = implode('', [...array_slice($letters, 0, -2), $last]);
+        }
+
+        return $stems;
     }
 
     // ── rooms/shapes.json ───────────────────────────────────────────────

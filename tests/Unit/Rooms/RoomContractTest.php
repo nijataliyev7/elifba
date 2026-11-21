@@ -1,12 +1,16 @@
 <?php
 
+use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Content\Support\RoomWords;
 use App\Domain\Rooms\Data\RoomActData;
 use App\Domain\Rooms\Data\RoomActReceiptData;
 use App\Domain\Rooms\Data\RoomAnswerData;
 use App\Domain\Rooms\Data\RoomAnswerReceiptData;
+use App\Domain\Rooms\Data\RoomAskData;
 use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Data\RoomTauntData;
 use App\Domain\Rooms\Data\RoomTauntReceiptData;
+use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
 
 /*
  * The room's contract on the PHP side (docs/architecture.md §12 "Room
@@ -16,7 +20,8 @@ use App\Domain\Rooms\Data\RoomTauntReceiptData;
  * the zod schemas refuse: a key of the reveal, the material or the
  * question in a phase that may not serve it. judge.json is the judge's
  * (RoomJudgeTest), not a payload. From D3 (ADR 034 decision 17) a board
- * game's match in each of its phases, a seat's act and its receipt.
+ * game's match in each of its phases, a seat's act and its receipt. From
+ * ADR 037 an anagram's question with its clue and its orders (`v: 8`).
  */
 
 const ROOM_FIXTURES = __DIR__.'/../../Fixtures/rooms';
@@ -243,6 +248,52 @@ it('says each player\'s «Hazıram» at v 7: never the host\'s, an absent player
     }
 
     expect($marked)->toBe(['state.lobby', 'state.over']);
+});
+
+it('carries an anagram\'s clue and its orders at v 8, and in every other question none', function (): void {
+    // ADR 037 decision 21: `clue` and `orders` last in every question; null and [] but in an anagram.
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+        $ask = roomFixture($name)['round']['ask'] ?? null;
+
+        if ($ask === null) {
+            continue;
+        }
+
+        expect(array_keys($ask))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items', 'clue', 'orders'], $name);
+
+        if (! str_contains($name, '.anagram')) {
+            expect($ask['clue'])->toBeNull($name)
+                ->and($ask['orders'])->toBe([], $name);
+        }
+    }
+
+    $ask = roomFixture('state.answer.anagram')['round']['ask'];
+    $says = array_column($ask['items'], 'text', 'id');
+    $readings = array_map(static fn (array $order): string => implode('', array_map(static fn (string $id): string => $says[$id], $order)), $ask['orders']);
+
+    // «alma»: twelve orders, two of them words — a third of them, four, none a word.
+    expect($ask['clue'])->toBe(app(ContentRepository::class)->roomClues()->of('alma'))
+        ->and($ask['orders'][0])->toBe(array_column($ask['items'], 'id'))
+        ->and($readings)->toBe(['MALA', 'LAMA', 'AMLA', 'LMAA'])
+        ->and(count($ask['orders']))->toBe(AnagramOrders::count(RoomWords::arrangements('alma'), 2));
+
+    // A question stored before ADR 037 reads with no clue and no orders.
+    $older = array_diff_key($ask, ['clue' => true, 'orders' => true]);
+
+    expect(RoomAskData::fromArray($older)->toArray())->toBe([...$older, 'clue' => null, 'orders' => []]);
+
+    // The DTO refuses what zod refuses: not the items' order first, an item missing or twice, two orders reading alike, more than six.
+    [$first, $second] = $ask['orders'];
+
+    foreach ([
+        [$second, $first],
+        [$first, array_slice($second, 1)],
+        [$first, [$first[0], $first[0], $first[2], $first[3]]],
+        [$first, [$first[0], $first[3], $first[2], $first[1]]],
+        array_fill(0, AnagramOrders::MAX + 1, $first),
+    ] as $orders) {
+        expect(fn () => RoomAskData::fromArray([...$ask, 'orders' => $orders]))->toThrow(InvalidArgumentException::class);
+    }
 });
 
 it('says the room\'s voice at v 5, each player\'s standing only while it is on, and nothing of it in a closed room', function (): void {

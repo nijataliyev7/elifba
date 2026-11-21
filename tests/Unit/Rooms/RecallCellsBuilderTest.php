@@ -166,8 +166,11 @@ it('asks for exactly the lit cells', function (RoomLevelData $level): void {
             $payload = $round->payload();
 
             expect(array_keys($payload))->toBe(['study', 'ask'])
-                ->and(array_keys($payload['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items'])
-                ->and($payload['ask']['shown'])->toBe([]);
+                ->and(array_keys($payload['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items', 'clue', 'orders'])
+                ->and($payload['ask']['shown'])->toBe([])
+                // ADR 037: an anagram's clue and orders, none here.
+                ->and($payload['ask']['clue'])->toBeNull()
+                ->and($payload['ask']['orders'])->toBe([]);
         }
     }
 })->with(recallCellsLevels());

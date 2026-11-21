@@ -150,21 +150,75 @@ export const RoomStudy = z.strictObject({
     items: z.array(RoomItem).min(1),
 });
 
+/** The most orders an anagram's question carries (ADR 037 decision 7). */
+export const ANAGRAM_ORDERS_MAX = 6;
+
 /**
  * The question; from the phase `answer` on. For a sequence, never in the
  * order to tap. `shown` is what is shown with it and never picked (B5: the
  * row `next_in_sequence` continues; empty for the other mechanics);
- * `items` are what an answer is made of.
+ * `items` are what an answer is made of. From ADR 037 an anagram's
+ * question also carries its word's `clue` (content, shown as written) and
+ * the `orders` «Qarışdır» cycles through — each every item once, the first
+ * the order of `items`, no two reading alike, none spelling an accepted
+ * word (the server's word: a page never checks or makes one); `null` and
+ * `[]` for every other mechanic and an older round.
  */
-export const RoomAsk = z.strictObject({
-    shape: z.enum(['choice', 'sequence', 'set']),
-    /** How many items an answer holds. */
-    pick: z.number().int().positive(),
-    layout: RoomLayout,
-    grid: RoomGrid.nullable(),
-    shown: z.array(RoomItem),
-    items: z.array(RoomItem).min(1),
-});
+export const RoomAsk = z
+    .strictObject({
+        shape: z.enum(['choice', 'sequence', 'set']),
+        /** How many items an answer holds. */
+        pick: z.number().int().positive(),
+        layout: RoomLayout,
+        grid: RoomGrid.nullable(),
+        shown: z.array(RoomItem),
+        items: z.array(RoomItem).min(1),
+        clue: z.string().min(1).nullable(),
+        orders: z.array(z.array(itemId).min(1)).max(ANAGRAM_ORDERS_MAX),
+    })
+    .superRefine((ask, context) => {
+        if (ask.orders.length === 0) {
+            return;
+        }
+
+        const ids = ask.items.map((item) => item.id);
+        const sorted = [...ids].sort().join(' ');
+        const says = new Map(
+            ask.items.map((item) => [
+                item.id,
+                item.text ?? item.asset ?? item.id,
+            ]),
+        );
+        const readings = new Set<string>();
+
+        if (ask.orders[0].join(' ') !== ids.join(' ')) {
+            context.addIssue({
+                code: 'custom',
+                message: "The first order is the items' own.",
+                path: ['orders', 0],
+            });
+        }
+
+        ask.orders.forEach((order, index) => {
+            if ([...order].sort().join(' ') !== sorted) {
+                context.addIssue({
+                    code: 'custom',
+                    message: 'An order holds every item once.',
+                    path: ['orders', index],
+                });
+            }
+
+            readings.add(order.map((id) => says.get(id)).join('\u0000'));
+        });
+
+        if (readings.size !== ask.orders.length) {
+            context.addIssue({
+                code: 'custom',
+                message: 'No two orders read alike.',
+                path: ['orders'],
+            });
+        }
+    });
 
 /** The viewer's own answer, in the reveal. */
 export const RoomMine = z.strictObject({

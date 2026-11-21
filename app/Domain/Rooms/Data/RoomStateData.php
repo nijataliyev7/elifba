@@ -39,6 +39,8 @@ use InvalidArgumentException;
  *
  * Version 7 (ADR 035 decision 6) has each player's `ready`: whether their
  * «Hazıram» between games counts.
+ * Version 8 (ADR 037 decision 21) has an anagram question's `clue` and
+ * `orders` (`RoomAskData`).
  *
  * @phpstan-import-type RoomSummaryArray from RoomSummaryData
  * @phpstan-import-type RoomViewerArray from RoomViewerData

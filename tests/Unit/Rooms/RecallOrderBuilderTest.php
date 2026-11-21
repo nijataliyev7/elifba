@@ -149,8 +149,11 @@ it('never asks in the order shown', function (RoomLevelData $level): void {
 
             expect(array_keys($payload))->toBe(['study', 'ask'])
                 ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain('accept')
-                ->and(array_keys($payload['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items'])
-                ->and($payload['ask']['shown'])->toBe([]);
+                ->and(array_keys($payload['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items', 'clue', 'orders'])
+                ->and($payload['ask']['shown'])->toBe([])
+                // ADR 037: an anagram's clue and orders, none here.
+                ->and($payload['ask']['clue'])->toBeNull()
+                ->and($payload['ask']['orders'])->toBe([]);
 
             // The ids carry no position: sorted, they are the order to tap only by chance.
             $sorted = $askIds;

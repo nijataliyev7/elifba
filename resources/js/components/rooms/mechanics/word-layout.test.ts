@@ -21,6 +21,8 @@ const ask: RoomAsk = {
         { id: 'l', kind: 'letter', text: 'L', asset: null, cell: null },
         { id: 'a2', kind: 'letter', text: 'A', asset: null, cell: null },
     ],
+    clue: null,
+    orders: [],
 };
 const solution = ['a1', 'l', 'm', 'a2'];
 

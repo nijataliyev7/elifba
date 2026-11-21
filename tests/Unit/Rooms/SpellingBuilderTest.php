@@ -155,6 +155,8 @@ it('offers four different spellings with one right', function (RoomLevelData $le
                 ->and(mb_strlen((string) $round->solution->word))->toBeGreaterThanOrEqual($level->wordLength->min ?? 0)->toBeLessThanOrEqual($level->wordLength->max ?? 0)
                 ->and(array_unique(array_map(static fn (RoomItemData $item): RoomItemKind => $item->kind, $round->ask->items), SORT_REGULAR))->toBe([RoomItemKind::Word])
                 ->and([$round->ask->shape, $round->ask->pick, $round->ask->layout, $round->ask->grid])->toBe([RoomAnswerShape::Choice, 1, RoomLayout::Row, null])
+                // ADR 037: the clue and the orders are an anagram's alone.
+                ->and([$round->ask->clue, $round->ask->orders])->toBe([null, []])
                 ->and($round->study)->toBeNull()
                 ->and($round->studyMs)->toBe(0)
                 ->and($round->answerMs)->toBe($level->answerMs)

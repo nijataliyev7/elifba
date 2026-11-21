@@ -81,7 +81,10 @@ function oddCommon(RoomLevelData $level, BuiltRoomRoundData $round): void
         ->and($texts)->toHaveCount($level->options ?? 0)
         ->and(array_unique(array_map(Az::lower(...), $texts)))->toHaveCount($level->options ?? 0)
         ->and(RoomJudge::correct($round->solution, $round->ask->items, $round->solution->ids))->toBeTrue()
-        ->and(array_keys($round->payload()['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items']);
+        ->and(array_keys($round->payload()['ask']))->toBe(['shape', 'pick', 'layout', 'grid', 'shown', 'items', 'clue', 'orders'])
+        // ADR 037: an anagram's clue and orders, none here.
+        ->and($round->ask->clue)->toBeNull()
+        ->and($round->ask->orders)->toBe([]);
 
     foreach ($round->ask->items as $item) {
         expect($item->kind)->toBe($level->source?->kind())
