@@ -674,7 +674,8 @@ it('gives the start screen, the screen and the round the link with the room\'s t
         ->and(RoomJoinLink::tag(Rooms::open($this->tural)))->not->toBe($tag)
         ->and(RoomJoinLink::tagMatches($room, null))->toBeTrue()
         ->and(RoomJoinLink::tagMatches($room, $tag))->toBeTrue()
-        ->and(RoomJoinLink::tagMatches($room, strtoupper($tag)))->toBeFalse();
+        // An uppercased tag is not the room's — where it has a letter to uppercase: a tag of digits alone (about 6 % of rooms) has none.
+        ->and(strtoupper($tag) === $tag || ! RoomJoinLink::tagMatches($room, strtoupper($tag)))->toBeTrue();
 
     // The host's start screen and a player's, with «Dostunu çağır» behind it.
     expect(pagesProps($this->actingAs($this->resad)->get(route('rooms.show', $room)))['join'])->toBe($link)

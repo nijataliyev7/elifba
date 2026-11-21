@@ -612,7 +612,11 @@ it('refuses a link whose tag is not the open room\'s, as an unknown code', funct
     $code = (string) $this->room->code;
     $this->actingAs($this->player);
 
-    foreach (['000000', 'abcdef', strtoupper(RoomJoinLink::tag($this->room)), RoomJoinLink::tag($this->room).'0'] as $tag) {
+    $own = RoomJoinLink::tag($this->room);
+    // An uppercased tag only where it differs: a tag of digits alone (about 6 % of rooms) has no case to change.
+    $others = array_values(array_unique(array_filter(['000000', 'abcdef', strtoupper($own), $own.'0'], static fn (string $tag): bool => $tag !== $own)));
+
+    foreach ($others as $tag) {
         Rooms::assertRefused($this->get(route('rooms.join', ['code' => $code, 't' => $tag]), JOIN_BY_HAND));
     }
 
