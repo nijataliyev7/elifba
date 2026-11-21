@@ -39,9 +39,10 @@ import { barStretch } from '@/rooms/clock';
 import type { ServerClock } from '@/rooms/clock';
 import type {
     RoomAnswer,
+    RoomBoardGame,
     RoomGame,
-    RoomRaceGame,
     RoomMine,
+    RoomRaceGame,
     RoomRound,
     RoomState,
 } from '@/rooms/contract';
@@ -271,7 +272,7 @@ export function LiveRound({
                 className="flex flex-col gap-4"
             >
                 {round.phase === 'countdown' && (
-                    <Countdown game={game} round={round} now={now} />
+                    <Countdown game={game} until={round.opens_ms} now={now} />
                 )}
 
                 {round.phase === 'study' && (
@@ -448,24 +449,26 @@ export function LiveRound({
 }
 
 /**
- * The countdown to the first round: «Oyun başlayır» over the seconds in a
+ * The countdown to a game's start: «Oyun başlayır» over the seconds in a
  * ring — each second's figure drops in and the ring ripples, in a moment
- * the page saw begin — then the game's name and what it asks. The seconds
- * are the estimated server clock's, for show only.
+ * the page saw begin — then the game's name and what it asks. `until` is
+ * the moment it counts to: a race's round 0 `opens_ms`, a match's
+ * `starts_ms` (ADR 034 "Amended 2026-11-21 — the countdown over the
+ * board"). The seconds are the estimated server clock's, for show only.
  */
 export function Countdown({
     game,
-    round,
+    until,
     now,
     big = false,
 }: {
-    game: RoomGame;
-    round: RoomRound;
+    game: Pick<RoomGame, 'mechanic'> | Pick<RoomBoardGame, 'mechanic'>;
+    until: number;
     now: number | null;
     big?: boolean;
 }) {
     const { t } = useTranslation();
-    const left = secondsUntil(round.opens_ms, now);
+    const left = secondsUntil(until, now);
 
     return (
         <div

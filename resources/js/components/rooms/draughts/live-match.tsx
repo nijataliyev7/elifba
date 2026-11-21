@@ -15,6 +15,7 @@ import { rivalOf } from '@/components/rooms/rivalry';
 import { useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
 import { FrameTitle, ScreenHead } from '@/components/rooms/game-head';
+import { Countdown } from '@/components/rooms/live-round';
 import { RoomActionBar } from '@/components/rooms/room-action-bar';
 import { TauntReaction, TauntThrow } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
@@ -144,7 +145,21 @@ export function LiveMatch({
 
                 <div className="-mx-2 sm:mx-auto sm:w-full sm:max-w-[480px]">
                     {/* No taller than the viewport leaves — 19.25rem: the frame's bar, the strip, the line and the action bar — and never under 44px squares: 22rem and the rim's 3px a side. */}
-                    <div className="mx-auto max-w-[max(calc(22rem+6px),calc(100svh-19.25rem))]">
+                    <div className="relative mx-auto max-w-[max(calc(22rem+6px),calc(100svh-19.25rem))]">
+                        {/* The countdown over the board, as a race's first round opens (ADR 034 as amended 2026-11-21). */}
+                        {match.phase === 'countdown' && (
+                            <div
+                                key={`countdown:${game.id}`}
+                                data-motion={motion.phase ? 'on' : undefined}
+                                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/85 backdrop-blur-[2px]"
+                            >
+                                <Countdown
+                                    game={game}
+                                    until={match.starts_ms}
+                                    now={now}
+                                />
+                            </div>
+                        )}
                         <DraughtsBoard
                             position={match.position}
                             last={match.last}

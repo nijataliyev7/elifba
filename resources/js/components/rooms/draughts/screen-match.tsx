@@ -3,6 +3,8 @@ import { MatchTitle } from '@/components/rooms/draughts/live-match';
 import { MatchLine } from '@/components/rooms/draughts/match-line';
 import { MatchStrip } from '@/components/rooms/draughts/match-strip';
 import { MoveLines } from '@/components/rooms/draughts/move-list';
+import { Countdown } from '@/components/rooms/live-round';
+import { ScreenFit } from '@/components/rooms/screen-fit';
 import { useArrival } from '@/components/rooms/draughts/use-arrival';
 import { useRivalry } from '@/components/rooms/rivalry-strip';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
@@ -77,7 +79,24 @@ export function ScreenMatch({
 
             <MatchTitle game={game} match={match} motion={motion.round} big />
 
-            <div className="flex min-h-0 flex-1 justify-center gap-[3vw]">
+            <div className="relative flex min-h-0 flex-1 justify-center gap-[3vw]">
+                {/* The countdown over the board, as a race's first round opens (ADR 034 as amended 2026-11-21). */}
+                {match.phase === 'countdown' && (
+                    <div
+                        key={`countdown:${game.id}`}
+                        data-motion={motion.phase ? 'on' : undefined}
+                        className="pointer-events-none absolute inset-0 z-10 flex flex-col rounded-2xl bg-background/85 backdrop-blur-[3px]"
+                    >
+                        <ScreenFit className="flex-1">
+                            <Countdown
+                                game={game}
+                                until={match.starts_ms}
+                                now={now}
+                                big
+                            />
+                        </ScreenFit>
+                    </div>
+                )}
                 <DraughtsBoard
                     position={match.position}
                     last={match.last}

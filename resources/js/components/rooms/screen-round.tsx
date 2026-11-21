@@ -118,7 +118,12 @@ export function ScreenRound({
             >
                 {round.phase === 'countdown' && (
                     <ScreenFit className="flex-1">
-                        <Countdown game={game} round={round} now={now} big />
+                        <Countdown
+                            game={game}
+                            until={round.opens_ms}
+                            now={now}
+                            big
+                        />
                     </ScreenFit>
                 )}
 
