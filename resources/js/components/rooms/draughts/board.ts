@@ -178,12 +178,18 @@ export function offerTo(
         : null;
 }
 
-/** The side a viewer plays, or null for a watcher. */
+/**
+ * The side a viewer plays, or null for a watcher — and for no viewer at all
+ * (the screen, a host who does not play): a side without a player is the
+ * computer's (ADR 036 decision 11), never theirs.
+ */
 export function seatOf(
     match: Pick<RoomMatch, 'sides'>,
     viewer: string | null,
 ): RoomSide | null {
-    return match.sides.find((side) => side.player_id === viewer) ?? null;
+    return viewer === null
+        ? null
+        : (match.sides.find((side) => side.player_id === viewer) ?? null);
 }
 
 /**

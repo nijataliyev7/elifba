@@ -14,13 +14,14 @@ use Illuminate\Database\Eloquent\Collection;
  * "Scoring and what is kept", ADR 022): each game's mechanic, difficulty
  * and number of rounds, and its ranking (`RoomRanking::ofGame()`), derived
  * now and never stored — a board game its clock in place of the rounds
- * (D3, ADR 034 decision 17). A ranking names players by `room_players.id`; the
+ * (D3, ADR 034 decision 17), and from K3 the level of the computer that
+ * played one of its seats, or null (ADR 036 decision 11). A ranking names players by `room_players.id`; the
  * page reads their names from the state's `players`, read from the
  * accounts as they are now — a name taken out is null there.
  *
  * @phpstan-import-type RoomRankedPlayerArray from RoomRankedPlayerData
  *
- * @phpstan-type RoomResultGameArray array{id: string, mechanic: string, difficulty: int, rounds?: int, clock?: array{base_ms: int, increment_ms: int}, ranking: list<RoomRankedPlayerArray>}
+ * @phpstan-type RoomResultGameArray array{id: string, mechanic: string, difficulty: int, rounds?: int, clock?: array{base_ms: int, increment_ms: int}, computer?: int|null, ranking: list<RoomRankedPlayerArray>}
  */
 final class RoomResults
 {
@@ -35,7 +36,7 @@ final class RoomResults
             'id' => $game->id,
             'mechanic' => $game->mechanic->value,
             'difficulty' => $game->difficulty,
-            ...(($clock = RoomGameData::clockOf($game)) === null ? ['rounds' => $game->rounds->count()] : ['clock' => $clock->toArray()]),
+            ...(($clock = RoomGameData::clockOf($game)) === null ? ['rounds' => $game->rounds->count()] : ['clock' => $clock->toArray(), 'computer' => $game->computer?->value]),
             'ranking' => array_map(
                 static fn (RoomRankedPlayerData $row): array => $row->toArray(),
                 RoomRanking::ofGame($game, $nowMs, $players),

@@ -1,5 +1,16 @@
+import {
+    COMPUTER_DEFAULT,
+    computerName,
+    computerSeat,
+} from '@/components/rooms/computer';
 import { RoomBoardMechanic } from '@/rooms/contract';
-import type { RoomClockLevel, RoomGame, RoomMechanic } from '@/rooms/contract';
+import type {
+    RoomClockLevel,
+    RoomComputerLevel,
+    RoomGame,
+    RoomMatchColor,
+    RoomMechanic,
+} from '@/rooms/contract';
 import type { Translate } from '@/hooks/use-translation';
 
 /** A level as the catalog describes it (`RoomGameSetupData::options()`). */
@@ -42,7 +53,9 @@ export type GameSetupOptions = {
 /**
  * The room's choice of the next game: the state's `setup` without `played`.
  * A race's has its rounds; a board game's (ADR 034 decision 7) its level's
- * clock and its two seats, a player's row or null.
+ * clock and its two seats, a player's row or null — and the computer's
+ * level while it plays the seat without a player (ADR 036 decision 2),
+ * null for two players.
  */
 export type SetupChoice = {
     mechanic: RoomMechanic;
@@ -51,6 +64,18 @@ export type SetupChoice = {
     clock?: RoomClockLevel;
     white?: string | null;
     black?: string | null;
+    computer?: RoomComputerLevel | null;
+};
+
+/**
+ * A board game's seats as a page draws them: the two colours' players and
+ * the computer's level, which then plays the colour without a player
+ * (`computerSeat()`).
+ */
+export type ChoiceSeats = {
+    white: string | null;
+    black: string | null;
+    computer: RoomComputerLevel | null;
 };
 
 /** A game's kind: a race of rounds or a board game. */
@@ -69,36 +94,49 @@ export function kindOf(mechanic: RoomMechanic): GameKind {
  * The start screen's parts of a choice (ADR 034 decision 27, the one place
  * the choice looks at the kind): under «Oyun», a race's level and its
  * rounds — «Orta · 10 raund» — or a board game's clock and its two seats —
- * «5+3» (docs/frontend.md rule 15 "Board games").
+ * «5+3», and «5+3 · Kompüter (Orta)» while the computer plays one of them
+ * (docs/frontend.md rule 15 "Board games", "The computer's seat").
  */
 export type ChoiceParts = {
     /** The control under the level: the rounds' steps, or the seats. */
     second: 'rounds' | 'seats';
     /** The choice's line, beside its game's name. */
     line: string;
-    /** A board game's seats; empty for a race. */
-    seats: { white: string | null; black: string | null };
-    /** Why the choice cannot start yet: a board game with a seat empty (`rooms.errors.needs_two`). */
+    /** A board game's seats, and the computer's level while it plays one; empty for a race. */
+    seats: ChoiceSeats;
+    /**
+     * Why the choice cannot start yet: a board game with a seat empty
+     * (`rooms.errors.needs_two`) — or, against the computer, with nobody to
+     * seat (`rooms.errors.needs_one`, ADR 036 decision 3).
+     */
     needs: string | null;
 };
 
 export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
     if (kindOf(choice.mechanic) === 'board') {
+        const computer = choice.computer ?? null;
+        // Undefined seats are a tap's not yet answered: the room's seats, which the state will say.
+        const empty = [choice.white, choice.black].filter(
+            (seat) => seat === null,
+        ).length;
+
         return {
             second: 'seats',
-            line:
-                choice.clock === undefined
-                    ? ''
-                    : clockLevelText(t, choice.clock),
+            line: boardLine(t, choice),
             seats: {
                 white: choice.white ?? null,
                 black: choice.black ?? null,
+                computer,
             },
-            // Undefined seats are a tap's not yet answered: the room's seats, which the state will say.
+            // Two players need both seats; against the computer one player is enough.
             needs:
-                choice.white === null || choice.black === null
-                    ? 'rooms.errors.needs_two'
-                    : null,
+                computer === null
+                    ? empty > 0
+                        ? 'rooms.errors.needs_two'
+                        : null
+                    : empty === 2
+                      ? 'rooms.errors.needs_one'
+                      : null,
         };
     }
 
@@ -111,9 +149,25 @@ export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
             choice.rounds === undefined
                 ? difficulty
                 : `${difficulty} · ${t('rooms.show.rounds', { count: choice.rounds })}`,
-        seats: { white: null, black: null },
+        seats: { white: null, black: null, computer: null },
         needs: null,
     };
+}
+
+/**
+ * A board game's line: its clock and, against the computer, who plays the
+ * other seat — «5+3», «5+3 · Kompüter (Orta)».
+ */
+function boardLine(
+    t: Translate,
+    game: { clock?: RoomClockLevel; computer?: RoomComputerLevel | null },
+): string {
+    return [
+        ...(game.clock === undefined ? [] : [clockLevelText(t, game.clock)]),
+        ...(game.computer === undefined || game.computer === null
+            ? []
+            : [computerName(t, game.computer)]),
+    ].join(' · ');
 }
 
 /** A clock's whole minutes and seconds a move. */
@@ -135,7 +189,8 @@ export function clockLevelText(t: Translate, clock: RoomClockLevel): string {
 /**
  * A played game's line: «Söz tap · Orta · 10 raund», or a board game's
  * «Şaşki · 5+3» — by its clock, which only a board game has (the state's
- * `game`, «Keçmiş oyunlar», a closed room's games).
+ * `game`, «Keçmiş oyunlar», a closed room's games) — and «Şaşki · 5+3 ·
+ * Kompüter (Orta)» for a match against the computer.
  */
 export function gameSummary(
     t: Translate,
@@ -144,6 +199,7 @@ export function gameSummary(
         difficulty: number;
         rounds?: number;
         clock?: RoomClockLevel;
+        computer?: RoomComputerLevel | null;
     },
 ): string {
     if (game.clock !== undefined) {
@@ -159,7 +215,8 @@ export function gameSummary(
 
 /**
  * A game's short line, without rounds: «Söz tap · Orta», or a board game's
- * «Şaşki · 5+3» by its clock («Keçmiş oyunlar»).
+ * «Şaşki · 5+3» by its clock («Keçmiş oyunlar») — «Şaşki · 5+3 · Kompüter
+ * (Orta)» against the computer.
  */
 export function gameLabel(
     t: Translate,
@@ -167,12 +224,13 @@ export function gameLabel(
         mechanic: RoomMechanic;
         difficulty: number;
         clock?: RoomClockLevel;
+        computer?: RoomComputerLevel | null;
     },
 ): string {
     const name = t(`rooms.mechanics.${game.mechanic}.name`);
 
     return game.clock !== undefined
-        ? `${name} · ${clockLevelText(t, game.clock)}`
+        ? `${name} · ${boardLine(t, game)}`
         : t('rooms.index.game', {
               game: name,
               difficulty: t(`rooms.difficulty.${game.difficulty}`),
@@ -227,10 +285,11 @@ export function levelOf(
 /**
  * The whole choice with another game: the difficulty kept where that game
  * has a level at it, else its lowest; a race's rounds and a board game's
- * seats kept when the choice was of the same kind. A choice of the other
- * kind names neither: the room fills it — the rounds it keeps, its seats
- * (`RoomGameSetupData::validate()`, ADR 034 as built in D5) — and the page
- * shows what the state then says.
+ * seats and computer kept when the choice was of the same kind. A choice of
+ * the other kind names none of them: the room fills it — the rounds it
+ * keeps, its seats, whether the computer plays
+ * (`RoomGameSetupData::validate()`, ADR 034 as built in D5, ADR 036
+ * decision 2) — and the page shows what the state then says.
  */
 export function withGame(choice: SetupChoice, game: CatalogGame): SetupChoice {
     const difficulty = game.difficulties.includes(choice.difficulty)
@@ -245,6 +304,7 @@ export function withGame(choice: SetupChoice, game: CatalogGame): SetupChoice {
                   difficulty,
                   white: choice.white,
                   black: choice.black,
+                  computer: choice.computer,
               },
               game,
               difficulty,
@@ -264,23 +324,104 @@ export function withLevel(
         : { ...choice, difficulty, clock };
 }
 
-/** Whether two choices are the same game, difficulty, rounds and seats. */
+/**
+ * The choice with a player on a seat (docs/frontend.md rule 15 "Board
+ * games", "The computer's seat"). Between two players, one picked for the
+ * other seat changes places. Against the computer: another player on the
+ * player's seat plays it instead; the one player picked for the computer's
+ * colour takes it, and the computer the other; another player picked for
+ * the computer's colour sits there, and the game is two players' again.
+ */
+export function withSeat(
+    choice: SetupChoice,
+    color: RoomMatchColor,
+    player: string,
+): SetupChoice {
+    const other = color === 'white' ? 'black' : 'white';
+    const own = choice[color] ?? null;
+    const across = choice[other] ?? null;
+    const computer = choice.computer ?? null;
+
+    if (computer === null) {
+        return {
+            ...choice,
+            [color]: player,
+            [other]: across === player ? own : across,
+        };
+    }
+
+    const computers = computerSeat({
+        white: choice.white ?? null,
+        black: choice.black ?? null,
+        computer,
+    });
+
+    return computers === color && across !== null && across !== player
+        ? { ...choice, computer: null, [color]: player, [other]: across }
+        : { ...choice, [color]: player, [other]: null };
+}
+
+/**
+ * The choice with the computer on a seat, at the level it had or, first
+ * turned on, at «Orta» (ADR 036 decision 15): the player across stays, and
+ * with nobody across the seat's own player moves there — so a room of one
+ * still has its player seated, with the other colour.
+ */
+export function withComputer(
+    choice: SetupChoice,
+    color: RoomMatchColor,
+): SetupChoice {
+    const other = color === 'white' ? 'black' : 'white';
+
+    return {
+        ...choice,
+        computer: choice.computer ?? COMPUTER_DEFAULT,
+        [color]: null,
+        [other]: choice[other] ?? choice[color] ?? null,
+    };
+}
+
+/**
+ * The choice with the computer turned off: two players again. The seat it
+ * leaves is the room's to fill (`RoomSeats`), so the page names no seat and
+ * shows who sits there once the state says.
+ */
+export function withoutComputer(choice: SetupChoice): SetupChoice {
+    return {
+        ...choice,
+        computer: null,
+        white: choice.white ?? undefined,
+        black: choice.black ?? undefined,
+    };
+}
+
+/** The choice with the two colours changed: against the computer, the player takes its colour. */
+export function withSeatsSwapped(choice: SetupChoice): SetupChoice {
+    return { ...choice, white: choice.black, black: choice.white };
+}
+
+/** Whether two choices are the same game, difficulty, rounds, seats and computer. */
 export function sameChoice(a: SetupChoice, b: SetupChoice): boolean {
     return (
         a.mechanic === b.mechanic &&
         a.difficulty === b.difficulty &&
         a.rounds === b.rounds &&
         (a.white ?? null) === (b.white ?? null) &&
-        (a.black ?? null) === (b.black ?? null)
+        (a.black ?? null) === (b.black ?? null) &&
+        (a.computer ?? null) === (b.computer ?? null)
     );
 }
 
 /**
  * The body a choice is sent as: a race's `{mechanic, difficulty, rounds}`
- * or a board game's `{mechanic, difficulty, white, black}` — the rounds or
- * the seats left out while the page does not know them (a choice of the
- * other kind: the room fills them) — never the state's `kind`, `played`
- * or `clock`.
+ * or a board game's `{mechanic, difficulty, white, black, computer}` — the
+ * rounds, the seats or the computer left out while the page does not know
+ * them (a choice of the other kind: the room fills them) — never the
+ * state's `kind`, `played` or `clock`. A board game's two seats go only as
+ * a pair; with the computer (ADR 036 decision 2) at most the one seat a
+ * player has, the other colour being the computer's, and with nobody
+ * seated none, so the room's seat stands. A board choice that knows whether
+ * the computer plays always says so: null turns it off.
  */
 export function choiceBody(choice: SetupChoice): Record<string, unknown> {
     const body: Record<string, unknown> = {
@@ -294,7 +435,22 @@ export function choiceBody(choice: SetupChoice): Record<string, unknown> {
             : { ...body, rounds: choice.rounds };
     }
 
-    return typeof choice.white === 'string' && typeof choice.black === 'string'
-        ? { ...body, white: choice.white, black: choice.black }
-        : body;
+    const white = typeof choice.white === 'string' ? choice.white : null;
+    const black = typeof choice.black === 'string' ? choice.black : null;
+    const pair = white !== null && black !== null ? { white, black } : {};
+
+    if (choice.computer === undefined) {
+        return { ...body, ...pair };
+    }
+
+    if (choice.computer === null) {
+        return { ...body, ...pair, computer: null };
+    }
+
+    return {
+        ...body,
+        ...(white !== null && black === null ? { white } : {}),
+        ...(black !== null && white === null ? { black } : {}),
+        computer: choice.computer,
+    };
 }

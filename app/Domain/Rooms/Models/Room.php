@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Models;
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Data\RoomGameSetupData;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomStatus;
 use App\Domain\Rooms\Policies\RoomPolicy;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
@@ -61,6 +62,7 @@ use LogicException;
  * @property int|null $setup_rounds kept for the next race while a board game is chosen
  * @property string|null $setup_white_id the seat that plays white in the next board game (D3); read through `RoomSeats`
  * @property string|null $setup_black_id the seat that plays black
+ * @property RoomComputerLevel|null $setup_computer the level of the computer in the next board game (K3, ADR 036); null: two players
  * @property bool $taunts the host's switch: players may throw taunts
  * @property int|null $screen_seen_ms when the big screen last read the state while shown, Unix ms (`RecordScreenRead`)
  * @property CarbonImmutable|null $voice_at the host turned the room's voice on; null: off
@@ -154,7 +156,7 @@ class Room extends Model
      */
     public function setup(): RoomGameSetupData
     {
-        return $this->chosen()->seated(fn (): array => RoomSeats::of($this));
+        return $this->chosen()->seated(fn (): array => RoomSeats::of($this), $this->setup_computer);
     }
 
     /**
@@ -272,6 +274,7 @@ class Room extends Model
             'setup_mechanic' => RoomMechanic::class,
             'setup_difficulty' => 'integer',
             'setup_rounds' => 'integer',
+            'setup_computer' => RoomComputerLevel::class,
             'taunts' => 'boolean',
             'screen_seen_ms' => 'integer',
             'voice_at' => 'datetime',

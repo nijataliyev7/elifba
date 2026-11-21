@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Data;
 
 use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomGamePhase;
 use App\Domain\Rooms\Models\RoomGame;
 use InvalidArgumentException;
@@ -20,13 +21,14 @@ use InvalidArgumentException;
  *
  * @phpstan-import-type RoomClockLevelArray from RoomClockLevelData
  *
- * @phpstan-type RoomGameArray array{kind: string, id: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, phase: string}
+ * @phpstan-type RoomGameArray array{kind: string, id: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, computer?: int|null, phase: string}
  */
 final readonly class RoomGameData
 {
     /**
      * @param  int|null  $rounds  a race's
      * @param  RoomClockLevelData|null  $clock  a board game's
+     * @param  RoomComputerLevel|null  $computer  a board game's: the level of the computer that plays one of its seats (K3, ADR 036); null: two players
      */
     public function __construct(
         public string $id,
@@ -35,10 +37,11 @@ final readonly class RoomGameData
         public ?int $rounds,
         public RoomGamePhase $phase,
         public ?RoomClockLevelData $clock = null,
+        public ?RoomComputerLevel $computer = null,
     ) {
         $race = $this->kind() === RoomGameKind::Race;
 
-        if ($race !== ($rounds !== null) || $race === ($clock !== null)) {
+        if ($race !== ($rounds !== null) || $race === ($clock !== null) || ($race && $computer !== null)) {
             throw new InvalidArgumentException('A race has its rounds; a board game its clock.');
         }
     }
@@ -47,7 +50,7 @@ final readonly class RoomGameData
     {
         $clock = self::clockOf($game);
 
-        return new self($game->id, $game->mechanic, $game->difficulty, $clock === null ? $game->rounds->count() : null, $phase, $clock);
+        return new self($game->id, $game->mechanic, $game->difficulty, $clock === null ? $game->rounds->count() : null, $phase, $clock, $clock === null ? null : $game->computer);
     }
 
     /**
@@ -83,6 +86,7 @@ final readonly class RoomGameData
             $data['rounds'] ?? null,
             RoomGamePhase::from($data['phase']),
             isset($data['clock']) ? RoomClockLevelData::fromArray($data['clock']) : null,
+            isset($data['computer']) ? RoomComputerLevel::from($data['computer']) : null,
         );
     }
 
@@ -95,6 +99,6 @@ final readonly class RoomGameData
 
         return $this->clock === null
             ? [...$head, 'rounds' => (int) $this->rounds, 'phase' => $this->phase->value]
-            : [...$head, 'clock' => $this->clock->toArray(), 'phase' => $this->phase->value];
+            : [...$head, 'clock' => $this->clock->toArray(), 'computer' => $this->computer?->value, 'phase' => $this->phase->value];
     }
 }

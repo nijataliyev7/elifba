@@ -238,8 +238,10 @@ export type ThrowChoice = {
  * but the viewer — never oneself, a player who left, a removed one or a
  * host who does not play — in the ranking's order as the server gave it;
  * in a match the two seats, so the other seat alone, and nobody for a
- * watcher (ADR 034 decision 22). Nobody while the strip shows no rival,
- * since the button is the rival's side (decision 36). The tile throws at
+ * watcher (ADR 034 decision 22) — nor against the computer, whose seat is
+ * no player's and never present (ADR 036 decision 13). Nobody while the
+ * strip shows no rival, since the button is the rival's side (decision 36).
+ * The tile throws at
  * `picked` while it may still be picked, else at the strip's rival, else
  * at the first of the row: a picked player who left drops out before any
  * throw. It reads no answer, result or verdict.

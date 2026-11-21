@@ -186,6 +186,17 @@ final class RaceDriver extends RoomGameDriver
         RoomRoundClose::whenPresenceChanges($locked, $game, $nowMs);
     }
 
+    /** A race has no seat for the computer (ADR 036 "What is not built"). */
+    public function computerTurn(RoomGame $game, int $nowMs): ?array
+    {
+        return null;
+    }
+
+    public function computerChoice(RoomGame $game, int $nowMs): ?array
+    {
+        return null;
+    }
+
     public function readCountsFrom(RoomGame $game, int $nowMs): ?int
     {
         return RoomWaits::readCountsFrom($game, $nowMs);

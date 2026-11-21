@@ -1,5 +1,5 @@
 {
-    "v": 7,
+    "v": 8,
     "revision": 7,
     "server_ms": 1795534799000,
     "room": {
@@ -54,6 +54,7 @@
         },
         "white": "01kaqrx3mn4p5q6r7s8t9vwxyz",
         "black": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+        "computer": null,
         "played": false
     },
     "taunts": null,

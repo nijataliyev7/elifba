@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { clockLevelText } from '@/components/rooms/catalog';
+import { clockLevelText, gameLabel } from '@/components/rooms/catalog';
+import { seatKey, seatName } from '@/components/rooms/computer';
 import { offerTo, seatOf, yourTurn } from '@/components/rooms/draughts/board';
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
 import { MatchActions } from '@/components/rooms/draughts/match-actions';
@@ -47,6 +48,11 @@ import type { RoomBoardGame, RoomMatch, RoomState } from '@/rooms/contract';
  * page's (`roomCues()`), and the tab's title says «● Sizin növbənizdir»;
  * its phone holds a screen wake lock while the match is live, so it does
  * not sleep while the other seat thinks. A watcher's page has none of it.
+ *
+ * Against the computer (docs/frontend.md rule 15 "The computer's seat", ADR
+ * 036) the page is the same: the other side is «Kompüter» with `Bot`, the
+ * strip's rival half is no button — nobody is there to throw at — and the
+ * computer's move arrives with the state, as a seat's does.
  */
 export function LiveMatch({
     roomId,
@@ -99,8 +105,12 @@ export function LiveMatch({
     const offered =
         offerer === null
             ? null
-            : (state.players.find((player) => player.id === offerer.player_id)
-                  ?.name ?? t('rooms.show.nameless'));
+            : seatName(
+                  t,
+                  state.players,
+                  seatKey(offerer.player_id),
+                  game.computer,
+              );
 
     // A seat's phone stays awake through the countdown and the play.
     useWakeLock(seat !== null && match.phase !== 'over');
@@ -177,6 +187,7 @@ export function LiveMatch({
                     match={match}
                     seat={seat}
                     players={state.players}
+                    computer={game.computer}
                     now={now}
                     begun={acts.taps.length > 0}
                     failed={acts.failed}
@@ -202,8 +213,9 @@ export function LiveMatch({
 /**
  * A match's title (ADR 032 decision 4): in the game frame's top bar the
  * page's `h1` «Şaşki» over «5+3 · Gediş :number»; on the screen (`big`),
- * as a round's head stands there, «Şaşki · 5+3» muted over «Gediş
- * :number» — the move's number as the record counts it.
+ * as a round's head stands there, «Şaşki · 5+3» muted — against the
+ * computer «Şaşki · 5+3 · Kompüter (Orta)» — over «Gediş :number», the
+ * move's number as the record counts it.
  */
 export function MatchTitle({
     game,
@@ -237,7 +249,7 @@ export function MatchTitle({
 
     return (
         <ScreenHead
-            line={`${name} · ${clock}`}
+            line={gameLabel(t, game)}
             title={move}
             titleKey={match.ply}
             motion={motion}

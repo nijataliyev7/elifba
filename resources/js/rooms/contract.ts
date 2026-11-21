@@ -26,6 +26,12 @@
  * server alone judges a move and keeps the clock, and sends the legal
  * paths to the seat whose move it is.
  *
+ * From version 8 (K3, ADR 036 decision 11) a board game may have one seat
+ * played by the computer: its `setup` and `game` say the computer's level
+ * (`computer`, null in a game of two players), and that seat's `player_id`
+ * — in the match's `sides` and its result's `standing` — is null. The
+ * computer is no player: it is in no `players` and no `ranking`.
+ *
  * The board's contract (`resources/js/game/contract.ts`) is another one and
  * shares nothing with this.
  */
@@ -278,6 +284,13 @@ export const RoomClockLevel = z.strictObject({
     increment_ms: count,
 });
 
+/**
+ * How strong the computer plays a board game (ADR 036 decision 4): 1
+ * «Asan», 2 «Orta», 3 «Çətin». Its own level, never the game's difficulty,
+ * which in a board game is its clock.
+ */
+export const RoomComputerLevel = z.literal([1, 2, 3]);
+
 const raceGameBase = {
     kind: z.literal('race'),
     id,
@@ -292,11 +305,13 @@ const boardGameBase = {
     mechanic: RoomBoardMechanic,
     difficulty,
     clock: RoomClockLevel,
+    /** The level of the computer, which plays the seat without a player (ADR 036); null: two players. */
+    computer: RoomComputerLevel.nullable(),
 };
 
 const gamePhase = z.enum(['live', 'over']);
 
-/** The room's latest game: a race with its rounds, or a board game with its clock. */
+/** The room's latest game: a race with its rounds, or a board game with its clock and, when it plays, the computer's level. */
 export const RoomGame = z.discriminatedUnion('kind', [
     z.strictObject({ ...raceGameBase, phase: gamePhase }),
     z.strictObject({ ...boardGameBase, phase: gamePhase }),
@@ -319,6 +334,8 @@ export const RoomRankedPlayer = z.strictObject({
  * choice, so a page shows its final rather than the start screen. A race
  * has its rounds; a board game its level's clock and its two seats, a
  * player's row or null while nobody is there to sit (ADR 034 decision 7).
+ * With the computer chosen (`computer`, its level; ADR 036 decision 2) at
+ * most one seat is a player's and the other colour is the computer's.
  * The server derives it; a page compares nothing itself.
  */
 export const RoomSetup = z.discriminatedUnion('kind', [
@@ -336,6 +353,7 @@ export const RoomSetup = z.discriminatedUnion('kind', [
         clock: RoomClockLevel,
         white: id.nullable(),
         black: id.nullable(),
+        computer: RoomComputerLevel.nullable(),
         played: z.boolean(),
     }),
 ]);
@@ -354,10 +372,14 @@ const path = z.array(square).min(2).max(13);
 
 export const RoomMatchColor = z.enum(['white', 'black']);
 
-/** A side: its seat, its time at `server_ms` (or at the end), its pieces, men and kings together. */
+/**
+ * A side: its seat, its time at `server_ms` (or at the end), its pieces, men
+ * and kings together. The seat is a player's row, or null: the computer's
+ * (ADR 036 decision 11).
+ */
 export const RoomSide = z.strictObject({
     color: RoomMatchColor,
-    player_id: id,
+    player_id: id.nullable(),
     left_ms: count,
     pieces: z.number().int().min(0).max(12),
     kings: z.number().int().min(0).max(12),
@@ -382,9 +404,13 @@ export const RoomLegal = z.strictObject({
     paths: z.array(path).min(1),
 });
 
-/** A seat's row of the match's own standing: its points, its place by the outcome. */
+/**
+ * A seat's row of the match's own standing: its points, its place by the
+ * outcome. The computer's seat has no player and earns nothing (ADR 036
+ * decision 12).
+ */
 export const RoomMatchStanding = z.strictObject({
-    player_id: id,
+    player_id: id.nullable(),
     points: count,
     place: z.union([z.literal(1), z.literal(2)]).nullable(),
 });
@@ -551,7 +577,7 @@ export const RoomTaunts = z.strictObject({
 });
 
 /** The state's version: a page that meets another reloads itself (`fetchState`). */
-export const ROOM_STATE_VERSION = 7;
+export const ROOM_STATE_VERSION = 8;
 
 const stateBase = {
     v: z.literal(ROOM_STATE_VERSION),
@@ -736,6 +762,7 @@ export type RoomMechanic = z.infer<typeof RoomMechanic>;
 export type RoomRaceMechanic = z.infer<typeof RoomRaceMechanic>;
 export type RoomBoardMechanic = z.infer<typeof RoomBoardMechanic>;
 export type RoomClockLevel = z.infer<typeof RoomClockLevel>;
+export type RoomComputerLevel = z.infer<typeof RoomComputerLevel>;
 export type RoomMatchColor = z.infer<typeof RoomMatchColor>;
 export type RoomSide = z.infer<typeof RoomSide>;
 export type RoomPiece = z.infer<typeof RoomPiece>;

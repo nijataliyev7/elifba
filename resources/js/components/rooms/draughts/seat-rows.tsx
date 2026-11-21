@@ -1,14 +1,53 @@
-import { ArrowUpDown, ChevronDown, Check } from 'lucide-react';
+import { ArrowUpDown, Bot, ChevronDown, Check } from 'lucide-react';
 import { useState } from 'react';
+import {
+    withComputer,
+    withoutComputer,
+    withSeat,
+    withSeatsSwapped,
+} from '@/components/rooms/catalog';
+import type { ChoiceSeats } from '@/components/rooms/catalog';
+import {
+    computerName,
+    computerSeat,
+    seatName,
+} from '@/components/rooms/computer';
 import { PieceMark } from '@/components/rooms/draughts/piece';
 import type { RoomChoice } from '@/components/rooms/game-settings';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
+import type { Translate } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type { RoomMatchColor, RoomPlayer } from '@/rooms/contract';
 
-type Seats = { white: string | null; black: string | null };
+/**
+ * Who a seat of the choice shows: the computer with its level on the colour
+ * it plays (`computerSeat()`), the seated player's name, or nobody yet.
+ */
+function seatShown(
+    t: Translate,
+    seats: ChoiceSeats,
+    players: RoomPlayer[],
+    color: RoomMatchColor,
+): { id: string | null; computer: boolean; name: string | null } {
+    const id = seats[color];
+    const computer = computerSeat(seats) === color;
+
+    return {
+        id,
+        computer,
+        name: computer
+            ? computerName(t, seats.computer)
+            : id === null
+              ? null
+              : seatName(t, players, id, null),
+    };
+}
+
+/** A row of a seat's list: a present player, or the computer. */
+const option =
+    'flex min-h-13 w-full items-center gap-2 px-3 text-left outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
 /**
  * «Oyunçular» of a board game's choice (docs/frontend.md rule 15 "Board
@@ -20,6 +59,13 @@ type Seats = { white: string | null; black: string | null };
  * the state (`useRoomChoice()`); a player picked for the other seat
  * changes places. The seats are the state's: the server keeps a seat's
  * player while present and fills an empty one.
+ *
+ * Each seat's list ends with «Kompüter» beside `Bot` (rule 15 "The
+ * computer's seat", ADR 036 decision 15): picked, the computer plays that
+ * colour — its row says «Kompüter (Orta)» with `Bot` — and the player the
+ * other; picked again, it is turned off. «Yerləri dəyiş» then gives the
+ * player the computer's colour, and a room of one can start. Its level is
+ * `ComputerLevelSegments`, under the rows.
  */
 export function SeatRows({
     seats,
@@ -27,7 +73,7 @@ export function SeatRows({
     choice,
     big = false,
 }: {
-    seats: Seats;
+    seats: ChoiceSeats;
     players: RoomPlayer[];
     choice: RoomChoice;
     big?: boolean;
@@ -36,26 +82,20 @@ export function SeatRows({
     const [open, setOpen] = useState<RoomMatchColor | null>(null);
     const present = players.filter((player) => player.present);
     const busy = choice.pending !== null;
+    // Two players change places; against the computer the one player takes its colour.
+    const seated = [seats.white, seats.black].filter(
+        (seat) => seat !== null,
+    ).length;
+    const swappable = seated === (seats.computer === null ? 2 : 1);
+    const robot = big ? 'size-[max(1rem,2.4vh)] shrink-0' : 'size-4 shrink-0';
 
-    const seat = (color: RoomMatchColor, id: string) => {
-        const other = color === 'white' ? seats.black : seats.white;
-        const own = color === 'white' ? seats.white : seats.black;
-        const next =
-            color === 'white'
-                ? { white: id, black: other === id ? own : other }
-                : { black: id, white: other === id ? own : other };
-
+    const pick = (next: Parameters<RoomChoice['choose']>[0]) => {
         setOpen(null);
-        choice.choose({ ...choice.shown, ...next }, 'seats');
+        choice.choose(next, 'seats');
     };
 
     const row = (color: RoomMatchColor) => {
-        const id = color === 'white' ? seats.white : seats.black;
-        const name =
-            id === null
-                ? null
-                : (players.find((player) => player.id === id)?.name ??
-                  t('rooms.show.nameless'));
+        const { id, computer, name } = seatShown(t, seats, players, color);
         const side = t(`rooms.seats.${color}`);
 
         return (
@@ -78,12 +118,15 @@ export function SeatRows({
                         </span>
                         <span
                             className={cn(
-                                'truncate font-semibold',
+                                'flex min-w-0 items-center gap-1.5 font-semibold',
                                 name === null &&
                                     'font-normal text-muted-foreground',
                             )}
                         >
-                            {name ?? t('rooms.seats.waiting')}
+                            {computer && <Bot aria-hidden className={robot} />}
+                            <span className="truncate">
+                                {name ?? t('rooms.seats.waiting')}
+                            </span>
                         </span>
                     </span>
                     {choice.pending === 'seats' && <Spinner />}
@@ -93,7 +136,7 @@ export function SeatRows({
                         className="size-11 shrink-0"
                         aria-label={t('rooms.seats.pick', { side })}
                         aria-expanded={open === color}
-                        disabled={busy || present.length === 0}
+                        disabled={busy}
                         onClick={() => setOpen(open === color ? null : color)}
                     >
                         <ChevronDown
@@ -115,8 +158,16 @@ export function SeatRows({
                                     type="button"
                                     disabled={busy}
                                     aria-pressed={player.id === id}
-                                    onClick={() => seat(color, player.id)}
-                                    className="flex min-h-13 w-full items-center gap-2 px-3 text-left outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    onClick={() =>
+                                        pick(
+                                            withSeat(
+                                                choice.shown,
+                                                color,
+                                                player.id,
+                                            ),
+                                        )
+                                    }
+                                    className={option}
                                 >
                                     <span className="min-w-0 flex-1 truncate">
                                         {player.name ??
@@ -128,6 +179,30 @@ export function SeatRows({
                                 </button>
                             </li>
                         ))}
+                        {/* The computer, after the players: picked again, it is turned off. */}
+                        <li>
+                            <button
+                                type="button"
+                                disabled={busy}
+                                aria-pressed={computer}
+                                onClick={() =>
+                                    pick(
+                                        computer
+                                            ? withoutComputer(choice.shown)
+                                            : withComputer(choice.shown, color),
+                                    )
+                                }
+                                className={option}
+                            >
+                                <Bot aria-hidden className={robot} />
+                                <span className="min-w-0 flex-1 truncate">
+                                    {t('rooms.computer.name')}
+                                </span>
+                                {computer && (
+                                    <Check aria-hidden className="size-4" />
+                                )}
+                            </button>
+                        </li>
                     </ul>
                 )}
             </div>
@@ -141,17 +216,8 @@ export function SeatRows({
                 type="button"
                 variant="outline"
                 className="h-11 self-center"
-                disabled={busy || seats.white === null || seats.black === null}
-                onClick={() =>
-                    choice.choose(
-                        {
-                            ...choice.shown,
-                            white: seats.black,
-                            black: seats.white,
-                        },
-                        'seats',
-                    )
-                }
+                disabled={busy || !swappable}
+                onClick={() => pick(withSeatsSwapped(choice.shown))}
             >
                 <ArrowUpDown />
                 {t('rooms.seats.swap')}
@@ -165,8 +231,15 @@ export function SeatRows({
  * A player's own seat in the choice, in words (rule 15 "«Oyunlar» and the
  * start screen"): «Siz ağlarla oynayırsınız», «Siz qaralarla
  * oynayırsınız» or «Bu oyunu izləyəcəksiniz», with a piece of its colour.
+ * Whom it plays — another player or the computer — is the choice's line.
  */
-export function SeatNote({ seats, me }: { seats: Seats; me: string | null }) {
+export function SeatNote({
+    seats,
+    me,
+}: {
+    seats: ChoiceSeats;
+    me: string | null;
+}) {
     const { t } = useTranslation();
     const color: RoomMatchColor | null =
         me === null
@@ -192,25 +265,21 @@ export function SeatNote({ seats, me }: { seats: Seats; me: string | null }) {
 /**
  * The two seats of the choice in one line, as the start screen shows them
  * beside the game: a piece of each colour and its player's name, or
- * «Oyunçu gözlənilir». `big` is the screen's.
+ * «Oyunçu gözlənilir» — the computer's seat `Bot` and «Kompüter (Orta)».
+ * `big` is the screen's.
  */
 export function SeatPair({
     seats,
     players,
     big = false,
 }: {
-    seats: Seats;
+    seats: ChoiceSeats;
     players: RoomPlayer[];
     big?: boolean;
 }) {
     const { t } = useTranslation();
     const seat = (color: RoomMatchColor) => {
-        const id = color === 'white' ? seats.white : seats.black;
-        const name =
-            id === null
-                ? null
-                : (players.find((player) => player.id === id)?.name ??
-                  t('rooms.show.nameless'));
+        const { computer, name } = seatShown(t, seats, players, color);
 
         return (
             <span className="flex min-w-0 items-center gap-1.5">
@@ -219,6 +288,15 @@ export function SeatPair({
                     className={big ? 'size-[2.4vh]' : 'size-3.5'}
                 />
                 <span className="sr-only">{t(`rooms.seats.${color}`)}:</span>
+                {computer && (
+                    <Bot
+                        aria-hidden
+                        className={cn(
+                            'shrink-0',
+                            big ? 'size-[2.4vh]' : 'size-3.5',
+                        )}
+                    />
+                )}
                 <span
                     className={cn(
                         'min-w-0 truncate',
@@ -246,16 +324,17 @@ export function SeatPair({
 
 /**
  * «Növbəti oyunda :name ağlarla oynayır» (docs/frontend.md rule 15 "Board
- * games" → "The end"): who plays white in the next game, under «Yenidən
- * oyna» on the phone and the screen.
+ * games" → "The end"): who plays white in the next game — a player, or the
+ * computer when the colours' change gives it white — under «Yenidən oyna»
+ * on the phone and the screen.
  */
 export function SeatNext({
-    white,
+    seats,
     players,
     className,
 }: {
-    /** The next game's seat of white. */
-    white: string | null;
+    /** The next game's seats: the choice's. */
+    seats: ChoiceSeats;
     players: RoomPlayer[];
     className?: string;
 }) {
@@ -265,7 +344,7 @@ export function SeatNext({
         <span className={className}>
             {t('rooms.seats.next', {
                 name:
-                    players.find((player) => player.id === white)?.name ??
+                    seatShown(t, seats, players, 'white').name ??
                     t('rooms.show.nameless'),
             })}
         </span>

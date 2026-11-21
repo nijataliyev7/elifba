@@ -1,5 +1,6 @@
 import { CircleStop, Handshake, Trophy } from 'lucide-react';
 import { gameSummary } from '@/components/rooms/catalog';
+import { computerOf, seatKey, seatName } from '@/components/rooms/computer';
 import { seatOf } from '@/components/rooms/draughts/board';
 import { DraughtsBoard } from '@/components/rooms/draughts/draughts-board';
 import { MoveListButton } from '@/components/rooms/draughts/move-list';
@@ -21,7 +22,8 @@ type Over = Extract<RoomMatch, { phase: 'over' }>;
  * hits, roll, fanfare and cheer as after a race; then the board as it
  * ended with the last move marked, «Gedişlər», and the room's standing as
  * the plain card. A match the host stopped says «Oyun dayandırıldı» and
- * has no final. `big` is the screen's left column.
+ * has no final. `big` is the screen's left column. A match the computer
+ * won says «Kompüter (Orta) qalib gəldi» (ADR 036 decision 15).
  */
 export function MatchEnd({
     state,
@@ -45,8 +47,12 @@ export function MatchEnd({
     const winnerName =
         winner === undefined
             ? null
-            : (state.players.find((player) => player.id === winner.player_id)
-                  ?.name ?? t('rooms.show.nameless'));
+            : seatName(
+                  t,
+                  state.players,
+                  seatKey(winner.player_id),
+                  computerOf(game),
+              );
     const Icon = stopped
         ? CircleStop
         : result.outcome === 'draw'

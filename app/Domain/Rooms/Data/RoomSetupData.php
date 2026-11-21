@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Data;
 
 use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use InvalidArgumentException;
 
 /**
@@ -23,7 +24,7 @@ use InvalidArgumentException;
  *
  * @phpstan-import-type RoomClockLevelArray from RoomClockLevelData
  *
- * @phpstan-type RoomSetupArray array{kind: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, white?: string|null, black?: string|null, played: bool}
+ * @phpstan-type RoomSetupArray array{kind: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, white?: string|null, black?: string|null, computer?: int|null, played: bool}
  */
 final readonly class RoomSetupData
 {
@@ -32,6 +33,7 @@ final readonly class RoomSetupData
      * @param  RoomClockLevelData|null  $clock  a board game's
      * @param  string|null  $white  a board game's seat of white
      * @param  string|null  $black  a board game's seat of black
+     * @param  RoomComputerLevel|null  $computer  a board game's: the computer's level, which plays the seat that is null (K3, ADR 036)
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -41,17 +43,18 @@ final readonly class RoomSetupData
         public ?RoomClockLevelData $clock = null,
         public ?string $white = null,
         public ?string $black = null,
+        public ?RoomComputerLevel $computer = null,
     ) {
         $race = $mechanic->kind() === RoomGameKind::Race;
 
-        if ($race !== ($rounds !== null) || $race === ($clock !== null) || ($race && ($white !== null || $black !== null))) {
+        if ($race !== ($rounds !== null) || $race === ($clock !== null) || ($race && ($white !== null || $black !== null || $computer !== null))) {
             throw new InvalidArgumentException('A race\'s choice has its rounds; a board game\'s its clock and its seats.');
         }
     }
 
     public static function of(RoomGameSetupData $choice, bool $played): self
     {
-        return new self($choice->mechanic, $choice->difficulty, $choice->rounds, $played, $choice->clock(), $choice->white, $choice->black);
+        return new self($choice->mechanic, $choice->difficulty, $choice->rounds, $played, $choice->clock(), $choice->white, $choice->black, $choice->computer);
     }
 
     /**
@@ -73,6 +76,7 @@ final readonly class RoomSetupData
             isset($data['clock']) ? RoomClockLevelData::fromArray($data['clock']) : null,
             $data['white'] ?? null,
             $data['black'] ?? null,
+            isset($data['computer']) ? RoomComputerLevel::from($data['computer']) : null,
         );
     }
 
@@ -85,6 +89,6 @@ final readonly class RoomSetupData
 
         return $this->clock === null
             ? [...$head, 'rounds' => (int) $this->rounds, 'played' => $this->played]
-            : [...$head, 'clock' => $this->clock->toArray(), 'white' => $this->white, 'black' => $this->black, 'played' => $this->played];
+            : [...$head, 'clock' => $this->clock->toArray(), 'white' => $this->white, 'black' => $this->black, 'computer' => $this->computer?->value, 'played' => $this->played];
     }
 }

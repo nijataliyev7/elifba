@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Rooms;
 
+use App\Domain\Rooms\Actions\PlayComputerMove;
 use App\Domain\Rooms\Actions\RecordRoomRead;
 use App\Domain\Rooms\Actions\RecordScreenRead;
 use App\Domain\Rooms\Models\Room;
@@ -13,6 +14,8 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+
+use function Illuminate\Support\defer;
 
 /**
  * `GET /rooms/{room}/state` (zod `RoomState`, docs/architecture.md §12 "The
@@ -36,10 +39,14 @@ use Illuminate\Support\Facades\Gate;
  * the screen asks only while it is shown, at least every
  * `elifba.rooms.screen.beat_ms`, and the state's `room.screen` says
  * whether it still does.
+ *
+ * A read that finds the computer to move in a match (K3, ADR 036 decision
+ * 9) hands its move to `defer()`: `PlayComputerMove` runs after this
+ * response went out, so the read itself writes no fact of the match.
  */
 final class RoomStateController extends Controller
 {
-    public function __invoke(Request $request, Room $room, #[CurrentUser] User $account, RecordRoomRead $recordRead, RecordScreenRead $recordScreen): JsonResponse
+    public function __invoke(Request $request, Room $room, #[CurrentUser] User $account, RecordRoomRead $recordRead, RecordScreenRead $recordScreen, PlayComputerMove $playComputerMove): JsonResponse
     {
         $forScreen = $request->query('for') === 'screen';
 
@@ -52,7 +59,13 @@ final class RoomStateController extends Controller
             $recordRead->handle($room, $account);
         }
 
-        return new JsonResponse(RoomState::for($room, $account, $forScreen, RoomsArea::voice())->toArray(), 200, ['Cache-Control' => 'no-store, private']);
+        $state = RoomState::for($room, $account, $forScreen, RoomsArea::voice());
+
+        if ($state->match?->computerToMove() === true) {
+            defer(static fn () => $playComputerMove->handle($room));
+        }
+
+        return new JsonResponse($state->toArray(), 200, ['Cache-Control' => 'no-store, private']);
     }
 
     private static function fromTheScreen(Request $request, Room $room): bool

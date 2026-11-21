@@ -78,6 +78,8 @@ it('has every phase\'s fixture, the answer and the receipt', function (): void {
         'state.voice', 'state.voice.off',
         // D3: a board game chosen, its countdown, the seat to move with a capture to make, a watcher, a draw offered, its end; an act and its receipt.
         'state.match.chosen', 'state.match.countdown', 'state.match.play', 'state.match.watch', 'state.match.offer', 'state.match.over', 'act', 'act-receipt',
+        // K3 (ADR 036): a match against the computer, and the choice of one.
+        'state.match.computer', 'state.match.computer.chosen',
     ]);
 });
 
@@ -154,7 +156,7 @@ it('says the choice of the next game in every open room\'s state, and nothing el
         $board = $setup['kind'] === 'board';
 
         expect($state['v'])->toBe(RoomStateData::VERSION)
-            ->and(array_keys($setup))->toBe($board ? ['kind', 'mechanic', 'difficulty', 'clock', 'white', 'black', 'played'] : ['kind', 'mechanic', 'difficulty', 'rounds', 'played'], $name)
+            ->and(array_keys($setup))->toBe($board ? ['kind', 'mechanic', 'difficulty', 'clock', 'white', 'black', 'computer', 'played'] : ['kind', 'mechanic', 'difficulty', 'rounds', 'played'], $name)
             // Played only once the game is over and was this very choice: a race's rounds, a board game's two players in either colour.
             ->and($setup['played'])->toBe($game !== null && $game['phase'] === 'over'
                 && [$game['mechanic'], $game['difficulty']] === [$setup['mechanic'], $setup['difficulty']]
@@ -247,8 +249,8 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
 
-        expect($state['v'])->toBe(7, $name)
-            ->and(RoomStateData::VERSION)->toBe(7)
+        expect($state['v'])->toBe(8, $name)
+            ->and(RoomStateData::VERSION)->toBe(8)
             ->and(array_key_last($state))->toBe('voice', $name);
 
         foreach ($state['players'] as $player) {

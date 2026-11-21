@@ -3,7 +3,11 @@ import { ChevronRight } from 'lucide-react';
 import { gameLabel } from '@/components/rooms/catalog';
 import { useTranslation } from '@/hooks/use-translation';
 import { past as pastRoute, show } from '@/routes/rooms';
-import type { RoomClockLevel, RoomMechanic } from '@/rooms/contract';
+import type {
+    RoomClockLevel,
+    RoomComputerLevel,
+    RoomMechanic,
+} from '@/rooms/contract';
 
 /** A past room: its day, its games and the account's own row of its standing (null for a host who did not play). */
 type PastRoom = {
@@ -11,11 +15,12 @@ type PastRoom = {
     date: string;
     host: boolean;
     players: number;
-    /** A board game also its clock (D3). */
+    /** A board game also its clock (D3) and the level of the computer it was played against, or null (ADR 036). */
     games: {
         mechanic: RoomMechanic;
         difficulty: number;
         clock?: RoomClockLevel;
+        computer?: RoomComputerLevel | null;
     }[];
     mine: { points: number; place: string | null } | null;
 };
@@ -33,7 +38,8 @@ type Props = {
  * account's own place, labelled on the server — as «Otaqlar» listed them
  * before G3, on a page of their own with its entry in the player's
  * navigation, under one line on how long the results are kept. One row per
- * room; no total across rooms and no list ordered by points.
+ * room; no total across rooms and no list ordered by points. A match
+ * against the computer says so: «Şaşki · 5+3 · Kompüter (Orta)».
  */
 export default function RoomsPast({ past, retention_days: days }: Props) {
     const { t } = useTranslation();

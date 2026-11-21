@@ -65,7 +65,7 @@ final readonly class RoomMatchData
 
         $wrong = match (true) {
             array_map(static fn (RoomSideData $side): RoomMatchColor => $side->color, $sides) !== [RoomMatchColor::White, RoomMatchColor::Black] => 'A match has its two sides, white and then black.',
-            $sides[0]->player_id === $sides[1]->player_id => 'Two seats are two players.',
+            $sides[0]->player_id === $sides[1]->player_id => 'Two seats are two players, or a player and the computer.',
             $ply !== count($moves) || ($last === null) !== ($ply === 0) => 'The moves made are the list\'s lines, the last one marked.',
             $over !== ($result !== null) => 'A match has its result once it is over, and only then.',
             $over !== ($turn === null) || $over !== ($flag_ms === null) => 'A live match has a side to move and its flag; one that is over has neither.',
@@ -102,6 +102,22 @@ final readonly class RoomMatchData
             can_offer: $data['can_offer'],
             result: $data['result'] === null ? null : RoomMatchResultData::fromArray($data['result']),
         );
+    }
+
+    /**
+     * Whether the match is live and the side to move is the computer's — the
+     * seat without a player (K3, ADR 036 decision 9): what a controller
+     * asks before it hands `PlayComputerMove` to `defer()`.
+     */
+    public function computerToMove(): bool
+    {
+        foreach ($this->sides as $side) {
+            if ($side->color === $this->turn) {
+                return $side->player_id === null;
+            }
+        }
+
+        return false;
     }
 
     /**

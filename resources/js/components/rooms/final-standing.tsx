@@ -1,6 +1,11 @@
-import { Medal, Trophy } from 'lucide-react';
+import { Bot, Medal, Trophy } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
+import {
+    COMPUTER_SEAT,
+    computerOf,
+    seatName,
+} from '@/components/rooms/computer';
 import {
     finalRows,
     finalSpent,
@@ -18,6 +23,7 @@ import { useCountUp } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type {
+    RoomComputerLevel,
     RoomPlayer,
     RoomRankedPlayer,
     RoomSpent,
@@ -30,7 +36,8 @@ import type {
  * a match's own two places — with the taunts `finalSpent()` counts beside
  * them; on a phone the viewer's own row «siz», its confetti the room's in
  * a room without a screen (`carriesRoom()`); on the screen (`big`) larger
- * and at the screen's pace.
+ * and at the screen's pace. A match's row without a player is the
+ * computer's, at the level the game says (`computerOf()`, ADR 036).
  */
 export function GameFinal({
     state,
@@ -48,6 +55,7 @@ export function GameFinal({
         <FinalStanding
             ranking={finalRows(state)}
             players={state.players}
+            computer={computerOf(state.game)}
             me={big ? null : state.me.player_id}
             placeLabels={placeLabels}
             animate={animate}
@@ -74,10 +82,15 @@ export function GameFinal({
  * holds it, or for everyone in a room without a screen (`forRoom`, ADR 025
  * as amended 2026-11-19), where each phone is the room's final. Opened on the final, or under reduced motion, it is
  * complete and still. Nothing is ranked or added up here.
+ *
+ * A row of the seat nobody held in a match is the computer's (ADR 036
+ * decision 15): `Bot` and «Kompüter (Orta)» where a player's name stands —
+ * never «siz», since it is nobody's own.
  */
 export function FinalStanding({
     ranking,
     players,
+    computer = null,
     me,
     placeLabels,
     animate,
@@ -87,6 +100,8 @@ export function FinalStanding({
 }: {
     ranking: RoomRankedPlayer[];
     players: RoomPlayer[];
+    /** The level of the computer, for a match's row without a player; null without one. */
+    computer?: RoomComputerLevel | null;
     me: string | null;
     placeLabels: string[];
     /** The page saw the game end: the places open; otherwise they stand. */
@@ -100,7 +115,8 @@ export function FinalStanding({
 }) {
     const groups = standingGroups(ranking, placeLabels);
     const timeline = finalTimeline(groups, big ? 'screen' : 'phone');
-    const names = new Map(players.map((player) => [player.id, player.name]));
+    const { t } = useTranslation();
+    const nameOf = (key: string) => seatName(t, players, key, computer);
     const costs = new Map(spent.map((cost) => [cost.player_id, cost.count]));
     const winnerAt = timeline.winnerAt;
     const cheers =
@@ -143,7 +159,7 @@ export function FinalStanding({
             key={group.place ?? 'none'}
             group={group}
             tier={finalTier(group.place)}
-            names={names}
+            nameOf={nameOf}
             costs={costs}
             me={me}
             opensAt={animate ? timeline.opensAt[index] : null}
@@ -215,7 +231,7 @@ const SIZE = {
 function Place({
     group,
     tier,
-    names,
+    nameOf,
     costs,
     me,
     opensAt,
@@ -223,7 +239,8 @@ function Place({
 }: {
     group: StandingGroup;
     tier: FinalTier;
-    names: Map<string, string | null>;
+    /** A row's name by its key: a player's, or the computer's. */
+    nameOf: (key: string) => string;
     costs: Map<string, number>;
     me: string | null;
     opensAt: number | null;
@@ -307,9 +324,14 @@ function Place({
                                 mine && tier !== 'first' && 'bg-accent',
                             )}
                         >
+                            {row.player_id === COMPUTER_SEAT && (
+                                <Bot
+                                    aria-hidden
+                                    className="size-[1em] shrink-0"
+                                />
+                            )}
                             <span className="min-w-0 flex-1 truncate">
-                                {names.get(row.player_id) ??
-                                    t('rooms.show.nameless')}
+                                {nameOf(row.player_id)}
                             </span>
                             {mine && (
                                 <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">

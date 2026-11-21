@@ -1,3 +1,4 @@
+import { seatKey } from '@/components/rooms/computer';
 import type { StandingGroup } from '@/components/rooms/standing-groups';
 import type { RoomRankedPlayer, RoomSpent, RoomState } from '@/rooms/contract';
 
@@ -14,7 +15,9 @@ import type { RoomRankedPlayer, RoomSpent, RoomState } from '@/rooms/contract';
  * final looks at the game's kind: a race's are the state's ranking — the
  * room's standing once it is over; a board game's are its match's own two
  * places, the winner first or both first in a draw, by the outcome; a
- * match stopped without a result opens none.
+ * match stopped without a result opens none. A seat the computer played
+ * has no player (ADR 036 decision 11): its row is keyed `COMPUTER_SEAT`
+ * (`seatKey()`), nobody's own.
  */
 export function finalRows(
     state: Pick<RoomState, 'ranking' | 'match'>,
@@ -25,7 +28,10 @@ export function finalRows(
 
     return state.match.result.outcome === 'none'
         ? []
-        : state.match.result.standing;
+        : state.match.result.standing.map((row) => ({
+              ...row,
+              player_id: seatKey(row.player_id),
+          }));
 }
 
 /**

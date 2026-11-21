@@ -82,6 +82,7 @@ import { voice as memberVoice } from '@/routes/rooms/members';
 import { destroy as forget } from '@/routes/rooms/name';
 import type {
     RoomClockLevel,
+    RoomComputerLevel,
     RoomGame,
     RoomMechanic,
     RoomRankedPlayer,
@@ -91,13 +92,18 @@ import type {
 import type { RoomFinishVoice, RoomSoundUrls } from '@/rooms/sound';
 import { roomRequest } from '@/rooms/http';
 
-/** A game of a closed room, with its ranking (`Rooms\Support\RoomResults`): a race's rounds, a board game's clock (D3). */
+/**
+ * A game of a closed room, with its ranking (`Rooms\Support\RoomResults`):
+ * a race's rounds, a board game's clock (D3) and, where the server says it,
+ * the level of the computer it was played against (ADR 036 decision 11).
+ */
 export type RoomResultGame = {
     id: string;
     mechanic: RoomMechanic;
     difficulty: number;
     rounds?: number;
     clock?: RoomClockLevel;
+    computer?: RoomComputerLevel | null;
     ranking: RoomRankedPlayer[];
 };
 
@@ -523,7 +529,7 @@ function HostRoom({
                     over !== null &&
                     parts.second === 'seats' && (
                         <SeatNext
-                            white={parts.seats.white}
+                            seats={parts.seats}
                             players={state.players}
                             className="text-center text-sm text-muted-foreground"
                         />

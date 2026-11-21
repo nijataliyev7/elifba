@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id the order of a game's acts
  * @property string|null $event_id ULID made by the device; null for a `leave`
  * @property string $room_game_id
- * @property string $room_player_id the seat that did it
+ * @property string|null $room_player_id the seat that did it; null: the computer's seat (K3, ADR 036 decision 8)
  * @property RoomActKind $kind
  * @property int $ply the moves made before it
  * @property list<string>|null $path a move's squares; null for the other kinds

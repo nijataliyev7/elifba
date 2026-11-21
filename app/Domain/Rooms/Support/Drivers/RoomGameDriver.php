@@ -26,7 +26,8 @@ use Illuminate\Validation\ValidationException;
  * `BoardDriver`, two seats taking turns on one board. Each concern is one
  * method: the choice's rules, the start, whether the game is over, what
  * each player earned and what its taunts cost, who may taunt whom and the
- * balance, the state's part, an act, a presence that changed and a read.
+ * balance, the state's part, an act, a presence that changed, a read and
+ * the computer's seat (ADR 036).
  * Nothing else in `Rooms` asks for the kind, compares a mechanic with one
  * of them or looks at which driver it was given.
  */
@@ -133,6 +134,24 @@ abstract class RoomGameDriver
 
     /** A presence that changed in a room the caller holds locked, while `$game` runs. */
     abstract public function whenPresenceChanges(Room $locked, RoomGame $game, RoomPlayer $row, int $nowMs): void;
+
+    /**
+     * The computer's seat (ADR 036 decisions 8–9): when the game is live at
+     * `$nowMs` and the side to move is the computer's, the ply its move
+     * answers and the moment from which it may be stored; null otherwise —
+     * a race, a match of two players, a match that is over.
+     *
+     * @return array{ply: int, due_ms: int}|null
+     */
+    abstract public function computerTurn(RoomGame $game, int $nowMs): ?array;
+
+    /**
+     * The computer's seat: the path of the move it makes in the game as it
+     * stands at `$nowMs`, or null when it has none to make.
+     *
+     * @return list<string>|null
+     */
+    abstract public function computerChoice(RoomGame $game, int $nowMs): ?array;
 
     /** A read: the moment from which a page's read at `$nowMs` counts, or null when it changes nothing. */
     abstract public function readCountsFrom(RoomGame $game, int $nowMs): ?int;

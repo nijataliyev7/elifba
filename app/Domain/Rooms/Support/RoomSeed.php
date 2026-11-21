@@ -26,6 +26,18 @@ final class RoomSeed
         return random_int(1, RoomGame::MAX_SEED);
     }
 
+    /**
+     * The source the computer takes its move at a ply of a game from (K3,
+     * ADR 036 decision 7): the same each time, and nothing a page can work
+     * out ahead.
+     */
+    public static function computer(string $gameId, int $ply): Randomizer
+    {
+        $key = Config::get('app.key');
+
+        return new Randomizer(new RoomRandomEngine(hash_hmac('sha256', 'room-computer:'.$gameId.':'.$ply, is_string($key) ? $key : '', true)));
+    }
+
     /** The source a game with this seed builds its rounds from, the same each time. */
     public static function random(int $seed): Randomizer
     {

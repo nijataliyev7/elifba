@@ -7,12 +7,14 @@ import {
     crownedAt,
     isDark,
     moveRows,
+    offerTo,
     seatOf,
     shownLeft,
     slideOf,
     squareAt,
     yourTurn,
 } from './board';
+import computer from '../../../../../tests/Fixtures/rooms/state.match.computer.json';
 import play from '../../../../../tests/Fixtures/rooms/state.match.play.json';
 
 /*
@@ -140,5 +142,32 @@ describe('the board', () => {
         expect(
             yourTurn({ ...shown, phase: 'over', turn: null }, white.player_id),
         ).toBe(false);
+    });
+
+    it("gives the computer's side to no viewer: a seat without a player is nobody's own (ADR 036)", () => {
+        const state = RoomState.parse(computer);
+        const shown = state.match;
+
+        if (shown?.phase !== 'play') {
+            throw new Error('A match in play.');
+        }
+
+        const [white, black] = shown.sides;
+
+        expect([white.player_id, black.player_id]).toEqual([
+            state.me.player_id,
+            null,
+        ]);
+        // The player holds white; a viewer who does not play (the screen, a host who watches) holds nothing.
+        expect(seatOf(shown, state.me.player_id)).toBe(white);
+        expect(seatOf(shown, null)).toBeNull();
+        expect(seatOf(shown, 'a-watcher')).toBeNull();
+        // The computer to move: nobody's turn on any device, and no offer waits for an answer.
+        const computers = { ...shown, turn: 'black' as const, legal: null };
+
+        expect(yourTurn(computers, state.me.player_id)).toBe(false);
+        expect(yourTurn(computers, null)).toBe(false);
+        expect(yourTurn(shown, state.me.player_id)).toBe(true);
+        expect(offerTo({ ...shown, offer: 'white' }, null)).toBeNull();
     });
 });

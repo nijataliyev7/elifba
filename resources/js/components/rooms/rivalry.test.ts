@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RoomState } from '@/rooms/contract';
 import type { RoomPlayer, RoomRankedPlayer } from '@/rooms/contract';
+import { COMPUTER_SEAT } from './computer';
 import {
     contenders,
     interimPair,
     overtakeOf,
     pairBefore,
+    rivalOf,
     rivalPair,
     splitOf,
     stripChange,
@@ -616,5 +618,137 @@ describe('a match on the strip', () => {
         expect(stripMoment(pieces(play, [12, 12], match.last, 3)).key).not.toBe(
             stripMoment(play).key,
         );
+    });
+});
+
+/*
+ * The computer's seat on the strip (ADR 036 decisions 11, 13 and 15): the
+ * side without a player is a row of its own key — a side like any other for
+ * the pair, its lead and an overtake — never the viewer's own, and never a
+ * rival to throw at.
+ */
+describe("the computer's seat on the strip", () => {
+    type Match = NonNullable<RoomState['match']>;
+
+    const computer = RoomState.parse(
+        fixtures['../../../../tests/Fixtures/rooms/state.match.computer.json'],
+    );
+    const match = computer.match as Match;
+    const [white, black] = match.sides;
+    const player = computer.me.player_id;
+    /** The same match with these pieces left, white's then the computer's. */
+    const pieces = (
+        counts: [number, number],
+        last: Match['last'] = match.last,
+        ply = match.ply,
+    ): RoomState =>
+        ({
+            ...computer,
+            match: {
+                ...match,
+                ply,
+                last,
+                sides: [
+                    { ...white, pieces: counts[0] },
+                    { ...black, pieces: counts[1] },
+                ],
+            },
+        }) as RoomState;
+
+    it('takes the player and the computer as its two rows, the computer under its own key', () => {
+        expect([white.player_id, black.player_id]).toEqual([player, null]);
+        expect(stripRows(computer)).toEqual({
+            rows: [
+                { player_id: player, points: 12, place: null },
+                { player_id: COMPUTER_SEAT, points: 12, place: null },
+            ],
+            seats: true,
+        });
+    });
+
+    it("puts the player on the left of their phone and white on the left elsewhere, the computer never anyone's own", () => {
+        const mine = rivalPair(pieces([10, 12]), player);
+
+        expect(mine).toMatchObject({
+            mode: 'duel',
+            unit: 'pieces',
+            mine: true,
+        });
+        expect(sides(mine)).toEqual([player, COMPUTER_SEAT]);
+        expect([mine?.gap, mine?.leader]).toEqual([-2, COMPUTER_SEAT]);
+
+        // The screen and a host who only watches have no viewer: the computer's side is not theirs.
+        const shown = rivalPair(pieces([10, 12]), null);
+
+        expect(shown?.mine).toBe(false);
+        expect(sides(shown)).toEqual([player, COMPUTER_SEAT]);
+        expect(shown?.leader).toBe(COMPUTER_SEAT);
+    });
+
+    it('offers no rival to throw at: nobody sits there', () => {
+        const pair = rivalPair(computer, player);
+
+        expect(pair?.right?.player_id).toBe(COMPUTER_SEAT);
+        expect(rivalOf(pair, computer.players)).toBeNull();
+        // Between two players the other seat is the rival, as ever.
+        const play = RoomState.parse(
+            fixtures['../../../../tests/Fixtures/rooms/state.match.play.json'],
+        );
+
+        expect(
+            rivalOf(rivalPair(play, play.me.player_id), play.players)?.id,
+        ).toBe((play.match as Match).sides[1].player_id);
+    });
+
+    it("counts the computer's capture and its overtake as a side's", () => {
+        // The computer (black) took one of white's: e5 over d4 to c3.
+        const taken = pieces(
+            [11, 12],
+            { path: ['e5', 'c3'], captured: ['d4'], crowned: false },
+            3,
+        );
+        const moved = {
+            ...taken,
+            match: {
+                ...(taken.match as Match),
+                position: [
+                    ...match.position.filter(
+                        (piece) => !['d4', 'c3', 'e5'].includes(piece.square),
+                    ),
+                    { square: 'c3', color: 'black' as const, king: false },
+                ],
+            },
+        } as RoomState;
+
+        expect(stripChange(moved).results).toEqual([
+            { player_id: player, points: -1 },
+        ]);
+
+        // And the player's capture is taken from the computer's row.
+        const won = {
+            ...moved,
+            match: {
+                ...(moved.match as Match),
+                position: [
+                    ...match.position.filter(
+                        (piece) => !['d4', 'f6', 'e5'].includes(piece.square),
+                    ),
+                    { square: 'f6', color: 'white' as const, king: false },
+                ],
+                last: { path: ['d4', 'f6'], captured: ['e5'], crowned: false },
+            },
+        } as RoomState;
+
+        expect(stripChange(won).results).toEqual([
+            { player_id: COMPUTER_SEAT, points: -1 },
+        ]);
+
+        const level = rivalPair(pieces([12, 12]), player);
+        const behind = rivalPair(taken, player);
+
+        expect(overtakeOf(level, behind)).toBe(COMPUTER_SEAT);
+        expect(
+            pairBefore(behind as RivalPair, stripChange(moved).results),
+        ).toMatchObject({ gap: 0, leader: null });
     });
 });

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Support\ContentRepository;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
@@ -90,6 +91,19 @@ class RoomGameFactory extends Factory
             'black_player_id' => $black->id,
             'clock_ms' => $level->clockMs,
             'increment_ms' => $level->incrementMs,
+        ]);
+    }
+
+    /**
+     * A match against the computer (ADR 036) at its `$level`: `$player` on
+     * white — on black when `$white` is false — and the other seat nobody's.
+     */
+    public function againstComputer(RoomPlayer $player, RoomComputerLevel $level = RoomComputerLevel::Medium, bool $white = true, int $difficulty = 2): static
+    {
+        return $this->draughts($player, $player, $difficulty)->state(fn (array $attributes) => [
+            'white_player_id' => $white ? $player->id : null,
+            'black_player_id' => $white ? null : $player->id,
+            'computer' => $level,
         ]);
     }
 

@@ -14,6 +14,7 @@ use App\Domain\Rooms\Data\OpenRoomData;
 use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Enums\RoomActKind;
 use App\Domain\Rooms\Enums\RoomAnswerShape;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomMatchColor;
 use App\Domain\Rooms\Enums\RoomPhase;
 use App\Domain\Rooms\Models\Room;
@@ -164,6 +165,18 @@ final class Rooms
     }
 
     /**
+     * A match against the computer (ADR 036) chosen in `$room` with
+     * `$player` on white — on black when `$white` is false — at the
+     * computer's `$level`, through `ChooseRoomGame` and `StartRoomGame`.
+     */
+    public static function computer(Room $room, RoomPlayer $player, RoomComputerLevel $level = RoomComputerLevel::Medium, bool $white = true, int $difficulty = 2): RoomGame
+    {
+        app(ChooseRoomGame::class)->handle($room, new RoomGameSetupData(RoomMechanic::Draughts, $difficulty, null, $white ? $player->id : null, $white ? null : $player->id, $level));
+
+        return app(StartRoomGame::class)->handle($room);
+    }
+
+    /**
      * Moves stored as `RecordRoomAct` stores them, for a long game a test
      * does not post move by move: the lines from ply `$from` on, each by the
      * seat of the side to move, the first at `$atMs` and one every
@@ -178,7 +191,8 @@ final class Rooms
             $act = new RoomAct;
             $act->event_id = strtolower((string) Str::ulid());
             $act->room_game_id = $game->id;
-            $act->room_player_id = (string) (RoomMatchColor::toMove($ply) === RoomMatchColor::White ? $game->white_player_id : $game->black_player_id);
+            // A seat without a player is the computer's (ADR 036 decision 8).
+            $act->room_player_id = RoomMatchColor::toMove($ply) === RoomMatchColor::White ? $game->white_player_id : $game->black_player_id;
             $act->kind = RoomActKind::Move;
             $act->ply = $ply;
             $act->path = Draughts::path($line);

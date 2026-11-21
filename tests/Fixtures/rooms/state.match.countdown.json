@@ -1,5 +1,5 @@
 {
-    "v": 7,
+    "v": 8,
     "revision": 8,
     "server_ms": 1795534800500,
     "room": {
@@ -49,6 +49,7 @@
             "base_ms": 300000,
             "increment_ms": 3000
         },
+        "computer": null,
         "phase": "live"
     },
     "round": null,
@@ -231,6 +232,7 @@
         },
         "white": "01kaqrx2ab3c4d5e6f7g8h9jkm",
         "black": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+        "computer": null,
         "played": false
     },
     "taunts": {

@@ -626,7 +626,7 @@ function ScreenOver({
                 </Button>
                 {parts.second === 'seats' && (
                     <SeatNext
-                        white={parts.seats.white}
+                        seats={parts.seats}
                         players={state.players}
                         className="text-[max(0.9375rem,2.2vh)] text-muted-foreground"
                     />

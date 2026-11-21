@@ -1,3 +1,4 @@
+import { COMPUTER_SEAT } from '@/components/rooms/computer';
 import {
     offerTo,
     seatOf,
@@ -196,12 +197,20 @@ const now0 = (sound: RoomSoundName): RoomCue => ({ sound, at: 0 });
  * The cheer after the fanfare: who holds the final's first place, in the
  * order of the final's rows (the server's, never re-sorted: a race's
  * ranking, a match's own standing — ADR 034 decision 26) — none named when
- * more than `MAX_NAMES` share it — and whether it is shared.
+ * more than `MAX_NAMES` share it — and whether it is shared. It names only
+ * a player (ADR 036 decision 15): the computer's seat is nobody, so a final
+ * it wins keeps its fanfare and has no cheer at all — null here — and a
+ * draw with it cheers the one player.
  */
-function cheer(state: RoomState, at: number): RoomCue {
+function cheer(state: RoomState, at: number): RoomCue | null {
     const first = finalRows(state)
-        .filter((row) => row.place === 1)
+        .filter((row) => row.place === 1 && row.player_id !== COMPUTER_SEAT)
         .map((row) => row.player_id);
+
+    // The computer alone is first: nobody is there to praise.
+    if (first.length === 0) {
+        return null;
+    }
 
     return {
         sound: 'cheer',
@@ -238,7 +247,9 @@ function finalCues(state: RoomState, pace: RoomSpeaker): RoomCue[] {
         ...places,
         { sound: 'roll', at: timeline.winnerAt, ends: true },
         { sound: 'fanfare', at: timeline.winnerAt },
-        cheer(state, timeline.winnerAt + FANFARE_MS),
+        ...[cheer(state, timeline.winnerAt + FANFARE_MS)].filter(
+            (cue) => cue !== null,
+        ),
     ];
 }
 

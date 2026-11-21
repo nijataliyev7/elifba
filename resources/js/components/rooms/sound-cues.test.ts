@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { RoomState } from '@/rooms/contract';
 import type { RoomState as State } from '@/rooms/contract';
 import type { RoomSpeaker } from '@/rooms/sound';
-import { finalTimeline } from './final';
+import { finalRows, finalTimeline } from './final';
 import { REVEAL_MS } from './motion';
 import {
     CALL_AFTER_CHEER_MS,
@@ -1500,7 +1500,7 @@ describe('roomCues in a match', () => {
         ply: number,
         turn: 'white' | 'black',
         last: Play['last'],
-        viewer: string,
+        viewer: string | null,
         screen: boolean,
     ): State =>
         withScreen(
@@ -1528,7 +1528,7 @@ describe('roomCues in a match', () => {
     };
     const watcher = matchWatch.me.player_id ?? 'a-watcher';
     /** White moves (ply 2 → 3), then black takes and crowns (ply 3 → 4), each heard 50 ms after its moment began. */
-    const twoMoves = (viewer: string, screen: boolean): RoomEar[] => [
+    const twoMoves = (viewer: string | null, screen: boolean): RoomEar[] => [
         {
             state: turnAt(2, 'white', null, viewer, screen),
             now: starts + 8_100,
@@ -1608,7 +1608,7 @@ describe('roomCues in a match', () => {
     });
 
     it("begins white's first turn with go and a buzz as the clock starts, on white's phone alone", () => {
-        const start = (viewer: string, screen: boolean) =>
+        const start = (viewer: string | null, screen: boolean) =>
             roomCues(
                 {
                     state: withScreen(
@@ -1651,7 +1651,7 @@ describe('roomCues in a match', () => {
 
     it('runs the clock on the phone of the seat to move alone, ending at its flag, with a screen too', () => {
         const flagOf = (state: State) => playOf(state).flag_ms;
-        const clockFor = (viewer: string) => {
+        const clockFor = (viewer: string | null) => {
             const state = turnAt(4, 'white', blackTakes, viewer, true);
             const flag = flagOf(state);
 
@@ -1700,10 +1700,7 @@ describe('roomCues in a match', () => {
             { state: matchOver, now: starts + 16_000 },
             'screen',
         );
-        const standing =
-            matchOver.match?.phase === 'over'
-                ? matchOver.match.result.standing
-                : [];
+        const standing = finalRows(matchOver);
         const timeline = finalTimeline(standingGroups(standing, []), 'screen');
 
         expect(cues.map((cue) => cue.sound)).toEqual([
@@ -1719,6 +1716,104 @@ describe('roomCues in a match', () => {
             players: [standing[0].player_id],
             many: false,
         });
+    });
+
+    /*
+     * The computer's seat (ADR 036 decisions 11 and 15): the cheer names
+     * only a player, so a final the computer wins keeps its fanfare and has
+     * no name; and a side without a player is never a viewer's own seat.
+     */
+    const matchComputer = state('match.computer');
+
+    /** The match against the computer, over: `outcome` with the player on white. */
+    const computerOver = (outcome: 'white' | 'black' | 'draw'): State => {
+        const played = matchComputer.match;
+
+        if (played === null || matchComputer.game === null) {
+            throw new Error('a match against the computer is needed');
+        }
+
+        const [player, computer] = played.sides;
+        const places = { white: [1, 2], black: [2, 1], draw: [1, 1] }[outcome];
+        const rows = [
+            {
+                player_id: player.player_id,
+                points: { white: 3, black: 0, draw: 1 }[outcome],
+                place: places[0],
+            },
+            { player_id: computer.player_id, points: 0, place: places[1] },
+        ];
+
+        return RoomState.parse({
+            ...matchComputer,
+            game: { ...matchComputer.game, phase: 'over' },
+            setup: { ...matchComputer.setup, played: true },
+            taunts: null,
+            match: {
+                ...played,
+                phase: 'over',
+                turn: null,
+                flag_ms: null,
+                legal: null,
+                offer: null,
+                can_offer: false,
+                result: {
+                    outcome,
+                    ending: outcome === 'draw' ? 'agreed' : 'resigned',
+                    // The winner first; both first in a draw.
+                    standing: outcome === 'black' ? rows.reverse() : rows,
+                    spent: [],
+                },
+            },
+        });
+    };
+    const endOf = (ended: State) =>
+        roomCues(
+            { state: matchComputer, now: starts + 15_000 },
+            { state: ended, now: starts + 16_000 },
+            'phone',
+        );
+    const cheerOf = (cues: RoomCue[]) =>
+        cues.find((cue) => cue.sound === 'cheer');
+
+    it('cheers the player who beat the computer by name, as any winner', () => {
+        const player = matchComputer.me.player_id;
+
+        expect(cheerOf(endOf(computerOver('white')))).toMatchObject({
+            sound: 'cheer',
+            players: [player],
+            many: false,
+        });
+    });
+
+    it('keeps the fanfare and cheers nobody when the computer wins', () => {
+        const cues = endOf(computerOver('black'));
+
+        expect(cues.map((cue) => cue.sound)).toContain('fanfare');
+        expect(cheerOf(cues)).toBeUndefined();
+        // No name's clip is asked for: nothing the cheer holds is a seat without a player.
+        expect(JSON.stringify(cues)).not.toContain('computer');
+        expect(JSON.stringify(cues)).not.toContain('null');
+    });
+
+    it('cheers the one player of a draw with the computer, not two', () => {
+        expect(cheerOf(endOf(computerOver('draw')))).toMatchObject({
+            sound: 'cheer',
+            players: [matchComputer.me.player_id],
+            many: false,
+        });
+    });
+
+    it("never takes the computer's seat for a viewer who does not play", () => {
+        const hostOnly = {
+            ...matchComputer,
+            me: { player_id: null, host: true },
+        } as State;
+
+        // The player's phone fetches its seat's files; a host who only watches does not,
+        // though the computer's side has no player and that viewer no row.
+        expect(holdsSeat(matchComputer)).toBe(true);
+        expect(holdsSeat(hostOnly)).toBe(false);
     });
 
     it('closes a match the host stopped without a final', () => {

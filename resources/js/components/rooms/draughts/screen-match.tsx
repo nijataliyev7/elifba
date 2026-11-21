@@ -118,6 +118,7 @@ export function ScreenMatch({
                         match={match}
                         seat={null}
                         players={state.players}
+                        computer={game.computer}
                         now={now}
                         big
                     />

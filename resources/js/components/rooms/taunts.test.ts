@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { RoomState } from '@/rooms/contract';
+import { COMPUTER_SEAT } from './computer';
+import { rivalOf, rivalPair } from './rivalry';
 import {
     readTauntsHidden,
     shownTaunts,
@@ -405,6 +407,43 @@ describe('throwChoice', () => {
             target: { id: resad },
             row: false,
         });
+    });
+
+    it('offers nobody against the computer: its seat is no player and nobody is there to aim at (ADR 036)', () => {
+        const computer = state('match.computer');
+        const nobody = { targets: [], target: null, row: false };
+
+        // The strip gives no rival there (`rivalOf()`), and no throw is open in that match.
+        expect(
+            rivalOf(
+                rivalPair(computer, computer.me.player_id),
+                computer.players,
+            ),
+        ).toBeNull();
+        expect(throwChoice(computer, null, null)).toEqual(nobody);
+        expect(computer.taunts).toMatchObject({ open: false, balance: 0 });
+        expect(trayView(computer, null, computer.server_ms)).toEqual({
+            kind: 'none',
+        });
+        // Nor with the seat's own key for a rival or a pick: it is no present player.
+        expect(
+            throwChoice(
+                computer,
+                { id: COMPUTER_SEAT, name: null },
+                COMPUTER_SEAT,
+            ),
+        ).toEqual(nobody);
+        // And a watcher of that match is offered nobody either.
+        expect(
+            throwChoice(
+                {
+                    ...computer,
+                    me: { player_id: null, host: true },
+                },
+                null,
+                null,
+            ),
+        ).toEqual(nobody);
     });
 
     it('offers nobody to a watcher, a viewer who does not play or a strip with no rival', () => {

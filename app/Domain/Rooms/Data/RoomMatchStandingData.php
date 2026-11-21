@@ -12,12 +12,12 @@ use InvalidArgumentException;
  * by those points: the winner 1 and the loser 2, both 1 in a draw, none in
  * a game without a result.
  *
- * @phpstan-type RoomMatchStandingArray array{player_id: string, points: int, place: int|null}
+ * @phpstan-type RoomMatchStandingArray array{player_id: string|null, points: int, place: int|null}
  */
 final readonly class RoomMatchStandingData
 {
     public function __construct(
-        public string $player_id,
+        public ?string $player_id,
         public int $points,
         public ?int $place,
     ) {

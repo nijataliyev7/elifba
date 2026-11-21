@@ -1,4 +1,5 @@
 import {
+    Bot,
     Eye,
     Hand,
     Handshake,
@@ -7,12 +8,18 @@ import {
     Undo2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { seatKey, seatName } from '@/components/rooms/computer';
 import { yourTurn } from '@/components/rooms/draughts/board';
 import { secondsUntil } from '@/components/rooms/use-server-now';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import type { RoomMatch, RoomPlayer, RoomSide } from '@/rooms/contract';
+import type {
+    RoomComputerLevel,
+    RoomMatch,
+    RoomPlayer,
+    RoomSide,
+} from '@/rooms/contract';
 
 /**
  * The line under the board (docs/frontend.md rule 15 "Board games"): words
@@ -33,11 +40,15 @@ import type { RoomMatch, RoomPlayer, RoomSide } from '@/rooms/contract';
  * the strip), `Hand` and the words in white. It pops in once when the page
  * saw the turn begin (`motion`), and stands still otherwise and under
  * reduced motion.
+ *
+ * While the computer thinks (ADR 036 decision 15) the line says «Kompüter
+ * (Orta) oynayır» beside `Bot`, where a player's turn has `Hourglass`.
  */
 export function MatchLine({
     match,
     seat,
     players,
+    computer = null,
     now,
     begun = false,
     failed = false,
@@ -49,6 +60,8 @@ export function MatchLine({
     /** The viewer's side; null for a watcher and the screen. */
     seat: RoomSide | null;
     players: RoomPlayer[];
+    /** The level of the computer, which plays the side without a player; null in a match of two. */
+    computer?: RoomComputerLevel | null;
     now: number | null;
     /** A path is begun: «Geri» takes it back. */
     begun?: boolean;
@@ -59,12 +72,16 @@ export function MatchLine({
     big?: boolean;
 }) {
     const { t } = useTranslation();
+    const sideOf = (color: string | null) =>
+        match.sides.find((one) => one.color === color);
     const nameOf = (color: string | null) => {
-        const side = match.sides.find((one) => one.color === color);
+        const side = sideOf(color);
 
-        return (
-            players.find((player) => player.id === side?.player_id)?.name ??
-            t('rooms.show.nameless')
+        return seatName(
+            t,
+            players,
+            side === undefined ? null : seatKey(side.player_id),
+            computer,
         );
     };
     const icon = big ? 'size-[3vh] shrink-0' : 'size-4 shrink-0';
@@ -108,7 +125,14 @@ export function MatchLine({
             ) : (
                 <Part
                     key="turn"
-                    icon={<Hourglass aria-hidden className={icon} />}
+                    icon={
+                        // The side to move has no player: the computer thinks.
+                        sideOf(match.turn)?.player_id === null ? (
+                            <Bot aria-hidden className={icon} />
+                        ) : (
+                            <Hourglass aria-hidden className={icon} />
+                        )
+                    }
                 >
                     {t('rooms.match.their_turn', { name: nameOf(match.turn) })}
                 </Part>

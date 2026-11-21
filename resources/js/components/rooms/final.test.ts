@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RoomState } from '@/rooms/contract';
 import type { RoomRankedPlayer } from '@/rooms/contract';
+import { COMPUTER_SEAT } from './computer';
 import { finalRows, finalTier, finalTimeline, holdsFirst } from './final';
 import over from '../../../../tests/Fixtures/rooms/state.match.over.json';
 import raceOver from '../../../../tests/Fixtures/rooms/state.over.json';
@@ -187,5 +188,50 @@ describe('finalRows', () => {
             finalTimeline(standingGroups(finalRows(stopped), LABELS), 'screen')
                 .winnerAt,
         ).toBeNull();
+    });
+
+    it("keys the computer's row by its own key, nobody's own, and still opens two places (ADR 036)", () => {
+        if (match.match?.phase !== 'over' || match.game?.kind !== 'board') {
+            throw new Error('a match over is needed');
+        }
+
+        const ended = match.match;
+        const [winner, loser] = ended.result.standing;
+        // The same end with the winner's seat nobody's: the computer won.
+        const lost = RoomState.parse({
+            ...match,
+            game: { ...match.game, computer: 3 },
+            match: {
+                ...ended,
+                sides: ended.sides.map((side) =>
+                    side.player_id === winner.player_id
+                        ? { ...side, player_id: null }
+                        : side,
+                ),
+                result: {
+                    ...ended.result,
+                    spent: [],
+                    standing: [
+                        { ...winner, player_id: null, points: 0 },
+                        loser,
+                    ],
+                },
+            },
+        });
+        const rows = finalRows(lost);
+
+        expect(rows).toEqual([
+            { player_id: COMPUTER_SEAT, points: 0, place: 1 },
+            { player_id: loser.player_id, points: 0, place: 2 },
+        ]);
+        expect(
+            standingGroups(rows, LABELS).map((group) => group.place),
+        ).toEqual([1, 2]);
+        // The first place is the computer's: no viewer holds it — not the loser, not the screen.
+        expect(holdsFirst(rows, loser.player_id)).toBe(false);
+        expect(holdsFirst(rows, null)).toBe(false);
+        expect(
+            finalTimeline(standingGroups(rows, LABELS), 'phone').winnerAt,
+        ).not.toBeNull();
     });
 });

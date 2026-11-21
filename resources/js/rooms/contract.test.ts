@@ -99,6 +99,8 @@ describe('room fixtures', () => {
             'state.match.watch',
             'state.match.offer',
             'state.match.over',
+            'state.match.computer',
+            'state.match.computer.chosen',
             'act',
             'act-receipt',
         ]) {
@@ -579,8 +581,8 @@ describe('the live voice (C3)', () => {
         players: state.players.map((player) => ({ ...player, voice: null })),
     });
 
-    it("reads every state at v 7, with the voice and each player's standing", () => {
-        expect(ROOM_STATE_VERSION).toBe(7);
+    it("reads every state at v 8, with the voice and each player's standing", () => {
+        expect(ROOM_STATE_VERSION).toBe(8);
 
         for (const [path, value] of payloads) {
             if (!path.includes('/state.')) {
@@ -589,7 +591,7 @@ describe('the live voice (C3)', () => {
 
             const state = value as State;
 
-            expect(state.v, path).toBe(7);
+            expect(state.v, path).toBe(8);
             expect('voice' in state, path).toBe(true);
             expect(
                 state.players.every((player) => 'voice' in player),
@@ -866,6 +868,168 @@ describe('a board game (D3)', () => {
         expect(
             RoomActReceipt.safeParse({ status: 'answered', revision: 1 })
                 .success,
+        ).toBe(false);
+    });
+});
+
+describe("the computer's seat (K3, ADR 036)", () => {
+    type Match = NonNullable<State['match']>;
+    const computer = fixture('state.match.computer') as State;
+    const chosen = fixture('state.match.computer.chosen') as State;
+    const twoChosen = fixture('state.match.chosen') as State;
+    const play = fixture('state.match.play') as State;
+    const over = fixture('state.match.over') as State;
+    const resad = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+
+    it("says the computer's level in a board game's choice and game, and nothing of it in a race's", () => {
+        expect(chosen.setup).toMatchObject({
+            kind: 'board',
+            white: resad,
+            black: null,
+            computer: 2,
+        });
+        expect(computer.game).toMatchObject({ kind: 'board', computer: 2 });
+        expect(twoChosen.setup).toMatchObject({ computer: null });
+        expect(play.game).toMatchObject({ computer: null });
+
+        // Every level it has, and no other.
+        for (const level of [1, 2, 3, null]) {
+            expect(
+                RoomState.safeParse({
+                    ...chosen,
+                    setup: { ...chosen.setup, computer: level },
+                }).success,
+                String(level),
+            ).toBe(true);
+        }
+
+        for (const level of [0, 4, '2', true]) {
+            expect(
+                RoomState.safeParse({
+                    ...chosen,
+                    setup: { ...chosen.setup, computer: level },
+                }).success,
+                String(level),
+            ).toBe(false);
+            expect(
+                RoomState.safeParse({
+                    ...computer,
+                    game: { ...computer.game, computer: level },
+                }).success,
+                String(level),
+            ).toBe(false);
+        }
+
+        // A board game always says it; a race never does.
+        const { computer: _setup, ...setupWithout } = chosen.setup as Extract<
+            NonNullable<State['setup']>,
+            { kind: 'board' }
+        >;
+        const { computer: _game, ...gameWithout } = computer.game as Extract<
+            NonNullable<State['game']>,
+            { kind: 'board' }
+        >;
+
+        expect(
+            RoomState.safeParse({ ...chosen, setup: setupWithout }).success,
+        ).toBe(false);
+        expect(
+            RoomState.safeParse({ ...computer, game: gameWithout }).success,
+        ).toBe(false);
+        expect(
+            RoomState.safeParse({
+                ...lobby,
+                setup: { ...lobby.setup, computer: null },
+            }).success,
+        ).toBe(false);
+
+        const race = fixture('state.answer') as State;
+
+        expect(
+            RoomState.safeParse({
+                ...race,
+                game: { ...race.game, computer: 2 },
+            }).success,
+        ).toBe(false);
+    });
+
+    it('gives the seat nobody holds no player, in the sides and in the standing', () => {
+        const match = computer.match as Match;
+
+        expect(match.sides.map((side) => side.player_id)).toEqual([
+            resad,
+            null,
+        ]);
+        expect(RoomState.safeParse(computer).success).toBe(true);
+
+        // Over: the computer's row of the standing has no player either.
+        const result = (over.match as Match).result;
+
+        if (result === null) {
+            throw new Error('The match is over.');
+        }
+
+        const lost = {
+            ...over,
+            game: { ...over.game, computer: 3 },
+            match: {
+                ...over.match,
+                sides: (over.match as Match).sides.map((side, index) =>
+                    index === 0 ? { ...side, player_id: null } : side,
+                ),
+                result: {
+                    ...result,
+                    spent: [],
+                    standing: [
+                        { player_id: null, points: 0, place: 1 },
+                        { ...result.standing[1], place: 2 },
+                    ],
+                },
+            },
+        };
+
+        expect(RoomState.safeParse(lost).error).toBeUndefined();
+
+        // A seat is a row's id or nobody: never a name, a word or a number.
+        for (const seat of ['computer', 'Kompüter', 0, undefined]) {
+            expect(
+                RoomState.safeParse({
+                    ...computer,
+                    match: {
+                        ...match,
+                        sides: [
+                            match.sides[0],
+                            { ...match.sides[1], player_id: seat },
+                        ],
+                    },
+                }).success,
+                String(seat),
+            ).toBe(false);
+        }
+    });
+
+    it('lists the computer among no players and in no ranking, and opens no throw in its match', () => {
+        expect(computer.players.map((player) => player.id)).toEqual([resad]);
+        expect(computer.ranking.map((row) => row.player_id)).toEqual([resad]);
+        expect(computer.taunts).toMatchObject({ open: false, balance: 0 });
+
+        expect(
+            RoomState.safeParse({
+                ...computer,
+                ranking: [
+                    ...computer.ranking,
+                    { player_id: null, points: 0, place: null },
+                ],
+            }).success,
+        ).toBe(false);
+        expect(
+            RoomState.safeParse({
+                ...computer,
+                players: [
+                    ...computer.players,
+                    { ...computer.players[0], id: null, name: 'Kompüter' },
+                ],
+            }).success,
         ).toBe(false);
     });
 });

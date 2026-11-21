@@ -123,6 +123,28 @@ return [
             'beat_ms' => 10_000,
         ],
 
+        // The computer's seat in a board game (§12 "The computer's seat",
+        // ADR 036 decisions 4–6): what each of its levels — 1 «Asan»,
+        // 2 «Orta», 3 «Çətin» (`RoomComputerLevel`) — means to the search
+        // (`DraughtsEngine`): the plies it looks ahead at most, the
+        // positions it may look at, and how far below the best move (a man
+        // is 100) a move it takes may be. The positions are a count, not a
+        // time, so the same position gets the same answer on every machine;
+        // `max_ms` only stops a search on a machine too slow for the count.
+        'computer' => [
+            'levels' => [
+                1 => ['depth' => 2, 'nodes' => 4_000, 'margin' => 130],
+                2 => ['depth' => 5, 'nodes' => 30_000, 'margin' => 15],
+                3 => ['depth' => 14, 'nodes' => 60_000, 'margin' => 2],
+            ],
+            'max_ms' => 3_000,
+
+            // Its move is stored no sooner than this after its turn began
+            // (ADR 036 decision 8), so a page draws the player's own move
+            // before the answer arrives.
+            'think_ms' => 800,
+        ],
+
         // Live voice (§12 "Live voice", ADR 031 decision 28): the switch,
         // false unless set, read only through `RoomsArea::voice()`; the voice
         // server's API key and secret (also its `LIVEKIT_KEYS`), which sign

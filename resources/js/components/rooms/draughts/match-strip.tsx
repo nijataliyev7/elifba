@@ -1,10 +1,11 @@
-import { Timer } from 'lucide-react';
+import { Bot, Timer } from 'lucide-react';
 import {
     clockText,
     CLOCK_URGENT_MS,
     shownLeft,
     yourTurn,
 } from '@/components/rooms/draughts/board';
+import { seatKey } from '@/components/rooms/computer';
 import { PieceMark } from '@/components/rooms/draughts/piece';
 import type { ReactNode } from 'react';
 import { GameStrip } from '@/components/rooms/rivalry-strip';
@@ -28,7 +29,11 @@ import type { RoomMatch, RoomSide, RoomState } from '@/rooms/contract';
  * colour beside `Timer`. On a seat's phone its own clock, while it runs
  * (`yourTurn()`), is drawn active — ringed in the left side's colour,
  * where «Siz» stands, on the side's tint (ADR 034 "Amended 2026-11-21 —
- * whose turn it is"). `children` lies over it: a seat's throw.
+ * whose turn it is"). `children` lies over it: a seat's throw. A side
+ * without a player is the computer's (docs/frontend.md rule 15 "The
+ * computer's seat", ADR 036 decision 15): `Bot` stands where a player's
+ * side has its piece — the other side's piece says the colours — beside
+ * «Kompüter», the strip's word for it, and its clock as any side's.
  */
 export function MatchStrip({
     rivalry,
@@ -54,14 +59,20 @@ export function MatchStrip({
 }) {
     const marks: SideMarks = Object.fromEntries(
         match.sides.map((side) => [
-            side.player_id,
+            seatKey(side.player_id),
             {
-                lead: (
-                    <PieceMark
-                        color={side.color}
-                        className={big ? 'size-[3vh]' : 'size-4'}
-                    />
-                ),
+                lead:
+                    side.player_id === null ? (
+                        <Bot
+                            aria-hidden
+                            className={big ? 'size-[3vh]' : 'size-4'}
+                        />
+                    ) : (
+                        <PieceMark
+                            color={side.color}
+                            className={big ? 'size-[3vh]' : 'size-4'}
+                        />
+                    ),
                 tail: (
                     <SideClock
                         match={match}
@@ -69,6 +80,7 @@ export function MatchStrip({
                         now={now}
                         big={big}
                         mine={
+                            state.me.player_id !== null &&
                             side.player_id === state.me.player_id &&
                             yourTurn(match, state.me.player_id)
                         }

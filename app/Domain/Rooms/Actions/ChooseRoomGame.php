@@ -30,6 +30,11 @@ use Illuminate\Validation\ValidationException;
  * other kind than the room's names only the game and its level (D5): a
  * board game's then keeps the room's seats — read through `RoomSeats` —
  * and a race's takes the rounds the room keeps (`Room::roundsKept()`).
+ *
+ * From K3 (ADR 036 decision 2) a board game's choice may name the computer
+ * (`computer`, its level, stored as `setup_computer`) with at most one
+ * seat: the other colour is then the computer's. A board game's choice
+ * always says it — null turns the computer off — and a race's leaves it.
  */
 final readonly class ChooseRoomGame
 {
@@ -53,11 +58,15 @@ final readonly class ChooseRoomGame
             }
 
             $rounds = $setup->rounds ?? $locked->setup_rounds;
-            $white = $setup->white ?? $locked->setup_white_id;
-            $black = $setup->black ?? $locked->setup_black_id;
+            // Seats named — one of them with the computer — are the seats; none named, the room's stand.
+            $named = $setup->white !== null || $setup->black !== null;
+            $white = $named ? $setup->white : $locked->setup_white_id;
+            $black = $named ? $setup->black : $locked->setup_black_id;
+            // A board game's choice says whether the computer plays; a race's leaves it.
+            $computer = $setup->rounds === null ? $setup->computer : $locked->setup_computer;
 
             if ($locked->setup_mechanic === $setup->mechanic && $locked->setup_difficulty === $setup->difficulty && $locked->setup_rounds === $rounds
-                && $locked->setup_white_id === $white && $locked->setup_black_id === $black) {
+                && $locked->setup_white_id === $white && $locked->setup_black_id === $black && $locked->setup_computer === $computer) {
                 return;
             }
 
@@ -66,6 +75,7 @@ final readonly class ChooseRoomGame
             $locked->setup_rounds = $rounds;
             $locked->setup_white_id = $white;
             $locked->setup_black_id = $black;
+            $locked->setup_computer = $computer;
             $locked->last_activity_at = now();
             RoomSignal::raise($locked);
         });

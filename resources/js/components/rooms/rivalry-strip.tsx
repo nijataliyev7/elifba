@@ -1,6 +1,11 @@
 import { ChevronsDown, ChevronsUp, Equal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import {
+    COMPUTER_SEAT,
+    computerOf,
+    seatName,
+} from '@/components/rooms/computer';
 import { REVEAL_MS } from '@/components/rooms/motion';
 import { reducedMotion } from '@/components/rooms/motion-dom';
 import {
@@ -18,6 +23,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import type { Translate } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import type {
+    RoomComputerLevel,
     RoomPlayer,
     RoomRankedPlayer,
     RoomSpent,
@@ -110,8 +116,10 @@ export function useRivalry(
  * "Board games" → "The strip"): `RivalryStrip` over the pair a page draws
  * (`useRivalry()`, which the caller keeps — a round's screen reads the
  * pair, a phone's throw its rival), its rows and what the moment changed
- * them by (`stripRows()`, `stripChange()`) — a round's and a match's alike.
- * `children` lies over it: a player's throw, as T4 built it.
+ * them by (`stripRows()`, `stripChange()`) — a round's and a match's alike,
+ * and the level of the computer for a match's seat nobody holds
+ * (`computerOf()`, ADR 036). `children` lies over it: a player's throw, as
+ * T4 built it.
  */
 export function GameStrip({
     rivalry,
@@ -150,6 +158,7 @@ export function GameStrip({
             results={change.results}
             spent={change.spent}
             players={state.players}
+            computer={computerOf(state.game)}
             placeLabels={placeLabels}
             icons={icons}
             moves={moves}
@@ -172,7 +181,8 @@ export function GameStrip({
 /**
  * What a side shows beside its name in place of a place label: a match's
  * piece of its colour before the name and its clock after it (ADR 034
- * decision 23), by `player_id`.
+ * decision 23), by the row's `player_id` — the computer's seat by its own
+ * key (`seatKey()`), with `Bot` where a player's side has its piece.
  */
 export type SideMarks = Record<string, { lead?: ReactNode; tail?: ReactNode }>;
 
@@ -194,6 +204,13 @@ export type SideMarks = Record<string, { lead?: ReactNode; tail?: ReactNode }>;
  * its new values, the ribbon included. From T2 the count starts from
  * before the taunts counted at this close (`spent`, ADR 029 decision 6);
  * a taunt shown now lies over the strip, which never moves under it.
+ *
+ * A side nobody holds is the computer's (docs/frontend.md rule 15 "The
+ * computer's seat", ADR 036 decision 15): «Kompüter» beside the icon its
+ * match gives it (`marks`) — with its level, «Kompüter (Orta)», on the
+ * screen and wherever the strip names it in words (the gap, the ribbon);
+ * on a phone the side's half has no room for the level beside the icon,
+ * 👑 and the clock, so it is read out but not drawn there.
  */
 export function RivalryStrip({
     pair,
@@ -203,6 +220,7 @@ export function RivalryStrip({
     results,
     spent = [],
     players,
+    computer = null,
     placeLabels,
     icons,
     moves,
@@ -220,6 +238,8 @@ export function RivalryStrip({
     /** The taunts counted at this close, in a reveal (T2): the count starts before their cost. */
     spent?: RoomSpent[];
     players: RoomPlayer[];
+    /** The level of the computer, for a match's side nobody holds; null without one. */
+    computer?: RoomComputerLevel | null;
     placeLabels: string[];
     icons: RivalryIcons | null;
     /** A reveal the page saw begin (`RoomMotion.strip`), or a capture it saw arrive. */
@@ -256,8 +276,7 @@ export function RivalryStrip({
     const split = sliding && step === 0 ? before.split : drawn.split;
     const words = animate && step < 2 && previous !== null ? previous : drawn;
     const names = new Map(players.map((player) => [player.id, player]));
-    const nameOf = (id: string | null) =>
-        (id === null ? null : names.get(id)?.name) ?? t('rooms.show.nameless');
+    const nameOf = (id: string | null) => seatName(t, players, id, computer);
     const ribbon = overtake !== null && (!animate || step >= 3);
     const leftTook = overtake !== null && overtake === pair.left?.player_id;
     const overGap = ribbon && !big && ribbonInGap;
@@ -443,9 +462,10 @@ function Emoji({ src, className }: { src: string; className: string }) {
 
 /**
  * One end of the names row: the side's place as a filled label in its
- * colour (not in a duel), the name — «Siz» for the viewer — 👑 by the
- * first place, «çıxıb» for one who left and, on the right, how many
- * others share its place. The right end is mirrored; an empty side is «—».
+ * colour (not in a duel), the name — «Siz» for the viewer, «Kompüter» for
+ * the seat nobody holds — 👑 by the first place, «çıxıb» for one who left
+ * and, on the right, how many others share its place. The right end is
+ * mirrored; an empty side is «—».
  */
 function Side({
     row,
@@ -472,6 +492,7 @@ function Side({
 }) {
     const { t } = useTranslation();
     const right = side === 'right';
+    const computer = row?.player_id === COMPUTER_SEAT;
 
     if (row === null) {
         return (
@@ -510,7 +531,15 @@ function Side({
             </span>
         ),
         <span key="name" className="min-w-0 truncate font-semibold">
-            {name ?? nameOf(row.player_id)}
+            {computer && !big ? (
+                // A phone's half has no room for the level: «Kompüter» is drawn, the level read out.
+                <>
+                    <span aria-hidden>{t('rooms.computer.name')}</span>
+                    <span className="sr-only">{nameOf(row.player_id)}</span>
+                </>
+            ) : (
+                (name ?? nameOf(row.player_id))
+            )}
         </span>,
         row.place === 1 && icons !== null && (
             <Emoji

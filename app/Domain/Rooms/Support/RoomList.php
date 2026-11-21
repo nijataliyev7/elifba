@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Config;
  * 034 decision 17), so a page writes «Şaşki · 5+3» without a catalog.
  *
  * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, running: bool}
- * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int, clock?: array{base_ms: int, increment_ms: int}}>, mine: array{points: int, place: string|null}|null}
+ * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int, clock?: array{base_ms: int, increment_ms: int}, computer?: int|null}>, mine: array{points: int, place: string|null}|null}
  */
 final class RoomList
 {
@@ -110,13 +110,13 @@ final class RoomList
     /**
      * A board game's clock, as its row keeps it; nothing for a race.
      *
-     * @return array{clock?: array{base_ms: int, increment_ms: int}}
+     * @return array{clock?: array{base_ms: int, increment_ms: int}, computer?: int|null}
      */
     private static function clock(RoomGame $game): array
     {
         $clock = RoomGameData::clockOf($game);
 
-        return $clock === null ? [] : ['clock' => $clock->toArray()];
+        return $clock === null ? [] : ['clock' => $clock->toArray(), 'computer' => $game->computer?->value];
     }
 
     /**

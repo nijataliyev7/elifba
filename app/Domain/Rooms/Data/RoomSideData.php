@@ -12,13 +12,13 @@ use InvalidArgumentException;
  * at the end, once the match is over — and its pieces, men and kings
  * together, of which `kings` are kings. The strip's totals are the pieces.
  *
- * @phpstan-type RoomSideArray array{color: string, player_id: string, left_ms: int, pieces: int, kings: int}
+ * @phpstan-type RoomSideArray array{color: string, player_id: string|null, left_ms: int, pieces: int, kings: int}
  */
 final readonly class RoomSideData
 {
     public function __construct(
         public RoomMatchColor $color,
-        public string $player_id,
+        public ?string $player_id,
         public int $left_ms,
         public int $pieces,
         public int $kings,

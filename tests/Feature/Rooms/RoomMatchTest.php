@@ -148,7 +148,7 @@ it('starts a match from the room\'s choice with its two seats and its clock, and
     expect($chosen['setup'])->toBe([
         'kind' => 'board', 'mechanic' => 'draughts', 'difficulty' => 2,
         'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000],
-        'white' => $this->aygunRow->id, 'black' => $this->resadRow->id, 'played' => false,
+        'white' => $this->aygunRow->id, 'black' => $this->resadRow->id, 'computer' => null, 'played' => false,
     ])->and($chosen['game'])->toBeNull()
         ->and($chosen['match'])->toBeNull();
 
@@ -160,7 +160,7 @@ it('starts a match from the room\'s choice with its two seats and its clock, and
         ->and([$game?->mechanic, $game?->white_player_id, $game?->black_player_id, $game?->clock_ms, $game?->increment_ms, $game?->rounds->count()])
         ->toBe([RoomMechanic::Draughts, $this->aygunRow->id, $this->resadRow->id, 300_000, 3_000, 0])
         ->and($game?->started_ms)->toBe(RoomClock::nowMs() + Config::integer('elifba.rooms.countdown_ms'))
-        ->and($state['game'])->toBe(['kind' => 'board', 'id' => $game?->id, 'mechanic' => 'draughts', 'difficulty' => 2, 'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000], 'phase' => 'live'])
+        ->and($state['game'])->toBe(['kind' => 'board', 'id' => $game?->id, 'mechanic' => 'draughts', 'difficulty' => 2, 'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000], 'computer' => null, 'phase' => 'live'])
         ->and($state['round'])->toBeNull()
         ->and($state['match']['phase'])->toBe('countdown')
         ->and(array_column($state['match']['sides'], 'player_id'))->toBe([$this->aygunRow->id, $this->resadRow->id])
@@ -248,7 +248,7 @@ it('refuses to start a match with fewer than two seats', function (): void {
     expect(matchState($this->tural, $room)['setup'])->toBe([
         'kind' => 'board', 'mechanic' => 'draughts', 'difficulty' => 2,
         'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000],
-        'white' => $room->rowOf($this->tural)?->id, 'black' => null, 'played' => false,
+        'white' => $room->rowOf($this->tural)?->id, 'black' => null, 'computer' => null, 'played' => false,
     ]);
 
     $this->actingAs($this->tural)->postJson(route('rooms.games.store', $room))
@@ -599,7 +599,7 @@ it('counts a win 3 and a draw 1 in the room\'s standing, each game netted on its
     $clock = ['base_ms' => 300_000, 'increment_ms' => 3_000];
     $this->actingAs($this->aygun)->get(route('rooms.past'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('past.0.games', [['mechanic' => 'draughts', 'difficulty' => 2, 'clock' => $clock], ['mechanic' => 'draughts', 'difficulty' => 2, 'clock' => $clock]])
+            ->where('past.0.games', [['mechanic' => 'draughts', 'difficulty' => 2, 'clock' => $clock, 'computer' => null], ['mechanic' => 'draughts', 'difficulty' => 2, 'clock' => $clock, 'computer' => null]])
             ->where('past.0.mine.points', 2));
 });
 

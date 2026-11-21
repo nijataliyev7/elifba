@@ -1,5 +1,5 @@
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { Bot, X } from 'lucide-react';
+import { useId, useState } from 'react';
 import InputError from '@/components/input-error';
 import {
     choiceBody,
@@ -19,6 +19,7 @@ import type {
     SetupChoice,
     SetupLevel,
 } from '@/components/rooms/catalog';
+import { COMPUTER_LEVELS } from '@/components/rooms/computer';
 import { SeatRows } from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import { seconds } from '@/components/rooms/seconds';
@@ -36,11 +37,16 @@ import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { store as startGame } from '@/routes/rooms/games';
 import { update as chooseGame } from '@/routes/rooms/setup';
-import type { RoomPlayer } from '@/rooms/contract';
+import type { RoomComputerLevel, RoomPlayer } from '@/rooms/contract';
 import { roomRequest } from '@/rooms/http';
 
 /** Which control a tap went through: it shows pressed while the others wait. */
-export type ChoiceControl = 'mechanic' | 'difficulty' | 'rounds' | 'seats';
+export type ChoiceControl =
+    | 'mechanic'
+    | 'difficulty'
+    | 'rounds'
+    | 'seats'
+    | 'computer';
 
 /** The room's choice as a page shows it and changes it (`useRoomChoice()`). */
 export type RoomChoice = {
@@ -75,7 +81,7 @@ export function useRoomChoice({
     /** After a write: the page asks for the state now rather than wait for the signal. */
     onChanged: () => void;
 }): RoomChoice {
-    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}`;
+    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}:${choice.computer}`;
 
     // The tap, and the state's choice it was made over: once that moves, the state has answered.
     const [tap, setTap] = useState<{
@@ -161,6 +167,20 @@ export function useRoomStart({
 
 const pressable =
     'outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-wait motion-reduce:transition-none';
+
+/** A segment of a segmented control: 44px, the pressed one raised from the muted track. */
+function segment(pressed: boolean, big: boolean): string {
+    return cn(
+        pressable,
+        'rounded-lg px-1 leading-tight font-medium',
+        big
+            ? 'min-h-[max(2.75rem,6vh)] text-[max(0.9375rem,2vh)]'
+            : 'min-h-11 text-[0.8125rem]',
+        pressed
+            ? 'bg-background text-foreground shadow-sm'
+            : 'text-muted-foreground',
+    );
+}
 
 /**
  * The six games as buttons (docs/frontend.md rule 15 "Oyun ayarları"): on
@@ -273,14 +293,7 @@ export function DifficultySegments({
                                 )
                             }
                             className={cn(
-                                pressable,
-                                'rounded-lg px-1 leading-tight font-medium',
-                                big
-                                    ? 'min-h-[max(2.75rem,6vh)] text-[max(0.9375rem,2vh)]'
-                                    : 'min-h-11 text-[0.8125rem]',
-                                pressed
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground',
+                                segment(pressed, big),
                                 clock !== undefined && 'tabular-nums',
                             )}
                         >
@@ -297,6 +310,76 @@ export function DifficultySegments({
                     className={big ? 'text-[max(0.875rem,1.9vh)]' : undefined}
                 />
             )}
+        </div>
+    );
+}
+
+/**
+ * «Kompüterin səviyyəsi» (docs/frontend.md rule 15 "The computer's seat",
+ * ADR 036 decisions 4 and 15): three segments — «Asan», «Orta», «Çətin» —
+ * under the seats while the computer plays one of them. It is the
+ * computer's own level and never the game's difficulty, which in a board
+ * game is «Vaxt», beside it. A tap sends the whole choice, as every control
+ * here does.
+ */
+export function ComputerLevelSegments({
+    level,
+    choice,
+    big = false,
+}: {
+    /** The shown choice's level. */
+    level: RoomComputerLevel;
+    choice: RoomChoice;
+    big?: boolean;
+}) {
+    const { t } = useTranslation();
+    const label = useId();
+
+    return (
+        <div
+            role="group"
+            aria-labelledby={label}
+            className={cn('flex flex-col gap-1.5', big && 'gap-[1vh]')}
+        >
+            <span
+                id={label}
+                className={cn(
+                    'flex items-center gap-1.5 font-medium text-muted-foreground',
+                    big ? 'text-[max(0.875rem,1.9vh)]' : 'text-[0.8125rem]',
+                )}
+            >
+                <Bot
+                    aria-hidden
+                    className={cn(
+                        'shrink-0',
+                        big ? 'size-[max(1rem,2.4vh)]' : 'size-4',
+                    )}
+                />
+                {t('rooms.computer.level.label')}
+            </span>
+            <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+                {COMPUTER_LEVELS.map((one) => {
+                    const pressed = one === level;
+
+                    return (
+                        <button
+                            key={one}
+                            type="button"
+                            aria-pressed={pressed}
+                            disabled={choice.pending !== null}
+                            onClick={() =>
+                                choice.choose(
+                                    { ...choice.shown, computer: one },
+                                    'computer',
+                                )
+                            }
+                            className={segment(pressed, big)}
+                        >
+                            {t(`rooms.computer.level.${one}`)}
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     );
 }
@@ -431,7 +514,9 @@ export function LevelLine({
  * «Oyun ayarları» (`GameSettings`, docs/frontend.md rule 15; ADR 026
  * decisions 8 and 16–17): the game, the difficulty and the rounds of the
  * room's choice — a board game's clock and its two seats (`SeatRows`,
- * ADR 034 decision 27) — each tap sent as the whole choice (`useRoomChoice()`), and
+ * ADR 034 decision 27), with the computer's level under them while it
+ * plays one (`ComputerLevelSegments`, ADR 036 decision 15) — each tap sent
+ * as the whole choice (`useRoomChoice()`), and
  * «Hazırdır», which closes. On a phone a sheet from the bottom below `sm`
  * and a dialog from there; on the screen (`big`) a centred dialog with the
  * games three by two and «Çətinlik» beside «Raund sayı»; from T2 the
@@ -565,12 +650,26 @@ export function GameSettings({
                                     : t('rooms.setup.rounds')}
                             </legend>
                             {parts.second === 'seats' ? (
-                                <SeatRows
-                                    seats={parts.seats}
-                                    players={players}
-                                    choice={choice}
-                                    big={big}
-                                />
+                                <div
+                                    className={cn(
+                                        'flex flex-col gap-3',
+                                        big && 'gap-[1.6vh]',
+                                    )}
+                                >
+                                    <SeatRows
+                                        seats={parts.seats}
+                                        players={players}
+                                        choice={choice}
+                                        big={big}
+                                    />
+                                    {parts.seats.computer !== null && (
+                                        <ComputerLevelSegments
+                                            level={parts.seats.computer}
+                                            choice={choice}
+                                            big={big}
+                                        />
+                                    )}
+                                </div>
                             ) : (
                                 <RoundStepButtons
                                     options={options}

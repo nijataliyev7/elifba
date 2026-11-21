@@ -1,3 +1,4 @@
+import { COMPUTER_SEAT, seatKey } from '@/components/rooms/computer';
 import type {
     RoomPlayer,
     RoomRankedPlayer,
@@ -23,6 +24,11 @@ export type TotalChange = RoomResult | { player_id: string; points: number };
  * strip moves at every move the page saw arrive. `stripRows()`,
  * `stripChange()` and `stripMoment()` are the one place the strip looks at
  * the game's kind.
+ *
+ * A seat the computer plays (ADR 036 decision 11) has no player: its row is
+ * keyed `COMPUTER_SEAT`, so the pair, its leader and an overtake name it as
+ * any side, while it is never the viewer's own row nor a rival to throw at
+ * (`rivalOf()`).
  */
 
 /** Two contenders face to face, or a race of three and more. */
@@ -98,7 +104,8 @@ export function contenders(
  * server's order; a match's are its two sides, white then black, each with
  * its pieces left as its total and 👑 (`place` 1) by the side with more —
  * neither when they are level (ADR 034 decision 23). `seats` says the rows
- * are a match's: always both, in their own order.
+ * are a match's: always both, in their own order. A side without a player
+ * is the computer's, keyed `COMPUTER_SEAT` (`seatKey()`).
  */
 export function stripRows(
     state: Pick<RoomState, 'ranking'> & { match?: RoomState['match'] },
@@ -111,7 +118,7 @@ export function stripRows(
 
     return {
         rows: state.match.sides.map((side) => ({
-            player_id: side.player_id,
+            player_id: seatKey(side.player_id),
             points: side.pieces,
             place:
                 white.pieces === black.pieces
@@ -157,7 +164,7 @@ export function stripChange(
                     ? null
                     : [
                           {
-                              player_id: taken.player_id,
+                              player_id: seatKey(taken.player_id),
                               points: -last.captured.length,
                           },
                       ],
@@ -197,7 +204,9 @@ export function stripMoment(
  * Whom a player's strip throws at (ADR 029 as amended, T4; ADR 034
  * decision 22): the right side of a pair whose left is the viewer — the
  * nearest rival in a race, the other seat in a match — with its name; none
- * on a watcher's phone, the screen, or a pair with an empty side.
+ * on a watcher's phone, the screen, or a pair with an empty side — and none
+ * when the other seat is the computer's: nobody is there to aim at (ADR 036
+ * decision 13).
  */
 export function rivalOf(
     pair: RivalPair | null,
@@ -205,7 +214,7 @@ export function rivalOf(
 ): { id: string; name: string | null } | null {
     const right = pair !== null && pair.mine ? pair.right : null;
 
-    return right === null
+    return right === null || right.player_id === COMPUTER_SEAT
         ? null
         : {
               id: right.player_id,

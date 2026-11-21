@@ -15,6 +15,7 @@ use App\Domain\Rooms\Data\RoomSideData;
 use App\Domain\Rooms\Data\RoomSpentData;
 use App\Domain\Rooms\Enums\RoomActKind;
 use App\Domain\Rooms\Enums\RoomActStatus;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomMatchColor;
 use App\Domain\Rooms\Enums\RoomMatchOutcome;
 use App\Domain\Rooms\Enums\RoomMatchPhase;
@@ -23,14 +24,19 @@ use App\Domain\Rooms\Models\RoomAct;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Support\Draughts\DraughtsAct;
+use App\Domain\Rooms\Support\Draughts\DraughtsEngine;
 use App\Domain\Rooms\Support\Draughts\DraughtsMatch;
 use App\Domain\Rooms\Support\Draughts\DraughtsRules;
 use App\Domain\Rooms\Support\RoomPointsRule;
 use App\Domain\Rooms\Support\RoomRanking;
+use App\Domain\Rooms\Support\RoomSeed;
 use App\Domain\Rooms\Support\RoomTauntCost;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Fluent;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use WeakMap;
@@ -61,6 +67,9 @@ use WeakMap;
  * - An act of a seat is judged against the match as it stands.
  * - A seat of a live match that is no longer present gets a `leave` act
  *   and has lost; a page's read changes nothing, since no round waits.
+ * - One seat may be the computer's (ADR 036): the game then has its level
+ *   (`computer`) and that seat no player; an act without a player is its
+ *   move, it earns nothing, and no taunt is thrown in its match.
  */
 final class BoardDriver extends RoomGameDriver
 {
@@ -71,16 +80,24 @@ final class BoardDriver extends RoomGameDriver
     {
         // Both or neither: neither keeps the room's seats (`RoomSeats`) — a board game
         // chosen after a race, or a room with fewer than two players to seat.
+        // With the computer (ADR 036 decision 2): at most one seat, the other colour being its own.
+        $computer = static fn (Fluent $input): bool => $input->get('computer') !== null;
+
         return [
-            'white' => ['required_with:black', 'string', 'ulid'],
-            'black' => ['required_with:white', 'string', 'ulid', 'different:white'],
+            'computer' => ['nullable', 'integer', Rule::enum(RoomComputerLevel::class)],
+            'white' => Rule::when($computer, ['nullable', 'string', 'ulid', 'prohibits:black'], ['required_with:black', 'string', 'ulid']),
+            'black' => Rule::when($computer, ['nullable', 'string', 'ulid', 'prohibits:white'], ['required_with:white', 'string', 'ulid', 'different:white']),
         ];
     }
 
     public function start(Room $locked, RoomGame $game, RoomGameSetupData $setup): void
     {
-        if ($setup->white === null || $setup->black === null) {
+        if ($setup->computer === null && ($setup->white === null || $setup->black === null)) {
             throw ValidationException::withMessages(['setup' => __('rooms.errors.needs_two')]);
+        }
+
+        if ($setup->computer !== null && $setup->white === null && $setup->black === null) {
+            throw ValidationException::withMessages(['setup' => __('rooms.errors.needs_one')]);
         }
 
         $level = app(ContentRepository::class)->roomLevel($setup->mechanic, $setup->difficulty);
@@ -89,6 +106,7 @@ final class BoardDriver extends RoomGameDriver
         $game->reveal_ms = 0;
         $game->white_player_id = $setup->white;
         $game->black_player_id = $setup->black;
+        $game->computer = $setup->computer;
         $game->clock_ms = (int) $level->clockMs;
         $game->increment_ms = (int) $level->incrementMs;
         $game->save();
@@ -125,7 +143,7 @@ final class BoardDriver extends RoomGameDriver
 
     public function mayThrow(RoomGame $game, RoomPlayer $thrower): bool
     {
-        return self::sideOf($game, $thrower->id) !== null;
+        return $game->computer === null && self::sideOf($game, $thrower->id) !== null;
     }
 
     public function mayAim(RoomGame $game, RoomPlayer $thrower, string $targetId): bool
@@ -138,7 +156,7 @@ final class BoardDriver extends RoomGameDriver
     /** What the match can still pay a seat: a win; a watcher nothing. */
     public function tauntBudget(RoomGame $game, RoomPlayer $row, int $nowMs): int
     {
-        return self::sideOf($game, $row->id) === null ? 0 : RoomPointsRule::MATCH_WIN;
+        return $game->computer !== null || self::sideOf($game, $row->id) === null ? 0 : RoomPointsRule::MATCH_WIN;
     }
 
     /**
@@ -158,7 +176,7 @@ final class BoardDriver extends RoomGameDriver
             starts_ms: $match->startsMs,
             sides: array_map(static fn (RoomMatchColor $color): RoomSideData => new RoomSideData(
                 $color,
-                (string) self::seatOf($game, $color),
+                self::seatOf($game, $color),
                 $match->left($color),
                 $position->count($color),
                 $position->kings($color),
@@ -243,6 +261,49 @@ final class BoardDriver extends RoomGameDriver
     }
 
     /**
+     * The computer is to move — in the countdown too, when it plays white —
+     * and may answer `elifba.rooms.computer.think_ms` after its turn began,
+     * so a page draws the player's move before the answer arrives.
+     */
+    public function computerTurn(RoomGame $game, int $nowMs): ?array
+    {
+        $side = self::computerSide($game);
+
+        if ($side === null) {
+            return null;
+        }
+
+        $match = $this->replay($game, $nowMs);
+
+        if ($match->phase === RoomMatchPhase::Over || $match->position->turn !== $side) {
+            return null;
+        }
+
+        return ['ply' => $match->ply(), 'due_ms' => $match->sinceMs() + Config::integer('elifba.rooms.computer.think_ms')];
+    }
+
+    /** One of the judge's moves, as `DraughtsEngine` chooses it at the game's level. */
+    public function computerChoice(RoomGame $game, int $nowMs): ?array
+    {
+        $level = $game->computer;
+
+        if ($level === null) {
+            return null;
+        }
+
+        $match = $this->replay($game, $nowMs);
+
+        return DraughtsEngine::choose(
+            $match->position,
+            $level->depth(),
+            $level->nodes(),
+            $level->margin(),
+            RoomSeed::computer($game->id, $match->ply()),
+            Config::integer('elifba.rooms.computer.max_ms'),
+        )?->path;
+    }
+
+    /**
      * The game replayed from its acts at `$nowMs` (`DraughtsMatch`), with
      * the host's end — or `$endedMs`, an end the reader knows of before it
      * is written — and remembered for the same game, moment and acts.
@@ -288,9 +349,10 @@ final class BoardDriver extends RoomGameDriver
         $outcome = $match->outcome ?? RoomMatchOutcome::None;
         $spent = RoomTauntCost::spent($game, $nowMs);
         $points = RoomRanking::net(self::outcomePoints($game, $match), $spent);
-        $white = (string) $game->white_player_id;
-        $black = (string) $game->black_player_id;
-        $row = static fn (string $seat, ?int $place): RoomMatchStandingData => new RoomMatchStandingData($seat, $points[$seat] ?? 0, $place);
+        $white = $game->white_player_id;
+        $black = $game->black_player_id;
+        // The computer's seat has no player and no points (ADR 036 decision 12).
+        $row = static fn (?string $seat, ?int $place): RoomMatchStandingData => new RoomMatchStandingData($seat, $seat === null ? 0 : ($points[$seat] ?? 0), $place);
 
         return new RoomMatchResultData(
             $outcome,
@@ -303,7 +365,7 @@ final class BoardDriver extends RoomGameDriver
             },
             array_values(array_map(
                 static fn (string $seat): RoomSpentData => new RoomSpentData($seat, $spent[$seat]),
-                array_filter([$white, $black], static fn (string $seat): bool => ($spent[$seat] ?? 0) > 0),
+                array_filter([$white, $black], static fn (?string $seat): bool => $seat !== null && ($spent[$seat] ?? 0) > 0),
             )),
         );
     }
@@ -315,24 +377,41 @@ final class BoardDriver extends RoomGameDriver
      */
     private static function outcomePoints(RoomGame $game, DraughtsMatch $match): array
     {
-        $white = (string) $game->white_player_id;
-        $black = (string) $game->black_player_id;
+        // A seat without a player — the computer's — earns nothing (ADR 036 decision 12).
+        $give = static fn (?string $seat, int $points): array => $seat === null ? [] : [$seat => $points];
 
         return match ($match->outcome) {
-            RoomMatchOutcome::White => [$white => RoomPointsRule::MATCH_WIN],
-            RoomMatchOutcome::Black => [$black => RoomPointsRule::MATCH_WIN],
-            RoomMatchOutcome::Draw => [$white => RoomPointsRule::MATCH_DRAW, $black => RoomPointsRule::MATCH_DRAW],
+            RoomMatchOutcome::White => $give($game->white_player_id, RoomPointsRule::MATCH_WIN),
+            RoomMatchOutcome::Black => $give($game->black_player_id, RoomPointsRule::MATCH_WIN),
+            RoomMatchOutcome::Draw => [...$give($game->white_player_id, RoomPointsRule::MATCH_DRAW), ...$give($game->black_player_id, RoomPointsRule::MATCH_DRAW)],
             RoomMatchOutcome::None, null => [],
         };
     }
 
-    /** The side a row plays in the game, or null for a row with no seat. */
-    private static function sideOf(RoomGame $game, string $playerId): ?RoomMatchColor
+    /**
+     * The side a row plays in the game, or null for a row with no seat; an
+     * act without a player is the computer's (ADR 036 decision 8).
+     */
+    private static function sideOf(RoomGame $game, ?string $playerId): ?RoomMatchColor
     {
+        if ($playerId === null) {
+            return self::computerSide($game);
+        }
+
         return match ($playerId) {
             $game->white_player_id => RoomMatchColor::White,
             $game->black_player_id => RoomMatchColor::Black,
             default => null,
+        };
+    }
+
+    /** The colour the computer plays — the seat without a player — or null in a match of two players. */
+    private static function computerSide(RoomGame $game): ?RoomMatchColor
+    {
+        return match (true) {
+            $game->computer === null => null,
+            $game->white_player_id === null => RoomMatchColor::White,
+            default => RoomMatchColor::Black,
         };
     }
 

@@ -3,6 +3,7 @@
 namespace App\Domain\Rooms\Models;
 
 use App\Domain\Content\Enums\RoomMechanic;
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Support\RoomTimetable;
 use Carbon\CarbonImmutable;
 use Database\Factories\RoomGameFactory;
@@ -45,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $ended_ms the host ended the game, or the room closed under it
  * @property string|null $white_player_id a board game's seat that plays white
  * @property string|null $black_player_id a board game's seat that plays black
+ * @property RoomComputerLevel|null $computer the level of the computer, which plays the seat without a player (K3, ADR 036); null: two players
  * @property int|null $clock_ms a board game's: each side's time
  * @property int|null $increment_ms a board game's: what a side gains with each move
  * @property CarbonImmutable $created_at
@@ -122,6 +124,7 @@ class RoomGame extends Model
             'ended_ms' => 'integer',
             'clock_ms' => 'integer',
             'increment_ms' => 'integer',
+            'computer' => RoomComputerLevel::class,
         ];
     }
 }
