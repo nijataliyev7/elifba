@@ -18,6 +18,7 @@ use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomRound;
+use App\Domain\Rooms\Support\RoomLetters;
 use App\Domain\Rooms\Support\RoomPlayable;
 use App\Domain\Rooms\Support\RoomRanking;
 use App\Domain\Rooms\Support\RoomRoundClose;
@@ -168,12 +169,12 @@ final class RaceDriver extends RoomGameDriver
      * The timetable's moment — over in a room that is not open — and, while
      * the game is live, its current round as the phase allows.
      */
-    public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs): array
+    public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs, bool $screen = false): array
     {
         $moment = $room->isOpen() ? $game->timetable()->moment($nowMs) : RoomMomentData::over();
         $live = ! $moment->isOver();
 
-        return ['live' => $live, 'round' => $live ? self::round($game, $moment, $rows, $mine) : null, 'match' => null];
+        return ['live' => $live, 'round' => $live ? self::round($game, $moment, $rows, $mine, $screen) : null, 'match' => null];
     }
 
     public function act(RoomGame $game, RoomPlayer $row, RoomActData $act, int $nowMs): array
@@ -210,9 +211,15 @@ final class RaceDriver extends RoomGameDriver
      * waits for (`RoomWaits`), as the early close does, so a full count is
      * a closed round. A reveal lists the taunts counted at its close.
      *
+     * From ADR 037 a present player's own state of a round that sells
+     * letters carries what that player bought (`letters`, decisions 13–16)
+     * while it takes answers, and the reveal's `mine` how many. The screen
+     * reads with the host's account but is nobody's phone: it gets neither,
+     * and no `mine` at all, so it never says whether the host bought.
+     *
      * @param  Collection<int, RoomPlayer>  $rows  the room's players not removed, in order
      */
-    private static function round(RoomGame $game, RoomMomentData $moment, Collection $rows, ?RoomPlayer $mine): RoomRoundData
+    private static function round(RoomGame $game, RoomMomentData $moment, Collection $rows, ?RoomPlayer $mine, bool $screen): RoomRoundData
     {
         $timetable = $game->timetable();
         $index = $moment->round ?? 0;
@@ -229,6 +236,9 @@ final class RaceDriver extends RoomGameDriver
         $waited = $rows->filter(static fn (RoomPlayer $row): bool => RoomWaits::waitsFor($row, $since, $answers->has($row->id)));
         $own = $mine === null ? null : $answers->get($mine->id);
         $spent = $revealed ? RoomTauntCost::spentAt($game, $index) : [];
+        // The viewer's own purchases (ADR 037): never the screen's, and only a round that sells letters has them.
+        $sells = ! $screen && $mine !== null && $asked && RoomLetters::sells($round);
+        $bought = $sells ? RoomLetters::count($round, $mine) : 0;
 
         return new RoomRoundData(
             id: $round->id,
@@ -248,7 +258,7 @@ final class RaceDriver extends RoomGameDriver
             reveal: $revealed ? new RoomRevealData(
                 solution: $round->solutionData()->ids,
                 word: $round->solutionData()->word,
-                mine: $own === null ? null : RoomMineData::of($own),
+                mine: $own === null || $screen ? null : RoomMineData::of($own, $bought),
                 results: array_values($rows
                     ->filter(static fn (RoomPlayer $row): bool => $answers->has($row->id))
                     ->map(static function (RoomPlayer $row) use ($answers): RoomResultData {
@@ -263,6 +273,7 @@ final class RaceDriver extends RoomGameDriver
                     ->map(static fn (RoomPlayer $row): RoomSpentData => new RoomSpentData($row->id, $spent[$row->id]))
                     ->all()),
             ) : null,
+            letters: $sells && $phase === RoomPhase::Answer && $mine->isPresent() ? RoomLetters::of($game, $round, $bought) : null,
         );
     }
 }

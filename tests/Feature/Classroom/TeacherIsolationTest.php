@@ -199,6 +199,12 @@ function isolationCases(): array
             'round_id' => $w['roomGameA']->rounds[0]->id,
             'picked' => $w['roomGameA']->rounds[0]->askData()->ids(),
         ]],
+        // A letter of the word of A's round bought (ADR 037).
+        'POST rooms/{room}/letters' => ['rooms.letters.store', $roomA, static fn (array $w): array => [
+            'event_id' => '01kaqs4d1e2f3g4h5j6k7m8n9p',
+            'round_id' => $w['roomGameA']->rounds[0]->id,
+            'position' => 0,
+        ]],
         // A taunt at a player of A's room, and the host's switch for them (T2).
         'POST rooms/{room}/taunts' => ['rooms.taunts.store', $roomA, static fn (array $w): array => [
             'event_id' => '01kaqs2s1r0q9p8n7m6k5j4h3g',
@@ -271,6 +277,7 @@ function isolationSnapshot(): array
         'room_answers' => $rows('room_answers'),
         'room_taunts' => $rows('room_taunts'),
         'room_acts' => $rows('room_acts'),
+        'room_letters' => $rows('room_letters'),
     ];
 }
 

@@ -151,6 +151,9 @@ class AppServiceProvider extends ServiceProvider
         // A seat's acts in a board game (D3, ADR 034 decision 19): a blitz player in time trouble moves faster than `room-answers` allows.
         RateLimiter::for('room-acts', static fn (Request $request): Limit => Limit::perMinute(90)->by($account($request)));
 
+        // A player's bought letters (ADR 037 decision 12): a word of at most twelve letters a round, and a double tap.
+        RateLimiter::for('room-letter', static fn (Request $request): Limit => Limit::perMinute(30)->by($account($request)));
+
         // A player's taunts (T2, ADR 029 decision 11): the server's cooldown is the brake, this the bound.
         RateLimiter::for('room-taunts', static fn (Request $request): Limit => Limit::perMinute(20)->by($account($request)));
 

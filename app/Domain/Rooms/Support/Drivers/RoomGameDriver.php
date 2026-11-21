@@ -116,9 +116,10 @@ abstract class RoomGameDriver
      * whether it is live, and a live race's round or a board game's match.
      *
      * @param  Collection<int, RoomPlayer>  $rows  the room's players not removed, in order
+     * @param  bool  $screen  the big screen's read, with the host's account: nobody's phone, so no player's own purchase (ADR 037 decision 13)
      * @return array{live: bool, round: RoomRoundData|null, match: RoomMatchData|null}
      */
-    abstract public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs): array;
+    abstract public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs, bool $screen = false): array;
 
     /**
      * An act of a seat, in a room the caller holds locked, of the running

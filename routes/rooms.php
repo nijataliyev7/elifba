@@ -9,6 +9,7 @@ use App\Http\Controllers\Rooms\RoomGameController;
 use App\Http\Controllers\Rooms\RoomInvitedController;
 use App\Http\Controllers\Rooms\RoomJoinController;
 use App\Http\Controllers\Rooms\RoomLeaveController;
+use App\Http\Controllers\Rooms\RoomLetterController;
 use App\Http\Controllers\Rooms\RoomMemberController;
 use App\Http\Controllers\Rooms\RoomMemberVoiceController;
 use App\Http\Controllers\Rooms\RoomNameController;
@@ -119,6 +120,13 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
         ->middleware('throttle:room-acts')
         ->can('play', 'room')
         ->name('rooms.acts.store');
+
+    // A present player buys the next letter of an anagram's word, for that round's points (ADR 037).
+    Route::post('rooms/{room}/letters', RoomLetterController::class)
+        ->whereUlid('room')
+        ->middleware('throttle:room-letter')
+        ->can('play', 'room')
+        ->name('rooms.letters.store');
 
     // A present player's own taunt at another, for a point of their own (T2, ADR 029).
     Route::post('rooms/{room}/taunts', [RoomTauntController::class, 'store'])

@@ -27,7 +27,13 @@ const ask: RoomAsk = {
 const solution = ['a1', 'l', 'm', 'a2'];
 
 function mine(picked: string[], correct: boolean): RoomMine {
-    return { picked, correct, points: correct ? 19 : 0, elapsed_ms: 2300 };
+    return {
+        picked,
+        correct,
+        points: correct ? 19 : 0,
+        elapsed_ms: 2300,
+        letters: 0,
+    };
 }
 
 describe('tileRows', () => {

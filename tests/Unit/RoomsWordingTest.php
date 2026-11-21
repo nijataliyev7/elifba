@@ -336,6 +336,25 @@ it('words the invitation link in exactly the strings ADR 033 lists, in both lang
     }
 });
 
+/**
+ * The rows of a record's wording table — `| + `key` | az | en |` for a new
+ * key, `~` for a changed one, a line break as `\n` — by locale and key.
+ *
+ * @return array{az: array<string, string>, en: array<string, string>}
+ */
+function roomWordingOf(string $record): array
+{
+    $adr = (string) file_get_contents(base_path("docs/decisions/{$record}"));
+    preg_match_all('/^\s*\| [+~] `([a-z_.]+)`\s*\|(.*)\|(.*)\|\s*$/mu', $adr, $rows, PREG_SET_ORDER);
+    $listed = ['az' => [], 'en' => []];
+
+    foreach ($rows as [, $key, $az, $en]) {
+        [$listed['az'][$key], $listed['en'][$key]] = [str_replace('\n', "\n", trim($az)), str_replace('\n', "\n", trim($en))];
+    }
+
+    return $listed;
+}
+
 it('words the ready mark in exactly the strings ADR 035 lists, in both languages', function (): void {
     // ADR 035 decision 12: each new or changed key, az and en, as its table writes it (a line break as `\n`).
     $adr = (string) file_get_contents(base_path('docs/decisions/035-ready-for-the-next-game.md'));
@@ -344,6 +363,15 @@ it('words the ready mark in exactly the strings ADR 035 lists, in both languages
 
     foreach ($rows as [, $key, $az, $en]) {
         [$listed['az'][$key], $listed['en'][$key]] = [str_replace('\n', "\n", trim($az)), str_replace('\n', "\n", trim($en))];
+    }
+
+    // A later record that rewords the notice is the one in force: ADR 037 part 2 adds the bought letters to its «Cavablar:» line.
+    foreach (roomWordingOf('037-anagram-clue-shuffle-letter.md') as $locale => $rows) {
+        foreach ($rows as $key => $text) {
+            if (str_starts_with($key, 'privacy.')) {
+                $listed[$locale][$key] = $text;
+            }
+        }
     }
 
     expect(array_keys($listed['az']))->toContain('rooms.ready.button', 'rooms.ready.count', 'privacy.rooms.stored');
@@ -368,4 +396,26 @@ it('words the ready mark in exactly the strings ADR 035 lists, in both languages
             expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
         }
     }
+});
+
+it('words the bought letter in exactly the strings ADR 037 lists, in both languages', function (): void {
+    // ADR 037 part 2: the purchase's refusal and the notice's line; the page's words come with part 3.
+    $listed = roomWordingOf('037-anagram-clue-shuffle-letter.md');
+
+    expect(array_keys($listed['az']))->toBe(['privacy.rooms.stored', 'rooms.errors.letter'])
+        ->and(array_keys($listed['en']))->toBe(array_keys($listed['az']))
+        ->and($listed['az']['privacy.rooms.stored'])->toContain('«Anaqram»da hər oyunçunun raundda neçə hərf aldığı');
+
+    foreach (['az', 'en'] as $locale) {
+        /** @var array<string, string> $translations */
+        $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+
+        foreach ($listed[$locale] as $key => $text) {
+            expect($translations[$key] ?? null)->toBe($text, "{$locale}: {$key}")
+                ->and(promisesInRoomText($text))->toBe([], "{$locale}: {$key}");
+        }
+    }
+
+    // «otaq» only on `/privacy` (ADR 026 decision 2).
+    expect(preg_match('/\botaq|\botağ/u', Az::lower($listed['az']['rooms.errors.letter'])))->toBe(0);
 });

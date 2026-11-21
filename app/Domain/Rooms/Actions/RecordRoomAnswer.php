@@ -9,6 +9,7 @@ use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomJudge;
+use App\Domain\Rooms\Support\RoomLetters;
 use App\Domain\Rooms\Support\RoomLock;
 use App\Domain\Rooms\Support\RoomPointsRule;
 use App\Domain\Rooms\Support\RoomRoundClose;
@@ -40,7 +41,10 @@ use Illuminate\Validation\ValidationException;
  * 4. otherwise it is judged (`RoomJudge`), timed — `elapsed_ms` is the
  *    server's receipt, read as soon as the room's lock is held, minus
  *    `answer_from` — scored
- *    (`RoomPointsRule`) and stored, and the room is active → `accepted`;
+ *    (`RoomPointsRule`) — from ADR 037 after the letters this player
+ *    bought in the round (`afterLetters()`, the rows counted under these
+ *    same locks, which `BuyRoomLetter` takes too) — and stored, and the
+ *    room is active → `accepted`;
  * 5. the revision rises and the room is signalled, since the count of
  *    answers the screen and the phones show has changed; if every player
  *    the round waits for has now answered — a present player whose page
@@ -117,7 +121,8 @@ final readonly class RecordRoomAnswer
             $stored->picked = $answer->picked;
             $stored->correct = $correct;
             $stored->elapsed_ms = $elapsedMs;
-            $stored->points = RoomPointsRule::points($correct, $elapsedMs, $round->answer_ms);
+            // The letters this player bought in the round, counted under the same locks (ADR 037 decision 17).
+            $stored->points = RoomPointsRule::afterLetters(RoomPointsRule::points($correct, $elapsedMs, $round->answer_ms), RoomLetters::count($round, $row));
             $stored->save();
 
             $locked->last_activity_at = now();

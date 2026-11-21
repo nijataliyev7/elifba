@@ -147,7 +147,8 @@
         "answered": true,
         "answered_count": 1,
         "present_count": 2,
-        "reveal": null
+        "reveal": null,
+        "letters": null
     },
     "match": null,
     "ranking": [

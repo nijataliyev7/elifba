@@ -252,7 +252,7 @@ it('never serves the solution or a result before the round closes', function ():
         ->and($state['round']['reveal'])->toBe([
             'solution' => Rooms::right($round),
             'word' => null,
-            'mine' => ['picked' => Rooms::right($round), 'correct' => true, 'points' => $points, 'elapsed_ms' => 0],
+            'mine' => ['picked' => Rooms::right($round), 'correct' => true, 'points' => $points, 'elapsed_ms' => 0, 'letters' => 0],
             'results' => [
                 ['player_id' => $this->hostRow->id, 'correct' => false, 'points' => 0],
                 ['player_id' => $this->aygunRow->id, 'correct' => true, 'points' => $points],

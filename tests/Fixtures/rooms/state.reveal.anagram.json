@@ -120,8 +120,9 @@
             "mine": {
                 "picked": ["h5y3j9dp", "t4k9m2xa", "b7q1w8ne", "r2z6c0lu"],
                 "correct": true,
-                "points": 19,
-                "elapsed_ms": 2300
+                "points": 9,
+                "elapsed_ms": 2300,
+                "letters": 1
             },
             "results": [
                 {
@@ -132,17 +133,18 @@
                 {
                     "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
                     "correct": true,
-                    "points": 19
+                    "points": 9
                 }
             ],
             "spent": []
-        }
+        },
+        "letters": null
     },
     "match": null,
     "ranking": [
         {
             "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
-            "points": 36,
+            "points": 26,
             "place": 1
         },
         {
@@ -170,7 +172,7 @@
     },
     "taunts": {
         "open": true,
-        "balance": 36,
+        "balance": 26,
         "ready_ms": null,
         "received": [],
         "shown": null

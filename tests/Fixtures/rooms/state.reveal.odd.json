@@ -116,7 +116,8 @@
                 "picked": ["v4b7n0m3"],
                 "correct": false,
                 "points": 0,
-                "elapsed_ms": 2300
+                "elapsed_ms": 2300,
+                "letters": 0
             },
             "results": [
                 {
@@ -131,7 +132,8 @@
                 }
             ],
             "spent": []
-        }
+        },
+        "letters": null
     },
     "match": null,
     "ranking": [

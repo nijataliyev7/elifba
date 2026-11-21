@@ -135,7 +135,8 @@
                 ],
                 "correct": true,
                 "points": 19,
-                "elapsed_ms": 2300
+                "elapsed_ms": 2300,
+                "letters": 0
             },
             "results": [
                 {
@@ -155,7 +156,8 @@
                     "count": 1
                 }
             ]
-        }
+        },
+        "letters": null
     },
     "match": null,
     "ranking": [

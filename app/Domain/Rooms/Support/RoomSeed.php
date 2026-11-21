@@ -45,4 +45,18 @@ final class RoomSeed
 
         return new Randomizer(new RoomRandomEngine(hash_hmac('sha256', 'room-game:'.$seed, is_string($key) ? $key : '', true)));
     }
+
+    /**
+     * The source a buyer's orders of an anagram's tiles are drawn from once
+     * `$bought` of its word's letters are bought in the round at
+     * `$position` (ADR 037 decision 16): the same at every read, so a
+     * reload shows the same orders, and never stored. A key of its own, so
+     * it says nothing of the rounds the game's source builds.
+     */
+    public static function letters(int $seed, int $position, int $bought): Randomizer
+    {
+        $key = Config::get('app.key');
+
+        return new Randomizer(new RoomRandomEngine(hash_hmac('sha256', 'room-letters:'.$seed.':'.$position.':'.$bought, is_string($key) ? $key : '', true)));
+    }
 }

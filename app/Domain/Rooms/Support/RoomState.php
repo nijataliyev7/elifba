@@ -102,7 +102,7 @@ final class RoomState
         $rows = RoomRanking::players($room);
         $mine = $rows->first(static fn (RoomPlayer $row): bool => $row->user_id === $viewer->id);
         $game = $room->latestGame();
-        $part = $game === null ? ['live' => false, 'round' => null, 'match' => null] : RoomGameDriver::of($game->mechanic)->part($room, $game, $rows, $mine, $nowMs);
+        $part = $game === null ? ['live' => false, 'round' => null, 'match' => null] : RoomGameDriver::of($game->mechanic)->part($room, $game, $rows, $mine, $nowMs, $screen);
         $live = $game !== null && $part['live'];
         $setup = $room->isOpen() ? $room->setup() : null;
         $voiceData = $voice && $room->isOpen() ? new RoomVoiceData($room->voiceIsOn(), $viewer->voice_agreed_at !== null) : null;

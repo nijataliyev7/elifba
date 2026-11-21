@@ -26,11 +26,17 @@ use InvalidArgumentException;
  * the next opening only once the round has closed, since an early close
  * may come before the bell.
  *
+ * From ADR 037 (decision 14) `letters`: the letters of an anagram's word
+ * the viewer bought, their orders and the next one's price — only in the
+ * phase `answer`, only in a present player's own state of a round that
+ * sells letters (`RoomLetters`), null for everyone else and the screen.
+ *
  * @phpstan-import-type RoomStudyArray from RoomStudyData
  * @phpstan-import-type RoomAskArray from RoomAskData
  * @phpstan-import-type RoomRevealArray from RoomRevealData
+ * @phpstan-import-type RoomLettersArray from RoomLettersData
  *
- * @phpstan-type RoomRoundArray array{id: string, index: int, total: int, phase: string, opens_ms: int, answer_from_ms: int, bell_ms: int, closes_ms: int|null, next_ms: int|null, study: RoomStudyArray|null, ask: RoomAskArray|null, answered: bool, answered_count: int, present_count: int, reveal: RoomRevealArray|null}
+ * @phpstan-type RoomRoundArray array{id: string, index: int, total: int, phase: string, opens_ms: int, answer_from_ms: int, bell_ms: int, closes_ms: int|null, next_ms: int|null, study: RoomStudyArray|null, ask: RoomAskArray|null, answered: bool, answered_count: int, present_count: int, reveal: RoomRevealArray|null, letters: RoomLettersArray|null}
  */
 final readonly class RoomRoundData
 {
@@ -50,6 +56,7 @@ final readonly class RoomRoundData
         public int $answered_count,
         public int $present_count,
         public ?RoomRevealData $reveal,
+        public ?RoomLettersData $letters = null,
     ) {
         $revealed = $phase === RoomPhase::Reveal;
         $asked = $revealed || $phase === RoomPhase::Answer;
@@ -64,6 +71,7 @@ final readonly class RoomRoundData
             ($closes_ms !== null) !== $revealed || ($next_ms !== null) !== $revealed => 'The close is known once the round has closed.',
             ! $asked && ($answered || $answered_count !== 0) => 'Nobody answers before the question.',
             $answered_count < 0 || $answered_count > $present_count => 'More answers than present players.',
+            $letters !== null && $phase !== RoomPhase::Answer => 'Bought letters are served only while the round takes answers.',
             default => null,
         };
 
@@ -93,6 +101,7 @@ final readonly class RoomRoundData
             answered_count: $data['answered_count'],
             present_count: $data['present_count'],
             reveal: $data['reveal'] === null ? null : RoomRevealData::fromArray($data['reveal']),
+            letters: $data['letters'] === null ? null : RoomLettersData::fromArray($data['letters']),
         );
     }
 
@@ -117,6 +126,7 @@ final readonly class RoomRoundData
             'answered_count' => $this->answered_count,
             'present_count' => $this->present_count,
             'reveal' => $this->reveal?->toArray(),
+            'letters' => $this->letters?->toArray(),
         ];
     }
 }

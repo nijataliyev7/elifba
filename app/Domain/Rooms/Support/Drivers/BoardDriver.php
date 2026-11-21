@@ -163,7 +163,7 @@ final class BoardDriver extends RoomGameDriver
      * The match as the viewer sees it — in a room that is not open, ended
      * at the moment read, as its close will end it.
      */
-    public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs): array
+    public function part(Room $room, RoomGame $game, Collection $rows, ?RoomPlayer $mine, int $nowMs, bool $screen = false): array
     {
         $match = $this->replay($game, $nowMs, $room->isOpen() ? null : $nowMs);
         $over = $match->phase === RoomMatchPhase::Over;

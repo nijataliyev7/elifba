@@ -7,6 +7,9 @@ use App\Domain\Rooms\Data\RoomActReceiptData;
 use App\Domain\Rooms\Data\RoomAnswerData;
 use App\Domain\Rooms\Data\RoomAnswerReceiptData;
 use App\Domain\Rooms\Data\RoomAskData;
+use App\Domain\Rooms\Data\RoomLetterData;
+use App\Domain\Rooms\Data\RoomLetterReceiptData;
+use App\Domain\Rooms\Data\RoomLettersData;
 use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Data\RoomTauntData;
 use App\Domain\Rooms\Data\RoomTauntReceiptData;
@@ -21,7 +24,8 @@ use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
  * question in a phase that may not serve it. judge.json is the judge's
  * (RoomJudgeTest), not a payload. From D3 (ADR 034 decision 17) a board
  * game's match in each of its phases, a seat's act and its receipt. From
- * ADR 037 an anagram's question with its clue and its orders (`v: 8`).
+ * ADR 037 an anagram's question with its clue and its orders (`v: 8`),
+ * and from its part 2 a buyer's letters, a purchase and its receipt.
  */
 
 const ROOM_FIXTURES = __DIR__.'/../../Fixtures/rooms';
@@ -60,6 +64,8 @@ it('round-trips every fixture', function (string $name): void {
         'taunt-receipt' => RoomTauntReceiptData::fromArray($fixture)->toArray(),
         'act' => RoomActData::fromArray($fixture)->toArray(),
         'act-receipt' => RoomActReceiptData::fromArray($fixture)->toArray(),
+        'letter' => RoomLetterData::fromArray($fixture)->toArray(),
+        'letter-receipt' => RoomLetterReceiptData::fromArray($fixture)->toArray(),
     };
 
     expect($again)->toBe($fixture);
@@ -85,6 +91,8 @@ it('has every phase\'s fixture, the answer and the receipt', function (): void {
         'state.match.chosen', 'state.match.countdown', 'state.match.play', 'state.match.watch', 'state.match.offer', 'state.match.over', 'act', 'act-receipt',
         // K3 (ADR 036): a match against the computer, and the choice of one.
         'state.match.computer', 'state.match.computer.chosen',
+        // ADR 037 part 2: a buyer's question after one letter, a purchase and its receipt.
+        'state.answer.anagram.bought', 'letter', 'letter-receipt',
     ]);
 });
 
@@ -294,6 +302,47 @@ it('carries an anagram\'s clue and its orders at v 8, and in every other questio
     ] as $orders) {
         expect(fn () => RoomAskData::fromArray([...$ask, 'orders' => $orders]))->toThrow(InvalidArgumentException::class);
     }
+});
+
+it('carries a buyer\'s letters at v 8 only while the round takes answers, and the reveal how many', function (): void {
+    // ADR 037 decisions 14 and 19: `letters` last in every round, null but in a buyer's question; `mine.letters` a count.
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+        $round = roomFixture($name)['round'];
+
+        if ($round === null) {
+            continue;
+        }
+
+        expect(array_key_last($round))->toBe('letters', $name);
+
+        if (! str_starts_with($name, 'state.answer.anagram')) {
+            expect($round['letters'])->toBeNull($name);
+        }
+
+        if (($round['reveal']['mine'] ?? null) !== null) {
+            expect(array_keys($round['reveal']['mine']))->toBe(['picked', 'correct', 'points', 'elapsed_ms', 'letters'], $name);
+        }
+    }
+
+    $bought = roomFixture('state.answer.anagram.bought');
+    $says = array_column($bought['round']['ask']['items'], 'text', 'id');
+    $letters = $bought['round']['letters'];
+    $read = static fn (array $order): string => implode('', array_map(static fn (string $id): string => $says[$id], $order));
+
+    expect(roomFixture('state.answer.anagram')['round']['letters'])->toBe(['bought' => [], 'orders' => [], 'price' => 'half'])
+        ->and(array_map($read, [$letters['bought']]))->toBe(['A'])
+        ->and(array_map($read, $letters['orders']))->toBe(['ALM', 'MLA'])
+        ->and($letters['price'])->toBe('rest')
+        ->and(roomFixture('state.reveal.anagram')['round']['reveal']['mine'])->toMatchArray(['letters' => 1, 'points' => 9]);
+
+    // Only in the answer phase; never orders before a purchase, nor a bought tile back in the tray.
+    $reveal = roomFixture('state.reveal.anagram');
+
+    expect(fn () => RoomStateData::fromArray([...$reveal, 'round' => [...$reveal['round'], 'letters' => $letters]]))
+        ->toThrow(InvalidArgumentException::class, 'Bought letters')
+        ->and(fn () => RoomLettersData::fromArray(['bought' => [], 'orders' => $letters['orders'], 'price' => 'half']))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => RoomLettersData::fromArray(['bought' => [], 'orders' => [], 'price' => 'rest']))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => RoomLettersData::fromArray([...$letters, 'orders' => [[...$letters['orders'][0], $letters['bought'][0]]]]))->toThrow(InvalidArgumentException::class);
 });
 
 it('says the room\'s voice at v 5, each player\'s standing only while it is on, and nothing of it in a closed room', function (): void {

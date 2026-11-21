@@ -74,6 +74,7 @@ describe('optionMark', () => {
             correct: false,
             points: 0,
             elapsed_ms: 2000,
+            letters: 0,
         };
 
         expect(optionMark('other', solution, wrong)).toEqual({

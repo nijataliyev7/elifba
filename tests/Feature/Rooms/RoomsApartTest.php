@@ -353,6 +353,21 @@ it('asks for a game\'s kind in one place on the server', function (): void {
     ])->and($compares)->toBe([]);
 });
 
+it('sells a letter by the round\'s question, never by the mechanic\'s name', function (): void {
+    // ADR 037 decision 10: a round sells letters when its question has orders (`RoomLetters::sells()`);
+    // the anagram is named only where a mechanic is given its builder.
+    $named = [];
+
+    foreach ([...phpFilesUnder(app_path('Domain/Rooms')), ...phpFilesUnder(app_path('Http/Controllers/Rooms'))] as $path) {
+        if (preg_match('/RoomMechanic::Anagram\b|[\'"]anagram[\'"]/', (string) file_get_contents($path)) === 1) {
+            $named[] = str_replace(base_path().'/', '', $path);
+        }
+    }
+
+    expect($named)->toBe(['app/Domain/Rooms/Support/RoomPlayable.php'])
+        ->and((string) file_get_contents(app_path('Domain/Rooms/Support/RoomLetters.php')))->toContain('->orders !== []');
+});
+
 it('asks for a game\'s kind in one place per concern on the page side', function (): void {
     // ADR 034 decision 27: a page looks at the kind of a game through one
     // function per concern — `roomMoment()`, `phaseEnds()` and

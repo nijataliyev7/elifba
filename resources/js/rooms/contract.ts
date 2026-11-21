@@ -220,13 +220,89 @@ export const RoomAsk = z
         }
     });
 
-/** The viewer's own answer, in the reveal. */
+/**
+ * The viewer's own answer, in the reveal. From ADR 037 also how many
+ * letters of an anagram's word the viewer bought in the round (0 without
+ * any), so the points explain themselves.
+ */
 export const RoomMine = z.strictObject({
     picked: z.array(itemId).min(1),
     correct: z.boolean(),
     points: z.number().int().min(0).max(20),
     elapsed_ms: count,
+    letters: count,
 });
+
+/**
+ * What the next bought letter costs the answer, as a word the page says and
+ * never computes (ADR 037 decision 14): `half` before the first, `rest`
+ * before the one that leaves nothing, `none` once nothing is left to lose.
+ */
+export const RoomLetterPrice = z.enum(['half', 'rest', 'none']);
+
+/**
+ * The letters of an anagram's word the viewer bought (ADR 037 decisions
+ * 14–16), in the viewer's own state alone, while the round takes answers:
+ * the solution's first ids in the word's order, the buyer's own orders of
+ * the tiles left (`[]` before a purchase, when the question's serve, and
+ * once none is left) and the next letter's price (null once every letter
+ * is bought). Null for everyone else, the screen included.
+ */
+export const RoomLetters = z
+    .strictObject({
+        bought: z.array(itemId),
+        orders: z.array(z.array(itemId).min(1)).max(ANAGRAM_ORDERS_MAX),
+        price: RoomLetterPrice.nullable(),
+    })
+    .superRefine((letters, context) => {
+        const bought = new Set(letters.bought);
+        const left = letters.orders[0]?.length ?? 0;
+        const sets = new Set<string>();
+
+        if (bought.size !== letters.bought.length) {
+            context.addIssue({
+                code: 'custom',
+                message: 'A letter is bought once.',
+                path: ['bought'],
+            });
+        }
+
+        if (
+            letters.bought.length === 0 &&
+            (letters.orders.length > 0 || letters.price !== 'half')
+        ) {
+            context.addIssue({
+                code: 'custom',
+                message:
+                    "Before a purchase the question's orders serve and the first letter leaves half.",
+                path: ['orders'],
+            });
+        }
+
+        letters.orders.forEach((order, index) => {
+            if (
+                order.length !== left ||
+                new Set(order).size !== order.length ||
+                order.some((tile) => bought.has(tile))
+            ) {
+                context.addIssue({
+                    code: 'custom',
+                    message: 'An order lays out the tiles left, each once.',
+                    path: ['orders', index],
+                });
+            }
+
+            sets.add([...order].sort().join(' '));
+        });
+
+        if (sets.size > 1) {
+            context.addIssue({
+                code: 'custom',
+                message: 'Every order holds the same tiles.',
+                path: ['orders'],
+            });
+        }
+    });
 
 /** A player's result of the round, in the reveal; a player who did not answer has none. */
 export const RoomResult = z.strictObject({
@@ -299,6 +375,7 @@ export const RoomRound = z.discriminatedUnion('phase', [
         study: z.null(),
         ask: z.null(),
         reveal: z.null(),
+        letters: z.null(),
     }),
     z.strictObject({
         ...roundBase,
@@ -308,6 +385,7 @@ export const RoomRound = z.discriminatedUnion('phase', [
         study: RoomStudy,
         ask: z.null(),
         reveal: z.null(),
+        letters: z.null(),
     }),
     z.strictObject({
         ...roundBase,
@@ -317,6 +395,8 @@ export const RoomRound = z.discriminatedUnion('phase', [
         study: z.null(),
         ask: RoomAsk,
         reveal: z.null(),
+        /** The viewer's own bought letters (ADR 037): only a present player's, in a round whose question has orders. */
+        letters: RoomLetters.nullable(),
     }),
     z.strictObject({
         ...roundBase,
@@ -327,6 +407,7 @@ export const RoomRound = z.discriminatedUnion('phase', [
         study: z.null(),
         ask: RoomAsk,
         reveal: RoomReveal,
+        letters: z.null(),
     }),
 ]);
 
@@ -724,6 +805,32 @@ export const RoomState = z
                 });
             }
         });
+
+        // ADR 037: a player's bought letters are the question's own tiles, in a round that sells them.
+        const letters =
+            state.round?.phase === 'answer' ? state.round.letters : null;
+
+        if (state.round?.phase === 'answer' && letters !== null) {
+            const ids = state.round.ask.items.map((item) => item.id);
+            const laid = [...letters.bought, ...(letters.orders[0] ?? [])];
+
+            if (
+                state.me.player_id === null ||
+                state.round.ask.orders.length === 0 ||
+                letters.bought.some((tile) => !ids.includes(tile)) ||
+                (letters.orders.length > 0 &&
+                    [...laid].sort().join(' ') !== [...ids].sort().join(' ')) ||
+                (letters.bought.length === ids.length) !==
+                    (letters.price === null)
+            ) {
+                context.addIssue({
+                    code: 'custom',
+                    message:
+                        "A player's own letters of a round whose question has orders: its tiles, bought and left.",
+                    path: ['round', 'letters'],
+                });
+            }
+        }
     });
 
 /** `POST /rooms/{room}/answers`: the device's own event id, the round, the items in the order tapped. Never a player. */
@@ -737,6 +844,23 @@ export const RoomAnswer = z.strictObject({
 export const RoomAnswerReceipt = z.strictObject({
     status: z.enum(['accepted', 'duplicate', 'answered', 'late']),
     revision: count,
+});
+
+/**
+ * `POST /rooms/{room}/letters` (ADR 037 decision 12): the device's own event
+ * id, the round, and the place in the word of the letter it buys — the next
+ * one, so a second tap names one already bought and buys nothing. Never a
+ * player, never a letter.
+ */
+export const RoomLetter = z.strictObject({
+    event_id: id,
+    round_id: id,
+    position: z.number().int().min(0).max(35),
+});
+
+/** The receipt of a bought letter: what was done with it; no revision, since nobody else's view changes. */
+export const RoomLetterReceipt = z.strictObject({
+    status: z.enum(['accepted', 'duplicate', 'bought', 'late']),
 });
 
 /** `POST /rooms/{room}/taunts` (T2): the device's own event id, the target's row, a key of the list. Never text, never the thrower. */
@@ -831,6 +955,10 @@ export type RoomItem = z.infer<typeof RoomItem>;
 export type RoomStudy = z.infer<typeof RoomStudy>;
 export type RoomAsk = z.infer<typeof RoomAsk>;
 export type RoomMine = z.infer<typeof RoomMine>;
+export type RoomLetterPrice = z.infer<typeof RoomLetterPrice>;
+export type RoomLetters = z.infer<typeof RoomLetters>;
+export type RoomLetter = z.infer<typeof RoomLetter>;
+export type RoomLetterReceipt = z.infer<typeof RoomLetterReceipt>;
 export type RoomResult = z.infer<typeof RoomResult>;
 export type RoomReveal = z.infer<typeof RoomReveal>;
 export type RoomSpent = z.infer<typeof RoomSpent>;

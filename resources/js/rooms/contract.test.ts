@@ -8,6 +8,8 @@ import {
     RoomAnswerReceipt,
     RoomChangedEvent,
     RoomItem,
+    RoomLetter,
+    RoomLetterReceipt,
     RoomState,
     RoomTaunt,
     RoomTauntReceipt,
@@ -34,6 +36,8 @@ const schemas: Record<string, z.ZodType> = {
     'taunt-receipt': RoomTauntReceipt,
     act: RoomAct,
     'act-receipt': RoomActReceipt,
+    letter: RoomLetter,
+    'letter-receipt': RoomLetterReceipt,
 };
 
 function schemaOf(path: string): z.ZodType | undefined {
@@ -103,6 +107,9 @@ describe('room fixtures', () => {
             'state.match.computer.chosen',
             'act',
             'act-receipt',
+            'state.answer.anagram.bought',
+            'letter',
+            'letter-receipt',
         ]) {
             expect(fixture(name), name).toBeDefined();
         }
@@ -1126,7 +1133,12 @@ describe("an anagram's clue and orders (ADR 037)", () => {
         const refused = (orders: string[][]): boolean =>
             !RoomState.safeParse({
                 ...answer,
-                round: { ...answer.round, ask: { ...ask, orders } },
+                // Without a buyer's letters, which only a round with orders sells.
+                round: {
+                    ...answer.round,
+                    ask: { ...ask, orders },
+                    letters: null,
+                },
             }).success;
         const [first, second] = ask.orders;
 
@@ -1152,5 +1164,143 @@ describe("an anagram's clue and orders (ADR 037)", () => {
             }).success,
         ).toBe(false);
         expect(JSON.stringify(answer)).not.toMatch(/"(word|accept|solution)":/);
+    });
+});
+
+describe("an anagram's bought letters (ADR 037)", () => {
+    const answer = fixture('state.answer.anagram') as State;
+    const bought = fixture('state.answer.anagram.bought') as State;
+    const reveal = fixture('state.reveal.anagram') as State;
+    const asked = bought.round as Extract<Round, { phase: 'answer' }>;
+    const letters = asked.letters as NonNullable<typeof asked.letters>;
+    const says = (id: string): string | null | undefined =>
+        asked.ask.items.find((item) => item.id === id)?.text;
+    const parses = (state: State, round: object): boolean =>
+        RoomState.safeParse({ ...state, round: { ...state.round, ...round } })
+            .success;
+
+    it("says the viewer's own letters while the round takes answers, and how many in the reveal", () => {
+        // Nothing bought: the first letter leaves half, and the question's orders serve.
+        expect((answer.round as Round & { letters: unknown }).letters).toEqual({
+            bought: [],
+            orders: [],
+            price: 'half',
+        });
+
+        // One bought: «alma»'s A, the tiles left in the buyer's own orders, none reading the rest of a word.
+        expect(letters.bought.map(says)).toEqual(['A']);
+        expect(letters.price).toBe('rest');
+        expect(letters.orders.map((order) => order.map(says).join(''))).toEqual(
+            ['ALM', 'MLA'],
+        );
+        expect(
+            letters.orders.map((order) => order.map(says).join('')),
+        ).not.toContain('LMA');
+
+        const revealed = reveal.round as Extract<Round, { phase: 'reveal' }>;
+
+        expect(revealed.reveal.mine?.letters).toBe(1);
+        expect(revealed.reveal.mine?.points).toBe(9);
+        expect(revealed.letters).toBeNull();
+
+        // Every other round says none.
+        for (const [path, value] of payloads) {
+            const round = path.includes('/state.')
+                ? (value as State).round
+                : null;
+
+            if (round !== null && !path.includes('.anagram.')) {
+                expect(round.letters, path).toBeNull();
+            }
+        }
+    });
+
+    it('refuses letters out of their phase, of another question or priced on the page', () => {
+        const [first] = letters.orders;
+
+        // Not in the reveal, not without orders, not for a viewer who does not play.
+        expect(
+            parses(reveal, {
+                letters: { bought: [], orders: [], price: 'half' },
+            }),
+        ).toBe(false);
+        expect(parses(bought, { ask: { ...asked.ask, orders: [] } })).toBe(
+            false,
+        );
+        expect(
+            RoomState.safeParse({
+                ...bought,
+                me: { ...bought.me, player_id: null },
+            }).success,
+        ).toBe(false);
+
+        // A tile of no question, a bought tile back in the tray, a tile lost, an order before a purchase.
+        expect(
+            parses(bought, { letters: { ...letters, bought: ['zzzzzzzz'] } }),
+        ).toBe(false);
+        expect(
+            parses(bought, {
+                letters: {
+                    ...letters,
+                    orders: [[...first, letters.bought[0]]],
+                },
+            }),
+        ).toBe(false);
+        expect(
+            parses(bought, {
+                letters: { ...letters, orders: [first.slice(1)] },
+            }),
+        ).toBe(false);
+        expect(
+            parses(bought, {
+                letters: { bought: [], orders: [first], price: 'half' },
+            }),
+        ).toBe(false);
+
+        // A price is a word, and none once every letter is bought.
+        expect(parses(bought, { letters: { ...letters, price: 6 } })).toBe(
+            false,
+        );
+        expect(
+            parses(bought, {
+                letters: {
+                    bought: asked.ask.items.map((item) => item.id),
+                    orders: [],
+                    price: 'none',
+                },
+            }),
+        ).toBe(false);
+        expect(
+            parses(bought, {
+                letters: {
+                    bought: asked.ask.items.map((item) => item.id),
+                    orders: [],
+                    price: null,
+                },
+            }),
+        ).toBe(true);
+    });
+
+    it('takes a purchase by its place and answers with its status alone', () => {
+        const letter = fixture('letter') as RoomLetter;
+
+        expect(Object.keys(letter)).toEqual([
+            'event_id',
+            'round_id',
+            'position',
+        ]);
+        expect(RoomLetter.safeParse({ ...letter, position: -1 }).success).toBe(
+            false,
+        );
+        expect(RoomLetter.safeParse({ ...letter, letter: 'A' }).success).toBe(
+            false,
+        );
+        expect(RoomLetterReceipt.safeParse({ status: 'bought' }).success).toBe(
+            true,
+        );
+        expect(
+            RoomLetterReceipt.safeParse({ status: 'accepted', revision: 4 })
+                .success,
+        ).toBe(false);
     });
 });
