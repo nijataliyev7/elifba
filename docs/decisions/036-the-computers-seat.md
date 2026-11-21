@@ -1,0 +1,73 @@
+# 036 — The computer's seat: a match against the computer, at three levels
+
+- **Status:** Accepted, 2026-11-21 (roadmap "The computer's seat", K1–K4: K1 this record; K2 the search, built with it; K3 the seat, the act and the state; K4 the pages). The owner's request of 2026-11-21: a player who has no partner plays draughts against the system, at three levels — «Asan», «Orta», «Çətin». It **reverses the owner's choice of 2026-11-20** recorded in [034](034-board-games-draughts.md) ("no computer opponent"). Everything else below is this step's recommendation, taken under the owner's standing rule of 2026-11-18 (a session that would ask the owner takes its recommended option and says so); the owner may reverse any of it — "Taken without asking" lists them.
+- **Sections:** architecture.md §1 "Tables" (`rooms`, `room_games`, `room_acts`), §12 "The computer's seat (K2–K4)", "What each step builds"; docs/frontend.md rule 15 "The computer's seat"; glossary.md "The computer's seat"; CLAUDE.md "Rooms"
+- **Amends:** [034](034-board-games-draughts.md) — its status line's and "What is not built"'s "no computer opponent"; decisions 7–8 (a choice may seat one player and the computer), 9 (the computer's move is an act with no player, written by `PlayComputerMove`), 17 (`v: 8`), 21–22 (the computer earns nothing and no taunt is thrown in its match), 23 and 25–26 (a side and a final's row may be the computer's); [021](021-room-race-protocol.md) "The state" (`v: 8`); [029](029-taunts.md) (no taunt in a match against the computer). Every rule of a match of two players and of a race holds as written.
+- **Why it is hard to reverse:** the columns, the act that has no player, the state every device reads, and a played game's level, which is told again from its row.
+
+## Context
+
+A match needs two present players (ADR 034 decision 7): a room of one shows «Şaşki üçün iki oyunçu lazımdır» and cannot start. The owner wants a player without a partner to play the system. Two things were open: what the computer **is** in a room whose every player is an account (ADR 019, ADR 024), and **who makes its move** in an app where only the server judges a move, nothing is queued or scheduled, and a read writes no fact of a match.
+
+## Decision
+
+### What the computer is
+
+1. **The computer is a seat nobody holds, never a player.** A board game may have one seat without a player: `room_games.computer` is its level (decision 4; null in a match of two players) and that seat's `white_player_id` or `black_player_id` is null. There is no `room_players` row, no account and no stored name for it: it joins nothing and is counted in nothing — the room's players, `max_players`, «Hazıram», the live voice, the ranking, a race's waits. **Why not a row of `room_players`:** every reader of that table — presence, the ranking, the waits, the voice, the taunts, the ready count, the host's chips — would need an exception, and "every player is an account" would stop being true of the table.
+2. **The choice names it.** `rooms.setup_computer` (nullable, the level) is part of the room's choice of a board game, written only by `ChooseRoomGame`. `PUT /rooms/{room}/setup` for a board game is `{mechanic, difficulty, white, black, computer}`: without `computer` as ADR 034 decision 7 has it; with `computer` (1–3) **at most one** of `white` and `black`, a present player — the other colour is the computer's — or neither, and the room's seats stand. `RoomSeats` reads them: with the computer chosen the one seat is the stored white while its player is present, else the stored black while its player is present, else the present player who joined first, as white. A choice of the other kind and a race leave `setup_computer` as it is; a board choice always says it (null turns the computer off).
+3. **The start.** `StartRoomGame` (the `BoardDriver`) copies the seat, the level (`room_games.computer`) and the clock, and writes the room's seats the other way round, as for two players: «Yenidən oyna» is the same player with the other colour. A choice with the computer and no present player to seat is refused with `rooms.errors.needs_one`; `setup.played` also asks for the same level.
+
+### How it plays
+
+4. **Three levels, the computer's own.** `Rooms\Enums\RoomComputerLevel`: `1` «Asan», `2` «Orta», `3` «Çətin» (`rooms.computer.level.*`). It is not the game's difficulty, which in a board game is its clock (ADR 034 decision 6): the host picks both, with two controls.
+5. **A search that judges nothing.** `Rooms\Support\Draughts\DraughtsEngine::choose()` returns one of `DraughtsRules::moves()` — the judge's own list — so the computer cannot make a move the judge would refuse. Below that list it searches on a faster copy of the same rules (places and a board string, no names), which `DraughtsEngineTest` holds to the judge on every position of the oracle's fixtures and three moves deep from each perft position. The search: negamax with alpha–beta, deepened a ply at a time; every compulsory capture is followed before a position is weighed; a side with one move costs no ply; met positions are remembered. A position is weighed by its pieces (a man 100, a king 300), a man's advance, the centre files, the first row kept, and fewer pieces when ahead. The draws of ADR 034 decision 16 are not searched: the server declares them.
+6. **A level is three numbers** (`elifba.rooms.computer.levels`): the plies looked ahead at most, the positions looked at at most, and the margin — among the moves within it of the best one is taken at random.
+
+    | Level | Depth | Positions | Margin | What it does                                                    |
+    | ----- | ----- | --------- | ------ | --------------------------------------------------------------- |
+    | 1     | 2     | 4 000     | 130    | sees one reply ahead and gives a man away more often than not   |
+    | 2     | 5     | 30 000    | 15     | keeps its pieces and finds a short combination                  |
+    | 3     | 14    | 60 000    | 2      | as deep as the positions allow; varies only between equal moves |
+
+    The limit is a **count**, not a time, so the same position, level and random source give the same move on every machine and in a test; `max_ms` (3 s) only stops a search on a machine too slow for the count. Measured on 2026-11-21 (PHP 8.4, no JIT): level 3 answers the first move in about 0.35 s; over six games each, level 3 beat level 2 6–0 and level 2 beat level 1 6–0.
+
+7. **Its random source is the game's.** `RoomSeed::computer($game, $ply)`: keyed by the game, the ply and `app.key`, so a move computed twice is the same move and a page cannot tell it ahead.
+
+### Who makes its move
+
+8. **The computer's move is an act.** A `room_acts` row with `room_player_id` null (the column becomes nullable), `kind` `move` and no `event_id`, written only by `Rooms\Actions\PlayComputerMove` — the fourth writer of an act beside `RecordRoomAct` and the two that end a presence. It replays the match; when the match is live with a computer whose turn it is (or will be when the countdown ends), it chooses outside the lock, waits until `since_ms + elifba.rooms.computer.think_ms` (800 ms) — so a page draws the player's own move before the answer arrives — then, in one transaction under the room row's lock, replays again and stores the move **only if the match still stands at that ply with the computer to move**; the revision rises and `room.changed` goes out after the commit. It makes moves only: it never offers a draw, accepts one or resigns, and an offer made to it is declined by its reply move (ADR 034 decision 15).
+9. **It runs after a response, never inside one.** No queue and no schedule exist (CLAUDE.md "No queue"), and a read writes no fact of a match. `RoomActController` after an accepted act and `RoomStateController` after a read hand `PlayComputerMove` to `defer()`: the response goes out first, the search follows in the same process. One search per game and ply at a time (`Cache::lock`, 10 s), a wait longer than 5 s is left to a later read, and a process that dies costs nothing: the next read — a page of a live match asks every 3 s at least — does it. **Why not inside the act's request:** the player's own move would wait for the answer. **Why not a client's request:** a page would then decide when the other side moves.
+10. **Its clock runs like a seat's.** Its move is timed by its receipt under the lock, like any act. A computer that nobody reads loses on time, as a phone that vanished does (ADR 034 decision 13): accepted, since it needs a room nobody looks at.
+
+### The state, the points and the pages
+
+11. **The state is `v: 8`.** `setup` and `game` of the board kind gain `computer: 1 | 2 | 3 | null`; `match.sides[].player_id` and `match.result.standing[].player_id` are `id | null`, null on the computer's seat. `RoomList::past()` and a closed room's `games` give a board game its `computer` beside its `clock`. Fixtures: every `state.*.json` is `v: 8`, the board ones gain `computer`; new `state.match.computer.json` (the viewer to move against level 2) and `state.match.computer.chosen.json`.
+12. **The player earns what a match gives; the computer earns nothing.** `MATCH_WIN` and `MATCH_DRAW` as ADR 034 decision 21; the computer has no row in the game's or the room's ranking.
+13. **No taunt in its match.** Nobody is there to aim at, and it throws none: the driver's `mayThrow()` is false, so the strip's rival half is no button.
+14. **Who leaves, loses — to nobody.** The player's `leave` ends the match (ADR 034 decision 13); the outcome names the computer's colour and nobody gets a point.
+15. **The pages** (docs/frontend.md rule 15 "The computer's seat"). The start screen's `SeatRows` offers «Kompüter» among a seat's choices and, while it is chosen, the level's segments «Asan», «Orta», «Çətin»; the choice's line says «Şaşki · 5+3 · Kompüter (Orta)». A side or a final's row without a player is drawn as «Kompüter» with its level and the icon `Bot` — a word and an icon, never a colour alone; it has no ready mark, no voice and no remove button. The final opens the match's two rows as ever; the cheer (ADR 030) names only a player, so a final the computer wins has the fanfare and no name. Whose turn it is, the board, the list of moves, the clocks, the motion and the sounds are a match's own, unchanged.
+
+## Taken without asking
+
+| Taken                                                                  | Instead of                                         | To reverse                                      |
+| ---------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------- |
+| the computer is a seat without a player (1)                            | a `room_players` row that is no account            | the columns of decision 1 and the state's nulls |
+| the search runs on the server, in PHP (5, 9)                           | in the page, in TypeScript or WebAssembly          | `DraughtsEngine`, `PlayComputerMove`            |
+| a level is a count of positions (6)                                    | a time limit                                       | three numbers of config                         |
+| its move follows a response through `defer()` (9)                      | a queue; the act's own request; a client's request | two lines of two controllers                    |
+| a win against it gives 3 and a draw 1, like any match (12)             | a match that counts in no standing                 | `BoardDriver::outcomePoints()`                  |
+| no taunts in its match (13)                                            | a computer that taunts back                        | the driver's `mayThrow()`                       |
+| it never offers, accepts or resigns (8)                                | accepting a draw when it stands worse              | `PlayComputerMove`                              |
+| its clock runs and it can lose on time when nobody reads the room (10) | a side without a clock                             | `DraughtsMatch`'s flag                          |
+
+## What is not built
+
+- A hint, an analysis, a mark on a bad move or a "best move" for a player: a match stays a match.
+- The computer in a race, the computer against the computer, more levels than three, an opening book, an endgame table, thinking on the player's time.
+- A room that seats the computer by itself: the host chooses it.
+
+## Consequences
+
+- A player alone in a room plays a whole match; a room of several may watch one of them play the computer.
+- A move of the computer costs a PHP process up to about half a second of search and, at the first level, most of `think_ms` asleep after its response went out. A host that runs many such matches at once needs the processes for it.
+- `room_acts.room_player_id` is nullable: a reader of acts asks for the side through the driver (`BoardDriver::sideOf()`), never for the player.

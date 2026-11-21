@@ -337,6 +337,7 @@ A row holds no name and nothing about a child (ADR 013): a mode, level keys, cas
 | `setup_rounds`     | tinyint null                         | G2: its rounds, inside `elifba.rooms.rounds`; all three null in a room before G2                                                                                                                                                                     |
 | `setup_white_id`   | fk room_players null, null on delete | D3: the seat that plays white in the next board game (`ChooseRoomGame`, `StartRoomGame`; read through `RoomSeats`), §12 "Board games"                                                                                                                |
 | `setup_black_id`   | fk room_players null, null on delete | D3: the seat that plays black                                                                                                                                                                                                                        |
+| `setup_computer`   | tinyint null                         | K3: the level of the computer in the next board game, 1–3 (`RoomComputerLevel`; `ChooseRoomGame`); null: two players. §12 "The computer's seat", ADR 036                                                                                             |
 | `taunts`           | bool, default true                   | T2: the host's switch for taunts (`SetRoomTaunts`, §12 "Taunts (T2)", ADR 029)                                                                                                                                                                       |
 | `screen_seen_ms`   | bigint null                          | when the big screen last read the state while shown, Unix ms (`RecordScreenRead`); `room.screen` is derived from it (§12 "A room without a screen")                                                                                                  |
 | `voice_at`         | timestamp null                       | C3: the room's voice is on since this moment — set by `OpenRoom` at the opening while the instance's voice is on (ADR 031 as amended 2026-11-19) and by `SetRoomVoice`; null: off (cleared by `SetRoomVoice` and a close; §12 "Live voice", ADR 031) |
@@ -377,6 +378,7 @@ Unique: `(room_id, user_id)`. A player is **present** while `user_id` is set and
 | `ended_ms`        | bigint null                   | a fact: the host ended the game, or the room closed under it; null = the timetable ends — or, for a board game, its outcome does |
 | `white_player_id` | fk room_players null, cascade | D3, a board game only: the seat that plays white, copied from the room's choice at the start                                     |
 | `black_player_id` | fk room_players null, cascade | D3, a board game only: the seat that plays black                                                                                 |
+| `computer`        | tinyint null                  | K3, a board game only: the level of the computer, which plays the seat whose player is null (ADR 036); null: two players         |
 | `clock_ms`        | int null                      | D3, a board game only: each side's time, copied from the level at the start, so a live match keeps its clock                     |
 | `increment_ms`    | int null                      | D3, a board game only: what a side gains with each move it makes                                                                 |
 | `created_at`      | timestamp                     |                                                                                                                                  |
@@ -428,18 +430,18 @@ Index: `(room_game_id, room_player_id)`. A game's points are its answers' points
 
 **`room_acts`** (`Rooms\Models\RoomAct`, D3, ADR 034) — one thing a seat did in a board game; the only facts of a match
 
-| Column           | Type                     | Notes                                                                                                                         |
-| ---------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | bigint                   | the order of a game's acts                                                                                                    |
-| `event_id`       | ulid null, unique        | made by the device; makes the write idempotent. Null only for a `leave`, which the server writes                              |
-| `room_game_id`   | fk room_games, cascade   |                                                                                                                               |
-| `room_player_id` | fk room_players, cascade | the seat that did it                                                                                                          |
-| `kind`           | string(16)               | `Rooms\Enums\RoomActKind`: `move`, `offer`, `accept`, `decline`, `resign`, `leave`                                            |
-| `ply`            | int                      | the moves made before it; a move's own number, from 0                                                                         |
-| `path`           | json null                | a move only: the square it started on and every square it landed on, by their names (`a1`–`h8`); never a position, never text |
-| `acted_ms`       | bigint                   | the server's moment (`RoomClock`); from the moves' moments the clock                                                          |
+| Column           | Type                          | Notes                                                                                                                         |
+| ---------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | bigint                        | the order of a game's acts                                                                                                    |
+| `event_id`       | ulid null, unique             | made by the device; makes the write idempotent. Null only for a `leave`, which the server writes                              |
+| `room_game_id`   | fk room_games, cascade        |                                                                                                                               |
+| `room_player_id` | fk room_players null, cascade | the seat that did it; null (K3): the computer's seat, whose move only `PlayComputerMove` writes (ADR 036 decision 8)          |
+| `kind`           | string(16)                    | `Rooms\Enums\RoomActKind`: `move`, `offer`, `accept`, `decline`, `resign`, `leave`                                            |
+| `ply`            | int                           | the moves made before it; a move's own number, from 0                                                                         |
+| `path`           | json null                     | a move only: the square it started on and every square it landed on, by their names (`a1`–`h8`); never a position, never text |
+| `acted_ms`       | bigint                        | the server's moment (`RoomClock`); from the moves' moments the clock                                                          |
 
-Unique: `(room_game_id, kind, ply, room_player_id)`. Only `RecordRoomAct` writes a row — and the actions that end a presence, a `leave`. The position, the side to move, each side's time, the standing draw offer, the outcome and its reason are derived by replaying a game's acts (`Rooms\Support\Draughts\DraughtsMatch`, §12 "Board games"); none is stored, and no row holds a captured square, a result or a name.
+Unique: `(room_game_id, kind, ply, room_player_id)`. Only `RecordRoomAct` writes a row — and the actions that end a presence, a `leave`, and from K3 `PlayComputerMove`, the computer's `move`, without a player or an `event_id`. The position, the side to move, each side's time, the standing draw offer, the outcome and its reason are derived by replaying a game's acts (`Rooms\Support\Draughts\DraughtsMatch`, §12 "Board games"); none is stored, and no row holds a captured square, a result or a name.
 
 ### Status lifecycle
 
@@ -3064,6 +3066,24 @@ The limiter `room-acts` is 90 a minute per account. No `/match` route exists.
 
 **The countdown over the board (2026-11-21; ADR 034 "Amended 2026-11-21 — the countdown over the board").** A match's 3 s before `starts_ms` were only a muted line under the board. Now `Countdown` — the race's ring, given the moment it counts to (`until`: a round's `opens_ms`, a match's `starts_ms`) — lies over the board while `match.phase` is `countdown`, on the phones and the screen, with the race's motion in a countdown the page saw begin. No state field, word or sound.
 
+### The computer's seat (K2–K4)
+
+A player without a partner plays a match of draughts against the computer, at one of three levels (ADR 036, the owner's request of 2026-11-21, which reverses ADR 034's "no computer opponent"). Every rule of "Board games" holds for a match of two players; this section says what one more seat changes.
+
+**A seat nobody holds.** The computer is never a player: no `room_players` row, no account, no stored name; it is counted in nothing — the room's players, `max_players`, «Hazıram», the live voice, a ranking, a race's waits. A board game has it when `room_games.computer` holds its level; the seat it plays is the one whose `white_player_id` or `black_player_id` is null. Only the `BoardDriver` asks which side that is (`computerSide()`, `sideOf()`); nothing else reads an act's player.
+
+**The choice and the start.** `rooms.setup_computer` is part of the choice of a board game: `PUT /rooms/{room}/setup` `{mechanic, difficulty, white, black, computer}` — with `computer` (1–3) at most one of `white` and `black`, a present player, the other colour being the computer's; with neither, the room's seat stands (`RoomSeats`: the stored white while present, else the stored black, else the present player who joined first, as white). A board choice always says `computer` (null turns it off); a race's leaves it; a board game chosen after a race names only the game and its level and keeps it. `StartRoomGame` copies the seat and the level to the game and turns the seats round, so «Yenidən oyna» is the same player with the other colour; with no present player to seat it refuses with `rooms.errors.needs_one`. `setup.played` also asks for the same level.
+
+**The levels and the search.** `Rooms\Enums\RoomComputerLevel`: 1 «Asan», 2 «Orta», 3 «Çətin» — the computer's own, never the game's difficulty, which is its clock. `Rooms\Support\Draughts\DraughtsEngine::choose()` returns one of `DraughtsRules::moves()`, so the computer cannot make a move the judge refuses; below that list it searches (negamax with alpha–beta, deepened a ply at a time, every compulsory capture followed before a position is weighed) on a faster copy of the same rules, which `DraughtsEngineTest` holds to the judge on the oracle's fixtures. A level is three numbers of `elifba.rooms.computer.levels` — the plies looked ahead (2, 5, 14), the positions looked at (4 000, 30 000, 60 000) and the margin within which a move is taken at random (130, 15, 2; a man is 100). The limit is a count of positions, not a time: the same position, level and random source (`RoomSeed::computer()`, keyed by the game, the ply and `app.key`) give the same move on every machine.
+
+**Its move** is an act: a `room_acts` row with `room_player_id` null and `kind` `move`, written only by `Rooms\Actions\PlayComputerMove`. It asks the driver whether the computer is to move (`computerTurn()`: the ply and when the move is due, `since_ms + elifba.rooms.computer.think_ms`), holds that game and ply (`Cache::lock`), chooses outside the room's lock (`computerChoice()`), waits until the move is due — so a page draws the player's own move before the answer — and then, under the room row's lock, stores the move only if the same game still stands at that ply with the computer to move; the revision rises and `room.changed` follows the commit. It never offers a draw, accepts one or resigns; an offer made to it is declined by its reply. Its clock runs like a seat's.
+
+**When it runs.** After a response, never inside one: `RoomActController` after an accepted act and `RoomStateController` after a read whose state says the computer is to move (`RoomMatchData::computerToMove()`) hand `PlayComputerMove` to `defer()`. Nothing is queued or scheduled; a move due more than 5 s ahead is left to a later read; a process that dies costs nothing, since a page of a live match asks again within 3 s. A read still writes no fact of a match within its own request.
+
+**The state** is `v: 8`: a board `setup` and `game` carry `computer: 1 | 2 | 3 | null`; `match.sides[].player_id` and `match.result.standing[].player_id` are null on the computer's seat. The player earns `MATCH_WIN` or `MATCH_DRAW` as in any match and the computer nothing; it stands in no ranking; no taunt is thrown in its match (`mayThrow()` is false); a player who leaves or resigns ends the match with a point for nobody. `RoomList::past()` and a closed room's `games` give a board game its `computer` beside its `clock`. Fixtures: `state.match.computer.json`, `state.match.computer.chosen.json`.
+
+**Guard tests.** `DraughtsEngineTest` (the search's rules against the judge's on every oracle position; the choice at each level; a slow game between levels); `RoomComputerTest` (the choice, the start, the answer after a response, the first move as white, one move per turn, the points, the leaving, no taunt, the past list, the fixtures from rows); `RoomContractTest` and `contract.test.ts` (`v: 8`).
+
 ### Ready for the next game (2026-11-21)
 
 **Decision** (ADR 035; the owner's words of 2026-11-21: «bütün oyunlarda otaqda yenidən oynamağa hazırsanmı düyməsi gəlsin ki, misal oyunçu oynamaq istədiyini otaq quran bilsin»). Between games — before a room's first game, and after a race's end or a match's — a present player who is not the host may say «Hazıram» on their phone and take it back, and the host's phone and the screen show who is ready and how many. It is a fact in a row that reaches devices through the state, in every room game, races and draughts alike. It never gates the start: the host may start with nobody ready, and nothing starts by itself.
@@ -3467,6 +3487,14 @@ D1 (2026-11-20) read pull request #9 (commit `f5e5308`, by the contributor Jafar
     - _Finish line._ Two seats, a watcher and the screen play a match to its final at 375 × 667 and 1920 × 1080, light and dark, with reduced motion, with and without a screen; the board's squares are at least 44px; `git grep -i checkers` finds only ADR 034.
     - _As built._ Landed 2026-11-20 on `feat/rooms-draughts`: `components/rooms/draughts/*`, `kinds.ts` (`GAME_VIEWS`), `choiceParts()`, `stripRows()`, `finalRows()` and a match's moments, asks and cues; `screen-round.tsx` and `race-end.tsx` moved out of the pages; one write loop (`rooms/receipt.ts`) for answers, taunts and acts; the four sounds; the words and `privacy.rooms.stored`. A choice of the other kind is filled on the page (ADR 034 "As built (D4)" item 4, a gap reported to the owner). A Playwright run plays a match to its final on two phones, a watcher and the screen, light, dark and reduced.
 - **D5 — The audit** (duplicates and structure, rules and protocol, the interface's rules), and **D6-O — the owner** plays a match on two phones and the screen (on elifba.io, the branch deployed without a merge; done 2026-11-20, ADR 034 "As built (D6)").
+
+### The computer's seat (K1–K4)
+
+K1 (2026-11-21) designed it at the owner's request — a player without a partner plays the system at three levels — in ADR 036, which reverses ADR 034's "no computer opponent" and lists what it took without asking.
+
+- **K2 — The search.** `Rooms\Support\Draughts\DraughtsEngine`, `Rooms\Enums\RoomComputerLevel`, `elifba.rooms.computer.*`; `DraughtsEngineTest`. Pure: no table, route or state. _As built_ 2026-11-21: level 3 answers the first move in about 0.35 s (PHP 8.4, no JIT); over six games each, level 3 beat level 2 and level 2 beat level 1 6–0.
+- **K3 — The seat, the act and the state.** One migration (`rooms.setup_computer`, `room_games.computer`, `room_acts.room_player_id` nullable); the choice (`RoomGameSetupData`, `ChooseRoomGame`, `RoomSeats`), the start and the driver's two concerns more (`computerTurn()`, `computerChoice()`); `PlayComputerMove` and `defer()` in the two controllers; the state `v: 8` with its fixtures; `RoomComputerTest`. _As built_ 2026-11-21.
+- **K4 — The pages.** docs/frontend.md rule 15 "The computer's seat": «Kompüter» and its level on the start screen, a side and a final's row without a player, no taunt toward it, the choice's line and the past lists.
 
 ## Open questions for the owner
 

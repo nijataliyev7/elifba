@@ -332,6 +332,17 @@ Russian draughts in a room (ADR 034, architecture §12 "Board games (D2–D4)", 
 | matçın yekunu                   | a match's result                 | the state's `match.result`, `RoomMatchResultData`, `RoomMatchStandingData`                                                             | Its two seats with the points the match gave each, less its counted taunts, placed by the outcome — never by the points.                                                                                                           |
 | yoxlayıcı                       | oracle                           | `scripts/draughts-oracle/make.py`, `tests/Fixtures/rooms/draughts/`                                                                    | `pydraughts` 0.6.7 run offline to make fixtures; never a dependency. The official text decides a disagreement.                                                                                                                     |
 
+### The computer's seat (K2–K4)
+
+A match of draughts against the computer (ADR 036, architecture §12 "The computer's seat (K2–K4)", docs/frontend.md rule 15 "The computer's seat").
+
+| Azerbaijani          | English              | In code                                                                                         | Meaning                                                                                        |
+| -------------------- | -------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| kompüter             | the computer         | `room_games.computer`, `rooms.setup_computer`; a seat whose player is null                      | The seat nobody holds in a board game: never a player, an account or a row of `room_players`.  |
+| kompüterin səviyyəsi | the computer's level | `Rooms\Enums\RoomComputerLevel` (1 «Asan», 2 «Orta», 3 «Çətin»); `elifba.rooms.computer.levels` | How strong it plays; not the game's difficulty, which is its clock.                            |
+| kompüterin gedişi    | the computer's move  | `Rooms\Actions\PlayComputerMove`; a `room_acts` row without a player                            | Chosen by `DraughtsEngine` among the judge's moves, stored after a response through `defer()`. |
+| axtarış              | the search           | `Rooms\Support\Draughts\DraughtsEngine`                                                         | Looks ahead a level's plies and positions; judges nothing.                                     |
+
 ### Ready for the next game
 
 A player's «Hazıram» between games, seen by the host and the screen (ADR 035, architecture §12 "Ready for the next game (2026-11-21)", docs/frontend.md rule 15 "Ready for the next game").
