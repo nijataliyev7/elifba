@@ -93,8 +93,9 @@ it('gives the lobby its players by name and never an account id or an address', 
 
     // The name is the account's as it is now.
     $player->forceFill(['name' => 'Aygün Həsənova'])->save();
+    // Joined before the first game: ready for it by default (ADR 035 decision 21).
     $this->actingAs($host)->getJson(route('rooms.state', $room))
-        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Həsənova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => false]);
+        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Həsənova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => true]);
 });
 
 it('names no one who took their name out', function (): void {

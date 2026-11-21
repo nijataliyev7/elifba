@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
 import { edit as editProfile } from '@/routes/profile';
 import { entrance as entranceRoute, index } from '@/routes/rooms';
+import { store as enter } from '@/routes/rooms/entrance';
 import { store } from '@/routes/rooms/join';
 
 type Props = {
@@ -25,7 +26,8 @@ type Props = {
  * The entrance (docs/frontend.md rule 15 "Games first", "The entrance";
  * architecture §12 "Rooms and joining", ADR 020 decision 4, ADR 026
  * decisions 6 and 15): at `/oyun` the code field with its camera, focused,
- * and «Davam et»; at `/oyun/{code}` the code, the account's own name as the
+ * and «Qoşul», which joins with that tap (ADR 033 as amended 2026-11-21);
+ * at `/oyun/{code}` the code, the account's own name as the
  * game will show it, and «Qoşul» at the bottom of the screen. A locked or
  * a full room is said here and nothing else about it. From I2 (ADR 033) a
  * player who opened a room's link by hand never sees this page: the link
@@ -52,7 +54,7 @@ export default function RoomsJoin({ code, name, entrance }: Props) {
                         </p>
                     </header>
                     <Form
-                        {...entranceRoute.form()}
+                        {...enter.form()}
                         options={{ preserveState: 'errors' }}
                         className="flex flex-col gap-3"
                     >
@@ -77,8 +79,8 @@ export default function RoomsJoin({ code, name, entrance }: Props) {
                                         className="h-13 text-base"
                                         disabled={processing}
                                     >
-                                        {processing && <Spinner />}
-                                        {t('rooms.join.next')}
+                                        {processing ? <Spinner /> : <LogIn />}
+                                        {t('rooms.join.submit')}
                                     </Button>
                                 </>
                             );

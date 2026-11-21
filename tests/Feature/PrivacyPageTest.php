@@ -403,6 +403,6 @@ it('says a player\'s «Hazıram» is kept in the room\'s line, and until when it
                 return count($lines) === 4 && str_contains($lines[1], $clause);
             }));
 })->with([
-    'az' => [null, 'oyunlar arasında kimin «Hazıram» dediyi (növbəti oyun başlayana qədər sayılır, oyunçu çıxanda silinir)'],
-    'en' => ['en', 'who said “I\'m ready” between games (it counts until the next game starts and is erased when the player leaves)'],
+    'az' => [null, 'oyunlar arasında kimin oynamağa hazır olduğu (qoşulan oyunçu hazır sayılır və bunu «Hazırsınız» düyməsi ilə geri götürə bilər; növbəti oyun başlayana qədər sayılır, oyunçu çıxanda silinir)'],
+    'en' => ['en', 'who is ready to play between games (a player who joins counts as ready and can take it back with “You\'re ready”; it counts until the next game starts and is erased when the player leaves)'],
 ]);

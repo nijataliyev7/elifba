@@ -7,6 +7,7 @@ use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
+use App\Domain\Rooms\Support\RoomReady;
 use App\Domain\Rooms\Support\RoomSignal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -32,6 +33,11 @@ use Illuminate\Validation\ValidationException;
  * player who returns keeps what their row had (docs/architecture.md §12
  * "Live voice", ADR 031 decision 39, as amended 2026-11-19). An admission
  * calls no voice server.
+ *
+ * A row it brings in between games — new, or back after leaving — is
+ * ready for the room's next game (`ready_for`, ADR 035 as amended
+ * 2026-11-21): joining is the wish to play it, and the player can take it
+ * back. A join while a game runs marks nothing; the host is never marked.
  */
 final readonly class JoinRoom
 {
@@ -75,9 +81,15 @@ final readonly class JoinRoom
 
             $nowMs = RoomClock::nowMs();
             $row->left_at = null;
+            $between = $locked->runningGame($nowMs) === null;
 
-            if ($row->voice_admitted_at === null && $locked->voiceIsOn() && $locked->runningGame($nowMs) === null) {
+            if ($row->voice_admitted_at === null && $locked->voiceIsOn() && $between) {
                 $row->voice_admitted_at = now();
+            }
+
+            // Ready by default for the next game (ADR 035 decision 21): not the host's row, not during a game.
+            if ($between && ! $locked->isHostedBy($account)) {
+                $row->ready_for = RoomReady::next($locked->latestGame());
             }
 
             $row->save();

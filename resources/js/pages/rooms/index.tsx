@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import { entrance as entranceRoute, index, show, store } from '@/routes/rooms';
+import { index, show, store } from '@/routes/rooms';
+import { store as enter } from '@/routes/rooms/entrance';
 import type { RoomMechanic } from '@/rooms/contract';
 
 /** An open room the account hosts or is in: the game of its choice and whether a game is running. */
@@ -119,7 +120,7 @@ export default function RoomsIndex({ catalog, open, entrance }: Props) {
 
             <RoomActionBar>
                 <Form
-                    {...entranceRoute.form()}
+                    {...enter.form()}
                     options={{ preserveState: 'errors' }}
                     className="flex flex-col gap-2"
                 >

@@ -42,8 +42,10 @@ use Inertia\Response;
  * carries the room's tag, and a link a person opened by hand
  * (`RoomInvitation::openedByHand`), or the end of a way in such an open
  * began (the session's invitation, used once), joins at once through
- * `JoinRoom`; the code field, the camera and every other request still get
- * the join page and «Qoşul».
+ * `JoinRoom`; every other `GET` gets the join page and «Qoşul». From
+ * 2026-11-21 (ADR 033 decisions 20–24) the code field posts its code
+ * (`enter`) and the camera the join page's own `store`, so either joins
+ * with that one tap.
  */
 final class RoomJoinController extends Controller
 {
@@ -59,6 +61,19 @@ final class RoomJoinController extends Controller
         }
 
         return Inertia::render('rooms/join', ['code' => null, 'name' => $account->name, 'entrance' => RoomJoinLink::entrance()]);
+    }
+
+    /**
+     * The code field's «Qoşul» (`POST /oyun`, ADR 033 decision 20): the code
+     * read as the field's `GET` reads it, refused under the field, and then
+     * the room — joined, unless the account is its host or already in it.
+     * A locked or full room is said under the field.
+     */
+    public function enter(Request $request, #[CurrentUser] User $account, JoinRoom $joinRoom): RedirectResponse
+    {
+        $code = RoomCodeData::validate($request->all())->code;
+
+        return $this->into($this->roomFor($code, $account, typed: true), $account, $joinRoom, typed: true);
     }
 
     public function oldEntrance(Request $request): RedirectResponse
@@ -112,15 +127,32 @@ final class RoomJoinController extends Controller
         return $this->joinPage($room, $account);
     }
 
+    /** The join page's «Qoşul» and the camera's scan (ADR 033 decision 21). */
     public function store(string $code, #[CurrentUser] User $account, JoinRoom $joinRoom): RedirectResponse
     {
-        $room = $this->roomFor($code, $account);
+        return $this->into($this->roomFor($code, $account), $account, $joinRoom);
+    }
+
+    /**
+     * Into the room with one tap: its host and a present player as they are
+     * (a join never changes whether the host plays), anyone else through
+     * `JoinRoom`. A locked or full room refuses on `code`.
+     *
+     * @throws ValidationException
+     */
+    private function into(Room $room, User $account, JoinRoom $joinRoom, bool $typed = false): RedirectResponse
+    {
+        $row = $room->rowOf($account);
+
+        if ($room->isHostedBy($account) || ($row !== null && $row->isPresent())) {
+            return to_route('rooms.show', $room);
+        }
 
         try {
             $joinRoom->handle($room, $account);
         } catch (ModelNotFoundException) {
             // Closed, or the account removed, a moment ago: the same refusal as any other.
-            throw self::unknown();
+            throw self::unknown($typed);
         }
 
         return to_route('rooms.show', $room);

@@ -86,14 +86,71 @@ it('joins with the code and an account', function (): void {
         ->assertJsonPath('me.player_id', $row->id)
         ->assertJsonPath('players.0.name', 'Rəşad Quliyev')
         ->assertJsonPath('players.1.name', 'Aygün Məmmədova');
+    // Joined before the first game: ready for it by default (ADR 035 decision 21).
     $this->actingAs($this->host)->getJson(route('rooms.state', $this->room))
-        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Məmmədova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => false]);
+        ->assertJsonPath('players.1', ['id' => $row->id, 'name' => 'Aygün Məmmədova', 'present' => true, 'host' => false, 'voice' => null, 'ready' => true]);
 
     // A present player is sent on to the room; joining again changes nothing.
     $before = joinSnapshot();
     $this->actingAs($this->player)->get(route('rooms.join', $code))->assertRedirect(route('rooms.show', $this->room));
     $this->post(route('rooms.join.store', $code))->assertRedirect(route('rooms.show', $this->room));
     expect(joinSnapshot())->toBe($before);
+});
+
+it('joins with one tap from the code field and the camera, the host and a present player as they are', function (): void {
+    $code = (string) $this->room->code;
+    $spaced = substr($code, 0, 3).'-'.substr($code, 3);
+
+    // The code field's «Qoşul»: `POST /oyun`, the code read as typed, and the room at once (ADR 033 decision 20).
+    expect(route('rooms.entrance.store', [], false))->toBe('/oyun');
+    $this->actingAs($this->player)
+        ->from(route('rooms.index'))
+        ->post(route('rooms.entrance.store'), ['code' => $spaced])
+        ->assertRedirect(route('rooms.show', $this->room));
+
+    $row = $this->room->rowOf($this->player);
+    expect($row?->isPresent())->toBeTrue()
+        ->and($row?->ready_for)->toBe(0)
+        ->and($this->room->refresh()->revision)->toBe(1);
+
+    // Again, or by the camera's post: a present player goes to the room and nothing changes.
+    $before = joinSnapshot();
+    $this->post(route('rooms.entrance.store'), ['code' => $code])->assertRedirect(route('rooms.show', $this->room));
+    $this->post(route('rooms.join.store', $code))->assertRedirect(route('rooms.show', $this->room));
+    expect(joinSnapshot())->toBe($before);
+
+    // The host — playing or not — goes to the room as they are, by the field or the camera.
+    $room = Rooms::open($this->host, plays: false);
+    $revision = $room->revision;
+    $this->actingAs($this->host)->post(route('rooms.entrance.store'), ['code' => (string) $room->code])->assertRedirect(route('rooms.show', $room));
+    $this->post(route('rooms.join.store', (string) $room->code))->assertRedirect(route('rooms.show', $room));
+    expect($room->rowOf($this->host)?->isPresent() ?? false)->toBeFalse()
+        ->and($room->refresh()->revision)->toBe($revision);
+});
+
+it('refuses under the field what the one tap cannot join', function (): void {
+    $code = (string) $this->room->code;
+    $unknown = $code === '000000' ? '000001' : '000000';
+    $before = joinSnapshot();
+    $this->actingAs($this->player);
+
+    // Malformed, unknown: the field's own refusals, back where it was typed.
+    $this->from(route('rooms.index'))->post(route('rooms.entrance.store'), ['code' => '12'])
+        ->assertRedirect(route('rooms.index'))->assertSessionHasErrors('code');
+    $this->from(route('rooms.index'))->post(route('rooms.entrance.store'), ['code' => $unknown])
+        ->assertRedirect(route('rooms.index'))->assertSessionHasErrors(['code' => __('rooms.errors.unknown')]);
+
+    // Locked, then full: the reason under the field and nothing else.
+    $this->actingAs($this->host)->patch(route('rooms.update', $this->room), ['locked' => true])->assertRedirect();
+    $this->actingAs($this->player)->from(route('rooms.entrance'))->post(route('rooms.entrance.store'), ['code' => $code])
+        ->assertRedirect(route('rooms.entrance'))->assertSessionHasErrors(['code' => __('rooms.errors.locked')]);
+    $this->actingAs($this->host)->patch(route('rooms.update', $this->room), ['locked' => false]);
+    Config::set('elifba.rooms.max_players', 1);
+    $this->actingAs($this->player)->from(route('rooms.entrance'))->post(route('rooms.entrance.store'), ['code' => $code])
+        ->assertRedirect(route('rooms.entrance'))->assertSessionHasErrors(['code' => __('rooms.errors.full')]);
+
+    expect($this->room->rowOf($this->player))->toBeNull()
+        ->and(joinSnapshot()['room_players'])->toBe($before['room_players']);
 });
 
 it('sends a visitor to the login and back to the code', function (): void {

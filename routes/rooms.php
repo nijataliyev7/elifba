@@ -59,6 +59,8 @@ Route::middleware(['rooms.enabled', 'auth', 'role.chosen', 'verified', Role::mid
     // The entrance with a code, `/oyun` (G2): 10 tries of a code a minute per account, the three ways together.
     Route::middleware('throttle:room-join')->group(function () {
         Route::get('oyun', [RoomJoinController::class, 'entrance'])->name('rooms.entrance');
+        // The code field's «Qoşul» joins with that tap (ADR 033 as amended 2026-11-21).
+        Route::post('oyun', [RoomJoinController::class, 'enter'])->name('rooms.entrance.store');
         // A link opened by hand is kept before `auth` (ADR 033 decision 8): `rooms.invitation`.
         Route::get('oyun/{code}', [RoomJoinController::class, 'show'])
             ->where('code', '[0-9]{6}')

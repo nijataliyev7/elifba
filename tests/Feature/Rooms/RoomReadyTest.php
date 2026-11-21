@@ -18,8 +18,9 @@ use Tests\Support\Rooms;
 /*
  * Ready for the next game (docs/architecture.md §12 "Ready for the next
  * game", ADR 035): between games a present player who is not the host says
- * «Hazıram» and may take it back. Only `SetRoomPlayerReady` writes it, under
- * the room row's lock, and `LeaveRoom` clears it; whether it counts is
+ * «Hazıram» and may take it back. `SetRoomPlayerReady` writes it, under
+ * the room row's lock, a join between games sets it (ADR 035 as amended
+ * 2026-11-21) and `LeaveRoom` clears it; whether it counts is
  * derived from the room's next game, so a start writes nothing for it. It
  * reaches every device as the state's `players[].ready` and never gates a
  * start.
@@ -35,6 +36,51 @@ beforeEach(function (): void {
     $this->resadRow = $this->room->rowOf($this->resad);
     $this->aygunRow = Rooms::join($this->room, $this->aygun);
     $this->turalRow = Rooms::join($this->room, $this->tural);
+
+    // Joining marks a player (ADR 035 decision 21): these cases start from two who took it back.
+    foreach ([$this->aygun, $this->tural] as $account) {
+        app(SetRoomPlayerReady::class)->handle($this->room, $account, new RoomReadyData(false));
+    }
+});
+
+it('marks a player who joins between games, never one who joins during a game or the host', function (): void {
+    // Before the first game: ready for game 0, at once on every device.
+    $leyla = User::factory()->player()->create();
+    $leylaRow = Rooms::join($this->room, $leyla);
+
+    expect($leylaRow->refresh()->ready_for)->toBe(0)
+        ->and(readyMarks($this->resad, $this->room)[$leylaRow->id])->toBeTrue()
+        ->and(readyMarks($leyla, $this->room)[$leylaRow->id])->toBeTrue()
+        ->and(readyMarks($this->resad, $this->room)[$this->resadRow->id])->toBeFalse();
+
+    // Joining while a game runs marks nothing: the call asks after it.
+    $game = Rooms::playing($this->room);
+    $this->travelTo(Rooms::at($game, RoomPhase::Answer, 1));
+    $murad = User::factory()->player()->create();
+    $muradRow = Rooms::join($this->room, $murad);
+
+    expect($muradRow->refresh()->ready_for)->toBeNull();
+
+    // After the game: a new player is ready for the next one, and so is one who comes back.
+    $this->travelTo(Rooms::at($game, RoomPhase::Over));
+    $nigar = User::factory()->player()->create();
+    $nigarRow = Rooms::join($this->room, $nigar);
+    $this->actingAs($this->tural)->post(route('rooms.leave', $this->room))->assertRedirect();
+    Rooms::join($this->room, $this->tural);
+
+    expect($nigarRow->refresh()->ready_for)->toBe(1)
+        ->and(readyMarks($this->resad, $this->room))->toMatchArray([
+            $nigarRow->id => true,
+            $this->turalRow->id => true,
+            $muradRow->id => false,
+            $leylaRow->id => false,
+        ]);
+
+    // A player already present is left as they are.
+    app(SetRoomPlayerReady::class)->handle($this->room, $nigar, new RoomReadyData(false));
+    Rooms::join($this->room, $nigar);
+
+    expect($nigarRow->refresh()->ready_for)->toBeNull();
 });
 
 /**
@@ -133,7 +179,9 @@ it('refuses the host, a player who left, a removed player, a closed room, a runn
     $this->actingAs($this->resad)->post(route('rooms.close', $this->room))->assertRedirect();
     readyPut($leyla, $this->room)->assertForbidden();
 
-    expect(RoomPlayer::query()->whereNotNull('ready_for')->count())->toBe(0);
+    // Only the two joins marked anyone (ADR 035 decision 21): no refused request wrote.
+    expect(RoomPlayer::query()->whereNotNull('ready_for')->pluck('user_id')->sort()->values()->all())
+        ->toBe(collect([$this->tural->id, $leyla->id])->sort()->values()->all());
 });
 
 it('refuses under the lock a mark that a start overtook', function (): void {
@@ -172,7 +220,7 @@ it('takes every mark down at the next start without writing, and takes a new one
     expect(readyMarks($this->resad, $this->room))->toBe([$this->resadRow->id => false, $this->aygunRow->id => false, $this->turalRow->id => true]);
 });
 
-it('clears the mark with a leave, so a return starts unmarked', function (): void {
+it('clears the mark with a leave; a return between games is marked again by the join', function (): void {
     readyPut($this->aygun, $this->room)->assertNoContent();
 
     $this->actingAs($this->aygun)->post(route('rooms.leave', $this->room))->assertRedirect();
@@ -180,7 +228,7 @@ it('clears the mark with a leave, so a return starts unmarked', function (): voi
 
     Rooms::join($this->room, $this->aygun);
 
-    expect(readyMarks($this->aygun, $this->room)[$this->aygunRow->id])->toBeFalse();
+    expect(readyMarks($this->aygun, $this->room)[$this->aygunRow->id])->toBeTrue();
 });
 
 it('marks between matches too, seated or watching', function (): void {

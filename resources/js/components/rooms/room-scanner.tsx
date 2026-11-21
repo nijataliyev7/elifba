@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
-import { join } from '@/routes/rooms';
+import { store as joinRoom } from '@/routes/rooms/join';
 import { scannedCode, scanOrigins } from '@/rooms/scan';
 
 /** The texts of the QR codes a frame holds. */
@@ -125,8 +125,9 @@ const LOOK_MS = 200;
  * themes, with the camera's picture in a square with four corner marks.
  * The picture is decoded on the device and goes nowhere: no frame,
  * picture or decoded text is sent, kept or logged, and it makes no sound.
- * A code of this app (`scannedCode()`) closes it and visits `rooms.join`
- * with the six digits, never the address it read; any other QR says so
+ * A code of this app (`scannedCode()`) closes it and posts `rooms.join.store`
+ * with the six digits — joining with that scan (ADR 033 decision 21 as
+ * amended 2026-11-21) — never the address it read; any other QR says so
  * under the frame while it keeps looking; a refused camera asks for the
  * code to be typed. The camera stops when the dialog closes, when a code
  * is read and while the page is hidden.
@@ -168,7 +169,8 @@ export function RoomScanner({
                     entrance={entrance}
                     onCode={(code) => {
                         onOpenChange(false);
-                        router.visit(join.url(code));
+                        // The scan is the tap: it joins at once (ADR 033 decision 21 as amended 2026-11-21).
+                        router.post(joinRoom.url(code));
                     }}
                 />
             </DialogContent>
