@@ -1,3 +1,4 @@
+import { stripRows } from '@/components/rooms/rivalry';
 import type { RoomState } from '@/rooms/contract';
 import type { StorageLike } from '@/rooms/sound';
 
@@ -28,7 +29,7 @@ export const TAUNT_SHOW_MS = 4_000;
  */
 export const TAUNT_REACTION_MS = 3_000;
 
-/** How long «Atıldı · −1 xal» lies over the strip after an accepted throw. */
+/** How long «Atıldı → :name · −1 xal» lies over the strip after an accepted throw. */
 export const TAUNT_SENT_MS = 2_000;
 
 /** At most two reactions at once, one above the other; a third waits for a place. */
@@ -214,4 +215,59 @@ export function trayView(
     }
 
     return { kind: 'tray', balance: taunts.balance, reason, cooling };
+}
+
+/** Someone a throw may go to: their row's id and the state's name (null: «Oyunçu»). */
+export type TauntTarget = { id: string; name: string | null };
+
+/** Whom the fan may throw at, and at whom a tile throws now (`throwChoice()`). */
+export type ThrowChoice = {
+    /** Whom a throw may go to: a race's in the state's ranking order, never re-sorted. */
+    targets: TauntTarget[];
+    /** Whom a tile throws at now; null with nobody to aim at. */
+    target: TauntTarget | null;
+    /** Two or more: the fan opens with the row of names. */
+    row: boolean;
+};
+
+/**
+ * Whom the thrower may pick (ADR 029 as amended 2026-11-21, decisions
+ * 60–62): exactly whom the server takes, read from the state through the
+ * strip's rows (`stripRows()`, the one place the strip looks at the game's
+ * kind). In a race those are the state's ranking, so every present player
+ * but the viewer — never oneself, a player who left, a removed one or a
+ * host who does not play — in the ranking's order as the server gave it;
+ * in a match the two seats, so the other seat alone, and nobody for a
+ * watcher (ADR 034 decision 22). Nobody while the strip shows no rival,
+ * since the button is the rival's side (decision 36). The tile throws at
+ * `picked` while it may still be picked, else at the strip's rival, else
+ * at the first of the row: a picked player who left drops out before any
+ * throw. It reads no answer, result or verdict.
+ */
+export function throwChoice(
+    state: Pick<RoomState, 'me' | 'players' | 'ranking' | 'match'>,
+    rival: TauntTarget | null,
+    picked: string | null,
+): ThrowChoice {
+    const me = state.me.player_id;
+    const { rows, seats } = stripRows(state);
+    const ids = rows.map((row) => row.player_id);
+    const present = new Map(
+        state.players
+            .filter((player) => player.present)
+            .map((player) => [player.id, player.name]),
+    );
+    const targets =
+        me === null || rival === null || (seats && !ids.includes(me))
+            ? []
+            : ids
+                  .filter((id) => id !== me && present.has(id))
+                  .map((id) => ({ id, name: present.get(id) ?? null }));
+    const target =
+        targets.find((one) => one.id === picked) ??
+        targets.find((one) => one.id === rival?.id) ??
+        targets[0] ??
+        null;
+
+    return { targets, target, row: targets.length > 1 };
 }

@@ -12,6 +12,7 @@ import {
     tauntsEnd,
     TAUNTS_HIDDEN_KEY,
     TAUNTS_UNSEEN,
+    throwChoice,
     trayView,
     writeTauntsHidden,
 } from './taunts';
@@ -285,5 +286,144 @@ describe('trayView', () => {
                 false,
             ),
         ).toEqual(taunted.taunts!.received);
+    });
+});
+
+describe('throwChoice', () => {
+    const resad = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+    const aygun = '01kaqrx3mn4p5q6r7s8t9vwxyz';
+    const tural = '01kaqrx4bc5d6e7f8g9h0jkmnp';
+    const gone = '01kaqrx5cd6e7f8g9h0jkmnpqr';
+    const leyla = '01kaqrx6de7f8g9h0jkmnpqrst';
+
+    /** A race of four present players and one who left, Aygün's phone: the ranking as the server ordered it. */
+    function race(): RoomState {
+        const answer = state('answer');
+
+        return {
+            ...answer,
+            players: [
+                ...answer.players.map((player) =>
+                    player.id === tural ? { ...player, present: true } : player,
+                ),
+                {
+                    ...answer.players[1],
+                    id: leyla,
+                    name: 'Leyla Həsənova',
+                },
+            ],
+            ranking: [
+                { player_id: gone, points: 20, place: 1 },
+                { player_id: aygun, points: 17, place: 2 },
+                { player_id: leyla, points: 12, place: 3 },
+                { player_id: resad, points: 9, place: 4 },
+                { player_id: tural, points: 0, place: null },
+            ],
+        } as RoomState;
+    }
+
+    const strip = (id: string) => ({ id, name: null });
+
+    it("offers every present player but the viewer, in the ranking's order as the server gave it", () => {
+        const choice = throwChoice(race(), strip(leyla), null);
+
+        // Not oneself, not one who left (a host who does not play is one); never re-sorted by name or join order.
+        expect(choice.targets).toEqual([
+            { id: leyla, name: 'Leyla Həsənova' },
+            { id: resad, name: 'Rəşad Quliyev' },
+            { id: tural, name: 'Tural Əliyev' },
+        ]);
+        expect(choice.row).toBe(true);
+
+        const reversed = {
+            ...race(),
+            ranking: [...race().ranking].reverse(),
+        } as RoomState;
+
+        expect(
+            throwChoice(reversed, strip(leyla), null).targets.map(
+                (one) => one.id,
+            ),
+        ).toEqual([tural, resad, leyla]);
+    });
+
+    it("picks the strip's rival first, else the first of the row, and then the thrower's pick", () => {
+        expect(throwChoice(race(), strip(resad), null).target?.id).toBe(resad);
+        // The strip's rival left holding a place: the first of the row.
+        expect(throwChoice(race(), strip(gone), null).target?.id).toBe(leyla);
+        expect(throwChoice(race(), strip(resad), tural).target).toEqual({
+            id: tural,
+            name: 'Tural Əliyev',
+        });
+        // A pick nobody may be thrown at is no pick.
+        expect(throwChoice(race(), strip(resad), aygun).target?.id).toBe(resad);
+        expect(throwChoice(race(), strip(resad), gone).target?.id).toBe(resad);
+    });
+
+    it('drops a picked player who leaves before a throw', () => {
+        const left = {
+            ...race(),
+            players: race().players.map((player) =>
+                player.id === tural ? { ...player, present: false } : player,
+            ),
+        } as RoomState;
+        const choice = throwChoice(left, strip(leyla), tural);
+
+        expect(choice.targets.map((one) => one.id)).toEqual([leyla, resad]);
+        expect(choice.target?.id).toBe(leyla);
+        expect(choice.row).toBe(true);
+    });
+
+    it('has no row with one target: a duel, a match, a race whose others left', () => {
+        // A duel: the other present player alone.
+        const duel = throwChoice(state('answer'), strip(resad), null);
+
+        expect(duel).toEqual({
+            targets: [{ id: resad, name: 'Rəşad Quliyev' }],
+            target: { id: resad, name: 'Rəşad Quliyev' },
+            row: false,
+        });
+
+        // A match: the other seat alone, though a watcher is present.
+        const match = throwChoice(state('match.play'), strip(resad), tural);
+
+        expect(match.targets.map((one) => one.id)).toEqual([resad]);
+        expect(match.target?.id).toBe(resad);
+        expect(match.row).toBe(false);
+
+        // A race whose others left: the one still there.
+        const alone = {
+            ...race(),
+            players: race().players.map((player) =>
+                player.id === tural || player.id === leyla
+                    ? { ...player, present: false }
+                    : player,
+            ),
+        } as RoomState;
+
+        expect(throwChoice(alone, strip(leyla), leyla)).toMatchObject({
+            target: { id: resad },
+            row: false,
+        });
+    });
+
+    it('offers nobody to a watcher, a viewer who does not play or a strip with no rival', () => {
+        expect(throwChoice(state('match.watch'), strip(resad), null)).toEqual({
+            targets: [],
+            target: null,
+            row: false,
+        });
+        expect(
+            throwChoice(
+                { ...race(), me: { player_id: null, host: true } },
+                strip(resad),
+                null,
+            ),
+        ).toEqual({ targets: [], target: null, row: false });
+        expect(throwChoice(race(), null, null)).toEqual({
+            targets: [],
+            target: null,
+            row: false,
+        });
     });
 });

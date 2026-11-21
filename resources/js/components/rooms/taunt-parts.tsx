@@ -1,5 +1,5 @@
 import { ArrowRight, Laugh } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -9,10 +9,15 @@ import {
     tauntMoment,
     tauntPops,
     TAUNTS_UNSEEN,
+    throwChoice,
     trayView,
     writeTauntsHidden,
 } from '@/components/rooms/taunts';
-import type { TauntPop, TauntsSeen } from '@/components/rooms/taunts';
+import type {
+    TauntPop,
+    TauntsSeen,
+    TauntTarget,
+} from '@/components/rooms/taunts';
 import { reducedMotion } from '@/components/rooms/motion-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
@@ -434,21 +439,24 @@ export function spentOf(state: RoomState): Map<string, number> {
 type Refusal = 'late' | 'off' | 'cooling' | 'no_points';
 
 /**
- * The throw (ADR 029 decisions 36–38): the strip's rival side — its right
- * half, the rival's name, number and bar end — is one button laid over the
- * strip, with a 28px badge on the strip's bottom-right corner; it opens
- * the fan under the strip, the strip's width, over the thrower's own round
- * head and question — «Kimə: :name», the price, the balance or the
- * reason and the twelve taunts as a 4 × 3 grid.
+ * The throw (ADR 029 decisions 36–38, as amended 2026-11-21): the strip's
+ * rival side — its right half, the rival's name, number and bar end — is
+ * one button laid over the strip, with a 28px badge on the strip's
+ * bottom-right corner; it opens the fan under the strip, the strip's
+ * width, over the thrower's own round head and question — «Kimə: :name»,
+ * the price, with two or more to aim at the row of their names (a
+ * `radiogroup`, `throwChoice()`: the strip's rival picked first), the
+ * balance or the reason and the twelve taunts as a 4 × 3 grid.
  * The badge is muted with no points or before the first close (a tap still
  * opens the fan and says why) and is the cooldown's ring while it runs. A
- * tap throws at the strip's rival; the fan stays open until the receipt
- * and says a refusal in itself; on `accepted` «Atıldı · −1 xal» lies over
- * the strip's gap row for 2 s and «−1» rises once from the badge (not
- * under reduced motion), and the page asks for the state. The button
- * again, a tap outside, Escape or a new phase of the round closes the fan.
- * Drawn inside the strip's own `relative` box; the strip under it never
- * moves.
+ * tap on a name picks it and throws nothing; a tile throws at the one
+ * picked; the fan stays open until the receipt and says a refusal in
+ * itself; on `accepted` «Atıldı → :name · −1 xal» lies over the strip's
+ * gap row for 2 s and «−1» rises once from the badge (not under reduced
+ * motion), and the page asks for the state. The button again, a tap
+ * outside, Escape or a new phase of the round closes the fan and forgets
+ * the pick. Drawn inside the strip's own `relative` box; the strip under
+ * it never moves.
  */
 export function TauntThrow({
     roomId,
@@ -463,8 +471,8 @@ export function TauntThrow({
 }: {
     roomId: string;
     state: RoomState;
-    /** The strip's rival on the right: whom the button throws at. */
-    rival: { id: string; name: string | null } | null;
+    /** The strip's rival on the right: whom the fan opens on (the button is its side). */
+    rival: TauntTarget | null;
     list: TauntList | null;
     /** The page's estimate of the server's clock: a taunt's event id. */
     clock: ServerClock;
@@ -483,10 +491,19 @@ export function TauntThrow({
     const open = openIn === phase;
     const [sending, setSending] = useState(false);
     const [refusal, setRefusal] = useState<Refusal | null>(null);
-    const [sent, setSent] = useState<{ key: string; at: number } | null>(null);
+    const [sent, setSent] = useState<{
+        key: string;
+        at: number;
+        name: string;
+    } | null>(null);
+    // The thrower's pick among the row: the open fan's only, forgotten when it closes.
+    const [pick, setPick] = useState<string | null>(null);
+    const group = useId();
     const button = useRef<HTMLButtonElement>(null);
     const fan = useRef<HTMLDivElement>(null);
-    const view = trayView(state, rival?.id ?? null, now);
+    const choice = throwChoice(state, rival, open ? pick : null);
+    const target = choice.target;
+    const view = trayView(state, target?.id ?? null, now);
     const cooling = view.kind === 'tray' ? view.cooling : null;
     const readyMs = state.taunts?.ready_ms ?? null;
     // The cooldown's length as the page first saw it: the ring fills from there.
@@ -543,11 +560,12 @@ export function TauntThrow({
         };
     }, [open]);
 
-    if (view.kind === 'none' || rival === null) {
+    if (view.kind === 'none' || target === null) {
         return null;
     }
 
-    const name = rival.name ?? t('rooms.show.nameless');
+    const nameOf = (one: TauntTarget) => one.name ?? t('rooms.show.nameless');
+    const name = nameOf(target);
     const left =
         readyMs === null || now === null ? 0 : Math.max(0, readyMs - now);
     const fraction =
@@ -575,7 +593,7 @@ export function TauntThrow({
         void sendTaunt({
             taunt: {
                 event_id: eventId(clock.now() ?? 0),
-                target_id: rival.id,
+                target_id: target.id,
                 taunt: key,
             },
             post: (taunt) => roomRequest('POST', throwTaunt.url(roomId), taunt),
@@ -593,7 +611,7 @@ export function TauntThrow({
 
                 if (status === 'accepted' || status === 'duplicate') {
                     setOpenIn(null);
-                    setSent({ key, at: Date.now() });
+                    setSent({ key, at: Date.now(), name });
                 } else {
                     setRefusal(status);
                 }
@@ -613,6 +631,7 @@ export function TauntThrow({
                 aria-expanded={open}
                 onClick={() => {
                     setRefusal(null);
+                    setPick(null);
                     setOpenIn(open ? null : phase);
                 }}
                 className="absolute inset-y-0 right-0 z-[5] min-h-11 w-1/2 rounded-r-[14px] outline-0 -outline-offset-2 outline-(--taunt) outline-dashed hover:outline-2 focus-visible:outline-2 aria-expanded:outline-2"
@@ -650,12 +669,14 @@ export function TauntThrow({
 
             {sent !== null && (
                 <span className="pointer-events-none absolute inset-x-0 bottom-1.5 z-20 flex justify-center">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-(--taunt) py-0.5 pr-2.5 pl-1 text-[0.78125rem] font-bold text-white ring-2 ring-card">
+                    <span className="inline-flex max-w-[calc(100%-1rem)] min-w-0 items-center gap-1.5 rounded-full bg-(--taunt) py-0.5 pr-2.5 pl-1 text-[0.78125rem] font-bold text-white ring-2 ring-card">
                         <TauntEmoji
                             url={emojiOf(list, sent.key)}
-                            className="size-4.5"
+                            className="size-4.5 shrink-0"
                         />
-                        {t('rooms.taunts.sent')}
+                        <span className="truncate">
+                            {t('rooms.taunts.sent_to', { name: sent.name })}
+                        </span>
                     </span>
                 </span>
             )}
@@ -674,6 +695,37 @@ export function TauntThrow({
                             {t('rooms.taunts.price')}
                         </span>
                     </div>
+                    {choice.row && (
+                        <div
+                            role="radiogroup"
+                            aria-label={t('rooms.taunts.whom')}
+                            className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto"
+                        >
+                            {choice.targets.map((one) => (
+                                <label
+                                    key={one.id}
+                                    className={cn(
+                                        'flex min-h-11 max-w-44 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-[0.8125rem] font-semibold has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50 has-focus-visible:ring-inset',
+                                        one.id === target.id
+                                            ? 'bg-(--taunt) text-white'
+                                            : 'bg-(--taunt-tint) hover:bg-(--taunt-tint-strong)',
+                                    )}
+                                >
+                                    <input
+                                        type="radio"
+                                        name={group}
+                                        value={one.id}
+                                        checked={one.id === target.id}
+                                        onChange={() => setPick(one.id)}
+                                        className="sr-only"
+                                    />
+                                    <span className="truncate">
+                                        {nameOf(one)}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
                     {line !== null ? (
                         <p className="rounded-[10px] bg-muted px-2.5 py-2 text-[0.78125rem] font-semibold">
                             {line}

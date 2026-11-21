@@ -327,6 +327,30 @@ it('refuses oneself, a player who left, a removed player and a host who does not
         ->and(RoomTaunt::query()->count())->toBe(0);
 });
 
+it('takes a taunt at a present player who is not the thrower\'s strip rival, and shows it to that player and the screen only', function (): void {
+    // A race of three: Rəşad leads, Aygün second, Tural third. On a phone the strip's rival is the leader, or the runner-up for the leader (ADR 027).
+    $game = Rooms::playing($this->room);
+    tauntsPoints($game, 0, [[$this->resadRow, 20], [$this->aygunRow, 10], [$this->turalRow, 5]]);
+    $this->travelTo(Rooms::at($game, RoomPhase::Answer, 1));
+
+    expect(array_column(tauntsState($this->tural, $this->room)['ranking'], 'player_id'))->toBe([$this->resadRow->id, $this->aygunRow->id, $this->turalRow->id]);
+
+    // Tural picks Aygün, not the leader on his strip; Rəşad picks Tural, not the runner-up on his (ADR 029 as amended 2026-11-21).
+    $sentMs = RoomClock::nowMs();
+    tauntsThrow($this->tural, $this->room, $this->aygunRow, taunt: 'dice')->assertJsonPath('status', 'accepted');
+    tauntsThrow($this->resad, $this->room, $this->turalRow, taunt: 'mine')->assertJsonPath('status', 'accepted');
+    $atAygun = RoomTaunt::query()->where('taunt', 'dice')->sole();
+    $atTural = RoomTaunt::query()->where('taunt', 'mine')->sole();
+
+    expect(tauntsState($this->aygun, $this->room)['taunts']['received'])->toBe([['id' => $atAygun->id, 'from' => $this->turalRow->id, 'taunt' => 'dice', 'sent_ms' => $sentMs]])
+        ->and(tauntsState($this->tural, $this->room)['taunts']['received'])->toBe([['id' => $atTural->id, 'from' => $this->resadRow->id, 'taunt' => 'mine', 'sent_ms' => $sentMs]])
+        ->and(tauntsState($this->resad, $this->room)['taunts']['received'])->toBe([])
+        ->and(tauntsState($this->resad, $this->room, screen: true)['taunts']['shown'])->toEqualCanonicalizing([
+            ['id' => $atAygun->id, 'from' => $this->turalRow->id, 'to' => $this->aygunRow->id, 'taunt' => 'dice', 'sent_ms' => $sentMs],
+            ['id' => $atTural->id, 'from' => $this->resadRow->id, 'to' => $this->turalRow->id, 'taunt' => 'mine', 'sent_ms' => $sentMs],
+        ]);
+});
+
 it('keeps the cooldown by the server\'s clock', function (): void {
     $game = Rooms::playing($this->room, difficulty: 2);
     tauntsPoints($game, 0, [[$this->aygunRow, 20]]);
