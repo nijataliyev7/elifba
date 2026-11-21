@@ -6,6 +6,7 @@
 - **Amended:** 2026-11-21 — decisions 30 and 31: the board, the pieces and their motion as the variant page recommended, and `move`, `capture` and `crown` as the owner chose them by ear, with no `tap` in a match ("Amended 2026-11-21" below); 2026-11-21 — decisions 30 and 31 again, for the seat whose turn begins: a band it cannot miss, the other seat's move heard and felt on its own phone, a phone that stays awake and a tab title ("Amended 2026-11-21 — whose turn it is" below; [025](025-room-motion-sound-and-final.md) decisions 2 and 14 and [028](028-room-sound-set.md) "Amended 2026-11-19" item 4 amended for it).
 - **Why it is hard to reverse:** the tables, the state every device reads, the facts a phone posts, the rule that only the server judges a move, and the rules of the game themselves — a game played under one draw rule cannot be replayed under another.
 - **Amended by:** [035](035-ready-for-the-next-game.md) (2026-11-21) — decision 17: the state is `v: 7`, each player with `ready`; a match is a room game for the «Hazıram» between games like a race. [036](036-the-computers-seat.md) (2026-11-21) — the owner reversed "no computer opponent": one seat of a match may be the computer's, at three levels; decisions 7–9, 17, 21–23 and 25–26 as amended there, the state `v: 8`.
+- **Amended by:** [037](037-anagram-clue-shuffle-letter.md) (2026-11-21) — decision 17: the state is `v: 8`, an anagram's question with `clue` and `orders`; a match has no question, and nothing of it changes.
 
 ## Context
 

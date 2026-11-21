@@ -1,0 +1,143 @@
+# 037 — «Anaqram»: a clue, a shuffle that never spells the word, and a bought letter
+
+- **Status:** Accepted, 2026-11-21, from the owner's words and choices below; everything the owner did not say is this record's recommendation, taken under the owner's standing rule of 2026-11-18 (a session that would ask the owner takes its recommended option and says so) — "Taken without asking" lists it. Built in three parts on `feat/rooms-anagram`: **part 1**, the clue and the shuffle on the server (2026-11-21, "As built (part 1)" at the end); **part 2**, the bought letter on the server; **part 3**, the look and the page. Numbered 037: ADR 036 is the computer's seat (roadmap K1–K4), designed the same day on another branch; both records take the state to `v: 8`, so whichever reaches `main` second moves its own to the next version and its fixtures with it.
+- **Sections:** architecture.md §1 "Tables" (part 2), §12 "Room games", "Room content", "Scoring and what is kept" and "«Anaqram»: a clue, a shuffle and a bought letter (ADR 037)"; docs/frontend.md rule 15 "«Anaqram» (ADR 037)"; glossary.md «anaqram», «ipucu», «Qarışdır», «Hərf al»; CLAUDE.md "Rooms"
+- **Amends:**
+    - [021](021-room-race-protocol.md) decision 3 ("the solution never leaves the server before the round closes"): a player who buys letters of an anagram's word gets those tiles of the solution — only that player, only in the answer phase (decisions 14–15). Decision 1: a player's device also writes that player's own bought letters, through `BuyRoomLetter` (decision 12). "The state" is `v: 8`: the question gains `clue` and `orders`, the round `letters`, the viewer's result `letters` (decisions 3, 7, 15 and 19). Nothing else of the protocol changes: a purchase raises no revision and sends no signal.
+    - [022](022-room-scoring-and-history.md) decision 1: an anagram's answer keeps half its points after one bought letter and none after two or more (decision 17). Decisions 2–9 hold: points are still stored with the answer, and the ranking, the places and the taunt balance read them as before.
+    - [023](023-room-games-and-content.md) decision 4 and decision 7: an anagram's question carries its word's clue, from a new content file, `content/rooms/clues.json` (decisions 1–3), and a bounded list of the tiles' orders (decisions 6–9); its solution's first tiles reach a buyer (decision 15). Decision 8 holds: the clue is content and stays Azerbaijani in every locale.
+    - [024](024-adults-privacy-in-rooms.md) decision 2: a room also keeps who bought how many letters of which round, with no moment shown (decision 20). Decision 6 holds: a purchase is no message.
+    - [034](034-board-games-draughts.md) decision 17: the state is `v: 8` (it was 7). A match has no question, so nothing of a match changes.
+- **Why it is hard to reverse:** the state every device reads (`v: 8`), a content file of 652 lines that contributors will keep in step with the word list, a table of facts that scoring reads, and the one exception to "no solution before the close".
+
+## Context
+
+The owner, on 2026-11-21: «anqarım oynunu daha peşakar edək həm vizual görünüş həmdək misal sözlərin hansı sahəyə aid olduğunu ipucu ilə bildirilsin ama tam aydın yox tutalım qarpız, bu bir yay meyvəsidir kimi və ya daha yaxşısını sən özün et, sonra hərifləri qarışdırmaq olsun ama düzgün söz heçvaxt qarışaraq təsadüf düşməməlidir, birdə hərf almaq olsun ama hərf almaq yarı xalını alsın misal 12 xaldırsa 6 sını hər hərf xal alsın ikinci hərf daha çox xal ama tam söz hərifini alsa elə olsunki xal tuta bilməsin artıq».
+
+The owner's choices while it was planned, the same day: the first bought letter leaves half of the answer's points (`intdiv`: 12 → 6, 13 → 6); the second and every letter after it leave 0. The look is built directly in part 3, with no variant page.
+
+What there is (ADR 023, architecture §12 "Room games", B6):
+
+- **A round** is the letters of a word of `content/rooms/words.json` as tiles (`Az::upper`), in one order that no accepted spelling reads (`AnagramBuilder::outOfOrder()`: the shuffle, else a turn of it, else the first order by bytes), under a row of places. A tap moves a tile into the next place and leaves a gap; «Geri» takes back the last; the tap that fills the last place sends the word. The solution's `accept` is every correct spelling of the list with those letters («alma», «amal»), its `ids` the tiles in the drawn word's order, its `word` the drawn word in capitals. 552 of the list's 652 words can be drawn (4–8 letters, `RoomWords::forAnagram()`).
+- **Nothing helps a stuck player.** The letters stand in one order for the whole round, nothing says what kind of word it is, and the only way out is to wait for the bell.
+- **The rules that bind any help.** The solution never reaches a device before the reveal (ADR 021 decision 3); the server alone judges, scores and keeps the clock; a page computes no solution and no point; text is cased on the server; content is data.
+
+The one hard part is the shuffle. A page never knows the word, so it cannot check a shuffle itself — a page that shuffled would now and then lay the word out by chance, which the owner forbids. And a server that shuffles on demand, each time an order that reads no accepted spelling, leaks the word: a page that asks long enough sees every order but one, and the one never returned is the answer.
+
+## Decision
+
+### The clue
+
+1. **Every word of the list has one clue**, in a file of its own, `content/rooms/clues.json`: `{version, clues}`, `clues` an object from each word of `words.json`'s `words` to its clue, in the list's order. A clue is a short Azerbaijani line that names the word's field and one trait — «Yay meyvəsi, bostanda yetişir» for «qarpız», «Uzun boyunlu Afrika heyvanı» for «zürafə» — and hints rather than defines: it narrows the letters down to a kind of thing, and the letters do the rest. `also_correct` has no clue: it is never drawn. The clues are written in this repository under MIT, like the list, with a credits entry "Elifba contributors" (`ContentValidator::CREDITED_LISTS`).
+2. **The validator** (`content:validate`, one broken fixture per rule): `version` from 1; a clue for every word and no key that is not a word; the keys in the list's order; each clue a string of the alphabet's letters, spaces, `,` and `-`, beginning with a capital letter, with no space at either end, two spaces together or a final stop; at most **56 characters** (`MAX_ROOM_CLUE_LENGTH`), which is two lines of a 375px phone at 17px with an icon before them (the longest clue of the file measured in Inter Medium: "As built"); and never, compared by `Az::lower`, holding:
+    - the word, or any spelling an anagram of it accepts (`RoomWords::accepted()`: «alma»'s clue never says «amal» either);
+    - the word's stem as Azerbaijani bends it: a last `q` or `k` softened (`ayaq` → `ayağ`, `çörək` → `çörəy`), and the narrow vowel of a closed last syllable dropped (`burun` → `burn`, `ağız` → `ağz`, `oğul` → `oğl`);
+    - a listed word of four letters or more that the word is built on (`balıq` in «balıqçı», `kitab` in «kitabxana», `qızıl` in «qızılquş»).
+
+    What a substring cannot see — a three-letter part of a compound («çay» in «çayxana», «quş» in «dəvəquşu»), a synonym, a word that gives the answer away — is reviewed by hand.
+
+3. **In the round, `ask.clue`** (string or null): the drawn word's clue as the file writes it, cased as written, served with the question from the phase `answer` on, to every device — the phones and the screen. It is free: anyone may read it, at no cost. It is null for every other mechanic and for an anagram round built before this record. When the letters spell two accepted words («alma», «amal»), the clue is the drawn word's, and the other is still right.
+4. **Content, not interface text** (ADR 023 decision 8): no `lang/` key, Azerbaijani in every locale. The board's voice never says it (ADR 030 and 029 as amended name its only two places).
+
+### The shuffle
+
+5. **One list, made when the round is built.** The page never shuffles, and the server never shuffles on demand. The builder stores a bounded list of the tiles' orders with the question, `ask.orders`, drawn from the game's keyed random source (`RoomSeed`), so the same seed gives the same list and a device cannot predict it.
+6. **What an order is.** A list of the round's item ids, every tile once. `orders[0]` is the order of `ask.items`. **No order reads an accepted spelling**, and **no two orders read the same** — so every «Qarışdır» changes what the row reads, and the last returns to the first. Every order is drawn uniformly among the orders of the letters that read no accepted spelling: a shuffle that reads one, or reads like an order already drawn, is drawn again (after 64 such shuffles in a row, the first order by the letters' bytes that reads neither is taken — letters nearly all of whose orders are words). This replaces B6's turn of a shuffle, which made an order one place from the word twice as likely as any other.
+7. **The bound**, `AnagramOrders::count()`:
+
+    ```
+    A = the different orders the letters have (RoomWords::arrangements(): n! over each repeated letter's count!)
+    E = the orders excluded (the accepted spellings)
+    N = max(1, min(6, ⌊A / 3⌋, A − E))
+    ```
+
+    **Why a third.** The answer is among the orders a list never shows. A list that showed every order but the answer would name it: «baba» has 6 orders — «baba» and five others — and a list of those five leaves «BABA» alone, unseen. So a list shows at most a third of the orders the letters have; at least twice as many as it shows are never shown, the answer is one of them, and elimination ends with at least four candidates for the shortest words and hundreds for the rest. A person finds the word by knowing it, never by counting what was not shown.
+
+    **Why six.** A round lasts 20–50 s; six orders are more than a player presses through, and a question stays small (six lists of at most eight ids).
+
+    **What it gives the list today:** 507 of the 552 words that can be drawn get 6 orders; 42 get 4 (four letters with one repeated, A = 12: «alma», «ayaq», «saat»); 3 get 2 («baba», «bibi», «nənə», A = 6). No word that can be drawn has fewer than 6 orders, so every round has a shuffle.
+
+8. **The page cycles through the list.** A phone's «Qarışdır» shows the next order (after the last, the first): the tiles stand where it says; a tile already tapped keeps its gap wherever its order puts it, and the row being built does not change. The index is the page's own — nothing is posted, stored or limited, and a reload starts again at `orders[0]`. The screen shows `orders[0]` and never shuffles. A round whose `orders` hold fewer than two (a round built before this record has `[]`) offers no «Qarışdır».
+9. **Only accepted spellings are excluded from the question's list.** It knows nothing of bought letters: decision 16 says why, and what a buyer gets instead.
+
+### The bought letter (built in part 2)
+
+10. **Who and when.** A present player of the game who has not answered the round, in the current round's phase `answer`, in a **round that sells letters**: one whose question carries `orders` — an anagram round built from this record on. The round itself says so; no code compares the mechanic's name (`RoomsApartTest`). Not the host who does not play, not the screen, not a watcher of a match.
+11. **What is bought: the drawn word's next letter** — the solution's `ids[k]`, where k is how many letters the player has bought in the round: always the drawn word's tiles in its order, even when the letters spell another accepted word («alma»: A, then L).
+12. **A fact, written by one action.** `room_letters` (`id` ULID; `room_round_id` and `room_player_id`, both cascading; `event_id` ULID, unique; `position`, the letter's place in the word, from 0; `bought_ms`, Unix ms; unique `(room_round_id, room_player_id, position)`), written only by `Rooms\Actions\BuyRoomLetter` from `POST /rooms/{room}/letters` `{event_id, round_id, position}` (`Rooms\Data\RoomLetterData::rules()`; `can:play`; `throttle:room-letter`). In one transaction with the room row and then the round row locked, as `RecordRoomAnswer`:
+    1. the `event_id` is stored → `duplicate`;
+    2. the round is not the game's current round in its `answer` phase by the server's clock, the room is closed, the player is not present or has answered → `late`, nothing written;
+    3. the round sells no letters, or `position` is past the word's last letter or ahead of the letters bought → 422, nothing written;
+    4. `position` is a letter already bought — a second tap, a second device → `bought`, nothing written: **the position named in the body is why a double tap never buys two**;
+    5. otherwise the row is stored and the room's `last_activity_at` touched → `accepted`.
+
+    The receipt is `{status: accepted | duplicate | bought | late}`, and the buyer's page fetches its state. **A purchase raises no revision and sends no `room.changed`**: nobody else's view changes. It never closes a round, never counts as an answer or a read (ADR 021 decision 7), and never moves the ranking or the strip.
+
+13. **The tiles are the solution's, so they are the one exception** to "no solution before the close" (ADR 021 decision 3, ADR 023 decisions 4–5): k tiles of the solution reach the one player who bought them, during the answer phase, in that player's own state. Nobody else learns whether anyone bought — the screen, the host who does not play and the other players read nothing of it, in the round or after it.
+14. **`round.letters`** in the buyer's state — in phase `answer`, for a present player of a round that sells letters; null for everyone else, in every other phase and in every round that sells none:
+
+    ```
+    letters: {
+      bought: string[],          // the solution's first k ids, in the word's order
+      orders: string[][],        // the buyer's own orders of the tiles left; [] while k = 0 (ask.orders serve)
+      price:  'half' | 'rest' | 'none' | null   // what the next letter costs; null when every letter is bought
+    } | null
+    ```
+
+    `price` names the next letter's cost as a word — `half` (none bought: the answer would keep half), `rest` (one bought: the answer would keep nothing), `none` (two or more bought: nothing is left to lose) — and the page says the word and never computes it.
+
+15. **The tray after a purchase.** The page lays the bought tiles in the row's first places — a purchase takes back the player's own taps first — and the tiles left in the tray in `letters.orders[0]`; «Qarışdır» then cycles `letters.orders`. Buying every letter fills the row, and the page sends it as it sends a row a tap filled.
+16. **The buyer's own orders.** `letters.orders` are drawn by the same `AnagramOrders::draw()` with the k bought tiles taken out: no order of the tiles left reads the rest of an accepted spelling that starts with the bought letters — wherever the tiles left have more than one order — none reads like another, and they are bounded by decision 7 over the orders of the tiles left. They are derived at read time from `RoomSeed`'s keyed source of the game's seed, the round's position and k — the same at every read, never stored.
+
+    **Why not one list for everybody that is also safe for every k** (the plan's first idea): "with the word's first k tiles taken out, no order reads the rest" holds at k = n − 2 only if every order shows the word's last two letters reversed, and at k = n − 3 only if none shows its last three in order. A page holding the question's list — every player's — could read the word's ending off it without buying anything: with four orders, the last two letters are down to about two candidates. So the question's list is bound by the accepted spellings alone, and a buyer's lists, drawn after the purchase, are what the bought letters bind. A buyer learns of the rest only what a list bounded by a third can say — and with two letters left, that the tray shows them reversed, when the answer can no longer earn a point.
+
+17. **The price lives in `RoomPointsRule` alone**: an answer's points as ADR 022 says (`points()`), then `afterLetters(points, bought)` — no letter: as they are; one: `intdiv(points, 2)` (20 → 10, 17 → 8, 13 → 6, 12 → 6); two or more: 0 — and `letterPrice(bought)` the word of decision 14. `RecordRoomAnswer` counts the player's letters under the same lock and stores the answer's points after them, so `room_answers.points` stays the one place points are: `RoomRanking`, the places, the strip and the taunt balance read them as before. A wrong answer is 0 either way.
+18. **The judge does not change.** An answer is right or wrong by `accept`, as before; the server does not ask that it begin with the bought tiles. A bought letter is never an answer: the player still sends the word, and a round still waits for that player.
+19. **In the reveal, `mine.letters`**: how many letters the viewer bought in the round (0 without any), so «+6» explains itself on the buyer's phone. `results` stay `{player_id, correct, points}`.
+20. **Kept and shown.** `room_letters` rows live with their round — deleted with the room by cascade, for the room's retention — and `privacy.rooms.stored` says that a room keeps how many letters each player bought in a round. After the round they are shown nowhere but in the buyer's own `mine.letters`. ADR 024 decision 6 holds: a purchase is aimed at nobody.
+
+### The state
+
+21. **`v: 8`** (`RoomStateData::VERSION`, `ROOM_STATE_VERSION`). Part 1: `ask.clue` and `ask.orders`, after `items` — `clue` null and `orders` `[]` for other mechanics and for an anagram round stored before them, as `shown` was for B5 (`RoomAskData::fromArray()`). Part 2 adds `round.letters` and `reveal.mine.letters` to the same `v: 8`: no `v: 8` state ships before the three parts are on `main`. A page that meets a `v` it does not know reloads itself once (G2).
+
+### The look (built in part 3)
+
+22. **The page draws the round anew**, directly in part 3 (the owner's choice: no variant page), on the app's tokens and ADR 025's motion: the clue above the places with a small icon, muted but legible, under the round head; the row of places; the tray; and a line of two buttons under the tray, «Qarışdır» and «Hərf al» with the price's word under it. The screen draws the clue large above the places and the first order, and nothing of shuffling or buying. Nothing moves or sounds differently for a right or a wrong answer before the reveal; a shuffle's motion is the viewer's own tap; everything stands still under `prefers-reduced-motion`. Every string goes into `lang/az.json` and `lang/en.json`, none says «otaq», none promises a benefit (`RoomsWordingTest`).
+
+### What does not change
+
+23. Every rule of ADRs 019–035 holds but the lines amended above. Other mechanics' rounds are built, served and judged exactly as before; a match has no question. A class game, a home game, a board, a student and a child get nothing of this. The channel still carries only `room.changed`; a room page sends no client event; the server alone judges, scores and keeps the clock.
+
+## Taken without asking
+
+- **The clue's shape** (decision 1): field and one trait, a line of at most 56 characters, written for all 652 words at once rather than for the 552 that can be drawn today, so a level that changes its lengths finds every word ready.
+- **What the validator checks beyond the word** (decision 2): the softened stem, the dropped vowel and the listed words of four letters or more inside the word — cheap, and each catches a real slip («ayağı», «burnu», «balıq» for «balıqçı»).
+- **A third and six** (decision 7), and **uniform orders** (decision 6), replacing B6's turn.
+- **The question's list knows only the accepted spellings, and a buyer gets lists of their own** (decision 16), against the plan's one list for every k.
+- **A round sells letters when its question has orders** (decision 10): the round's own payload says it, and a round built before this record sells none.
+- **No revision for a purchase** (decision 12): the buyer reads its own state; twenty other phones need not.
+- **`mine.letters` in the reveal** (decision 19), and **no rule that the answer begins with the bought tiles** (decision 18).
+
+## Alternatives rejected
+
+- **The page shuffles**: it does not know the word, so it would sometimes lay it out — what the owner forbade.
+- **The server shuffles on demand**, without a bound: the one order it never returns is the word.
+- **One list safe for every k**: decision 16.
+- **A list of every order but the accepted ones**, or no bound for short words: «baba» would be named by the order missing.
+- **The clue as interface text in `lang/`**: it is content about an Azerbaijani word, and an English clue would describe a word the player must still spell in Azerbaijani.
+- **A clue that costs points, or one that appears late in the round**: the owner asked for a hint that is there; the bought letter is the help that costs.
+- **A purchase that raises the revision**: every device would fetch the state for something only the buyer sees.
+- **The bought letter's price on the page** (`points / 2` in TypeScript): points are the server's (CLAUDE.md "Rooms").
+
+## Consequences
+
+- A stuck player has three ways forward — read the clue, shuffle, buy a letter — and only the last costs.
+- Contributors who add a word to `words.json` must add its clue; the validator says which is missing.
+- The state is `v: 8`: a page loaded before the deploy reloads once when it meets it.
+- An anagram question grows by up to six orders of ids (about 600 bytes at eight letters).
+
+## What would make us revisit
+
+- Players who find a clue too telling or too vague — a line of data to change.
+- A word whose letters have fewer than six orders entering the list (a list of one order: no shuffle for it).
+- A wish to buy a letter in another word game: a round that sells letters says so by its question, so «Düzgün yazılış» would need a question of tiles first.
