@@ -398,24 +398,38 @@ it('words the ready mark in exactly the strings ADR 035 lists, in both languages
     }
 });
 
-it('words the bought letter in exactly the strings ADR 037 lists, in both languages', function (): void {
-    // ADR 037 part 2: the purchase's refusal and the notice's line; the page's words come with part 3.
+it('words the anagram\'s clue, shuffle and bought letter in exactly the strings ADR 037 lists, in both languages', function (): void {
+    // ADR 037 part 2: the purchase's refusal and the notice's line; part 3: the page's words. The clue is content and has none.
     $listed = roomWordingOf('037-anagram-clue-shuffle-letter.md');
+    $page = ['rooms.anagram.bought', 'rooms.anagram.buy', 'rooms.anagram.clue', 'rooms.anagram.letters', 'rooms.anagram.price.half', 'rooms.anagram.price.none', 'rooms.anagram.price.rest', 'rooms.anagram.shuffle'];
 
-    expect(array_keys($listed['az']))->toBe(['privacy.rooms.stored', 'rooms.errors.letter'])
+    expect(array_keys($listed['az']))->toBe(['privacy.rooms.stored', 'rooms.errors.letter', ...$page])
         ->and(array_keys($listed['en']))->toBe(array_keys($listed['az']))
         ->and($listed['az']['privacy.rooms.stored'])->toContain('«Anaqram»da hər oyunçunun raundda neçə hərf aldığı');
 
     foreach (['az', 'en'] as $locale) {
         /** @var array<string, string> $translations */
         $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+        $own = array_filter($translations, static fn (string $key): bool => str_starts_with($key, 'rooms.anagram.'), ARRAY_FILTER_USE_KEY);
+
+        // The page's keys are the table's, nothing more.
+        expect(array_keys($own))->toEqualCanonicalizing($page, $locale);
 
         foreach ($listed[$locale] as $key => $text) {
             expect($translations[$key] ?? null)->toBe($text, "{$locale}: {$key}")
                 ->and(promisesInRoomText($text))->toBe([], "{$locale}: {$key}");
         }
+
+        // The price is a word, never a number the page could have worked out.
+        foreach (['half', 'rest', 'none'] as $price) {
+            expect(preg_match('/\d/', $translations["rooms.anagram.price.{$price}"]))->toBe(0, "{$locale}: {$price}");
+        }
     }
 
     // «otaq» only on `/privacy` (ADR 026 decision 2).
-    expect(preg_match('/\botaq|\botağ/u', Az::lower($listed['az']['rooms.errors.letter'])))->toBe(0);
+    foreach ($listed['az'] as $key => $text) {
+        if (! str_starts_with($key, 'privacy.')) {
+            expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
+        }
+    }
 });

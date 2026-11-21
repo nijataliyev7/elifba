@@ -28,10 +28,28 @@ import {
 } from '@/components/rooms/mechanics/spelling';
 import type {
     RoomAsk,
+    RoomLetters,
     RoomRaceMechanic,
     RoomMine,
     RoomStudy,
 } from '@/rooms/contract';
+
+/**
+ * What a question's own row of tools works with, for a view that draws
+ * one (`drawsTools`): given only to a player who may still answer, in the
+ * answer phase, and never on the screen. «Anaqram» (ADR 037) draws
+ * «Qarışdır», «Hərf al» and «Geri» from it.
+ */
+export type AskTools = {
+    /** «Geri»: the viewer's last own tap taken back — never a bought letter; null with none to take back. */
+    undo: (() => void) | null;
+    /** «Hərf al»: buys the next letter; the page then waits for its state. */
+    buy: () => void;
+    /** A purchase is on its way and its state has not come yet. */
+    buying: boolean;
+    /** A tap of a tool that sounds like a tap of an item. */
+    tapped: () => void;
+};
 
 /**
  * A mechanic's view (architecture §12 "Room games", docs/frontend.md rule
@@ -55,10 +73,20 @@ export type MechanicView = {
     }>;
     Ask: ComponentType<{
         ask: RoomAsk;
+        /** The answer being made, in order — from ADR 037 the bought letters first. */
         picked: string[];
         disabled: boolean;
         onPick: (id: string) => void;
         big?: boolean;
+        /**
+         * The viewer's bought letters (`round.letters`, ADR 037): the tiles
+         * locked in the word's first places, the viewer's own orders and
+         * the next letter's price. Null in a round that sells none, for a
+         * viewer who does not play and on the screen.
+         */
+        letters?: RoomLetters | null;
+        /** The question's own tools, for a view that `drawsTools`; null when none may be used. */
+        tools?: AskTools | null;
     }>;
     Solution: ComponentType<{
         ask: RoomAsk;
@@ -68,6 +96,11 @@ export type MechanicView = {
         word?: string | null;
         big?: boolean;
     }>;
+    /**
+     * The question draws its own row of tools, «Geri» among them, so the
+     * round does not draw its «Geri» (ADR 037: «Anaqram»).
+     */
+    drawsTools?: true;
 };
 
 export const MECHANIC_VIEWS: Record<RoomRaceMechanic, MechanicView> = {
@@ -97,6 +130,7 @@ export const MECHANIC_VIEWS: Record<RoomRaceMechanic, MechanicView> = {
         Study: NoStudy,
         Ask: AnagramAsk,
         Solution: AnagramSolution,
+        drawsTools: true,
     },
     spelling: {
         Study: NoStudy,

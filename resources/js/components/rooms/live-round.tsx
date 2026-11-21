@@ -1,6 +1,7 @@
 import {
     Check,
     Hourglass,
+    Lock,
     Minus,
     TimerOff,
     Undo2,
@@ -10,6 +11,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { MECHANIC_VIEWS } from '@/components/rooms/mechanics/views';
+import type { AskTools } from '@/components/rooms/mechanics/views';
+import { rowOf } from '@/components/rooms/mechanics/word-layout';
 import { REVEAL_MS } from '@/components/rooms/motion';
 import { rivalOf } from '@/components/rooms/rivalry';
 import { FrameTitle, ScreenHead } from '@/components/rooms/game-head';
@@ -34,6 +37,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { store as answersRoute } from '@/routes/rooms/answers';
+import { store as lettersRoute } from '@/routes/rooms/letters';
 import { eventId, sendAnswer } from '@/rooms/answer';
 import { barStretch } from '@/rooms/clock';
 import type { ServerClock } from '@/rooms/clock';
@@ -47,6 +51,7 @@ import type {
     RoomState,
 } from '@/rooms/contract';
 import { roomRequest } from '@/rooms/http';
+import { sendLetter } from '@/rooms/letter';
 
 const NOTES = {
     sending: 'rooms.game.sending',
@@ -101,6 +106,14 @@ type Sent = {
  * off (ADR 029 decision 55). The reveal says the cost counted at
  * its close: «Atmaca: −:count xal» under the thrower's verdict and
  * «−:count» in «Sıralama».
+ *
+ * A round that sells letters (ADR 037: «Anaqram», its question has orders)
+ * also carries the viewer's bought letters (`round.letters`): the answer
+ * being made is the bought tiles first, then the viewer's own taps, which
+ * a purchase takes back. «Hərf al» posts the next place with one event id
+ * per tap and waits for the state; buying the last letter fills the row,
+ * which is sent as a tap that fills it is. The reveal says how many
+ * letters the viewer bought beside the points.
  */
 export function LiveRound({
     roomId,
@@ -139,11 +152,23 @@ export function LiveRound({
     const previous = usePreviousReveal(game, round, state.ranking);
     const rivalry = useRivalry(state, state.me.player_id);
     const spent = round.reveal?.spent ?? [];
-    const [draft, setDraft] = useState<{ round: string; ids: string[] }>({
-        round: '',
-        ids: [],
-    });
+    // ADR 037: the viewer's bought letters, locked in the first places while the round takes answers.
+    const letters = round.phase === 'answer' ? round.letters : null;
+    const bought = letters?.bought ?? [];
+    // The viewer's own taps, after the bought letters: a purchase takes them back.
+    const [draft, setDraft] = useState<{
+        round: string;
+        bought: number;
+        ids: string[];
+    }>({ round: '', bought: 0, ids: [] });
     const [sent, setSent] = useState<Sent | null>(null);
+    // A purchase on its way: its round and the place it buys, until the state shows it bought.
+    const [buying, setBuying] = useState<{
+        round: string;
+        position: number;
+    } | null>(null);
+    // The round whose every letter was bought and whose row this page has sent.
+    const filledSent = useRef<string | null>(null);
     // What `keepTrying` reads while an answer is retried.
     const shownRound = useRef(round);
 
@@ -151,7 +176,11 @@ export function LiveRound({
         shownRound.current = round;
     }, [round]);
 
-    const picked = draft.round === round.id ? draft.ids : [];
+    const own =
+        draft.round === round.id && draft.bought === bought.length
+            ? draft.ids
+            : [];
+    const picked = rowOf(bought, own);
     const mySent = sent?.answer.round_id === round.id ? sent : null;
     const plays = state.me.player_id !== null;
     const locked =
@@ -181,7 +210,11 @@ export function LiveRound({
                 break;
             case 'refused':
                 setSent({ answer, status: 'refused' });
-                setDraft({ round: answer.round_id, ids: [] });
+                setDraft({
+                    round: answer.round_id,
+                    bought: bought.length,
+                    ids: [],
+                });
                 refresh();
                 break;
             case 'gone':
@@ -208,7 +241,11 @@ export function LiveRound({
             sound?.tap(next.ids.length > picked.length ? 'tap' : 'undo');
         }
 
-        setDraft({ round: round.id, ids: next.ids });
+        setDraft({
+            round: round.id,
+            bought: bought.length,
+            ids: next.ids.slice(bought.length),
+        });
 
         if (next.send) {
             void send({
@@ -218,6 +255,108 @@ export function LiveRound({
             });
         }
     };
+
+    const buyingNow =
+        buying !== null &&
+        buying.round === round.id &&
+        buying.position >= bought.length;
+
+    // «Hərf al» (ADR 037 decision 12): the next place, one event id per tap; the tiles come with the state.
+    const buy = async () => {
+        if (
+            locked ||
+            buyingNow ||
+            letters === null ||
+            letters.price === null ||
+            round.ask === null
+        ) {
+            return;
+        }
+
+        const position = letters.bought.length;
+        const roundId = round.id;
+
+        setBuying({ round: roundId, position });
+
+        const outcome = await sendLetter({
+            letter: {
+                event_id: eventId(clock.now() ?? 0),
+                round_id: roundId,
+                position,
+            },
+            post: (body) => roomRequest('POST', lettersRoute.url(roomId), body),
+            wait: (ms) =>
+                new Promise((resolve) => window.setTimeout(resolve, ms)),
+            keepTrying: () =>
+                shownRound.current.id === roundId &&
+                shownRound.current.phase === 'answer',
+        });
+
+        if (outcome.kind === 'gone') {
+            onGone();
+
+            return;
+        }
+
+        refresh();
+
+        const taken =
+            outcome.kind === 'receipt' &&
+            (outcome.receipt.status === 'accepted' ||
+                outcome.receipt.status === 'duplicate');
+
+        // A bought letter waits for its state; anything else frees «Hərf al» at once — and a state that never comes, after a while.
+        window.setTimeout(
+            () =>
+                setBuying((current) =>
+                    current?.round === roundId && current.position === position
+                        ? null
+                        : current,
+                ),
+            taken ? 4000 : 0,
+        );
+    };
+
+    // Every letter bought fills the row: it is sent as a tap that fills it is (ADR 037 decision 15).
+    useEffect(() => {
+        if (
+            round.phase !== 'answer' ||
+            round.ask === null ||
+            letters === null ||
+            letters.bought.length !== round.ask.pick ||
+            locked ||
+            filledSent.current === round.id
+        ) {
+            return;
+        }
+
+        filledSent.current = round.id;
+        void send({
+            event_id: eventId(clock.now() ?? 0),
+            round_id: round.id,
+            picked: letters.bought,
+        });
+    });
+
+    const tools: AskTools | null =
+        plays && !locked
+            ? {
+                  undo:
+                      own.length === 0
+                          ? null
+                          : () => {
+                                sound?.tap('undo');
+                                setDraft({
+                                    round: round.id,
+                                    bought: bought.length,
+                                    ids: untap(own),
+                                });
+                            },
+                  buy: () => void buy(),
+                  buying: buyingNow,
+                  tapped: () => sound?.tap('tap'),
+              }
+            : null;
 
     const shown =
         round.answered && mySent !== null ? mySent.answer.picked : picked;
@@ -306,23 +445,33 @@ export function LiveRound({
                             picked={shown}
                             disabled={locked}
                             onPick={pick}
+                            letters={letters}
+                            tools={tools}
                         />
 
                         {!sentNote && (
-                            <div className="flex min-h-11 items-center gap-3">
+                            <div
+                                className={cn(
+                                    'flex items-center gap-3',
+                                    // A question with its own tools leaves this row the count alone.
+                                    view.drawsTools ? 'min-h-5' : 'min-h-11',
+                                )}
+                            >
                                 {plays &&
                                     !locked &&
+                                    !view.drawsTools &&
                                     (round.ask.shape === 'sequence' ? (
                                         <Button
                                             type="button"
                                             variant="outline"
                                             className="h-11"
-                                            disabled={picked.length === 0}
+                                            disabled={own.length === 0}
                                             onClick={() => {
                                                 sound?.tap('undo');
                                                 setDraft({
                                                     round: round.id,
-                                                    ids: untap(picked),
+                                                    bought: bought.length,
+                                                    ids: untap(own),
                                                 });
                                             }}
                                         >
@@ -752,6 +901,8 @@ function AnswerNote({
  * none. In a reveal the page saw begin it comes in first, the same way
  * whatever the server judged, and its points count up from 0. Under it,
  * the viewer's taunts counted at this close (T2): «Atmaca: −:count xal».
+ * Under the points, the letters the viewer bought in the round (ADR 037
+ * decision 19, `mine.letters`), so a halved or empty score explains itself.
  */
 function Verdict({
     mine,
@@ -841,8 +992,23 @@ function Verdict({
                     </span>
                 )}
             </span>
-            <span className="shrink-0 text-xl font-bold tabular-nums">
-                {t('rooms.game.points_won', { count: points })}
+            <span className="flex shrink-0 flex-col items-end gap-1">
+                <span className="text-xl font-bold tabular-nums">
+                    {t('rooms.game.points_won', { count: points })}
+                </span>
+                {mine.letters > 0 && (
+                    <span
+                        data-letters={mine.letters}
+                        className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-primary-foreground tabular-nums"
+                    >
+                        <Lock
+                            aria-hidden
+                            className="size-3"
+                            strokeWidth={2.5}
+                        />
+                        {t('rooms.anagram.letters', { count: mine.letters })}
+                    </span>
+                )}
             </span>
         </div>
     );
