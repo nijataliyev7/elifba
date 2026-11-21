@@ -12,11 +12,7 @@ import {
     trayView,
     writeTauntsHidden,
 } from '@/components/rooms/taunts';
-import type {
-    TauntDevice,
-    TauntPop,
-    TauntsSeen,
-} from '@/components/rooms/taunts';
+import type { TauntPop, TauntsSeen } from '@/components/rooms/taunts';
 import { reducedMotion } from '@/components/rooms/motion-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
@@ -93,18 +89,20 @@ function useNameOf(players: RoomPlayer[]): (id: string) => string {
         t('rooms.show.nameless');
 }
 
-/** This device's choice to hide taunts, read once and remembered in `localStorage` (never sent). */
-export function useTauntsHidden(
-    device: TauntDevice,
-): [boolean, (hidden: boolean) => void] {
+/**
+ * The screen's «Atmacalar» toggle, read once and remembered in
+ * `localStorage` (never sent). A phone has no such choice: only the host
+ * turns taunts off (ADR 029 decision 55).
+ */
+export function useTauntsHidden(): [boolean, (hidden: boolean) => void] {
     const [hidden, setHidden] = useState(() =>
-        readTauntsHidden(deviceStorage(), device),
+        readTauntsHidden(deviceStorage()),
     );
 
     return [
         hidden,
         (next) => {
-            writeTauntsHidden(deviceStorage(), device, next);
+            writeTauntsHidden(deviceStorage(), next);
             setHidden(next);
         },
     ];
@@ -212,24 +210,24 @@ function ReactionLayer({
  * none`), moves nothing, and stays until `sent_ms + TAUNT_REACTION_MS` by
  * the estimated server clock; two stand one above the other, the older
  * first, each smaller. A live region that is always there announces it.
+ * The phone cannot hide it: only the host turns taunts off (ADR 029
+ * decision 55).
  */
 export function TauntReaction({
     received,
     players,
     list,
     now,
-    hidden,
 }: {
     received: RoomTauntReceived[] | null | undefined;
     players: RoomPlayer[];
     list: TauntList | null;
     /** The server's clock as the page estimates it (`useServerNow()`). */
     now: number | null;
-    hidden: boolean;
 }) {
     const { t } = useTranslation();
     const nameOf = useNameOf(players);
-    const { shown, pops } = useReactions(received, now, hidden);
+    const { shown, pops } = useReactions(received, now, false);
     const two = shown.length > 1;
 
     return (
@@ -441,7 +439,7 @@ type Refusal = 'late' | 'off' | 'cooling' | 'no_points';
  * strip, with a 28px badge on the strip's bottom-right corner; it opens
  * the fan under the strip, the strip's width, over the thrower's own round
  * head and question — «Kimə: :name», the price, the balance or the
- * reason, the twelve taunts as a 4 × 3 grid and «Mənə atılanları gizlət».
+ * reason and the twelve taunts as a 4 × 3 grid.
  * The badge is muted with no points or before the first close (a tap still
  * opens the fan and says why) and is the cooldown's ring while it runs. A
  * tap throws at the strip's rival; the fan stays open until the receipt
@@ -460,8 +458,6 @@ export function TauntThrow({
     clock,
     now,
     phase,
-    hidden,
-    onHiddenChange,
     onThrown,
     noPoints = 'rooms.taunts.no_points',
 }: {
@@ -476,8 +472,6 @@ export function TauntThrow({
     now: number | null;
     /** The round's index and phase: a new one closes the fan. */
     phase: string;
-    hidden: boolean;
-    onHiddenChange: (hidden: boolean) => void;
     /** After a receipt: the page asks for the state now. */
     onThrown: () => void;
     /** What the fan says at a balance of 0: a match's «Bu oyunda atmaca haqqınız qalmayıb» (ADR 034 decision 22). */
@@ -669,7 +663,7 @@ export function TauntThrow({
             {open && (
                 <div
                     ref={fan}
-                    className="absolute top-[calc(100%+6px)] right-0 left-0 z-30 flex flex-col gap-2 rounded-[20px] rounded-tr-lg border bg-card px-2.5 pt-2.5 pb-1 shadow-[0_16px_40px_rgb(0_0_0/0.24)] dark:shadow-[0_16px_40px_rgb(0_0_0/0.65)]"
+                    className="absolute top-[calc(100%+6px)] right-0 left-0 z-30 flex flex-col gap-2 rounded-[20px] rounded-tr-lg border bg-card p-2.5 shadow-[0_16px_40px_rgb(0_0_0/0.24)] dark:shadow-[0_16px_40px_rgb(0_0_0/0.65)]"
                 >
                     <div className="flex items-center justify-between gap-2 text-[0.84375rem]">
                         <span className="truncate">
@@ -717,29 +711,6 @@ export function TauntThrow({
                             </button>
                         ))}
                     </div>
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={hidden}
-                        onClick={() => onHiddenChange(!hidden)}
-                        className="flex min-h-11 items-center gap-2.5 text-left text-[0.8125rem] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        <span
-                            aria-hidden
-                            className={cn(
-                                'relative h-5 w-9 shrink-0 rounded-full transition-colors motion-reduce:transition-none',
-                                hidden ? 'bg-primary' : 'bg-input',
-                            )}
-                        >
-                            <span
-                                className={cn(
-                                    'absolute top-0.5 left-0.5 size-4 rounded-full bg-background shadow-sm transition-transform motion-reduce:transition-none',
-                                    hidden && 'translate-x-4',
-                                )}
-                            />
-                        </span>
-                        {t('rooms.taunts.hide')}
-                    </button>
                 </div>
             )}
         </>

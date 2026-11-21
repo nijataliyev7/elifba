@@ -6,7 +6,8 @@ import type { StorageLike } from '@/rooms/sound';
  * 36–43 as amended 2026-11-19, T3), the part that is pure: which taunts a
  * page draws now as reactions in the middle of the viewport, which of them
  * it saw arrive and how they pop, what the strip's throw button and its
- * fan say, and this device's choice to hide them. Everything else is the
+ * fan say, and the screen's choice to hide them (a phone has none: only
+ * the host turns taunts off, ADR 029 decision 55). Everything else is the
  * server's: whether a throw is open, the balance, the cooldown's end and
  * which taunts a state holds. Nothing here reads a verdict, a solution or
  * anybody's result — only the state's `taunts`, the round's index and
@@ -39,37 +40,32 @@ export const TAUNT_POP_STAGGER_MS = 260;
 /** The shortest a pop lasts, however late it arrived: its growth and its fade. */
 export const TAUNT_POP_MIN_MS = 600;
 
-/** This device's choice, one key per kind of device, like the mute: never sent. */
-export const TAUNTS_HIDDEN_KEYS = {
-    phone: 'elifba.rooms.phone.taunts_hidden',
-    screen: 'elifba.rooms.screen.taunts_hidden',
-} as const;
+/**
+ * The screen's «Atmacalar» toggle, like its mute: never sent. A phone has
+ * no such choice (ADR 029 decision 55); a phone's old
+ * `elifba.rooms.phone.taunts_hidden` is never read.
+ */
+export const TAUNTS_HIDDEN_KEY = 'elifba.rooms.screen.taunts_hidden';
 
-export type TauntDevice = keyof typeof TAUNTS_HIDDEN_KEYS;
-
-/** Whether this device hides the taunts aimed at it (or, on the screen, every one); false when storage cannot say. */
-export function readTauntsHidden(
-    storage: StorageLike | null,
-    device: TauntDevice,
-): boolean {
+/** Whether the screen hides taunts; false when storage cannot say. */
+export function readTauntsHidden(storage: StorageLike | null): boolean {
     try {
-        return storage?.getItem(TAUNTS_HIDDEN_KEYS[device]) === '1';
+        return storage?.getItem(TAUNTS_HIDDEN_KEY) === '1';
     } catch {
         return false;
     }
 }
 
-/** Remembers the choice on this device; a refusal only means it is not remembered. */
+/** Remembers the screen's choice; a refusal only means it is not remembered. */
 export function writeTauntsHidden(
     storage: StorageLike | null,
-    device: TauntDevice,
     hidden: boolean,
 ): void {
     try {
         if (hidden) {
-            storage?.setItem(TAUNTS_HIDDEN_KEYS[device], '1');
+            storage?.setItem(TAUNTS_HIDDEN_KEY, '1');
         } else {
-            storage?.removeItem(TAUNTS_HIDDEN_KEYS[device]);
+            storage?.removeItem(TAUNTS_HIDDEN_KEY);
         }
     } catch {
         // Not remembered: the choice holds until the page is left.

@@ -51,7 +51,7 @@ import {
     useRoomReady,
 } from '@/components/rooms/ready-parts';
 import type { RivalryIcons } from '@/components/rooms/rivalry-strip';
-import { tauntVoices, useTauntsHidden } from '@/components/rooms/taunt-parts';
+import { tauntVoices } from '@/components/rooms/taunt-parts';
 import type { TauntList } from '@/components/rooms/taunt-parts';
 import { RoomTools } from '@/components/rooms/room-tools';
 import { SoundToggle } from '@/components/rooms/sound-toggle';
@@ -179,11 +179,10 @@ export default function RoomsShow({
     const { t } = useTranslation();
     const { state, clock, refresh } = useLiveRoom({ room, initial });
     const motion = useRoomMotion(state);
-    // This device's «Mənə atılanları gizlət»: it hides a taunt's reaction and silences its voice.
-    const [tauntsHidden, setTauntsHidden] = useTauntsHidden('phone');
+    // A phone never hides a taunt aimed at it: only the host turns taunts off (ADR 029 decision 55).
     const tauntSound = useMemo(
-        () => ({ voices: tauntVoices(taunts), hidden: tauntsHidden }),
-        [taunts, tauntsHidden],
+        () => ({ voices: tauntVoices(taunts), hidden: false }),
+        [taunts],
     );
     // In a room without a screen the phone cheers the winner too: the first name by ids, then «Əla oynadın!» (ADR 030 as amended).
     const cheer = useMemo(
@@ -269,8 +268,6 @@ export default function RoomsShow({
                     sound={sound}
                     icons={rivalry}
                     taunts={taunts}
-                    tauntsHidden={tauntsHidden}
-                    onTauntsHiddenChange={setTauntsHidden}
                     footer={
                         can.host && (
                             <div className="flex justify-center border-t pt-4">

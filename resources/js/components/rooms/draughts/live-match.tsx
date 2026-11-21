@@ -60,8 +60,6 @@ export function LiveMatch({
     sound,
     icons,
     taunts,
-    tauntsHidden,
-    onTauntsHiddenChange,
     footer,
 }: {
     roomId: string;
@@ -76,8 +74,6 @@ export function LiveMatch({
     sound: RoomSound | null;
     icons: RivalryIcons | null;
     taunts: TauntList | null;
-    tauntsHidden: boolean;
-    onTauntsHiddenChange: (hidden: boolean) => void;
     footer?: ReactNode;
 }) {
     const { t } = useTranslation();
@@ -134,8 +130,6 @@ export function LiveMatch({
                         clock={clock}
                         now={now}
                         phase={`match:${game.id}:${match.ply}`}
-                        hidden={tauntsHidden}
-                        onHiddenChange={onTauntsHiddenChange}
                         onThrown={refresh}
                         noPoints="rooms.taunts.none_left"
                     />
@@ -146,7 +140,6 @@ export function LiveMatch({
                     players={state.players}
                     list={taunts}
                     now={now}
-                    hidden={tauntsHidden}
                 />
 
                 <div className="-mx-2 sm:mx-auto sm:w-full sm:max-w-[480px]">

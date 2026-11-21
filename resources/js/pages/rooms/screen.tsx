@@ -137,7 +137,7 @@ export default function RoomsScreen({
         beatMs,
     });
     const motion = useRoomMotion(state);
-    const [tauntsHidden, setTauntsHidden] = useTauntsHidden('screen');
+    const [tauntsHidden, setTauntsHidden] = useTauntsHidden();
     // After the final's fanfare the screen cheers the winner: the first name, fetched by ids, and «Əla oynadın!» (ADR 030).
     const cheer = useMemo(
         () => ({

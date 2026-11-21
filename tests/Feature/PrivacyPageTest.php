@@ -171,6 +171,13 @@ it('says what a taunt is, what it costs, who sees it and how it is hidden', func
                     }
                 }
 
+                // Only the host turns taunts off; no device hides them on its own (ADR 029 decision 58).
+                foreach (['privacy.rooms.contact', 'privacy.rooms.contact_voice'] as $key) {
+                    if (str_contains($translations[$key], 'öz cihazında') || str_contains($translations[$key], 'own device')) {
+                        return false;
+                    }
+                }
+
                 // Kept: who threw what at whom and when; the target forgotten after a day, the cost kept.
                 return str_contains($translations['privacy.rooms.stored'], $stored)
                     && substr_count($translations['privacy.rooms.stored'], "\n") === 3
@@ -179,8 +186,8 @@ it('says what a taunt is, what it costs, who sees it and how it is hidden', func
                     && ! str_contains(mb_strtolower($translations['roles.agreement.player']), 'taunt');
             }));
 })->with([
-    'az' => [null, ['mesaj, çat və ya dəvət göndərilmir', 'yalnız hazır siyahıdan atmaca', 'hər atmaca atana 1 xal başa gəlir', 'öz cihazında gizlədə', 'otaqda bağlaya bilər'], 'kimə atıldığı bir gündən sonra silinir'],
-    'en' => ['en', ['no message, chat or invitation is sent', 'only a taunt from a ready-made list', 'each costs the thrower 1 point', 'hide taunts on their own device', 'switch them off for the room'], 'whom it was aimed at is erased after a day'],
+    'az' => [null, ['mesaj, çat və ya dəvət göndərilmir', 'yalnız hazır siyahıdan atmaca', 'hər atmaca atana 1 xal başa gəlir', 'Atmacaları yalnız aparıcı otaqda bağlaya bilər.'], 'kimə atıldığı bir gündən sonra silinir'],
+    'en' => ['en', ['no message, chat or invitation is sent', 'only a taunt from a ready-made list', 'each costs the thrower 1 point', 'Only the host can switch taunts off for the room.'], 'whom it was aimed at is erased after a day'],
 ]);
 
 it('says a taunt is seen and heard only by its target and the big screen', function (?string $locale, string $clause): void {

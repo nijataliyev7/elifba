@@ -87,7 +87,7 @@ export type RoomCue =
     /** A seat's turn begins: one vibration (`BUZZ_MS`), on its phone alone. */
     | { sound: 'buzz'; at: number };
 
-/** What the page itself decided: whether this device hides taunts (its «Mənə atılanları gizlət», the screen's «Atmacalar»). */
+/** What the page itself decided: whether the screen hides taunts (its «Atmacalar»; a phone has no such choice, ADR 029 decision 55). */
 export type CueOptions = { tauntsHidden?: boolean };
 
 /**

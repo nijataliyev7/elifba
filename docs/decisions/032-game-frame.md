@@ -73,7 +73,7 @@ F1 drew one clickable page (`~/elifba-shots/game-frame/src/`, from the taunts' e
     - **025, 028, 030** — every moment's motion, the sounds and who plays them, the final, the winner's name on the screen alone; the frame adds no motion and no sound.
     - **026** — games first: the start screen's parts (the invitation, the choice's row, who joined, «Başla»), «Oyun ayarları», «Otağın idarəsi» never in a round, the two words.
     - **027** — the strip's look, colours, place above the round and motion; only decision 11's numbers change (decision 7).
-    - **029** — taunts: the rival's side of the strip throws, the fan, the reaction, its voice, «Mənə atılanları gizlət», the host's switch.
+    - **029** — taunts: the rival's side of the strip throws, the fan, the reaction, its voice, the host's switch.
     - **031** — the live voice: the button and its forms, the panel, the consent, the host's tools; the button stands in the frame's top bar where it stood in the page's head.
     - `rooms/screen`, every children's page and `RoomsApartTest`: `RoomFrame` lives in `components/rooms/` and imports nothing of the children's side — the remote is matched in spirit, never imported.
 

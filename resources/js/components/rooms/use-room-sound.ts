@@ -33,9 +33,9 @@ export type RoomCheer = {
 
 /**
  * What a page says of taunts (ADR 029 decisions 44–48): the clips of its
- * prop `taunts`, by key, and whether this device hides taunts — its
- * «Mənə atılanları gizlət», the screen's «Atmacalar» — which silences them
- * with their reactions.
+ * prop `taunts`, by key, and whether this device hides taunts — the
+ * screen's «Atmacalar», which silences them with their reactions; a phone
+ * never hides them (ADR 029 decision 55).
  */
 export type RoomTauntVoices = { voices: TauntVoiceUrls; hidden: boolean };
 
@@ -107,7 +107,7 @@ function allowedWithoutGesture(): boolean {
  * arrive — the target's phone, the screen — fetching the clips only while
  * the room's taunts are on and this device draws them, and a taunt being
  * said stops when they no longer are: the game over, the room closed, the
- * host's switch off, the taunts hidden. A page without it says none.
+ * host's switch off, the screen's taunts hidden. A page without it says none.
  */
 export function useRoomSound({
     speaker,

@@ -10,7 +10,7 @@ import {
     tauntMoment,
     tauntPops,
     tauntsEnd,
-    TAUNTS_HIDDEN_KEYS,
+    TAUNTS_HIDDEN_KEY,
     TAUNTS_UNSEEN,
     trayView,
     writeTauntsHidden,
@@ -127,21 +127,24 @@ describe('shownTaunts', () => {
         expect(shownTaunts(list, 15_000, false)).toEqual([]);
     });
 
-    it('shows nothing while this device hides taunts', () => {
+    it('shows nothing while the screen hides taunts', () => {
         const storage = memory();
         const list = [taunt('a', 10_000)];
 
-        expect(readTauntsHidden(storage, 'phone')).toBe(false);
-        writeTauntsHidden(storage, 'phone', true);
-        expect(storage.data.get(TAUNTS_HIDDEN_KEYS.phone)).toBe('1');
-        expect(readTauntsHidden(storage, 'phone')).toBe(true);
-        // The screen's choice is its own.
-        expect(readTauntsHidden(storage, 'screen')).toBe(false);
-        expect(
-            shownTaunts(list, 10_000, readTauntsHidden(storage, 'phone')),
-        ).toEqual([]);
-        writeTauntsHidden(storage, 'phone', false);
-        expect(storage.data.has(TAUNTS_HIDDEN_KEYS.phone)).toBe(false);
+        expect(readTauntsHidden(storage)).toBe(false);
+        writeTauntsHidden(storage, true);
+        expect(TAUNTS_HIDDEN_KEY).toBe('elifba.rooms.screen.taunts_hidden');
+        expect(storage.data.get(TAUNTS_HIDDEN_KEY)).toBe('1');
+        expect(readTauntsHidden(storage)).toBe(true);
+        expect(shownTaunts(list, 10_000, readTauntsHidden(storage))).toEqual(
+            [],
+        );
+        writeTauntsHidden(storage, false);
+        expect(storage.data.has(TAUNTS_HIDDEN_KEY)).toBe(false);
+
+        // A phone's old key hides nothing: only the host turns taunts off (ADR 029 decision 55).
+        storage.data.set('elifba.rooms.phone.taunts_hidden', '1');
+        expect(readTauntsHidden(storage)).toBe(false);
 
         // A storage that refuses: not hidden, and nothing throws.
         const refusing = {
@@ -156,9 +159,9 @@ describe('shownTaunts', () => {
             },
         };
 
-        expect(readTauntsHidden(refusing, 'phone')).toBe(false);
-        expect(() => writeTauntsHidden(refusing, 'phone', true)).not.toThrow();
-        expect(readTauntsHidden(null, 'screen')).toBe(false);
+        expect(readTauntsHidden(refusing)).toBe(false);
+        expect(() => writeTauntsHidden(refusing, true)).not.toThrow();
+        expect(readTauntsHidden(null)).toBe(false);
     });
 });
 

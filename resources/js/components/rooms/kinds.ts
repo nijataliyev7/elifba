@@ -70,8 +70,6 @@ export type PhoneParts = {
     sound: RoomSound | null;
     icons: RivalryIcons | null;
     taunts: TauntList | null;
-    tauntsHidden: boolean;
-    onTauntsHiddenChange: (hidden: boolean) => void;
     /** Under the game: the host's «Oyunu bitir». */
     footer: ReactNode;
 };

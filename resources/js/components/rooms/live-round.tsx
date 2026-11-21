@@ -96,8 +96,8 @@ type Sent = {
  * amended 2026-11-19): a player taps it and throws the strip's rival a
  * taunt from the fan (`taunts`), for a point of their own; a taunt aimed at
  * the viewer is a reaction in the middle of the viewport for 3 s, which
- * takes no tap and moves nothing of the round, unless this device hides
- * them (`tauntsHidden`, the page's). The reveal says the cost counted at
+ * takes no tap and moves nothing of the round; only the host turns taunts
+ * off (ADR 029 decision 55). The reveal says the cost counted at
  * its close: «Atmaca: −:count xal» under the thrower's verdict and
  * «−:count» in «Sıralama».
  */
@@ -114,8 +114,6 @@ export function LiveRound({
     sound = null,
     icons = null,
     taunts = null,
-    tauntsHidden = false,
-    onTauntsHiddenChange = () => {},
 }: {
     roomId: string;
     state: RoomState;
@@ -133,9 +131,6 @@ export function LiveRound({
     icons?: RivalryIcons | null;
     /** The taunts a player may throw (the prop `taunts`, T2). */
     taunts?: TauntList | null;
-    /** This device hides the taunts aimed at it («Mənə atılanları gizlət», the page's choice). */
-    tauntsHidden?: boolean;
-    onTauntsHiddenChange?: (hidden: boolean) => void;
 }) {
     const { t } = useTranslation();
     const now = useServerNow(clock, true);
@@ -257,8 +252,6 @@ export function LiveRound({
                     clock={clock}
                     now={now}
                     phase={`${round.index}:${round.phase}`}
-                    hidden={tauntsHidden}
-                    onHiddenChange={onTauntsHiddenChange}
                     onThrown={refresh}
                 />
             </GameStrip>
@@ -268,7 +261,6 @@ export function LiveRound({
                 players={state.players}
                 list={taunts}
                 now={now}
-                hidden={tauntsHidden}
             />
 
             <RoundHead game={game} round={round} now={now} />
