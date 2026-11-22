@@ -1,5 +1,5 @@
 {
-    "version": 5,
+    "version": 6,
     "levels": [
         {
             "mechanic": "recall_order",
@@ -151,28 +151,32 @@
             "difficulty": 1,
             "study_ms": 0,
             "answer_ms": 20000,
-            "word_length": { "min": 4, "max": 5 }
+            "word_length": { "min": 4, "max": 5 },
+            "clue": "full"
         },
         {
             "mechanic": "anagram",
             "difficulty": 2,
             "study_ms": 0,
             "answer_ms": 30000,
-            "word_length": { "min": 5, "max": 6 }
+            "word_length": { "min": 5, "max": 6 },
+            "clue": "field"
         },
         {
             "mechanic": "anagram",
             "difficulty": 3,
             "study_ms": 0,
             "answer_ms": 40000,
-            "word_length": { "min": 6, "max": 7 }
+            "word_length": { "min": 6, "max": 7 },
+            "clue": "field"
         },
         {
             "mechanic": "anagram",
             "difficulty": 4,
             "study_ms": 0,
             "answer_ms": 50000,
-            "word_length": { "min": 7, "max": 8 }
+            "word_length": { "min": 7, "max": 8 },
+            "clue": "field"
         },
         {
             "mechanic": "spelling",

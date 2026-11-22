@@ -2,6 +2,7 @@
 
 namespace App\Domain\Content\Data;
 
+use App\Domain\Content\Enums\RoomClueForm;
 use App\Domain\Content\Enums\RoomItemKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Enums\RoomSequenceRule;
@@ -22,7 +23,9 @@ use App\Domain\Content\Enums\RoomSource;
  *   row shows) and `range` (every number a round shows).
  * - `odd_one_out` (B5): `source` (numbers or words) and `options` (how
  *   many to choose from, 4 or 5).
- * - `anagram` (B6): `word_length` (`{min, max}` letters of the word).
+ * - `anagram` (B6): `word_length` (`{min, max}` letters of the word);
+ *   from ADR 037 as amended 2026-11-22 `clue`, how much of the word's
+ *   clue the question shows (`RoomClueForm`: `full`, or its `field` alone).
  * - `spelling` (B6): `word_length` and `swaps` (1 or 2: how many letters
  *   at least tell two of the four spellings apart, `Content\Support\RoomWords`).
  * - `draughts` (D3, ADR 034 decision 6), a board game: its level is its
@@ -31,7 +34,7 @@ use App\Domain\Content\Enums\RoomSource;
  *   `study_ms` and `answer_ms` are 0 and not in the file. Its difficulties
  *   are 1 to 3, a higher number a faster game.
  *
- * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms?: int, answer_ms?: int, clock_ms?: int, increment_ms?: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int}
+ * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms?: int, answer_ms?: int, clock_ms?: int, increment_ms?: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int, clue?: string}
  */
 final readonly class RoomLevelData
 {
@@ -52,6 +55,7 @@ final readonly class RoomLevelData
      * @param  int|null  $swaps  a `spelling` level's: 1 or 2
      * @param  int|null  $clockMs  a board game's: each side's time
      * @param  int|null  $incrementMs  a board game's: what a side gains with each move
+     * @param  RoomClueForm|null  $clue  an `anagram` level's: the clue whole or its field alone; null shows it whole
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -71,6 +75,7 @@ final readonly class RoomLevelData
         public ?int $swaps = null,
         public ?int $clockMs = null,
         public ?int $incrementMs = null,
+        public ?RoomClueForm $clue = null,
     ) {}
 
     /**
@@ -96,6 +101,7 @@ final readonly class RoomLevelData
             swaps: $data['swaps'] ?? null,
             clockMs: $data['clock_ms'] ?? null,
             incrementMs: $data['increment_ms'] ?? null,
+            clue: isset($data['clue']) ? RoomClueForm::from($data['clue']) : null,
         );
     }
 }

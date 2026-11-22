@@ -2,6 +2,7 @@
 
 namespace App\Domain\Rooms\Support\Mechanics;
 
+use App\Domain\Content\Data\RoomClueData;
 use App\Domain\Content\Data\RoomLevelData;
 use App\Domain\Content\Enums\RoomItemKind;
 use App\Domain\Content\Support\RoomWords;
@@ -32,7 +33,9 @@ use Random\Randomizer;
  *   ids are the tiles in the drawn word's order, and its `word` the drawn
  *   word in capitals, which the reveal shows.
  * - The question carries the word's clue as `content/rooms/clues.json`
- *   writes it (`ask.clue`; null for a word the clues given here lack) and
+ *   writes it — whole, or its field alone where the level says so
+ *   (`RoomClueData::shown()`, the level's `clue`; ADR 037 as amended
+ *   2026-11-22) — (`ask.clue`; null for a word the clues given here lack) and
  *   a bounded list of the tiles' orders (`ask.orders`, `AnagramOrders`):
  *   none reads an accepted spelling, not only the drawn word, no two read
  *   alike, and the first is the order of the question's `items`.
@@ -94,7 +97,7 @@ final readonly class AnagramBuilder implements RoomRoundBuilder
                 RoomLayout::Row,
                 null,
                 $orders[0],
-                clue: $this->clues[$word] ?? null,
+                clue: isset($this->clues[$word]) ? RoomClueData::shown($this->clues[$word], $level->clue) : null,
                 orders: array_map(static fn (array $order): array => array_map(static fn (RoomItemData $tile): string => $tile->id, $order), $orders),
             ),
             solution: $solution,

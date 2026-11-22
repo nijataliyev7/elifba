@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Content\Data\RoomClueData;
 use App\Domain\Content\Enums\Effect;
 use App\Domain\Content\Enums\ItemStyle;
 use App\Domain\Content\Enums\RoomSound;
@@ -335,6 +336,10 @@ it('gives every word of the real list a clue that fits two lines of a phone', fu
 
     expect(array_keys($clues->clues))->toBe($content->roomWords()->words)
         ->and(max(array_map(mb_strlen(...), $clues->clues)))->toBeLessThanOrEqual(ContentValidator::MAX_ROOM_CLUE_LENGTH)
+        // As amended 2026-11-22: every clue a field, then a trait; a level above «Asan» shows the field alone.
+        ->and(array_filter($clues->clues, static fn (string $clue): bool => RoomClueData::field($clue) === $clue))->toBe([])
+        ->and(max(array_map(static fn (string $clue): int => mb_strlen(RoomClueData::field($clue)), $clues->clues)))->toBeLessThanOrEqual(ContentValidator::MAX_ROOM_CLUE_FIELD_LENGTH)
+        ->and(RoomClueData::field((string) $clues->of('qaynaq')))->toBe('Metal birləşdirmə')
         ->and($clues->of('qarpız'))->toBe('Yay meyvəsi, bostanda yetişir')
         ->and($clues->of('babam'))->toBeNull();
 });

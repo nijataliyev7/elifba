@@ -7,6 +7,7 @@ use App\Domain\Content\Data\LevelData;
 use App\Domain\Content\Data\PackData;
 use App\Domain\Content\Data\PromptTemplateData;
 use App\Domain\Content\Data\RangeData;
+use App\Domain\Content\Data\RoomClueData;
 use App\Domain\Content\Data\RoomRivalryData;
 use App\Domain\Content\Data\RoomTauntData;
 use App\Domain\Content\Data\SoundChoiceData;
@@ -15,6 +16,7 @@ use App\Domain\Content\Enums\Effect;
 use App\Domain\Content\Enums\ItemStyle;
 use App\Domain\Content\Enums\License;
 use App\Domain\Content\Enums\Mechanic;
+use App\Domain\Content\Enums\RoomClueForm;
 use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomItemKind;
 use App\Domain\Content\Enums\RoomMechanic;
@@ -291,6 +293,14 @@ final class ContentValidator
      * and a line holds 315px.
      */
     public const int MAX_ROOM_CLUE_LENGTH = 56;
+
+    /**
+     * The longest field of a clue, what it says before its first comma
+     * (ADR 037 as amended 2026-11-22): a level above «Asan» shows it alone,
+     * so it is a kind of thing in a few words — «Metal birləşdirmə» — never
+     * a description. The longest of the file, «Simli musiqi aləti», has 18.
+     */
+    public const int MAX_ROOM_CLUE_FIELD_LENGTH = 24;
 
     private const string KEY = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
@@ -911,7 +921,8 @@ final class ContentValidator
      * - `odd_one_out` (B5): `source`, numbers or words; `options`, 4 or 5.
      * - `anagram` (B6): `word_length`, 3–12 letters, `min` ≤ `max`, and for
      *   every length in it at least `MIN_ROOM_WORDS` words of `words.json`
-     *   an anagram can be drawn from (`RoomWords::forAnagram()`).
+     *   an anagram can be drawn from (`RoomWords::forAnagram()`); from ADR
+     *   037 as amended 2026-11-22 `clue`, `full` or `field` (`RoomClueForm`).
      * - `spelling` (B6): `word_length` as an anagram's, with at least
      *   `MIN_ROOM_WORDS` words of every length in it; `swaps`, 1 or 2; and
      *   at least `MIN_ROOM_WORDS` words in the range that make three wrong
@@ -1096,7 +1107,7 @@ final class ContentValidator
             RoomMechanic::RecallCells => ['grid', 'lit'],
             RoomMechanic::NextInSequence => ['rules', 'terms', 'range'],
             RoomMechanic::OddOneOut => ['source', 'options'],
-            RoomMechanic::Anagram => ['word_length'],
+            RoomMechanic::Anagram => ['word_length', 'clue'],
             RoomMechanic::Spelling => ['word_length', 'swaps'],
             RoomMechanic::Draughts => [],
         };
@@ -1213,6 +1224,10 @@ final class ContentValidator
     {
         $length = $this->letterRange($level['word_length'], $file, "{$where}.word_length");
         $swaps = $level['swaps'] ?? null;
+
+        if ($mechanic === RoomMechanic::Anagram) {
+            $this->enum(RoomClueForm::class, $level['clue'], $file, "{$where}.clue");
+        }
 
         if ($mechanic === RoomMechanic::Spelling && ! in_array($swaps, RoomWords::SWAPS, true)) {
             $this->problem($file, "{$where}.swaps must be ".implode(' or ', RoomWords::SWAPS));
@@ -1422,8 +1437,11 @@ final class ContentValidator
      * `words` to its clue, in the list's order — a clue for every word and
      * no key that is no word. Each clue is the alphabet's letters, spaces,
      * `,` and `-`, from a capital letter, with no space at either end and
-     * no two together, of at most `MAX_ROOM_CLUE_LENGTH` characters; and it
-     * never holds, by `Az::lower`, a form of its word (`giveaways()`). What
+     * no two together, of at most `MAX_ROOM_CLUE_LENGTH` characters; it
+     * names its field, then a trait after the first comma, the field of at
+     * most `MAX_ROOM_CLUE_FIELD_LENGTH` (ADR 037 as amended 2026-11-22: a
+     * level above «Asan» shows the field alone); and it never holds, by
+     * `Az::lower`, a form of its word (`giveaways()`). What
      * a substring cannot see — a three-letter part of a compound, a synonym
      * — is reviewed by hand. The file needs a `credits.json` entry
      * (`CREDITED_LISTS`).
@@ -1516,6 +1534,14 @@ final class ContentValidator
 
         if ($length > self::MAX_ROOM_CLUE_LENGTH) {
             $this->problem($file, "{$where} has {$length} characters; a clue has at most ".self::MAX_ROOM_CLUE_LENGTH.', two lines of a 375px phone');
+        }
+
+        $field = RoomClueData::field($clue);
+
+        if ($field === $clue || trim(mb_substr($clue, mb_strlen($field) + 1)) === '') {
+            $this->problem($file, "{$where} \"{$clue}\" must name its word's field, then a trait after a comma, as «Yay meyvəsi, bostanda yetişir»");
+        } elseif (mb_strlen($field) > self::MAX_ROOM_CLUE_FIELD_LENGTH) {
+            $this->problem($file, "{$where}'s field \"{$field}\" has ".mb_strlen($field).' characters; a field has at most '.self::MAX_ROOM_CLUE_FIELD_LENGTH.', a kind of thing in a few words');
         }
 
         $lower = Az::lower($clue);

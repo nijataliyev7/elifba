@@ -1620,6 +1620,16 @@
         "set": { "levels.17.swaps": 1 },
         "problem": "rooms/levels.json: levels[17] has an unknown key `swaps`"
     },
+    "rooms levels: an anagram without its clue's form": {
+        "file": "rooms/levels.json",
+        "unset": ["levels.16.clue"],
+        "problem": "rooms/levels.json: levels[16] needs `clue`"
+    },
+    "rooms levels: an anagram with a clue form of no kind": {
+        "file": "rooms/levels.json",
+        "set": { "levels.17.clue": "half" },
+        "problem": "rooms/levels.json: levels[17].clue must be one of full, field"
+    },
     "rooms levels: words shorter than the list's": {
         "file": "rooms/levels.json",
         "set": { "levels.19.word_length": { "min": 2, "max": 5 } },
@@ -1786,6 +1796,27 @@
             "clues.alma": "Meyvə, Quba bağlarının məşhuru, qırmızısı da var, sarısı da"
         },
         "problem": "rooms/clues.json: clues \"alma\" has 59 characters; a clue has at most 56, two lines of a 375px phone"
+    },
+    "rooms clues: a clue with no field before a comma": {
+        "file": "rooms/clues.json",
+        "set": {
+            "clues.alma": "Quba bağlarının məşhur meyvəsi"
+        },
+        "problem": "rooms/clues.json: clues \"alma\" \"Quba bağlarının məşhur meyvəsi\" must name its word's field, then a trait after a comma, as «Yay meyvəsi, bostanda yetişir»"
+    },
+    "rooms clues: a field with nothing after its comma": {
+        "file": "rooms/clues.json",
+        "set": {
+            "clues.alma": "Meyvə,"
+        },
+        "problem": "rooms/clues.json: clues \"alma\" \"Meyvə,\" must name its word's field, then a trait after a comma, as «Yay meyvəsi, bostanda yetişir»"
+    },
+    "rooms clues: a field that describes rather than names a kind": {
+        "file": "rooms/clues.json",
+        "set": {
+            "clues.alma": "Quba bağlarının məşhur meyvəsi, qırmızı"
+        },
+        "problem": "rooms/clues.json: clues \"alma\"'s field \"Quba bağlarının məşhur meyvəsi\" has 30 characters; a field has at most 24, a kind of thing in a few words"
     },
     "rooms clues: a clue with a full stop": {
         "file": "rooms/clues.json",

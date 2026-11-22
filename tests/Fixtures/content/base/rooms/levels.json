@@ -138,28 +138,32 @@
             "difficulty": 1,
             "study_ms": 0,
             "answer_ms": 10000,
-            "word_length": { "min": 5, "max": 5 }
+            "word_length": { "min": 5, "max": 5 },
+            "clue": "full"
         },
         {
             "mechanic": "anagram",
             "difficulty": 2,
             "study_ms": 0,
             "answer_ms": 20000,
-            "word_length": { "min": 5, "max": 5 }
+            "word_length": { "min": 5, "max": 5 },
+            "clue": "field"
         },
         {
             "mechanic": "anagram",
             "difficulty": 3,
             "study_ms": 0,
             "answer_ms": 30000,
-            "word_length": { "min": 5, "max": 5 }
+            "word_length": { "min": 5, "max": 5 },
+            "clue": "field"
         },
         {
             "mechanic": "anagram",
             "difficulty": 4,
             "study_ms": 0,
             "answer_ms": 40000,
-            "word_length": { "min": 5, "max": 5 }
+            "word_length": { "min": 5, "max": 5 },
+            "clue": "field"
         },
         {
             "mechanic": "spelling",

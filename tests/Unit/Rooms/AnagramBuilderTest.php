@@ -1,7 +1,9 @@
 <?php
 
 use App\Domain\Content\Data\RangeData;
+use App\Domain\Content\Data\RoomClueData;
 use App\Domain\Content\Data\RoomLevelData;
+use App\Domain\Content\Enums\RoomClueForm;
 use App\Domain\Content\Enums\RoomItemKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Support\ContentRepository;
@@ -102,8 +104,10 @@ it('never shows the letters in the word\'s own order', function (RoomLevelData $
             $says = array_column(array_map(static fn (RoomItemData $item): array => $item->toArray(), $round->ask->items), 'text', 'id');
             $read = array_map(static fn (array $order): string => implode('', array_map(static fn (string $id): string => $says[$id], $order)), $round->ask->orders);
 
-            expect($round->ask->clue)->toBe($content->roomClues()->of($word))
+            // As amended 2026-11-22: «Asan» shows the clue whole, a harder level its field alone.
+            expect($round->ask->clue)->toBe(RoomClueData::shown((string) $content->roomClues()->of($word), $level->clue))
                 ->and($round->ask->clue)->not->toBeNull()
+                ->and(str_contains((string) $round->ask->clue, ','))->toBe($level->difficulty === 1)
                 ->and($round->ask->orders[0])->toBe($ids)
                 ->and(count($round->ask->orders))->toBe(AnagramOrders::count(RoomWords::arrangements($word), count($accepted)))
                 ->and(array_intersect($read, $accepted))->toBe([])
@@ -143,6 +147,36 @@ it('never shows the order of another word the letters spell, nor of the word, wh
     // Letters that spell an accepted word in every order are never drawn.
     expect((new RoomWords(['aba', 'aab', 'baa']))->forAnagram(new RangeData(3, 3)))->toBe([])
         ->and(fn () => anagramRounds(anagramLevel(3, 3), 1, 1, new RoomWords(['aba', 'aab', 'baa'])))->toThrow(InvalidArgumentException::class);
+});
+
+it('shows a clue whole at «Asan» and its field alone above it, as the level says', function (): void {
+    // ADR 037 as amended 2026-11-22: the owner found the trait gave the word away above the easiest level.
+    $content = app(ContentRepository::class);
+    $forms = array_map(static fn (int $difficulty): ?RoomClueForm => $content->roomLevel(RoomMechanic::Anagram, $difficulty)->clue, [1, 2, 3, 4]);
+
+    expect($forms)->toBe([RoomClueForm::Full, RoomClueForm::Field, RoomClueForm::Field, RoomClueForm::Field])
+        ->and(RoomClueData::field('Metal birləşdirmə, qığılcım saçır'))->toBe('Metal birləşdirmə')
+        ->and(RoomClueData::field('Yay meyvəsi, bostanda yetişir'))->toBe('Yay meyvəsi')
+        ->and(RoomClueData::field('Bir sözlü'))->toBe('Bir sözlü')
+        ->and(RoomClueData::shown('Yay meyvəsi, bostanda yetişir', RoomClueForm::Full))->toBe('Yay meyvəsi, bostanda yetişir')
+        ->and(RoomClueData::shown('Yay meyvəsi, bostanda yetişir', null))->toBe('Yay meyvəsi, bostanda yetişir')
+        ->and(RoomClueData::shown('Yay meyvəsi, bostanda yetişir', RoomClueForm::Field))->toBe('Yay meyvəsi');
+
+    $level = static fn (?RoomClueForm $clue): RoomLevelData => new RoomLevelData(RoomMechanic::Anagram, 2, 0, 30_000, wordLength: new RangeData(5, 6), clue: $clue);
+
+    foreach (anagramRounds($level(RoomClueForm::Field), 7) as $round) {
+        $word = Az::lower((string) $round->solution->word);
+
+        expect($round->ask->clue)->toBe(RoomClueData::field((string) $content->roomClues()->of($word)))
+            ->and($round->ask->clue)->not->toContain(',');
+    }
+
+    foreach (anagramRounds($level(RoomClueForm::Full), 7) as $round) {
+        $word = Az::lower((string) $round->solution->word);
+
+        expect($round->ask->clue)->toBe($content->roomClues()->of($word))
+            ->and($round->ask->clue)->toContain(', ');
+    }
 });
 
 it('accepts every listed word the letters spell', function (): void {
