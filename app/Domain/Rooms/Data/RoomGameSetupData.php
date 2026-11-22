@@ -32,9 +32,12 @@ use InvalidArgumentException;
  * kind, which the constructor holds to: a race has its rounds and no
  * seats; a board game has no rounds — `rooms.setup_rounds` keeps its number
  * for the next race — and its two seats, the `room_players.id` of the
- * players of white and black, either null while the room has fewer than
- * two present players to seat (`RoomSeats`). What the choice asks beyond
- * the game and its level is its kind's (`RoomGameDriver::choiceRules()`).
+ * players of white and black, either null while the room has nobody to
+ * seat there; the computer's level, when it plays the colour without a
+ * player, is chosen or — in a room of fewer than two present players —
+ * the room's own (`RoomSeats`, ADR 036 as amended 2026-11-22). What the
+ * choice asks beyond the game and its level is its kind's
+ * (`RoomGameDriver::choiceRules()`).
  */
 final readonly class RoomGameSetupData
 {
@@ -66,18 +69,18 @@ final readonly class RoomGameSetupData
     /**
      * A choice of this game at this level, in its kind's shape: a race with
      * `$rounds` — or none, when there are no rounds to give it — and a board
-     * game without them, its seats from `$seats` (`RoomSeats`), asked only
-     * for a board game.
+     * game without them, its seats and the computer's level from `$seats`
+     * (`RoomSeats`), asked only for a board game.
      *
-     * @param  (Closure(): array{0: string|null, 1: string|null})|null  $seats
+     * @param  (Closure(): array{0: string|null, 1: string|null, 2: RoomComputerLevel|null})|null  $seats
      */
-    public static function of(RoomMechanic $mechanic, int $difficulty, ?int $rounds, ?Closure $seats = null, ?RoomComputerLevel $computer = null): ?self
+    public static function of(RoomMechanic $mechanic, int $difficulty, ?int $rounds, ?Closure $seats = null): ?self
     {
         if ($mechanic->kind() === RoomGameKind::Race) {
             return $rounds === null ? null : new self($mechanic, $difficulty, $rounds);
         }
 
-        [$white, $black] = $seats === null ? [null, null] : $seats();
+        [$white, $black, $computer] = $seats === null ? [null, null, null] : $seats();
 
         return new self($mechanic, $difficulty, null, $white, $black, $computer);
     }
@@ -137,7 +140,7 @@ final readonly class RoomGameSetupData
             $kept && ! array_key_exists('computer', $validated) && $mechanic->kind() === RoomGameKind::Board => $room->setup_computer,
             default => null,
         };
-        $setup = self::of($mechanic, (int) $validated['difficulty'], $rounds, static fn (): array => $seats, $computer);
+        $setup = self::of($mechanic, (int) $validated['difficulty'], $rounds, static fn (): array => [...$seats, $computer]);
 
         // Each value may be a level's while the pair is none.
         if ($setup === null || ! in_array($setup->mechanic->value.'.'.$setup->difficulty, self::playablePairs(), true)) {
@@ -175,14 +178,14 @@ final readonly class RoomGameSetupData
     }
 
     /**
-     * The choice with the room's seats, for a board game (`RoomSeats`, asked
-     * only then); a race's as it is.
+     * The choice with the room's seats and the computer's level, for a
+     * board game (`RoomSeats`, asked only then); a race's as it is.
      *
-     * @param  Closure(): array{0: string|null, 1: string|null}  $seats
+     * @param  Closure(): array{0: string|null, 1: string|null, 2: RoomComputerLevel|null}  $seats
      */
-    public function seated(Closure $seats, ?RoomComputerLevel $computer = null): self
+    public function seated(Closure $seats): self
     {
-        return self::of($this->mechanic, $this->difficulty, $this->rounds, $seats, $this->rounds === null ? $computer : null) ?? $this;
+        return self::of($this->mechanic, $this->difficulty, $this->rounds, $seats) ?? $this;
     }
 
     /**

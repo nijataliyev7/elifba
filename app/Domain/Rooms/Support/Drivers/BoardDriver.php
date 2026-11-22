@@ -51,7 +51,10 @@ use WeakMap;
  * - The start seats the two players and copies the level's clock to the
  *   game's row, so a running match keeps its clock when the content
  *   changes, and writes the room's seats the other way round for the next
- *   game; it refuses a choice with fewer than two seats.
+ *   game; it refuses a choice with fewer than two seats — or, against the
+ *   computer, with none (in a room of one the computer plays by itself,
+ *   `RoomSeats`, so a room's own choice meets this only with nobody
+ *   present).
  * - Whether it is over, its outcome, the position, the clocks and the
  *   standing offer are replayed from the game's acts (`DraughtsMatch`),
  *   never stored; a replay is remembered within one request at most, for

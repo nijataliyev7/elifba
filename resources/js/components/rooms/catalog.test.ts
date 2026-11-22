@@ -7,6 +7,7 @@ import {
     gameSummary,
     sameChoice,
     withComputer,
+    withComputerPicked,
     withGame,
     withLevel,
     withoutComputer,
@@ -160,7 +161,7 @@ describe('a choice against the computer (ADR 036)', () => {
     ];
 
     it('needs one player against the computer, where two players need both seats', () => {
-        // A room of one cannot start a match of two, and can start one against the computer.
+        // A match of two players cannot start with a seat empty — the state of a room of one has the computer there (ADR 036 as amended 2026-11-22) — and one against the computer can.
         expect(choiceParts(t, one).needs).toBe('rooms.errors.needs_two');
         expect(choiceParts(t, against).needs).toBeNull();
         expect(
@@ -248,6 +249,31 @@ describe('a choice against the computer (ADR 036)', () => {
         // Two players, as before: one picked for the other seat changes places.
         expect(seats(withSeat(two, 'white', 'a'))).toEqual(['a', 'b', null]);
         expect(seats(withSeat(two, 'white', 'c'))).toEqual(['c', 'a', null]);
+    });
+
+    it('turns the computer off from its own row only where another player can take its seat', () => {
+        // Its own colour, in a room of two or more: off, the seat left to the room.
+        expect(seats(withComputerPicked(against, 'black', 2))).toEqual([
+            'a',
+            undefined,
+            null,
+        ]);
+        // In a room of one the room seats it by itself (ADR 036 as amended 2026-11-22): no toggle off.
+        expect(withComputerPicked(against, 'black', 1)).toBe(against);
+        expect(withComputerPicked(against, 'black', 0)).toBe(against);
+        expect(
+            withComputerPicked({ ...against, computer: 3 }, 'black', 1),
+        ).toEqual({ ...against, computer: 3 });
+        // The other colour moves it there, in any room.
+        expect(seats(withComputerPicked(against, 'white', 1))).toEqual([
+            null,
+            'a',
+            2,
+        ]);
+        // Two players: the row seats it, as `withComputer()`.
+        expect(withComputerPicked(two, 'black', 2)).toEqual(
+            withComputer(two, 'black'),
+        );
     });
 
     it('changes the colours, and turns the computer off without naming a seat', () => {

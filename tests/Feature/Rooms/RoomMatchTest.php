@@ -3,12 +3,14 @@
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Actions\CloseRoom;
 use App\Domain\Rooms\Data\RoomActData;
+use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomAct;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomTaunt;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomRanking;
 use App\Models\User;
@@ -242,20 +244,22 @@ it('fills a choice of the other kind from the room: a race takes its kept rounds
     expect(matchState($this->tural, $room)['setup']['rounds'])->toBe(Config::integer('elifba.rooms.defaults.rounds'));
 });
 
-it('refuses to start a match with fewer than two seats', function (): void {
+it('refuses to start a match of two players with fewer than two seats', function (): void {
+    // A room of one plays the computer by itself (ADR 036 as amended 2026-11-22): its own choice never lacks a seat.
     $room = Rooms::open($this->tural, mechanic: RoomMechanic::Draughts);
 
     expect(matchState($this->tural, $room)['setup'])->toBe([
         'kind' => 'board', 'mechanic' => 'draughts', 'difficulty' => 2,
         'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000],
-        'white' => $room->rowOf($this->tural)?->id, 'black' => null, 'computer' => null, 'played' => false,
+        'white' => $room->rowOf($this->tural)?->id, 'black' => null, 'computer' => 2, 'played' => false,
     ]);
 
-    $this->actingAs($this->tural)->postJson(route('rooms.games.store', $room))
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors(['setup' => __('rooms.errors.needs_two')]);
+    // The driver still holds a choice of two players to both seats.
+    $alone = new RoomGameSetupData(RoomMechanic::Draughts, 2, white: $room->rowOf($this->tural)?->id);
 
-    expect($room->games()->count())->toBe(0);
+    expect(fn () => RoomGameDriver::of(RoomMechanic::Draughts)->start($room, new RoomGame, $alone))
+        ->toThrow(ValidationException::class, __('rooms.errors.needs_two'))
+        ->and($room->games()->count())->toBe(0);
 });
 
 it('takes a legal move from the seat to move, and nothing before the clock, out of turn, at another ply or off the rules', function (): void {

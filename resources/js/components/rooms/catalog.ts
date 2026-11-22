@@ -395,6 +395,35 @@ export function withoutComputer(choice: SetupChoice): SetupChoice {
     };
 }
 
+/**
+ * The choice after a tap on a seat's «Kompüter» row (docs/frontend.md rule
+ * 15 "The computer's seat"): the computer on that colour (`withComputer()`)
+ * — and on the colour it already plays, turned off (`withoutComputer()`),
+ * but only while another present player could take its seat. With fewer
+ * than two present players the room seats the computer by itself
+ * (`RoomSeats`, ADR 036 as amended 2026-11-22), so «off» would change
+ * nothing the state could show and the tap would stand
+ * (`useRoomChoice()`): the choice stays as it is, as a tap on the player
+ * already seated leaves it.
+ */
+export function withComputerPicked(
+    choice: SetupChoice,
+    color: RoomMatchColor,
+    present: number,
+): SetupChoice {
+    const plays = computerSeat({
+        white: choice.white ?? null,
+        black: choice.black ?? null,
+        computer: choice.computer ?? null,
+    });
+
+    if (plays !== color) {
+        return withComputer(choice, color);
+    }
+
+    return present < 2 ? choice : withoutComputer(choice);
+}
+
 /** The choice with the two colours changed: against the computer, the player takes its colour. */
 export function withSeatsSwapped(choice: SetupChoice): SetupChoice {
     return { ...choice, white: choice.black, black: choice.white };

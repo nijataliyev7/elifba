@@ -32,8 +32,10 @@ use Illuminate\Validation\ValidationException;
  * games", ADR 034 decisions 3 and 8; `RoomGameDriver::start()`): a race
  * builds its rounds as above; a board game seats its two players and copies
  * its level's clock — `started_ms` is then when its clock starts — refuses
- * a choice with fewer than two seats (`rooms.errors.needs_two`), and turns
- * the room's seats round for the next game.
+ * a choice with fewer than two seats (`rooms.errors.needs_two`) or, against
+ * the computer, with none (`rooms.errors.needs_one`), and turns the room's
+ * seats round for the next game. A room of one plays the computer with no
+ * choosing (`RoomSeats`, ADR 036 as amended 2026-11-22).
  */
 final readonly class StartRoomGame
 {

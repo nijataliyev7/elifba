@@ -2,6 +2,7 @@
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Actions\CloseRoom;
+use App\Domain\Rooms\Actions\LeaveRoom;
 use App\Domain\Rooms\Actions\PlayComputerMove;
 use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Enums\RoomActKind;
@@ -109,31 +110,153 @@ it('chooses the computer for the other colour, with at most one seat', function 
 });
 
 it('keeps the computer through a race and takes it back with a board game chosen after it', function (): void {
-    computerChoice($this->resad, $this->room, ['computer' => 2])->assertNoContent();
+    computerChoice($this->resad, $this->room, ['computer' => 3])->assertNoContent();
     $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $this->room), ['mechanic' => 'recall_order', 'difficulty' => 1])->assertNoContent();
 
-    expect($this->room->refresh()->setup_computer)->toBe(RoomComputerLevel::Medium);
+    expect($this->room->refresh()->setup_computer)->toBe(RoomComputerLevel::Hard);
 
     // A board game chosen after a race names only the game and its level.
     $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $this->room), ['mechanic' => 'draughts', 'difficulty' => 3])->assertNoContent();
 
-    expect(computerState($this->resad, $this->room)['setup'])->toMatchArray(['difficulty' => 3, 'white' => $this->resadRow->id, 'black' => null, 'computer' => 2]);
+    expect(computerState($this->resad, $this->room)['setup'])->toMatchArray(['difficulty' => 3, 'white' => $this->resadRow->id, 'black' => null, 'computer' => 3]);
 });
 
 it('starts a match of one player against the computer, and changes the colours for the next', function (): void {
-    computerChoice($this->resad, $this->room, ['computer' => 2])->assertNoContent();
+    computerChoice($this->resad, $this->room, ['computer' => 3])->assertNoContent();
+    $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
+    $game = $this->room->latestGame();
+
+    expect([$game->white_player_id, $game->black_player_id, $game->computer])->toBe([$this->resadRow->id, null, RoomComputerLevel::Hard])
+        ->and([$this->room->refresh()->setup_white_id, $this->room->setup_black_id, $this->room->setup_computer])->toBe([null, $this->resadRow->id, RoomComputerLevel::Hard]);
+
+    $state = computerState($this->resad, $this->room);
+
+    expect($state['game'])->toMatchArray(['kind' => 'board', 'computer' => 3, 'phase' => 'live'])
+        ->and(array_column($state['match']['sides'], 'player_id'))->toBe([$this->resadRow->id, null])
+        ->and($state['setup'])->toMatchArray(['white' => null, 'black' => $this->resadRow->id, 'computer' => 3, 'played' => false])
+        ->and($state['taunts']['balance'] ?? 0)->toBe(0);
+});
+
+/*
+ * A room of one plays the computer by itself (ADR 036 as amended
+ * 2026-11-22): while nobody chose it and fewer than two players are
+ * present, the choice has the computer at «Orta» in the seat without a
+ * player — derived at each read, never stored — so «Başla» starts a match
+ * with no other tap, and a second player takes the seat by joining.
+ */
+
+it('seats the computer by itself in a room of one, and starts against it with no choosing', function (): void {
+    expect(computerState($this->resad, $this->room)['setup'])->toBe([
+        'kind' => 'board', 'mechanic' => 'draughts', 'difficulty' => 2,
+        'clock' => ['base_ms' => 300_000, 'increment_ms' => 3_000],
+        'white' => $this->resadRow->id, 'black' => null, 'computer' => 2, 'played' => false,
+    ])->and($this->room->refresh()->setup_computer)->toBeNull();
+
     $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
     $game = $this->room->latestGame();
 
     expect([$game->white_player_id, $game->black_player_id, $game->computer])->toBe([$this->resadRow->id, null, RoomComputerLevel::Medium])
-        ->and([$this->room->refresh()->setup_white_id, $this->room->setup_black_id, $this->room->setup_computer])->toBe([null, $this->resadRow->id, RoomComputerLevel::Medium]);
+        // The start writes the seats round, as ever, and no level.
+        ->and([$this->room->refresh()->setup_white_id, $this->room->setup_black_id, $this->room->setup_computer])->toBe([null, $this->resadRow->id, null]);
+
+    // The computer answers the player's first move.
+    $this->travelTo(RoomClock::at($game->started_ms));
+    $this->actingAs($this->resad)->postJson(route('rooms.acts.store', $this->room), Rooms::act('move', 0, 'c3-d4', gameId: $game->id))
+        ->assertOk()->assertJsonPath('status', 'accepted');
+    $reply = $game->acts()->get()->last();
+
+    expect([$reply?->room_player_id, $reply?->ply])->toBe([null, 1]);
 
     $state = computerState($this->resad, $this->room);
 
-    expect($state['game'])->toMatchArray(['kind' => 'board', 'computer' => 2, 'phase' => 'live'])
-        ->and(array_column($state['match']['sides'], 'player_id'))->toBe([$this->resadRow->id, null])
-        ->and($state['setup'])->toMatchArray(['white' => null, 'black' => $this->resadRow->id, 'computer' => 2, 'played' => false])
-        ->and($state['taunts']['balance'] ?? 0)->toBe(0);
+    expect([$state['match']['ply'], $state['match']['turn']])->toBe([2, 'white'])
+        ->and(array_column($state['match']['sides'], 'player_id'))->toBe([$this->resadRow->id, null]);
+});
+
+it('offers «Yenidən oyna» after a match against the computer it seated by itself, with the colours changed', function (): void {
+    $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
+    $game = $this->room->latestGame();
+    $this->travelTo(RoomClock::at($game->started_ms));
+    $this->actingAs($this->resad)->postJson(route('rooms.acts.store', $this->room), Rooms::act('resign', gameId: $game->id))->assertOk();
+
+    expect(computerState($this->resad, $this->room)['setup'])->toMatchArray(['white' => null, 'black' => $this->resadRow->id, 'computer' => 2, 'played' => true]);
+
+    // «Yenidən oyna» is the same start: the player has black, the computer white.
+    $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
+    $next = $this->room->latestGame();
+
+    expect([$next->white_player_id, $next->black_player_id, $next->computer])->toBe([null, $this->resadRow->id, RoomComputerLevel::Medium]);
+});
+
+it('gives the computer\'s seat to a second player who joins, and takes it back when one leaves', function (): void {
+    $aygun = Rooms::join($this->room);
+    $setup = computerState($this->resad, $this->room)['setup'];
+
+    expect([$setup['white'], $setup['black'], $setup['computer']])->toBe([$this->resadRow->id, $aygun->id, null]);
+
+    $this->actingAs($this->resad)->postJson(route('rooms.games.store', $this->room))->assertNoContent();
+    $game = $this->room->latestGame();
+
+    expect([$game->white_player_id, $game->black_player_id, $game->computer])->toBe([$this->resadRow->id, $aygun->id, null]);
+
+    // Aygün leaves: the match is over, and Rəşad alone plays the computer next.
+    app(LeaveRoom::class)->handle($this->room, $aygun);
+    $setup = computerState($this->resad, $this->room)['setup'];
+
+    expect([$setup['white'], $setup['black'], $setup['computer']])->toBe([null, $this->resadRow->id, 2])
+        ->and($this->room->refresh()->setup_computer)->toBeNull();
+});
+
+it('keeps a level the player chose when a second player joins', function (): void {
+    computerChoice($this->resad, $this->room, ['computer' => 1])->assertNoContent();
+
+    expect($this->room->refresh()->setup_computer)->toBe(RoomComputerLevel::Easy);
+
+    $aygun = Rooms::join($this->room);
+    $setup = computerState($this->resad, $this->room)['setup'];
+
+    // The host seats the friend with one tap, as before: Aygün on the computer's colour.
+    expect([$setup['white'], $setup['black'], $setup['computer']])->toBe([$this->resadRow->id, null, 1]);
+
+    computerChoice($this->resad, $this->room, ['computer' => null, 'white' => $this->resadRow->id, 'black' => $aygun->id])->assertNoContent();
+
+    expect(computerState($this->resad, $this->room)['setup'])->toMatchArray(['white' => $this->resadRow->id, 'black' => $aygun->id, 'computer' => null]);
+});
+
+it('stores nothing for the level a room of one plays by itself, and nothing for a null', function (): void {
+    $revision = $this->room->refresh()->revision;
+
+    // Null in a room of one: the computer still plays, and nothing changed.
+    computerChoice($this->resad, $this->room, ['computer' => null])->assertNoContent();
+
+    expect([$this->room->refresh()->revision, $this->room->setup_computer])->toBe([$revision, null])
+        ->and(computerState($this->resad, $this->room)['setup']['computer'])->toBe(2);
+
+    // «Yerləri dəyiş» sends the whole choice, «Orta» with it: the seats are stored, the level is not.
+    computerChoice($this->resad, $this->room, ['computer' => 2, 'black' => $this->resadRow->id])->assertNoContent();
+    $setup = computerState($this->resad, $this->room)['setup'];
+
+    expect([$setup['white'], $setup['black'], $setup['computer']])->toBe([null, $this->resadRow->id, 2])
+        ->and($this->room->refresh()->setup_computer)->toBeNull()
+        ->and($this->room->revision)->toBe($revision + 1);
+
+    // So a second player still takes the computer's seat.
+    $aygun = Rooms::join($this->room);
+    $setup = computerState($this->resad, $this->room)['setup'];
+
+    expect([$setup['white'], $setup['black'], $setup['computer']])->toBe([$aygun->id, $this->resadRow->id, null]);
+});
+
+it('seats no computer by itself in a room of two or in a race', function (): void {
+    $aygun = Rooms::join($this->room);
+
+    expect(computerState($this->resad, $this->room)['setup'])->toMatchArray(['white' => $this->resadRow->id, 'black' => $aygun->id, 'computer' => null]);
+
+    $race = Rooms::open(User::factory()->player()->create());
+    $setup = computerState($race->host, $race)['setup'];
+
+    expect($setup['kind'])->toBe('race')
+        ->and($setup)->not->toHaveKeys(['white', 'black', 'computer']);
 });
 
 it('refuses to start against the computer without a player to seat', function (): void {

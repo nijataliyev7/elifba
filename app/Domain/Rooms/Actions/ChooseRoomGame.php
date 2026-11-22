@@ -6,6 +6,7 @@ use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomLock;
+use App\Domain\Rooms\Support\RoomSeats;
 use App\Domain\Rooms\Support\RoomSignal;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,12 @@ use Illuminate\Validation\ValidationException;
  * (`computer`, its level, stored as `setup_computer`) with at most one
  * seat: the other colour is then the computer's. A board game's choice
  * always says it — null turns the computer off — and a race's leaves it.
+ * In a room of fewer than two present players the computer plays by
+ * itself while none is chosen (`RoomSeats::ALONE`, ADR 036 as amended
+ * 2026-11-22): a choice that only carries that level — a page sends the
+ * whole choice, so «Yerləri dəyiş» or a clock does — stores none, and a
+ * second player still takes its seat by joining; a level the state did not
+ * show is stored as ever.
  */
 final readonly class ChooseRoomGame
 {
@@ -64,6 +71,10 @@ final readonly class ChooseRoomGame
             $black = $named ? $setup->black : $locked->setup_black_id;
             // A board game's choice says whether the computer plays; a race's leaves it.
             $computer = $setup->rounds === null ? $setup->computer : $locked->setup_computer;
+            // The level a room of one plays by itself is not a choice: storing it would keep a joiner from its seat.
+            if ($locked->setup_computer === null && $computer !== null && $computer === RoomSeats::computer($locked)) {
+                $computer = null;
+            }
 
             if ($locked->setup_mechanic === $setup->mechanic && $locked->setup_difficulty === $setup->difficulty && $locked->setup_rounds === $rounds
                 && $locked->setup_white_id === $white && $locked->setup_black_id === $black && $locked->setup_computer === $computer) {

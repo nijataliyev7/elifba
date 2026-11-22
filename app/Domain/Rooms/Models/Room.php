@@ -62,7 +62,7 @@ use LogicException;
  * @property int|null $setup_rounds kept for the next race while a board game is chosen
  * @property string|null $setup_white_id the seat that plays white in the next board game (D3); read through `RoomSeats`
  * @property string|null $setup_black_id the seat that plays black
- * @property RoomComputerLevel|null $setup_computer the level of the computer in the next board game (K3, ADR 036); null: two players
+ * @property RoomComputerLevel|null $setup_computer the level of the computer chosen for the next board game (K3, ADR 036); null: none chosen — two players, or the computer by itself in a room of one (`RoomSeats`)
  * @property bool $taunts the host's switch: players may throw taunts
  * @property int|null $screen_seen_ms when the big screen last read the state while shown, Unix ms (`RecordScreenRead`)
  * @property CarbonImmutable|null $voice_at the host turned the room's voice on; null: off
@@ -151,12 +151,14 @@ class Room extends Model
      * decision 8): the one stored, while it is still a level a room plays;
      * else — a room opened before G2 — its latest game's; else the first
      * playable game at the host's defaults (`RoomDefaults`). A board game's
-     * choice has the room's two seats (`RoomSeats`, ADR 034 decision 7).
+     * choice has the room's two seats (`RoomSeats`, ADR 034 decision 7) —
+     * or one and the computer, chosen or, in a room of fewer than two
+     * present players, by itself (ADR 036 as amended 2026-11-22).
      * `StartRoomGame` starts it, and the state shows it to every device.
      */
     public function setup(): RoomGameSetupData
     {
-        return $this->chosen()->seated(fn (): array => RoomSeats::of($this), $this->setup_computer);
+        return $this->chosen()->seated(fn (): array => RoomSeats::of($this));
     }
 
     /**

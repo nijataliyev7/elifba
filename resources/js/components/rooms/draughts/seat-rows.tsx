@@ -1,8 +1,7 @@
 import { ArrowUpDown, Bot, ChevronDown, Check } from 'lucide-react';
 import { useState } from 'react';
 import {
-    withComputer,
-    withoutComputer,
+    withComputerPicked,
     withSeat,
     withSeatsSwapped,
 } from '@/components/rooms/catalog';
@@ -63,9 +62,11 @@ const option =
  * Each seat's list ends with «Kompüter» beside `Bot` (rule 15 "The
  * computer's seat", ADR 036 decision 15): picked, the computer plays that
  * colour — its row says «Kompüter (Orta)» with `Bot` — and the player the
- * other; picked again, it is turned off. «Yerləri dəyiş» then gives the
- * player the computer's colour, and a room of one can start. Its level is
- * `ComputerLevelSegments`, under the rows.
+ * other; picked again, it is turned off where another present player can
+ * take its seat (`withComputerPicked()`). «Yerləri dəyiş» then gives the
+ * player the computer's colour. A room of one has the computer already
+ * seated by the state and starts at once (ADR 036 as amended 2026-11-22).
+ * Its level is `ComputerLevelSegments`, under the rows.
  */
 export function SeatRows({
     seats,
@@ -179,7 +180,7 @@ export function SeatRows({
                                 </button>
                             </li>
                         ))}
-                        {/* The computer, after the players: picked again, it is turned off. */}
+                        {/* The computer, after the players: picked again, it is turned off — in a room of two or more. */}
                         <li>
                             <button
                                 type="button"
@@ -187,9 +188,11 @@ export function SeatRows({
                                 aria-pressed={computer}
                                 onClick={() =>
                                     pick(
-                                        computer
-                                            ? withoutComputer(choice.shown)
-                                            : withComputer(choice.shown, color),
+                                        withComputerPicked(
+                                            choice.shown,
+                                            color,
+                                            present.length,
+                                        ),
                                     )
                                 }
                                 className={option}
