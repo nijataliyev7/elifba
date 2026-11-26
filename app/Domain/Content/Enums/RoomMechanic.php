@@ -2,6 +2,8 @@
 
 namespace App\Domain\Content\Enums;
 
+use Illuminate\Support\Facades\Config;
+
 /**
  * The rules of an adults' room round (docs/architecture.md §12 "Room
  * games", ADR 023). The rules are code in `Rooms` (a builder in
@@ -61,6 +63,13 @@ enum RoomMechanic: string
      */
     case Draughts = 'draughts';
 
+    /**
+     * «101»: the local domino game, two to four seats each with seven tiles
+     * nobody else sees, hands played to 101 (Y5, ADR 038). A domino game:
+     * no rounds, no answer; its level is a turn's time.
+     */
+    case Domino101 = 'domino_101';
+
     public function family(): RoomFamily
     {
         return match ($this) {
@@ -68,7 +77,20 @@ enum RoomMechanic: string
             self::NextInSequence, self::OddOneOut => RoomFamily::Logic,
             self::Anagram, self::Spelling => RoomFamily::Words,
             self::Draughts => RoomFamily::Board,
+            self::Domino101 => RoomFamily::Domino,
         };
+    }
+
+    /**
+     * Whether a room offers the game: every one but «101», which Y5 builds
+     * without its pages and offers only while `elifba.rooms.domino.offered`
+     * is on — off in every instance, on in the tests that play it — until
+     * Y6 draws it and removes this (ADR 038 as amended 2026-11-26, Y5).
+     * `Rooms\Support\RoomPlayable` and the welcome page's section ask it.
+     */
+    public function offered(): bool
+    {
+        return $this !== self::Domino101 || Config::boolean('elifba.rooms.domino.offered');
     }
 
     /** A race of rounds or a board game: the family's (ADR 034 decision 1). */
@@ -92,7 +114,7 @@ enum RoomMechanic: string
      * `recall_cells` level names none: its items are the cells of its
      * grid; nor does a logic level: `next_in_sequence` shows numbers, and
      * `odd_one_out` what its `source` says; nor a word game: its items are
-     * what its word makes; nor a board game, which has no items.
+     * what its word makes; nor a board or domino game, which has no items.
      *
      * @return list<RoomItemKind>
      */
@@ -100,7 +122,7 @@ enum RoomMechanic: string
     {
         return match ($this) {
             self::RecallOrder => [RoomItemKind::Digit, RoomItemKind::Letter, RoomItemKind::Word, RoomItemKind::Shape],
-            self::RecallCells, self::NextInSequence, self::OddOneOut, self::Anagram, self::Spelling, self::Draughts => [],
+            self::RecallCells, self::NextInSequence, self::OddOneOut, self::Anagram, self::Spelling, self::Draughts, self::Domino101 => [],
         };
     }
 }

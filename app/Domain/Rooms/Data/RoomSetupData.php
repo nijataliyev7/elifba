@@ -5,6 +5,7 @@ namespace App\Domain\Rooms\Data;
 use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
+use App\Domain\Rooms\Enums\RoomTable;
 use InvalidArgumentException;
 
 /**
@@ -20,11 +21,16 @@ use InvalidArgumentException;
  * and the start screen otherwise; it compares nothing itself. Nothing in it
  * is a person's but the seats' ids.
  *
+ * From Y5 (ADR 038 decisions 11–14 and 38) a domino game's choice has its
+ * level's turn time, its table, its seats in the order of the turns — each
+ * a `room_players.id`, or null for the computer's — and the computer's
+ * level, null when no seat is the computer's.
+ *
  * The constructor holds the shape of each kind.
  *
  * @phpstan-import-type RoomClockLevelArray from RoomClockLevelData
  *
- * @phpstan-type RoomSetupArray array{kind: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, white?: string|null, black?: string|null, computer?: int|null, played: bool}
+ * @phpstan-type RoomSetupArray array{kind: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, white?: string|null, black?: string|null, turn_ms?: int, table?: string, seats?: list<string|null>, computer?: int|null, played: bool}
  */
 final readonly class RoomSetupData
 {
@@ -33,7 +39,10 @@ final readonly class RoomSetupData
      * @param  RoomClockLevelData|null  $clock  a board game's
      * @param  string|null  $white  a board game's seat of white
      * @param  string|null  $black  a board game's seat of black
-     * @param  RoomComputerLevel|null  $computer  a board game's: the computer's level, which plays the seat that is null (K3, ADR 036)
+     * @param  RoomComputerLevel|null  $computer  a board game's: the computer's level, which plays the seat that is null (K3, ADR 036); a domino game's: the level of every seat that is null (ADR 038)
+     * @param  int|null  $turn_ms  a domino game's turn
+     * @param  RoomTable|null  $table  a domino game's table
+     * @param  list<string|null>|null  $seats  a domino game's seats, as many as its table has
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -44,17 +53,29 @@ final readonly class RoomSetupData
         public ?string $white = null,
         public ?string $black = null,
         public ?RoomComputerLevel $computer = null,
+        public ?int $turn_ms = null,
+        public ?RoomTable $table = null,
+        public ?array $seats = null,
     ) {
-        $race = $mechanic->kind() === RoomGameKind::Race;
+        $kind = $mechanic->kind();
+        $race = $kind === RoomGameKind::Race;
+        $domino = $kind === RoomGameKind::Domino;
 
-        if ($race !== ($rounds !== null) || $race === ($clock !== null) || ($race && ($white !== null || $black !== null || $computer !== null))) {
-            throw new InvalidArgumentException('A race\'s choice has its rounds; a board game\'s its clock and its seats.');
+        $wrong = match (true) {
+            $race !== ($rounds !== null) || ($kind === RoomGameKind::Board) !== ($clock !== null) || ($race && ($white !== null || $black !== null || $computer !== null)) => 'A race\'s choice has its rounds; a board game\'s its clock and its seats.',
+            $domino !== ($turn_ms !== null) || $domino !== ($table !== null) || $domino !== ($seats !== null) || ($domino && ($white !== null || $black !== null)) => 'A domino game\'s choice has its turn, its table and its seats, and nothing else has them.',
+            $domino && (count((array) $seats) !== $table?->seats() || in_array(null, (array) $seats, true) !== ($computer !== null)) => 'A domino game\'s choice seats its table, the computer\'s level said while a seat is its.',
+            default => null,
+        };
+
+        if ($wrong !== null) {
+            throw new InvalidArgumentException($wrong);
         }
     }
 
     public static function of(RoomGameSetupData $choice, bool $played): self
     {
-        return new self($choice->mechanic, $choice->difficulty, $choice->rounds, $played, $choice->clock(), $choice->white, $choice->black, $choice->computer);
+        return new self($choice->mechanic, $choice->difficulty, $choice->rounds, $played, $choice->clock(), $choice->white, $choice->black, $choice->computer, $choice->turnMs(), $choice->table, $choice->seats);
     }
 
     /**
@@ -77,6 +98,9 @@ final readonly class RoomSetupData
             $data['white'] ?? null,
             $data['black'] ?? null,
             isset($data['computer']) ? RoomComputerLevel::from($data['computer']) : null,
+            $data['turn_ms'] ?? null,
+            isset($data['table']) ? RoomTable::from($data['table']) : null,
+            $data['seats'] ?? null,
         );
     }
 
@@ -87,8 +111,10 @@ final readonly class RoomSetupData
     {
         $head = ['kind' => $this->mechanic->kind()->value, 'mechanic' => $this->mechanic->value, 'difficulty' => $this->difficulty];
 
-        return $this->clock === null
-            ? [...$head, 'rounds' => (int) $this->rounds, 'played' => $this->played]
-            : [...$head, 'clock' => $this->clock->toArray(), 'white' => $this->white, 'black' => $this->black, 'computer' => $this->computer?->value, 'played' => $this->played];
+        return match (true) {
+            $this->table !== null => [...$head, 'turn_ms' => (int) $this->turn_ms, 'table' => $this->table->value, 'seats' => (array) $this->seats, 'computer' => $this->computer?->value, 'played' => $this->played],
+            $this->clock !== null => [...$head, 'clock' => $this->clock->toArray(), 'white' => $this->white, 'black' => $this->black, 'computer' => $this->computer?->value, 'played' => $this->played],
+            default => [...$head, 'rounds' => (int) $this->rounds, 'played' => $this->played],
+        };
     }
 }

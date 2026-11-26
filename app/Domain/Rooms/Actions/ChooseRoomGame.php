@@ -42,6 +42,17 @@ use Illuminate\Validation\ValidationException;
  * whole choice, so «Yerləri dəyiş» or a clock does — stores none, and a
  * second player still takes its seat by joining; a level the state did not
  * show is stored as ever.
+ *
+ * From Y5 (ADR 038 decision 11) a domino game's choice is `{mechanic,
+ * difficulty, table, seats, computer}`: the table (`setup_table`; null by
+ * the number of present players) and the seats (`setup_seats`), each place
+ * a present player of the room named once — 422 on `seats` otherwise — or
+ * null for nobody placed there; `seats` absent keeps the room's. The
+ * computer's level is `setup_computer`, the column a match's computer has;
+ * «Orta», which every computer seat of a domino game plays at when none
+ * is chosen, is stored as none, so a later board game does not read it as
+ * a computer chosen. A race's or a board game's choice leaves the table
+ * and the seats as they are, as a domino game's leaves the colours.
  */
 final readonly class ChooseRoomGame
 {
@@ -64,20 +75,37 @@ final readonly class ChooseRoomGame
                 }
             }
 
+            // A domino game's level is a turn's time (ADR 038 decision 22): its choice holds a table.
+            $domino = $setup->turnMs() !== null;
+            $places = array_values(array_filter($setup->seats ?? [], static fn (?string $player): bool => $player !== null));
+
+            if ($places !== [] && $locked->players()->present()->whereKey($places)->count() !== count($places)) {
+                throw ValidationException::withMessages(['seats' => __('rooms.errors.seat_gone')]);
+            }
+
             $rounds = $setup->rounds ?? $locked->setup_rounds;
             // Seats named — one of them with the computer — are the seats; none named, the room's stand.
             $named = $setup->white !== null || $setup->black !== null;
             $white = $named ? $setup->white : $locked->setup_white_id;
             $black = $named ? $setup->black : $locked->setup_black_id;
-            // A board game's choice says whether the computer plays; a race's leaves it.
-            $computer = $setup->rounds === null ? $setup->computer : $locked->setup_computer;
+            // A board game's choice says whether the computer plays; a race's leaves it — but never a domino game's level, which
+            // a board game chosen after the race would read as a computer chosen (ADR 038 decision 75).
+            $computer = match (true) {
+                $setup->rounds === null => $setup->computer,
+                $locked->setup()->turnMs() !== null => null,
+                default => $locked->setup_computer,
+            };
             // The level a room of one plays by itself is not a choice: storing it would keep a joiner from its seat.
-            if ($locked->setup_computer === null && $computer !== null && $computer === RoomSeats::computer($locked)) {
+            if ($locked->setup_computer === null && $computer !== null && $computer === ($domino ? RoomSeats::ALONE : RoomSeats::computer($locked))) {
                 $computer = null;
             }
 
+            $table = $domino ? $setup->table : $locked->setup_table;
+            $seats = $domino ? $setup->seats : $locked->setup_seats;
+
             if ($locked->setup_mechanic === $setup->mechanic && $locked->setup_difficulty === $setup->difficulty && $locked->setup_rounds === $rounds
-                && $locked->setup_white_id === $white && $locked->setup_black_id === $black && $locked->setup_computer === $computer) {
+                && $locked->setup_white_id === $white && $locked->setup_black_id === $black && $locked->setup_computer === $computer
+                && $locked->setup_table === $table && $locked->setup_seats === $seats) {
                 return;
             }
 
@@ -87,6 +115,8 @@ final readonly class ChooseRoomGame
             $locked->setup_white_id = $white;
             $locked->setup_black_id = $black;
             $locked->setup_computer = $computer;
+            $locked->setup_table = $table;
+            $locked->setup_seats = $seats;
             $locked->last_activity_at = now();
             RoomSignal::raise($locked);
         });

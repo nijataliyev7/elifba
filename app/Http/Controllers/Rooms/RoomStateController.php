@@ -41,8 +41,10 @@ use function Illuminate\Support\defer;
  * whether it still does.
  *
  * A read that finds the computer to move in a match (K3, ADR 036 decision
- * 9) hands its move to `defer()`: `PlayComputerMove` runs after this
- * response went out, so the read itself writes no fact of the match.
+ * 9) — or in a domino game a turn the server plays, or a flag within reach
+ * (Y5, ADR 038 decision 25) — hands its move to `defer()`:
+ * `PlayComputerMove` runs after this response went out, so the read itself
+ * writes no fact of the game.
  */
 final class RoomStateController extends Controller
 {
@@ -61,7 +63,7 @@ final class RoomStateController extends Controller
 
         $state = RoomState::for($room, $account, $forScreen, RoomsArea::voice());
 
-        if ($state->match?->computerToMove() === true) {
+        if ($state->serverToPlay(PlayComputerMove::PATIENCE_MS)) {
             defer(static fn () => $playComputerMove->handle($room));
         }
 

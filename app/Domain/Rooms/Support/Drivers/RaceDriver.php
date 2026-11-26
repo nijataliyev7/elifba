@@ -174,7 +174,7 @@ final class RaceDriver extends RoomGameDriver
         $moment = $room->isOpen() ? $game->timetable()->moment($nowMs) : RoomMomentData::over();
         $live = ! $moment->isOver();
 
-        return ['live' => $live, 'round' => $live ? self::round($game, $moment, $rows, $mine, $screen) : null, 'match' => null];
+        return ['live' => $live, 'round' => $live ? self::round($game, $moment, $rows, $mine, $screen) : null, 'match' => null, 'domino' => null];
     }
 
     public function act(RoomGame $game, RoomPlayer $row, RoomActData $act, int $nowMs): array
@@ -201,6 +201,11 @@ final class RaceDriver extends RoomGameDriver
     public function readCountsFrom(RoomGame $game, int $nowMs): ?int
     {
         return RoomWaits::readCountsFrom($game, $nowMs);
+    }
+
+    public function listed(RoomGame $game, int $nowMs, bool $rounds): array
+    {
+        return $rounds ? ['rounds' => $game->rounds->count()] : [];
     }
 
     /**

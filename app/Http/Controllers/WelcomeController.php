@@ -89,7 +89,7 @@ final class WelcomeController extends Controller
         foreach (RoomFamily::cases() as $family) {
             $mechanics = array_values(array_filter(
                 RoomMechanic::cases(),
-                static fn (RoomMechanic $mechanic): bool => $mechanic->family() === $family && in_array($mechanic, $leveled, true),
+                static fn (RoomMechanic $mechanic): bool => $mechanic->family() === $family && in_array($mechanic, $leveled, true) && $mechanic->offered(),
             ));
 
             if ($mechanics !== []) {

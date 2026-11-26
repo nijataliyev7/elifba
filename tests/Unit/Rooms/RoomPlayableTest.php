@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Config;
  * four difficulties or none; this test gives every mechanic RoomPlayable
  * lists its levels, so it plays at every difficulty, and a builder. A board
  * game (D3, ADR 034 decision 6) has two to four levels, each its clock,
- * and builds no rounds.
+ * and builds no rounds; so has a domino game (Y5, ADR 038 decision 22),
+ * each level a turn's time.
  */
 
 /**
@@ -70,6 +71,26 @@ it('lists a board game with its clocks, two to four of them from 1, each shorter
     // 10+5, 5+3, 3+2 (ADR 034 decision 6).
     expect(array_map(static fn (int $difficulty): array => [app(ContentRepository::class)->roomLevel(RoomMechanic::Draughts, $difficulty)->clockMs, app(ContentRepository::class)->roomLevel(RoomMechanic::Draughts, $difficulty)->incrementMs], [1, 2, 3]))
         ->toBe([[600_000, 5_000], [300_000, 3_000], [180_000, 2_000]]);
+});
+
+it('offers «101» only while it is offered, with its turns, two to four of them from 1, each shorter than the one before', function (): void {
+    // Until Y6 draws it, no instance offers it (ADR 038 as amended 2026-11-26, Y5).
+    expect(RoomPlayable::plays(RoomMechanic::Domino101))->toBeFalse()
+        ->and(RoomMechanic::Domino101->offered())->toBeFalse()
+        ->and(playableOf(RoomGameKind::Domino))->toBe([]);
+
+    Config::set('elifba.rooms.domino.offered', true);
+
+    expect(playableOf(RoomGameKind::Domino))->toBe([RoomMechanic::Domino101]);
+
+    $difficulties = playableDifficulties(RoomMechanic::Domino101);
+    $turns = array_map(static fn (int $difficulty): ?int => app(ContentRepository::class)->roomLevel(RoomMechanic::Domino101, $difficulty)->turnMs, $difficulties);
+
+    // 60, 30 and 15 seconds (ADR 038 decision 22); no clock, no rounds.
+    expect($difficulties)->toBe([1, 2, 3])
+        ->and($turns)->toBe([60_000, 30_000, 15_000])
+        ->and(app(ContentRepository::class)->roomLevel(RoomMechanic::Domino101, 2)->clockMs)->toBeNull()
+        ->and(app(ContentRepository::class)->roomLevel(RoomMechanic::Domino101, 2)->answerMs)->toBe(0);
 });
 
 it('has a builder for every race, and none for a board game', function (): void {

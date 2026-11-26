@@ -609,6 +609,7 @@
     "rooms.difficulty.2": "Medium",
     "rooms.difficulty.3": "Hard",
     "rooms.difficulty.4": "Very hard",
+    "rooms.domino.illegal": "This play is against the rules.",
     "rooms.errors.code": "A code is 6 digits.",
     "rooms.errors.full": "This game is full.",
     "rooms.errors.game_running": "A game is running: choose another once it is over.",

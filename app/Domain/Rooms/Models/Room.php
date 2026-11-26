@@ -6,10 +6,12 @@ use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomStatus;
+use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Policies\RoomPolicy;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Domain\Rooms\Support\RoomDefaults;
 use App\Domain\Rooms\Support\RoomSeats;
+use App\Domain\Rooms\Support\RoomTableSeats;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\RoomFactory;
@@ -62,6 +64,8 @@ use LogicException;
  * @property int|null $setup_rounds kept for the next race while a board game is chosen
  * @property string|null $setup_white_id the seat that plays white in the next board game (D3); read through `RoomSeats`
  * @property string|null $setup_black_id the seat that plays black
+ * @property RoomTable|null $setup_table the table of the next domino game (Y5, ADR 038 decision 11); null: by the number of present players (`RoomTableSeats`)
+ * @property list<string|null>|null $setup_seats the seats of the next domino game, each a `room_players.id` or null — nobody placed there; null: none placed
  * @property RoomComputerLevel|null $setup_computer the level of the computer chosen for the next board game (K3, ADR 036); null: none chosen — two players, or the computer by itself in a room of one (`RoomSeats`)
  * @property bool $taunts the host's switch: players may throw taunts
  * @property int|null $screen_seen_ms when the big screen last read the state while shown, Unix ms (`RecordScreenRead`)
@@ -153,12 +157,14 @@ class Room extends Model
      * playable game at the host's defaults (`RoomDefaults`). A board game's
      * choice has the room's two seats (`RoomSeats`, ADR 034 decision 7) —
      * or one and the computer, chosen or, in a room of fewer than two
-     * present players, by itself (ADR 036 as amended 2026-11-22).
+     * present players, by itself (ADR 036 as amended 2026-11-22). A domino
+     * game's has its table, its seats and the computer's level
+     * (`RoomTableSeats`, ADR 038 decisions 11–12).
      * `StartRoomGame` starts it, and the state shows it to every device.
      */
     public function setup(): RoomGameSetupData
     {
-        return $this->chosen()->seated(fn (): array => RoomSeats::of($this));
+        return $this->chosen()->seated(fn (): array => RoomSeats::of($this), fn (): array => RoomTableSeats::of($this));
     }
 
     /**
@@ -277,6 +283,8 @@ class Room extends Model
             'setup_difficulty' => 'integer',
             'setup_rounds' => 'integer',
             'setup_computer' => RoomComputerLevel::class,
+            'setup_table' => RoomTable::class,
+            'setup_seats' => 'array',
             'taunts' => 'boolean',
             'screen_seen_ms' => 'integer',
             'voice_at' => 'datetime',

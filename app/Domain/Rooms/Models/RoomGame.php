@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Models;
 
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
+use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Support\RoomTimetable;
 use Carbon\CarbonImmutable;
 use Database\Factories\RoomGameFactory;
@@ -34,6 +35,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * its clock starts. Whether it is over, and how, is replayed from the acts
  * (`DraughtsMatch`), never stored.
  *
+ * A domino game (Y5, ADR 038 decisions 5 and 14) is a row of the same
+ * table too: its table, its seats in the order of the turns — each a
+ * `room_players.id` or null, the computer's — the computer's level when a
+ * seat is its, a turn's time and the pause between hands (`reveal_ms`),
+ * copied from the room's choice at the start, and a seed its deals are
+ * derived from (`RoomSeed::deal()`), never served. Its hands, line,
+ * boneyard, account and outcome are replayed from its acts (`DominoGame`).
+ * The column `table` is read and written through `dominoTable()` and
+ * `setDominoTable()`, since a model's `$table` is its database table.
+ *
  * @property string $id
  * @property string $room_id
  * @property int $position order in the room, 0-based
@@ -49,10 +60,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property RoomComputerLevel|null $computer the level of the computer, which plays the seat without a player (K3, ADR 036); null: two players
  * @property int|null $clock_ms a board game's: each side's time
  * @property int|null $increment_ms a board game's: what a side gains with each move
+ * @property list<string|null>|null $seats a domino game's: each seat's `room_players.id`, null for the computer's, in the order of the turns
+ * @property int|null $turn_ms a domino game's: a turn's time
  * @property CarbonImmutable $created_at
  * @property-read Room $room
  * @property-read Collection<int, RoomRound> $rounds by position
- * @property-read Collection<int, RoomAct> $acts a board game's, in the order received
+ * @property-read Collection<int, RoomAct> $acts a board or domino game's, in the order received
  */
 #[UseFactory(RoomGameFactory::class)]
 class RoomGame extends Model
@@ -73,6 +86,19 @@ class RoomGame extends Model
      * @var list<string>
      */
     protected $hidden = ['seed'];
+
+    /** A domino game's table (`room_games.table`); null for a race or a board game. */
+    public function dominoTable(): ?RoomTable
+    {
+        $table = $this->getAttribute('table');
+
+        return $table instanceof RoomTable ? $table : null;
+    }
+
+    public function setDominoTable(?RoomTable $table): void
+    {
+        $this->setAttribute('table', $table);
+    }
 
     /**
      * The game's timetable, from its rounds as they are loaded.
@@ -125,6 +151,9 @@ class RoomGame extends Model
             'clock_ms' => 'integer',
             'increment_ms' => 'integer',
             'computer' => RoomComputerLevel::class,
+            'table' => RoomTable::class,
+            'seats' => 'array',
+            'turn_ms' => 'integer',
         ];
     }
 }

@@ -1,5 +1,5 @@
 {
-    "v": 9,
+    "v": 10,
     "revision": 10,
     "server_ms": 1795534301900,
     "room": {
@@ -58,6 +58,7 @@
     },
     "round": null,
     "match": null,
+    "domino": null,
     "ranking": [
         {
             "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",

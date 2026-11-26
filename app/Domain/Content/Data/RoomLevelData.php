@@ -33,8 +33,11 @@ use App\Domain\Content\Enums\RoomSource;
  *   gains with each move — and nothing else; it has no rounds, so its
  *   `study_ms` and `answer_ms` are 0 and not in the file. Its difficulties
  *   are 1 to 3, a higher number a faster game.
+ * - `domino_101` (Y5, ADR 038 decision 22), a domino game: its level is a
+ *   turn's time — `turn_ms` — and nothing else; no rounds, no clock a side.
+ *   Its difficulties are 1 to 3, a higher number a shorter turn.
  *
- * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms?: int, answer_ms?: int, clock_ms?: int, increment_ms?: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int, clue?: string}
+ * @phpstan-type RoomLevelArray array{mechanic: string, difficulty: int, study_ms?: int, answer_ms?: int, clock_ms?: int, increment_ms?: int, turn_ms?: int, kinds?: list<string>, length?: array{min: int, max: int}, grid?: array{cols: int, rows: int}, lit?: array{min: int, max: int}, rules?: list<string>, terms?: int, range?: array{min: int, max: int}, source?: string, options?: int, word_length?: array{min: int, max: int}, swaps?: int, clue?: string}
  */
 final readonly class RoomLevelData
 {
@@ -56,6 +59,7 @@ final readonly class RoomLevelData
      * @param  int|null  $clockMs  a board game's: each side's time
      * @param  int|null  $incrementMs  a board game's: what a side gains with each move
      * @param  RoomClueForm|null  $clue  an `anagram` level's: the clue whole or its field alone; null shows it whole
+     * @param  int|null  $turnMs  a domino game's: a turn's time (ADR 038 decision 22)
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -76,6 +80,7 @@ final readonly class RoomLevelData
         public ?int $clockMs = null,
         public ?int $incrementMs = null,
         public ?RoomClueForm $clue = null,
+        public ?int $turnMs = null,
     ) {}
 
     /**
@@ -102,6 +107,7 @@ final readonly class RoomLevelData
             clockMs: $data['clock_ms'] ?? null,
             incrementMs: $data['increment_ms'] ?? null,
             clue: isset($data['clue']) ? RoomClueForm::from($data['clue']) : null,
+            turnMs: $data['turn_ms'] ?? null,
         );
     }
 }

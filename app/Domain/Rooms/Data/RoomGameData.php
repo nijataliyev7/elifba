@@ -6,7 +6,9 @@ use App\Domain\Content\Enums\RoomGameKind;
 use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomGamePhase;
+use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Models\RoomGame;
+use App\Domain\Rooms\Support\Drivers\DominoDriver;
 use InvalidArgumentException;
 
 /**
@@ -17,18 +19,25 @@ use InvalidArgumentException;
  * row keeps it (ADR 034 decision 8). Never a race's seed: the rounds it
  * builds are the server's until each is served.
  *
+ * From Y5 (ADR 038 decision 38) a domino game says its turn's time, its
+ * table, the balance that ends it (`target`) and the computer's level, null
+ * when no seat is the computer's — never its seed.
+ *
  * The constructor holds the shape of each kind.
  *
  * @phpstan-import-type RoomClockLevelArray from RoomClockLevelData
  *
- * @phpstan-type RoomGameArray array{kind: string, id: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, computer?: int|null, phase: string}
+ * @phpstan-type RoomGameArray array{kind: string, id: string, mechanic: string, difficulty: int, rounds?: int, clock?: RoomClockLevelArray, turn_ms?: int, table?: string, target?: int, computer?: int|null, phase: string}
  */
 final readonly class RoomGameData
 {
     /**
      * @param  int|null  $rounds  a race's
      * @param  RoomClockLevelData|null  $clock  a board game's
-     * @param  RoomComputerLevel|null  $computer  a board game's: the level of the computer that plays one of its seats (K3, ADR 036); null: two players
+     * @param  RoomComputerLevel|null  $computer  a board game's: the level of the computer that plays one of its seats (K3, ADR 036); null: two players. A domino game's: the level of its seats without a player (ADR 038)
+     * @param  int|null  $turn_ms  a domino game's turn
+     * @param  RoomTable|null  $table  a domino game's table
+     * @param  int|null  $target  a domino game's: the balance that ends it
      */
     public function __construct(
         public string $id,
@@ -38,19 +47,30 @@ final readonly class RoomGameData
         public RoomGamePhase $phase,
         public ?RoomClockLevelData $clock = null,
         public ?RoomComputerLevel $computer = null,
+        public ?int $turn_ms = null,
+        public ?RoomTable $table = null,
+        public ?int $target = null,
     ) {
-        $race = $this->kind() === RoomGameKind::Race;
+        $kind = $this->kind();
+        $race = $kind === RoomGameKind::Race;
+        $domino = $kind === RoomGameKind::Domino;
 
-        if ($race !== ($rounds !== null) || $race === ($clock !== null) || ($race && $computer !== null)) {
+        if ($race !== ($rounds !== null) || ($kind === RoomGameKind::Board) !== ($clock !== null) || ($race && $computer !== null)) {
             throw new InvalidArgumentException('A race has its rounds; a board game its clock.');
+        }
+
+        if ($domino !== ($turn_ms !== null) || $domino !== ($table !== null) || $domino !== ($target !== null)) {
+            throw new InvalidArgumentException('A domino game has its turn, its table and its target, and nothing else has them.');
         }
     }
 
     public static function of(RoomGame $game, RoomGamePhase $phase): self
     {
-        $clock = self::clockOf($game);
-
-        return new self($game->id, $game->mechanic, $game->difficulty, $clock === null ? $game->rounds->count() : null, $phase, $clock, $clock === null ? null : $game->computer);
+        return match ($game->mechanic->kind()) {
+            RoomGameKind::Race => new self($game->id, $game->mechanic, $game->difficulty, $game->rounds->count(), $phase),
+            RoomGameKind::Board => new self($game->id, $game->mechanic, $game->difficulty, null, $phase, self::clockOf($game), $game->computer),
+            RoomGameKind::Domino => new self($game->id, $game->mechanic, $game->difficulty, null, $phase, null, $game->computer, $game->turn_ms, $game->dominoTable(), DominoDriver::variantOf($game)->target()),
+        };
     }
 
     /**
@@ -87,6 +107,9 @@ final readonly class RoomGameData
             RoomGamePhase::from($data['phase']),
             isset($data['clock']) ? RoomClockLevelData::fromArray($data['clock']) : null,
             isset($data['computer']) ? RoomComputerLevel::from($data['computer']) : null,
+            $data['turn_ms'] ?? null,
+            isset($data['table']) ? RoomTable::from($data['table']) : null,
+            $data['target'] ?? null,
         );
     }
 
@@ -97,8 +120,10 @@ final readonly class RoomGameData
     {
         $head = ['kind' => $this->kind()->value, 'id' => $this->id, 'mechanic' => $this->mechanic->value, 'difficulty' => $this->difficulty];
 
-        return $this->clock === null
-            ? [...$head, 'rounds' => (int) $this->rounds, 'phase' => $this->phase->value]
-            : [...$head, 'clock' => $this->clock->toArray(), 'computer' => $this->computer?->value, 'phase' => $this->phase->value];
+        return match (true) {
+            $this->table !== null => [...$head, 'turn_ms' => (int) $this->turn_ms, 'table' => $this->table->value, 'target' => (int) $this->target, 'computer' => $this->computer?->value, 'phase' => $this->phase->value],
+            $this->clock !== null => [...$head, 'clock' => $this->clock->toArray(), 'computer' => $this->computer?->value, 'phase' => $this->phase->value],
+            default => [...$head, 'rounds' => (int) $this->rounds, 'phase' => $this->phase->value],
+        };
     }
 }

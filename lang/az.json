@@ -609,6 +609,7 @@
     "rooms.difficulty.2": "Orta",
     "rooms.difficulty.3": "Çətin",
     "rooms.difficulty.4": "Çox çətin",
+    "rooms.domino.illegal": "Bu gediş qaydalara uyğun deyil.",
     "rooms.errors.code": "Kod 6 rəqəmdən ibarətdir.",
     "rooms.errors.full": "Bu oyun doludur.",
     "rooms.errors.game_running": "Oyun gedir: bitəndən sonra başqasını seçə bilərsiniz.",

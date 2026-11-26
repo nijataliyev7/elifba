@@ -4,6 +4,7 @@ namespace App\Domain\Rooms\Support\Drivers;
 
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Rooms\Data\RoomActData;
+use App\Domain\Rooms\Data\RoomGameData;
 use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Data\RoomLastMoveData;
 use App\Domain\Rooms\Data\RoomLegalData;
@@ -174,7 +175,7 @@ final class BoardDriver extends RoomGameDriver
         $legal = $side !== null && $side === $match->turn() ? $match->legal() : [];
         $position = $match->position;
 
-        return ['live' => ! $over, 'round' => null, 'match' => new RoomMatchData(
+        return ['live' => ! $over, 'round' => null, 'domino' => null, 'match' => new RoomMatchData(
             phase: $match->phase,
             starts_ms: $match->startsMs,
             sides: array_map(static fn (RoomMatchColor $color): RoomSideData => new RoomSideData(
@@ -230,7 +231,7 @@ final class BoardDriver extends RoomGameDriver
             RoomActKind::Offer => $playing && $match->canOffer($side),
             RoomActKind::Accept, RoomActKind::Decline => $playing && $match->offer === $side->other(),
             RoomActKind::Resign => true,
-            RoomActKind::Leave => false,
+            RoomActKind::Leave, RoomActKind::Play, RoomActKind::Yield, RoomActKind::Back => false,
         };
 
         return $taken ? [RoomActStatus::Accepted, $match->ply()] : $late;
@@ -285,7 +286,7 @@ final class BoardDriver extends RoomGameDriver
         return ['ply' => $match->ply(), 'due_ms' => $match->sinceMs() + Config::integer('elifba.rooms.computer.think_ms')];
     }
 
-    /** One of the judge's moves, as `DraughtsEngine` chooses it at the game's level. */
+    /** A move: one of the judge's, as `DraughtsEngine` chooses it at the game's level. */
     public function computerChoice(RoomGame $game, int $nowMs): ?array
     {
         $level = $game->computer;
@@ -295,8 +296,7 @@ final class BoardDriver extends RoomGameDriver
         }
 
         $match = $this->replay($game, $nowMs);
-
-        return DraughtsEngine::choose(
+        $path = DraughtsEngine::choose(
             $match->position,
             $level->depth(),
             $level->nodes(),
@@ -304,6 +304,16 @@ final class BoardDriver extends RoomGameDriver
             RoomSeed::computer($game->id, $match->ply()),
             Config::integer('elifba.rooms.computer.max_ms'),
         )?->path;
+
+        return $path === null ? null : ['kind' => RoomActKind::Move, 'path' => $path];
+    }
+
+    /** The clock the game was played on, and the computer's level. */
+    public function listed(RoomGame $game, int $nowMs, bool $rounds): array
+    {
+        $clock = RoomGameData::clockOf($game);
+
+        return $clock === null ? [] : ['clock' => $clock->toArray(), 'computer' => $game->computer?->value];
     }
 
     /**

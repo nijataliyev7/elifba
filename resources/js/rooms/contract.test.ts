@@ -14,6 +14,7 @@ import {
     RoomTaunt,
     RoomTauntReceipt,
 } from './contract';
+import type { RoomDominoGame } from './contract';
 
 /*
  * Every fixture in tests/Fixtures/rooms parses with its strict schema; Pest
@@ -588,8 +589,8 @@ describe('the live voice (C3)', () => {
         players: state.players.map((player) => ({ ...player, voice: null })),
     });
 
-    it("reads every state at v 9, with the voice and each player's standing", () => {
-        expect(ROOM_STATE_VERSION).toBe(9);
+    it("reads every state at v 10, with the voice and each player's standing", () => {
+        expect(ROOM_STATE_VERSION).toBe(10);
 
         for (const [path, value] of payloads) {
             if (!path.includes('/state.')) {
@@ -598,8 +599,9 @@ describe('the live voice (C3)', () => {
 
             const state = value as State;
 
-            expect(state.v, path).toBe(9);
+            expect(state.v, path).toBe(10);
             expect('voice' in state, path).toBe(true);
+            expect('domino' in state, path).toBe(true);
             expect(
                 state.players.every((player) => 'voice' in player),
                 path,
@@ -1038,6 +1040,452 @@ describe("the computer's seat (K3, ADR 036)", () => {
                 ],
             }).success,
         ).toBe(false);
+    });
+});
+
+describe('a domino game (Y5, ADR 038)', () => {
+    type Domino = NonNullable<State['domino']>;
+    type DominoSetup = Extract<NonNullable<State['setup']>, { kind: 'domino' }>;
+    type Act = z.infer<typeof RoomAct>;
+    const resad = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+    const views = [
+        'chosen',
+        'countdown',
+        'play',
+        'opener',
+        'drew',
+        'watch',
+        'screen',
+        'away',
+        'over',
+        'stopped',
+        'sheet.finished',
+        'sheet.blocked',
+        'sheet.tied',
+        'sheet.void',
+    ];
+    // Read inside each test, so a missing fixture fails that test alone.
+    const state = (name: string): State =>
+        fixture(`state.domino.${name}`) as State;
+    const dominoOf = (source: State): Domino => source.domino as Domino;
+    const withDomino = (source: State, domino: Record<string, unknown>) => ({
+        ...source,
+        domino: { ...dominoOf(source), ...domino },
+    });
+    const parses = (value: unknown): boolean =>
+        RoomState.safeParse(value).success;
+
+    it('has a fixture for every phase and view of a domino game, and for each of its acts', () => {
+        for (const name of [
+            ...views.map((view) => `state.domino.${view}`),
+            'act.play',
+            'act.yield',
+            'act.back',
+        ]) {
+            expect(fixture(name), name).toBeDefined();
+        }
+    });
+
+    it('carries the domino of a domino game, live or over, and of nothing else', () => {
+        for (const [path, value] of payloads) {
+            if (!path.includes('/state.')) {
+                continue;
+            }
+
+            const source = value as State;
+            const domino = source.game?.kind === 'domino';
+
+            expect(source.domino !== null, path).toBe(domino);
+
+            if (domino) {
+                expect(dominoOf(source).phase === 'over', path).toBe(
+                    source.game?.phase === 'over',
+                );
+                expect([source.round, source.match], path).toEqual([
+                    null,
+                    null,
+                ]);
+            }
+        }
+
+        const play = state('play');
+        const over = state('over');
+
+        expect(play.taunts).not.toBeNull();
+        expect(parses({ ...play, domino: null })).toBe(false);
+        expect(
+            parses({
+                ...(fixture('state.match.play') as State),
+                domino: play.domino,
+            }),
+        ).toBe(false);
+        expect(
+            parses({
+                ...(fixture('state.answer') as State),
+                domino: play.domino,
+            }),
+        ).toBe(false);
+        expect(parses({ ...lobby, domino: play.domino })).toBe(false);
+        expect(
+            parses({
+                ...over,
+                game: { ...over.game, phase: 'live' },
+                taunts: play.taunts,
+            }),
+        ).toBe(false);
+        expect(
+            parses({
+                ...play,
+                game: { ...play.game, phase: 'over' },
+                taunts: null,
+            }),
+        ).toBe(false);
+        expect(parses({ ...play, game: { ...play.game, kind: 'board' } })).toBe(
+            false,
+        );
+    });
+
+    it("says a domino game's turn, table and seats in its choice and its game, the computer's seat null", () => {
+        const chosen = state('chosen');
+        const play = state('play');
+        const setup = chosen.setup as DominoSetup;
+        const game = play.game as RoomDominoGame;
+
+        // A table of pairs with one computer.
+        expect(setup).toMatchObject({
+            kind: 'domino',
+            mechanic: 'domino_101',
+            table: 'pairs',
+        });
+        expect(setup.seats).toHaveLength(4);
+        expect(setup.seats.filter((seat) => seat === null)).toHaveLength(1);
+        expect(setup.computer).not.toBeNull();
+        expect(Object.keys(setup)).toEqual([
+            'kind',
+            'mechanic',
+            'difficulty',
+            'turn_ms',
+            'table',
+            'seats',
+            'computer',
+            'played',
+        ]);
+        expect(Object.keys(game)).toEqual([
+            'kind',
+            'id',
+            'mechanic',
+            'difficulty',
+            'turn_ms',
+            'table',
+            'target',
+            'computer',
+            'phase',
+        ]);
+
+        const player = setup.seats.find((seat) => seat !== null) ?? resad;
+
+        for (const wrong of [
+            { ...setup, seats: setup.seats.slice(1) },
+            { ...setup, table: 'three' },
+            { ...setup, computer: null },
+            { ...setup, seats: setup.seats.map((seat) => seat ?? player) },
+            { ...setup, seats: setup.seats.map((seat) => seat ?? 'Kompüter') },
+            { ...setup, white: player },
+            { ...setup, rounds: 10 },
+            { ...setup, mechanic: 'draughts' },
+            { ...setup, kind: 'board' },
+        ]) {
+            expect(
+                parses({ ...chosen, setup: wrong }),
+                JSON.stringify(wrong),
+            ).toBe(false);
+        }
+
+        const { target: _target, ...withoutTarget } = game;
+
+        for (const wrong of [
+            withoutTarget,
+            { ...game, rounds: 10 },
+            { ...game, clock: { base_ms: 300000, increment_ms: 3000 } },
+            { ...game, table: 'five' },
+            { ...game, computer: 4 },
+            { ...game, mechanic: 'recall_order' },
+            { ...game, seed: '0123456789abcdef' },
+        ]) {
+            expect(
+                parses({ ...play, game: wrong }),
+                JSON.stringify(wrong),
+            ).toBe(false);
+        }
+    });
+
+    it("gives a seat's own tiles to its player alone, never to a watcher or the screen", () => {
+        expect(dominoOf(state('watch')).mine).toBeNull();
+        expect(dominoOf(state('screen')).mine).toBeNull();
+
+        for (const view of ['play', 'opener', 'drew']) {
+            const domino = dominoOf(state(view));
+
+            expect(domino.phase, view).toBe('play');
+            expect(domino.mine?.seat, view).toBe(domino.turn);
+        }
+
+        // A tile is named only where it is public — the line, the latest
+        // play, every seat's tiles left once a hand is over — or the
+        // viewer's own; never in a count.
+        for (const view of views) {
+            const source = state(view);
+
+            if (source.domino === null) {
+                continue;
+            }
+
+            const domino = dominoOf(source);
+            const open = new Set([
+                ...domino.line.map((placed) => placed.tile),
+                ...(domino.last?.tile ? [domino.last.tile] : []),
+                ...(domino.sheet?.left.flatMap((seat) => seat.tiles) ?? []),
+                ...(domino.mine?.tiles ?? []),
+            ]);
+            const named = [
+                ...JSON.stringify(source).matchAll(/"([0-6]-[0-6])"/g),
+            ].map((match) => match[1]);
+
+            expect(
+                named.filter((name) => !open.has(name)),
+                view,
+            ).toEqual([]);
+        }
+    });
+
+    it('offers plays to the seat to move in its own turn, a give to the seat that may open, and says what it drew', () => {
+        const play = dominoOf(state('play'));
+        const opener = dominoOf(state('opener'));
+        const drew = dominoOf(state('drew'));
+
+        // One tile fitting both ends.
+        expect(play.mine?.legal?.some((one) => one.ends.length === 2)).toBe(
+            true,
+        );
+        expect(opener.mine?.may_yield).toBe(true);
+        expect(drew.mine?.drawn).toHaveLength(4);
+        expect(drew.mine?.legal).not.toBeNull();
+        expect(
+            dominoOf(state('away')).seats.some(
+                (seat) => seat.standing === 'away',
+            ),
+        ).toBe(true);
+    });
+
+    it('ends a hand four ways, each with its sheet and who opens the next', () => {
+        for (const ending of ['finished', 'blocked', 'tied', 'void'] as const) {
+            const domino = dominoOf(state(`sheet.${ending}`));
+
+            expect(domino.phase, ending).toBe('sheet');
+            expect(domino.sheet?.ending, ending).toBe(ending);
+            expect(domino.sheet?.next, ending).not.toBeNull();
+            expect(domino.sheet?.until_ms, ending).not.toBeNull();
+            expect(domino.sheet?.winner === null, ending).toBe(
+                ending === 'tied' || ending === 'void',
+            );
+        }
+
+        const tied = dominoOf(state('sheet.tied')).sheet;
+        const voided = dominoOf(state('sheet.void')).sheet;
+
+        expect(tied?.lines.map((line) => line.line)).toEqual(['bank_added']);
+        expect([voided?.gain, voided?.lines]).toEqual([0, []]);
+    });
+
+    it('ends a game at its target, dry or not, or stopped without a result', () => {
+        const over = dominoOf(state('over'));
+        const stopped = dominoOf(state('stopped'));
+
+        // A dry win, a taunt counted; the last hand's sheet without a next.
+        expect(over.result).toMatchObject({ ending: 'target', dry: true });
+        expect(over.result?.spent.length).toBeGreaterThan(0);
+        expect(over.sheet).toMatchObject({ next: null, until_ms: null });
+        expect(stopped.result).toMatchObject({
+            ending: 'stopped',
+            winner: null,
+            dry: false,
+        });
+        expect(
+            stopped.result?.standing.every(
+                (row) => row.place === null && row.points === 0,
+            ),
+        ).toBe(true);
+
+        const result = over.result!;
+        const source = state('over');
+
+        for (const wrong of [
+            { ...result, winner: null },
+            { ...result, ending: 'stopped' },
+            { ...result, ending: 'stopped', winner: null, dry: false },
+            {
+                ...result,
+                standing: result.standing.map((row) => ({
+                    ...row,
+                    player_id: null,
+                })),
+            },
+            { ...result, ending: 'draw' },
+        ]) {
+            expect(
+                parses(withDomino(source, { result: wrong })),
+                JSON.stringify(wrong),
+            ).toBe(false);
+        }
+    });
+
+    it('refuses a key of a domino game in a phase that has none, a tile named the wrong way and a count that names tiles', () => {
+        const play = state('play');
+        const finished = state('sheet.finished');
+        const countdown = state('countdown');
+        const over = state('over');
+        const playing = dominoOf(play);
+        const mine = playing.mine!;
+        const sheet = dominoOf(finished).sheet!;
+        const result = dominoOf(over).result!;
+        const idle = { ...mine, legal: null, may_yield: false };
+
+        for (const [source, domino] of [
+            // Every seat's tiles left while a hand is played; a result before the end.
+            [play, { sheet }],
+            [play, { result }],
+            [play, { turn: null }],
+            [play, { flag_ms: null }],
+            [play, { hand: null }],
+            // Between hands: no result, a sheet that names the next opening, nobody to move.
+            [finished, { result }],
+            [finished, { sheet: null }],
+            [finished, { sheet: { ...sheet, next: null, until_ms: null } }],
+            [finished, { turn: playing.turn }],
+            // Plays and a give only in the phase play.
+            [finished, { mine }],
+            [finished, { mine: { ...idle, may_yield: true } }],
+            [countdown, { mine }],
+            [over, { mine }],
+            [countdown, { hand: playing.hand }],
+            [countdown, { line: playing.line }],
+            [countdown, { sheet }],
+            // Over: its result, and a sheet with no hand to follow.
+            [over, { result: null }],
+            [over, { sheet }],
+            [over, { turn: playing.turn }],
+            // Plays offered to a seat that is not to move, an empty list, a tile not held.
+            [
+                play,
+                {
+                    mine: {
+                        ...mine,
+                        seat: (mine.seat + 1) % playing.seats.length,
+                    },
+                },
+            ],
+            [play, { mine: { ...mine, legal: [] } }],
+            [play, { mine: { ...mine, tiles: [] } }],
+            // A tile is its two numbers, the larger first.
+            [play, { mine: { ...mine, tiles: [...mine.tiles, '5-6'] } }],
+            [play, { mine: { ...mine, tiles: [...mine.tiles, '7-1'] } }],
+            [play, { mine: { ...mine, tiles: [...mine.tiles, 27] } }],
+            // A seat's tiles and the boneyard are counts; the seats in the order of the turns.
+            [
+                play,
+                {
+                    seats: playing.seats.map((seat) => ({
+                        ...seat,
+                        tiles: mine.tiles,
+                    })),
+                },
+            ],
+            [play, { boneyard: { ...playing.boneyard, tiles: ['6-6'] } }],
+            [play, { seats: [...playing.seats].reverse() }],
+            [
+                play,
+                {
+                    seats: playing.seats.map((seat) => ({
+                        ...seat,
+                        standing: 'computer',
+                    })),
+                },
+            ],
+            [play, { seed: '0123456789abcdef' }],
+            [play, { player_id: play.me.player_id }],
+        ] as const) {
+            expect(
+                parses(withDomino(source, domino)),
+                `${dominoOf(source).phase} with ${JSON.stringify(domino)}`,
+            ).toBe(false);
+        }
+
+        // The same parts in their own phases are taken.
+        expect(parses(withDomino(finished, { mine: idle }))).toBe(true);
+        expect(parses(withDomino(countdown, { mine: idle }))).toBe(true);
+        expect(
+            parses(
+                withDomino(over, {
+                    sheet: { ...sheet, next: null, until_ms: null },
+                }),
+            ),
+        ).toBe(true);
+    });
+
+    it('posts a play by its tile and end, a give at its ply and a return at none, and nothing of a person', () => {
+        const play = fixture('act.play') as Act;
+        const given = fixture('act.yield') as Act;
+        const back = fixture('act.back') as Act;
+        const named = { event_id: play.event_id, game_id: play.game_id };
+
+        expect([play.kind, given.kind, back.kind]).toEqual([
+            'play',
+            'yield',
+            'back',
+        ]);
+        expect(Object.keys(given)).toEqual([
+            'event_id',
+            'game_id',
+            'kind',
+            'ply',
+        ]);
+        expect(Object.keys(back)).toEqual(['event_id', 'game_id', 'kind']);
+
+        for (const right of [
+            { ...named, kind: 'play', ply: 0, path: ['6-6'] },
+            { ...named, kind: 'play', ply: 4, path: ['6-5', 'left'] },
+            { ...named, kind: 'play', ply: 4, path: ['3-0', 'right'] },
+        ]) {
+            expect(
+                RoomAct.safeParse(right).success,
+                JSON.stringify(right),
+            ).toBe(true);
+        }
+
+        for (const wrong of [
+            { ...named, kind: 'play', ply: 4, path: ['6-5', 'left', 'right'] },
+            { ...named, kind: 'play', ply: 4, path: [] },
+            { ...named, kind: 'play', ply: 4, path: ['5-6', 'left'] },
+            { ...named, kind: 'play', ply: 4, path: ['7-1'] },
+            { ...named, kind: 'play', ply: 4, path: ['left', '6-5'] },
+            { ...named, kind: 'play', ply: 4, path: ['6-5', 'middle'] },
+            { ...named, kind: 'play', ply: 4, path: [27] },
+            { ...named, kind: 'play', path: ['6-5', 'left'] },
+            { ...named, kind: 'yield', ply: 4, path: ['6-5'] },
+            { ...named, kind: 'yield' },
+            { ...named, kind: 'back', ply: 4 },
+            { ...named, kind: 'back', path: ['6-5'] },
+            { ...named, kind: 'move', ply: 4, path: ['6-5', 'left'] },
+            { ...named, kind: 'pass', ply: 4 },
+            { ...named, kind: 'draw', ply: 4 },
+            { ...play, player_id: resad },
+            { ...play, seat: 0 },
+        ]) {
+            expect(
+                RoomAct.safeParse(wrong).success,
+                JSON.stringify(wrong),
+            ).toBe(false);
+        }
     });
 });
 

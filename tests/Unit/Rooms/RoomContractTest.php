@@ -14,6 +14,7 @@ use App\Domain\Rooms\Data\RoomStateData;
 use App\Domain\Rooms\Data\RoomTauntData;
 use App\Domain\Rooms\Data\RoomTauntReceiptData;
 use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
+use Illuminate\Validation\ValidationException;
 
 /*
  * The room's contract on the PHP side (docs/architecture.md §12 "Room
@@ -27,6 +28,9 @@ use App\Domain\Rooms\Support\Mechanics\AnagramOrders;
  * ADR 037 an anagram's question with its clue and its orders (`v: 9`,
  * after ADR 036's `v: 8`),
  * and from its part 2 a buyer's letters, a purchase and its receipt.
+ * From Y5 (ADR 038 decisions 38–39, `v: 10`) a domino game's state in each
+ * of its phases and views, its three acts, and the keys it refuses out of
+ * its phase.
  */
 
 const ROOM_FIXTURES = __DIR__.'/../../Fixtures/rooms';
@@ -94,6 +98,12 @@ it('has every phase\'s fixture, the answer and the receipt', function (): void {
         'state.match.computer', 'state.match.computer.chosen',
         // ADR 037 part 2: a buyer's question after one letter, a purchase and its receipt.
         'state.answer.anagram.bought', 'letter', 'letter-receipt',
+        // Y5 (ADR 038 decision 39): a domino game chosen, its countdown, the seat to move, the seat that may give the opening,
+        // a seat that drew, a watcher, the screen, an away seat, each ending's sheet, its end and its stop; its three acts.
+        'state.domino.chosen', 'state.domino.countdown', 'state.domino.play', 'state.domino.opener', 'state.domino.drew',
+        'state.domino.watch', 'state.domino.screen', 'state.domino.away',
+        'state.domino.sheet.finished', 'state.domino.sheet.blocked', 'state.domino.sheet.tied', 'state.domino.sheet.void',
+        'state.domino.over', 'state.domino.stopped', 'act.play', 'act.yield', 'act.back',
     ]);
 });
 
@@ -163,7 +173,8 @@ it('has no solution in any state before the reveal', function (): void {
 });
 
 it('says the choice of the next game in every open room\'s state, and nothing else in it', function (): void {
-    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+    // A domino game's choice has its own test below (Y5).
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.') && ! str_starts_with($name, 'state.domino.')) as $name) {
         $state = roomFixture($name);
         $setup = $state['setup'];
         $game = $state['game'];
@@ -350,8 +361,8 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
     foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
         $state = roomFixture($name);
 
-        expect($state['v'])->toBe(9, $name)
-            ->and(RoomStateData::VERSION)->toBe(9)
+        expect($state['v'])->toBe(10, $name)
+            ->and(RoomStateData::VERSION)->toBe(10)
             ->and(array_key_last($state))->toBe('voice', $name);
 
         foreach ($state['players'] as $player) {
@@ -389,7 +400,8 @@ it('says the room\'s voice at v 5, each player\'s standing only while it is on, 
 });
 
 it('carries a board game\'s match in its game\'s state, shaped by its phase, and refuses one out of place', function (): void {
-    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+    // A domino game's state has its own test below (Y5).
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.') && ! str_starts_with($name, 'state.domino.')) as $name) {
         $state = roomFixture($name);
         $board = ($state['game']['kind'] ?? null) === 'board';
 
@@ -484,4 +496,92 @@ it('takes an act of each kind as the device sends it, and never a leave', functi
     foreach ([['kind' => 'leave', 'ply' => 2], ['kind' => 'move', 'ply' => 2], ['kind' => 'resign', 'ply' => 2], ['kind' => 'offer'], ['kind' => 'decline', 'ply' => 2, 'path' => ['d4', 'f6']]] as $wrong) {
         expect(fn () => RoomActData::fromArray([...$named, ...$wrong]))->toThrow(InvalidArgumentException::class);
     }
+});
+
+it('carries a domino game\'s domino in its game\'s state, shaped by its phase, and refuses one out of place', function (): void {
+    foreach (array_filter(array_keys(roomPayloads()), static fn (string $name): bool => str_starts_with($name, 'state.')) as $name) {
+        $state = roomFixture($name);
+        $domino = ($state['game']['kind'] ?? null) === 'domino';
+
+        expect($state['domino'] !== null)->toBe($domino, $name);
+
+        expect(array_keys($state['setup']))->toBe($state['setup']['kind'] === 'domino' ? ['kind', 'mechanic', 'difficulty', 'turn_ms', 'table', 'seats', 'computer', 'played'] : array_keys($state['setup']), $name);
+
+        if ($domino) {
+            // Played once the game is over with this very choice: the table, the players in their seats, the computer.
+            expect($state['setup']['played'])->toBe($state['game']['phase'] === 'over' && $state['setup']['table'] === $state['game']['table']
+                && $state['setup']['seats'] === array_column($state['domino']['seats'], 'player_id') && $state['setup']['computer'] === $state['game']['computer'], $name);
+            expect(array_keys($state['domino']))->toBe(['phase', 'starts_ms', 'seats', 'sides', 'bank', 'hand', 'ply', 'turn', 'since_ms', 'flag_ms', 'line', 'first', 'ends', 'boneyard', 'last', 'mine', 'sheet', 'result'], $name)
+                ->and($state['domino']['phase'] === 'over')->toBe($state['game']['phase'] === 'over', $name)
+                ->and([$state['round'], $state['match']])->toBe([null, null], $name);
+        }
+    }
+
+    $play = roomFixture('state.domino.play');
+    $watch = roomFixture('state.domino.watch');
+    $screen = roomFixture('state.domino.screen');
+    $sheet = roomFixture('state.domino.sheet.blocked');
+    $over = roomFixture('state.domino.over');
+    $countdown = roomFixture('state.domino.countdown');
+
+    // The seat to move has its own tiles and plays; the watcher and the screen — the host sits — none, and the same table.
+    expect($play['domino']['mine']['seat'])->toBe($play['domino']['turn'])
+        ->and(collect($play['domino']['mine']['legal'])->contains(static fn (array $legal): bool => $legal['ends'] === ['left', 'right']))->toBeTrue()
+        ->and([$watch['domino']['mine'], $screen['domino']['mine']])->toBe([null, null])
+        ->and($screen['me']['host'])->toBeTrue()
+        ->and(array_diff_key($watch['domino'], ['mine' => true]))->toBe(array_diff_key($play['domino'], ['mine' => true]))
+        ->and(roomFixture('state.domino.opener')['domino']['mine']['may_yield'])->toBeTrue()
+        ->and(roomFixture('state.domino.drew')['domino']['mine']['drawn'])->toHaveCount(4)
+        ->and(roomFixture('state.domino.away')['domino']['mine']['away'])->toBeTrue()
+        ->and([$over['domino']['result']['ending'], $over['domino']['result']['dry'], $over['domino']['sheet']['next']])->toBe(['target', true, null])
+        ->and(roomFixture('state.domino.stopped')['domino']['result']['ending'])->toBe('stopped')
+        ->and(roomFixture('state.domino.chosen')['setup'])->toMatchArray(['kind' => 'domino', 'table' => 'pairs', 'computer' => 2, 'played' => false])
+        ->and(roomFixture('state.domino.chosen')['setup']['seats'][3])->toBeNull();
+
+    // A key of a domino game in a phase that has none fails, as the zod schemas do.
+    $refused = static function (array $state, array $domino, string $why): void {
+        expect(fn () => RoomStateData::fromArray([...$state, 'domino' => [...$state['domino'], ...$domino]]))
+            ->toThrow(InvalidArgumentException::class, $why);
+    };
+
+    $refused($play, ['sheet' => $sheet['domino']['sheet']], 'sheet');
+    $refused($play, ['result' => $over['domino']['result']], 'result');
+    $refused($sheet, ['result' => $over['domino']['result']], 'result');
+    $refused($sheet, ['turn' => 0], 'seat to move');
+    $refused($sheet, ['mine' => [...$sheet['domino']['mine'], 'legal' => [['tile' => $sheet['domino']['mine']['tiles'][0], 'ends' => ['left']]]]], 'Plays are offered');
+    $refused($watch, ['mine' => [...$play['domino']['mine'], 'seat' => ($play['domino']['turn'] + 1) % 4]], 'Plays are offered');
+    $refused($countdown, ['line' => $play['domino']['line'], 'first' => 0, 'ends' => $play['domino']['ends']], 'Before the first hand');
+    $refused($over, ['sheet' => $sheet['domino']['sheet']], 'No hand follows');
+    $refused($sheet, ['sheet' => [...$sheet['domino']['sheet'], 'until_ms' => null, 'next' => null]], 'pause between hands');
+    $refused($play, ['line' => [['tile' => '7-1', 'left' => 7, 'right' => 1]]], 'one of the 28');
+    $refused($play, ['seats' => array_reverse($play['domino']['seats'])], 'order of the turns');
+
+    // A domino only for a domino game, and over exactly when its game is.
+    expect(fn () => RoomStateData::fromArray([...$play, 'domino' => null]))->toThrow(InvalidArgumentException::class, 'domino')
+        ->and(fn () => RoomStateData::fromArray([...roomFixture('state.answer'), 'domino' => $play['domino']]))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => RoomStateData::fromArray([...$over, 'game' => [...$over['game'], 'phase' => 'live'], 'taunts' => $play['taunts']]))->toThrow(InvalidArgumentException::class, 'over exactly')
+        ->and(fn () => RoomStateData::fromArray([...$play, 'game' => [...$play['game'], 'kind' => 'board']]))->toThrow(InvalidArgumentException::class, 'kind')
+        ->and(fn () => RoomStateData::fromArray([...$play, 'game' => array_diff_key($play['game'], ['table' => true])]))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => RoomStateData::fromArray([...$play, 'setup' => [...$play['setup'], 'seats' => [null, null]]]))->toThrow(InvalidArgumentException::class);
+});
+
+it('takes a domino act of each kind as the device sends it, and refuses one of another form', function (): void {
+    foreach (['act.play', 'act.yield', 'act.back'] as $name) {
+        $act = roomFixture($name);
+
+        expect(RoomActData::fromArray($act)->toArray())->toBe($act, $name);
+    }
+
+    $named = ['event_id' => roomFixture('act.play')['event_id'], 'game_id' => roomFixture('act.play')['game_id']];
+
+    foreach ([['kind' => 'play', 'ply' => 2], ['kind' => 'yield'], ['kind' => 'yield', 'ply' => 2, 'path' => ['6-5']], ['kind' => 'back', 'ply' => 2], ['kind' => 'back', 'path' => ['6-5']]] as $wrong) {
+        expect(fn () => RoomActData::fromArray([...$named, ...$wrong]))->toThrow(InvalidArgumentException::class);
+    }
+
+    // The form, never the judge: a tile not written the one way, an end of no name, a third item.
+    foreach ([['6-5', 'left', 'right'], ['5-6'], ['6-5', 'up'], ['7-1'], []] as $path) {
+        expect(fn () => RoomActData::validate([...$named, 'kind' => 'play', 'ply' => 3, 'path' => $path]))->toThrow(ValidationException::class);
+    }
+
+    expect(RoomActData::validate([...$named, 'kind' => 'play', 'ply' => 3, 'path' => ['0-0']])->path)->toBe(['0-0']);
 });

@@ -3,6 +3,7 @@
 namespace App\Domain\Rooms\Data;
 
 use App\Domain\Content\Enums\RoomGameKind;
+use App\Domain\Rooms\Enums\RoomDominoPhase;
 use App\Domain\Rooms\Enums\RoomGamePhase;
 use App\Domain\Rooms\Enums\RoomMatchPhase;
 use App\Domain\Rooms\Enums\RoomStatus;
@@ -42,6 +43,11 @@ use InvalidArgumentException;
  * Version 8 (ADR 037 decision 21) has an anagram question's `clue` and
  * `orders` (`RoomAskData`).
  *
+ * Version 10 (Y5, ADR 038 decision 38) has a third kind: a domino game —
+ * live or over — has its `domino` where a race has its `round` and a match
+ * its `match`, built for its viewer (`RoomDominoData`); `domino` is over
+ * exactly when its game is. Every other state has `domino: null`.
+ *
  * @phpstan-import-type RoomSummaryArray from RoomSummaryData
  * @phpstan-import-type RoomViewerArray from RoomViewerData
  * @phpstan-import-type RoomPlayerArray from RoomPlayerData
@@ -53,11 +59,11 @@ use InvalidArgumentException;
  * @phpstan-import-type RoomTauntsArray from RoomTauntsData
  * @phpstan-import-type RoomVoiceArray from RoomVoiceData
  *
- * @phpstan-type RoomStateArray array{v: int, revision: int, server_ms: int, room: RoomSummaryArray, me: RoomViewerArray, players: list<RoomPlayerArray>, game: RoomGameArray|null, round: RoomRoundArray|null, match: RoomMatchArray|null, ranking: list<RoomRankedPlayerArray>, setup: RoomSetupArray|null, taunts: RoomTauntsArray|null, voice: RoomVoiceArray|null}
+ * @phpstan-type RoomStateArray array{v: int, revision: int, server_ms: int, room: RoomSummaryArray, me: RoomViewerArray, players: list<RoomPlayerArray>, game: RoomGameArray|null, round: RoomRoundArray|null, match: RoomMatchArray|null, domino: array<string, mixed>|null, ranking: list<RoomRankedPlayerArray>, setup: RoomSetupArray|null, taunts: RoomTauntsArray|null, voice: RoomVoiceArray|null}
  */
 final readonly class RoomStateData
 {
-    public const int VERSION = 9;
+    public const int VERSION = 10;
 
     /**
      * @param  list<RoomPlayerData>  $players
@@ -76,15 +82,17 @@ final readonly class RoomStateData
         public ?RoomSetupData $setup = null,
         public ?RoomTauntsData $taunts = null,
         public ?RoomVoiceData $voice = null,
+        public ?RoomDominoData $domino = null,
     ) {
         $live = $game?->phase === RoomGamePhase::Live;
         $board = $game?->kind() === RoomGameKind::Board;
+        $race = $game?->kind() === RoomGameKind::Race;
 
         if (($room->status === RoomStatus::Open) !== ($setup !== null)) {
             throw new InvalidArgumentException('An open room has its choice of the next game, and a closed one has none.');
         }
 
-        if (($live && ! $board) !== ($round !== null)) {
+        if (($live && $race) !== ($round !== null)) {
             throw new InvalidArgumentException('A live race has its current round, and nothing else has one.');
         }
 
@@ -94,6 +102,14 @@ final readonly class RoomStateData
 
         if ($match !== null && $live === ($match->phase === RoomMatchPhase::Over)) {
             throw new InvalidArgumentException('A match is over exactly when its game is.');
+        }
+
+        if (($game?->kind() === RoomGameKind::Domino) !== ($domino !== null)) {
+            throw new InvalidArgumentException('A domino game has its domino, and nothing else has one.');
+        }
+
+        if ($domino !== null && $live === ($domino->phase === RoomDominoPhase::Over)) {
+            throw new InvalidArgumentException('A domino game is over exactly when its game is.');
         }
 
         if ($live !== ($taunts !== null)) {
@@ -113,6 +129,18 @@ final readonly class RoomStateData
                 throw new InvalidArgumentException('A player has a voice standing exactly while the room\'s voice is on, for the host and the present players.');
             }
         }
+    }
+
+    /**
+     * Whether the server is to play a turn now or soon — the computer to
+     * move in a match (ADR 036 decision 9), or in a domino game a seat the
+     * server plays for or a flag within `$withinMs` (ADR 038 decision 25):
+     * what `RoomStateController` asks before it hands `PlayComputerMove` to
+     * `defer()`.
+     */
+    public function serverToPlay(int $withinMs): bool
+    {
+        return $this->match?->computerToMove() === true || $this->domino?->serverToPlay($this->server_ms, $withinMs) === true;
     }
 
     /**
@@ -138,6 +166,7 @@ final readonly class RoomStateData
             setup: $data['setup'] === null ? null : RoomSetupData::fromArray($data['setup']),
             taunts: $data['taunts'] === null ? null : RoomTauntsData::fromArray($data['taunts']),
             voice: $data['voice'] === null ? null : RoomVoiceData::fromArray($data['voice']),
+            domino: $data['domino'] === null ? null : RoomDominoData::fromArray($data['domino']),
         );
     }
 
@@ -156,6 +185,7 @@ final readonly class RoomStateData
             'game' => $this->game?->toArray(),
             'round' => $this->round?->toArray(),
             'match' => $this->match?->toArray(),
+            'domino' => $this->domino?->toArray(),
             'ranking' => array_map(static fn (RoomRankedPlayerData $row): array => $row->toArray(), $this->ranking),
             'setup' => $this->setup?->toArray(),
             'taunts' => $this->taunts?->toArray(),

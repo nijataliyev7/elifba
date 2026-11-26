@@ -32,6 +32,18 @@
  * — in the match's `sides` and its result's `standing` — is null. The
  * computer is no player: it is in no `players` and no `ranking`.
  *
+ * From version 10 (Y5, ADR 038 decision 38) a game has a third kind,
+ * domino: `game` and `setup` have a third shape — the turn's time, the
+ * table, its seats in the order of the turns (null for the computer's) and
+ * the computer's level — and a domino game, live or over, has its `domino`
+ * where a race has its `round` and a match its `match`. Unlike a match it
+ * hides things: every seat's tiles and the boneyard are counts, a seat's
+ * own tiles (`mine`) reach that seat's player alone, and a tile is named
+ * only where it is public — the line, the latest play, and from a hand's
+ * end every seat's tiles left. A seat posts `play`, `yield` and `back`
+ * (`RoomAct`): the server alone judges a play, keeps the turn's time and
+ * keeps the account.
+ *
  * The board's contract (`resources/js/game/contract.ts`) is another one and
  * shares nothing with this.
  */
@@ -120,10 +132,14 @@ export const RoomRaceMechanic = z.enum([
 /** The board games a room plays (D3, ADR 034): Russian draughts. */
 export const RoomBoardMechanic = z.enum(['draughts']);
 
+/** The domino games a room plays (Y5, ADR 038): «101». */
+export const RoomDominoMechanic = z.enum(['domino_101']);
+
 /** Every game a room plays; its kind follows from it. */
 export const RoomMechanic = z.enum([
     ...RoomRaceMechanic.options,
     ...RoomBoardMechanic.options,
+    ...RoomDominoMechanic.options,
 ]);
 
 export const RoomItem = z.strictObject({
@@ -444,12 +460,45 @@ const boardGameBase = {
     computer: RoomComputerLevel.nullable(),
 };
 
+/**
+ * A domino game's table (ADR 038 decision 10): two, three or four seats
+ * each for itself, or two pairs — seats 0 and 2 against 1 and 3.
+ */
+export const RoomTable = z.enum(['two', 'three', 'four', 'pairs']);
+
+/** How many seats a table has. */
+const tableSeats: Record<z.infer<typeof RoomTable>, number> = {
+    two: 2,
+    three: 3,
+    four: 4,
+    pairs: 4,
+};
+
+const dominoGameBase = {
+    kind: z.literal('domino'),
+    id,
+    mechanic: RoomDominoMechanic,
+    difficulty,
+    /** A turn's time: the game's level (ADR 038 decision 22). */
+    turn_ms: z.number().int().positive(),
+    table: RoomTable,
+    /** The balance that ends the game (R25). */
+    target: z.number().int().positive(),
+    /** The level of the computer, which plays every seat without a player (ADR 038 decision 12); null: none does. */
+    computer: RoomComputerLevel.nullable(),
+};
+
 const gamePhase = z.enum(['live', 'over']);
 
-/** The room's latest game: a race with its rounds, or a board game with its clock and, when it plays, the computer's level. */
+/**
+ * The room's latest game: a race with its rounds, a board game with its
+ * clock and, when it plays, the computer's level, or a domino game with
+ * its turn's time, its table, its target and the computer's level.
+ */
 export const RoomGame = z.discriminatedUnion('kind', [
     z.strictObject({ ...raceGameBase, phase: gamePhase }),
     z.strictObject({ ...boardGameBase, phase: gamePhase }),
+    z.strictObject({ ...dominoGameBase, phase: gamePhase }),
 ]);
 
 /**
@@ -471,6 +520,10 @@ export const RoomRankedPlayer = z.strictObject({
  * player's row or null while nobody is there to sit (ADR 034 decision 7).
  * With the computer chosen (`computer`, its level; ADR 036 decision 2) at
  * most one seat is a player's and the other colour is the computer's.
+ * A domino game (ADR 038 decisions 11–14) has its level's turn time, its
+ * table and as many seats as the table has, in the order of the turns —
+ * each a player's row, or null for the computer's — and the computer's
+ * level exactly while a seat is its.
  * The server derives it; a page compares nothing itself.
  */
 export const RoomSetup = z.discriminatedUnion('kind', [
@@ -491,6 +544,30 @@ export const RoomSetup = z.discriminatedUnion('kind', [
         computer: RoomComputerLevel.nullable(),
         played: z.boolean(),
     }),
+    z
+        .strictObject({
+            kind: z.literal('domino'),
+            mechanic: RoomDominoMechanic,
+            difficulty,
+            turn_ms: z.number().int().positive(),
+            table: RoomTable,
+            seats: z.array(id.nullable()).min(2).max(4),
+            computer: RoomComputerLevel.nullable(),
+            played: z.boolean(),
+        })
+        .superRefine((setup, context) => {
+            if (
+                setup.seats.length !== tableSeats[setup.table] ||
+                setup.seats.includes(null) !== (setup.computer !== null)
+            ) {
+                context.addIssue({
+                    code: 'custom',
+                    message:
+                        "A domino game's choice seats its table, the computer's level said while a seat is its.",
+                    path: ['seats'],
+                });
+            }
+        }),
 ]);
 
 /** A dark square of the board by its official name, `a1`–`h8` (ADR 034 decision 5). */
@@ -675,6 +752,493 @@ export const RoomMatch = z.discriminatedUnion('phase', [
     RoomMatchOver,
 ]);
 
+/**
+ * A domino tile by its name: its two numbers, the larger first — `6-5`,
+ * `3-0`, `0-0` (ADR 038 decision 15). Never an index.
+ */
+const tile = z
+    .string()
+    .regex(/^[0-6]-[0-6]$/)
+    .refine((name) => name[0] >= name[2], 'The larger number first.');
+
+/** An end of the line, as every device draws it («sol uc», «sağ uc»). */
+export const RoomDominoEnd = z.enum(['left', 'right']);
+
+/** A seat by its number from 0 in the order of the turns (R3). */
+const seatNumber = z.number().int().min(0).max(3);
+
+/** A side by its number: a seat's own, or at `pairs` seats 0 and 2 (side 0) and 1 and 3 (side 1). */
+const sideNumber = z.number().int().min(0).max(3);
+
+/** A number of a tile's half, 0–6. */
+const pips = z.number().int().min(0).max(6);
+
+/**
+ * How a seat stands (ADR 038 decisions 26–27): its player plays, is away
+ * (the server plays at once until «Oyuna qayıt»), left the room, or the
+ * seat is the computer's.
+ */
+export const RoomSeatStanding = z.enum(['playing', 'away', 'left', 'computer']);
+
+/** A seat: its player (null for the computer's), its side, how many tiles it holds — a count, never a tile — and how it stands. */
+export const RoomDominoSeat = z
+    .strictObject({
+        seat: seatNumber,
+        player_id: id.nullable(),
+        side: sideNumber,
+        tiles: count,
+        standing: RoomSeatStanding,
+    })
+    .refine(
+        (seat) => (seat.player_id === null) === (seat.standing === 'computer'),
+        "A seat without a player is the computer's, and only it.",
+    );
+
+/**
+ * A side and its account (R20–R22): its seats, its balance, whether it is
+ * open, the points waiting and the tries, and its dense place by balance.
+ */
+export const RoomDominoSide = z.strictObject({
+    side: sideNumber,
+    seats: z.array(seatNumber).min(1).max(2),
+    balance: count,
+    open: z.boolean(),
+    waiting: count,
+    tries: count,
+    place: z.number().int().positive(),
+});
+
+/** Why a seat opens a hand (R6–R9). */
+export const RoomOpenerWhy = z.enum([
+    'lowest_double',
+    'lowest_tile',
+    'finished',
+    'fewest',
+    'blocker',
+    'again',
+    'given',
+]);
+
+/** The hand that is open, or was last: its number from 1, when it opened, who opens it and why. */
+export const RoomDominoHand = z.strictObject({
+    number: z.number().int().positive(),
+    opens_ms: moment,
+    opener: seatNumber,
+    why: RoomOpenerWhy,
+});
+
+/** A tile in the line, as it lies: the number at its left and at its right. */
+export const RoomDominoPlaced = z.strictObject({
+    tile,
+    left: pips,
+    right: pips,
+});
+
+/** An end of the line and the number it shows. */
+const RoomDominoLineEnd = z.strictObject({
+    end: RoomDominoEnd,
+    number: pips,
+});
+
+/** The boneyard, in counts only; closed by R13, never at `four` and `pairs`, which have none (decision 69). */
+export const RoomDominoBoneyard = z.strictObject({
+    tiles: count,
+    reserve: count,
+    closed: z.boolean(),
+});
+
+/** A seat that drew — how many, never which — or passed after the latest act, by itself (decisions 18, 68). */
+const RoomDominoThen = z.strictObject({
+    seat: seatNumber,
+    drew: count,
+    passed: z.boolean(),
+});
+
+/**
+ * The latest turn act of the hand and what followed it by itself: a play
+ * names its tile and its end (none for a hand's first tile); a «Sən aç»
+ * names neither and nothing follows it. `stood_in`: the server played it
+ * for the seat.
+ */
+export const RoomDominoLast = z.discriminatedUnion('kind', [
+    z.strictObject({
+        seat: seatNumber,
+        kind: z.literal('play'),
+        tile,
+        end: RoomDominoEnd.nullable(),
+        stood_in: z.boolean(),
+        // oxlint-disable-next-line unicorn/no-thenable -- the contract's key (ADR 038 decision 68): an array, never a function
+        then: z.array(RoomDominoThen),
+    }),
+    z.strictObject({
+        seat: seatNumber,
+        kind: z.literal('yield'),
+        tile: z.null(),
+        end: z.null(),
+        stood_in: z.boolean(),
+        // oxlint-disable-next-line unicorn/no-thenable -- the contract's key (ADR 038 decision 68): an array, never a function
+        then: z.array(RoomDominoThen).length(0),
+    }),
+]);
+
+/** A play the seat to move may make: a tile it holds and the ends it fits — none for a hand's first tile. */
+export const RoomDominoLegal = z.strictObject({
+    tile,
+    ends: z.array(RoomDominoEnd).max(2),
+});
+
+const mineShape = {
+    seat: seatNumber,
+    /** In the order dealt and drawn. */
+    tiles: z.array(tile),
+    /** Drawn after the latest turn act. */
+    drawn: z.array(tile),
+    /** Only in the seat's own turn; null otherwise, never empty. */
+    legal: z.array(RoomDominoLegal).min(1).nullable(),
+    /** Whether the seat may give the opening to its partner («Sən aç», R9). */
+    may_yield: z.boolean(),
+    away: z.boolean(),
+};
+
+function heldOnly(
+    mine: {
+        tiles: string[];
+        drawn: string[];
+        legal: { tile: string }[] | null;
+    },
+    context: z.RefinementCtx,
+): void {
+    const held = new Set(mine.tiles);
+    const named = [
+        ...mine.drawn,
+        ...(mine.legal ?? []).map((play) => play.tile),
+    ];
+
+    if (named.some((name) => !held.has(name))) {
+        context.addIssue({
+            code: 'custom',
+            message: 'A seat draws and plays only tiles it holds.',
+            path: ['tiles'],
+        });
+    }
+}
+
+/**
+ * A seat's own part, for that seat's player alone (ADR 038 decision 6):
+ * its tiles, the tiles it just drew, its plays and whether it may give the
+ * opening. Null for everyone else — a watcher, a host who does not sit and
+ * the screen.
+ */
+export const RoomDominoMine = z.strictObject(mineShape).superRefine(heldOnly);
+
+/** A seat's own part outside the phase `play`: nothing to play and no opening to give. */
+const RoomDominoMineIdle = z
+    .strictObject({
+        ...mineShape,
+        legal: z.null(),
+        may_yield: z.literal(false),
+    })
+    .superRefine(heldOnly);
+
+/** How a hand ended (R14–R19, decision 65). */
+export const RoomHandEnding = z.enum(['finished', 'blocked', 'tied', 'void']);
+
+/** A change of the account (decision 70). */
+export const RoomLedgerLine = z.enum([
+    'gained',
+    'opened',
+    'waited',
+    'released',
+    'burnt_rival',
+    'burnt_third',
+    'bank_added',
+    'bank_taken',
+    'bank_burnt',
+]);
+
+const sheetShape = {
+    hand: z.number().int().positive(),
+    ending: RoomHandEnding,
+    /** Who finished; who made the last play of a blocked or tied hand; a void hand's opener. */
+    by: seatNumber,
+    winner: sideNumber.nullable(),
+    /** Every seat's tiles left — public from the hand's end — and their count by R16. */
+    left: z.array(
+        z.strictObject({ seat: seatNumber, tiles: z.array(tile), pips: count }),
+    ),
+    counts: z.array(z.strictObject({ side: sideNumber, pips: count })),
+    gain: count,
+    /** Every change of the account, in the order it changed; a bank's line names no side. */
+    lines: z.array(
+        z.strictObject({
+            side: sideNumber.nullable(),
+            line: RoomLedgerLine,
+            points: count,
+        }),
+    ),
+};
+
+function sheetHolds(
+    sheet: {
+        ending: z.infer<typeof RoomHandEnding>;
+        winner: number | null;
+        gain: number;
+        lines: unknown[];
+    },
+    context: z.RefinementCtx,
+): void {
+    const won = sheet.ending === 'finished' || sheet.ending === 'blocked';
+
+    if (won !== (sheet.winner !== null)) {
+        context.addIssue({
+            code: 'custom',
+            message:
+                'A finished or blocked hand has its winner, a tied or void hand none.',
+            path: ['winner'],
+        });
+    }
+
+    if (
+        sheet.ending === 'void' &&
+        (sheet.gain !== 0 || sheet.lines.length > 0)
+    ) {
+        context.addIssue({
+            code: 'custom',
+            message: 'A void hand counts nothing.',
+            path: ['lines'],
+        });
+    }
+}
+
+/** The sheet in the pause after a hand: who opens the next — a seat, or null while the next deal decides — and when. */
+const RoomDominoSheetNext = z
+    .strictObject({
+        ...sheetShape,
+        next: z.strictObject({
+            seat: seatNumber.nullable(),
+            why: RoomOpenerWhy,
+        }),
+        until_ms: moment,
+    })
+    .superRefine(sheetHolds);
+
+/** The last hand's sheet once the game is over: no hand follows (decision 66). */
+const RoomDominoSheetLast = z
+    .strictObject({ ...sheetShape, next: z.null(), until_ms: z.null() })
+    .superRefine(sheetHolds);
+
+/** A seat's row of the game's standing: its side's points less its counted taunts, its side's place. */
+export const RoomDominoStanding = z.strictObject({
+    player_id: id.nullable(),
+    seat: seatNumber,
+    side: sideNumber,
+    points: count,
+    place: z.number().int().positive().nullable(),
+});
+
+/**
+ * How a domino game ended (decisions 27, 30–32): at its target, with its
+ * winning side and whether the win was dry (R26), or stopped without a
+ * result; each seat's row, the winning side first; the taunts counted.
+ */
+export const RoomDominoResult = z
+    .strictObject({
+        ending: z.enum(['target', 'stopped']),
+        winner: sideNumber.nullable(),
+        dry: z.boolean(),
+        standing: z.array(RoomDominoStanding).min(2).max(4),
+        spent: z.array(RoomSpent),
+    })
+    .superRefine((result, context) => {
+        const won = result.ending === 'target';
+
+        if (won !== (result.winner !== null) || (result.dry && !won)) {
+            context.addIssue({
+                code: 'custom',
+                message:
+                    'A game that reached its target has a winner, and only it may be dry.',
+                path: ['winner'],
+            });
+        }
+
+        if (
+            !won &&
+            result.standing.some(
+                (row) => row.place !== null || row.points !== 0,
+            )
+        ) {
+            context.addIssue({
+                code: 'custom',
+                message: 'A stopped game places nobody and gives nothing.',
+                path: ['standing'],
+            });
+        }
+
+        if (
+            result.standing.some(
+                (row) => row.player_id === null && row.points !== 0,
+            )
+        ) {
+            context.addIssue({
+                code: 'custom',
+                message: 'The computer earns nothing.',
+                path: ['standing'],
+            });
+        }
+    });
+
+const dominoBase = {
+    /** When the first hand opens: the end of the countdown. */
+    starts_ms: moment,
+    /** In the order of the turns. */
+    seats: z.array(RoomDominoSeat).min(2).max(4),
+    /** In the server's order, by balance and then by side: a page never sorts them. */
+    sides: z.array(RoomDominoSide).min(2).max(4),
+    bank: count,
+    /** The turn acts stored — plays and gives — over the whole game. */
+    ply: count,
+    /** From the left end to the right, each tile as it lies. */
+    line: z.array(RoomDominoPlaced).max(28),
+    /** The hand's first tile in `line`. */
+    first: count.nullable(),
+    /** Empty before the first tile. */
+    ends: z.array(RoomDominoLineEnd).max(2),
+    boneyard: RoomDominoBoneyard,
+    last: RoomDominoLast.nullable(),
+};
+
+function dominoHolds(
+    domino: {
+        seats: { seat: number }[];
+        line: unknown[];
+        first: number | null;
+        ends: unknown[];
+        turn: number | null;
+        mine: {
+            seat: number;
+            legal: unknown[] | null;
+            may_yield: boolean;
+        } | null;
+    },
+    context: z.RefinementCtx,
+): void {
+    if (domino.seats.some((seat, index) => seat.seat !== index)) {
+        context.addIssue({
+            code: 'custom',
+            message:
+                'A table has two to four seats, in the order of the turns.',
+            path: ['seats'],
+        });
+    }
+
+    const empty = domino.line.length === 0;
+
+    if (
+        empty !== (domino.first === null) ||
+        empty !== (domino.ends.length === 0)
+    ) {
+        context.addIssue({
+            code: 'custom',
+            message:
+                'A line has its first tile and its two ends once a tile lies.',
+            path: ['line'],
+        });
+    }
+
+    const mine = domino.mine;
+
+    if (
+        mine !== null &&
+        (mine.legal !== null || mine.may_yield) &&
+        mine.seat !== domino.turn
+    ) {
+        context.addIssue({
+            code: 'custom',
+            message:
+                'Plays are offered to the seat to move alone, in its turn.',
+            path: ['mine'],
+        });
+    }
+}
+
+/** Before the first hand opens at `starts_ms`: nothing dealt or played, no sheet, no result. */
+const RoomDominoCountdown = z
+    .strictObject({
+        phase: z.literal('countdown'),
+        ...dominoBase,
+        hand: z.null(),
+        turn: z.null(),
+        since_ms: z.null(),
+        flag_ms: z.null(),
+        line: z.array(RoomDominoPlaced).length(0),
+        first: z.null(),
+        ends: z.array(RoomDominoLineEnd).length(0),
+        last: z.null(),
+        mine: RoomDominoMineIdle.nullable(),
+        sheet: z.null(),
+        result: z.null(),
+    })
+    .superRefine(dominoHolds);
+
+/** A hand being played: the hand, the seat to move, since when and its flag; the seat to move's own plays. */
+const RoomDominoPlay = z
+    .strictObject({
+        phase: z.literal('play'),
+        ...dominoBase,
+        hand: RoomDominoHand,
+        turn: seatNumber,
+        since_ms: moment,
+        flag_ms: moment,
+        mine: RoomDominoMine.nullable(),
+        sheet: z.null(),
+        result: z.null(),
+    })
+    .superRefine(dominoHolds);
+
+/** The pause after a hand (phase `sheet`): the hand that ended and its sheet, who opens next and when; nobody to move. */
+const RoomDominoPause = z
+    .strictObject({
+        phase: z.literal('sheet'),
+        ...dominoBase,
+        hand: RoomDominoHand,
+        turn: z.null(),
+        since_ms: z.null(),
+        flag_ms: z.null(),
+        mine: RoomDominoMineIdle.nullable(),
+        sheet: RoomDominoSheetNext,
+        result: z.null(),
+    })
+    .superRefine(dominoHolds);
+
+/** Over: the result, and the last hand's sheet when the game ended at a hand's end — none when it was stopped inside one. */
+const RoomDominoOver = z
+    .strictObject({
+        phase: z.literal('over'),
+        ...dominoBase,
+        hand: RoomDominoHand.nullable(),
+        turn: z.null(),
+        since_ms: z.null(),
+        flag_ms: z.null(),
+        mine: RoomDominoMineIdle.nullable(),
+        sheet: RoomDominoSheetLast.nullable(),
+        result: RoomDominoResult,
+    })
+    .superRefine(dominoHolds);
+
+/**
+ * A domino game in the state (Y5, ADR 038 decision 38), one shape per
+ * phase, as its viewer may see it: every seat's tiles and the boneyard are
+ * counts; `mine` is the seat's own player's alone; tiles are named only
+ * where they are public — the line, the latest play and, from a hand's
+ * end, `sheet.left`.
+ */
+export const RoomDomino = z.discriminatedUnion('phase', [
+    RoomDominoCountdown,
+    RoomDominoPlay,
+    RoomDominoPause,
+    RoomDominoOver,
+]);
+
 /** A taunt's key: one of `content/rooms/taunts.json`; the phrase is the page's own translation. */
 const tauntKey = z.string().regex(/^[a-z_]{2,32}$/);
 
@@ -712,7 +1276,7 @@ export const RoomTaunts = z.strictObject({
 });
 
 /** The state's version: a page that meets another reloads itself (`fetchState`). */
-export const ROOM_STATE_VERSION = 9;
+export const ROOM_STATE_VERSION = 10;
 
 const stateBase = {
     v: z.literal(ROOM_STATE_VERSION),
@@ -731,9 +1295,10 @@ const stateBase = {
 
 /**
  * No game yet; a live race with its current round, or one that is over; a
- * board game with its match, live or over (D3). A closed room has no
- * voice, and a player has a voice standing exactly while the room's voice
- * is on, for the host and the present players.
+ * board game with its match, live or over (D3); a domino game with its
+ * `domino`, live or over (Y5). A closed room has no voice, and a player has
+ * a voice standing exactly while the room's voice is on, for the host and
+ * the present players.
  */
 export const RoomState = z
     .union([
@@ -742,6 +1307,7 @@ export const RoomState = z
             game: z.null(),
             round: z.null(),
             match: z.null(),
+            domino: z.null(),
             taunts: z.null(),
         }),
         z.strictObject({
@@ -749,6 +1315,7 @@ export const RoomState = z
             game: z.strictObject({ ...raceGameBase, phase: z.literal('live') }),
             round: RoomRound,
             match: z.null(),
+            domino: z.null(),
             /** A live game's taunts (T2); nothing else has any. */
             taunts: RoomTaunts,
         }),
@@ -757,6 +1324,7 @@ export const RoomState = z
             game: z.strictObject({ ...raceGameBase, phase: z.literal('over') }),
             round: z.null(),
             match: z.null(),
+            domino: z.null(),
             taunts: z.null(),
         }),
         z.strictObject({
@@ -770,6 +1338,7 @@ export const RoomState = z
                 RoomMatchCountdown,
                 RoomMatchPlay,
             ]),
+            domino: z.null(),
             taunts: RoomTaunts,
         }),
         z.strictObject({
@@ -780,6 +1349,33 @@ export const RoomState = z
             }),
             round: z.null(),
             match: RoomMatchOver,
+            domino: z.null(),
+            taunts: z.null(),
+        }),
+        z.strictObject({
+            ...stateBase,
+            game: z.strictObject({
+                ...dominoGameBase,
+                phase: z.literal('live'),
+            }),
+            round: z.null(),
+            match: z.null(),
+            domino: z.discriminatedUnion('phase', [
+                RoomDominoCountdown,
+                RoomDominoPlay,
+                RoomDominoPause,
+            ]),
+            taunts: RoomTaunts,
+        }),
+        z.strictObject({
+            ...stateBase,
+            game: z.strictObject({
+                ...dominoGameBase,
+                phase: z.literal('over'),
+            }),
+            round: z.null(),
+            match: z.null(),
+            domino: RoomDominoOver,
             taunts: z.null(),
         }),
     ])
@@ -883,11 +1479,17 @@ export const RoomTauntReceipt = z.strictObject({
     revision: count,
 });
 
+/** A domino play's `path`: `[tile]` for a hand's first tile, else `[tile, end]` (ADR 038 decision 16). */
+const playPath = z.union([z.tuple([tile]), z.tuple([tile, RoomDominoEnd])]);
+
 /**
  * `POST /rooms/{room}/acts` (D3, ADR 034 decision 9): a seat's own act in
  * the game the device saw (`game_id`, as an answer names its round) — a
  * move with its path, a draw offer or its answer at the ply the device saw,
- * or resigning. Never a player, never `leave`, which the server writes.
+ * or resigning. From Y5 (ADR 038 decision 16) a domino seat's: a play with
+ * its tile and end, «Sən aç» (`yield`) at the ply the device saw, and
+ * «Oyuna qayıt» (`back`) at none. Never a player, never `leave`, which the
+ * server writes.
  */
 export const RoomAct = z.discriminatedUnion('kind', [
     z.strictObject({
@@ -916,6 +1518,20 @@ export const RoomAct = z.discriminatedUnion('kind', [
         ply: count,
     }),
     z.strictObject({ event_id: id, game_id: id, kind: z.literal('resign') }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('play'),
+        ply: count,
+        path: playPath,
+    }),
+    z.strictObject({
+        event_id: id,
+        game_id: id,
+        kind: z.literal('yield'),
+        ply: count,
+    }),
+    z.strictObject({ event_id: id, game_id: id, kind: z.literal('back') }),
 ]);
 
 /** The receipt of an act: what was done with it; the match comes with the next state. */
@@ -949,6 +1565,26 @@ export type RoomLegal = z.infer<typeof RoomLegal>;
 export type RoomMatchStanding = z.infer<typeof RoomMatchStanding>;
 export type RoomMatchResult = z.infer<typeof RoomMatchResult>;
 export type RoomMatch = z.infer<typeof RoomMatch>;
+export type RoomDominoMechanic = z.infer<typeof RoomDominoMechanic>;
+export type RoomTable = z.infer<typeof RoomTable>;
+export type RoomDominoEnd = z.infer<typeof RoomDominoEnd>;
+export type RoomSeatStanding = z.infer<typeof RoomSeatStanding>;
+export type RoomDominoSeat = z.infer<typeof RoomDominoSeat>;
+export type RoomDominoSide = z.infer<typeof RoomDominoSide>;
+export type RoomOpenerWhy = z.infer<typeof RoomOpenerWhy>;
+export type RoomDominoHand = z.infer<typeof RoomDominoHand>;
+export type RoomDominoPlaced = z.infer<typeof RoomDominoPlaced>;
+export type RoomDominoBoneyard = z.infer<typeof RoomDominoBoneyard>;
+export type RoomDominoLast = z.infer<typeof RoomDominoLast>;
+export type RoomDominoLegal = z.infer<typeof RoomDominoLegal>;
+export type RoomDominoMine = z.infer<typeof RoomDominoMine>;
+export type RoomHandEnding = z.infer<typeof RoomHandEnding>;
+export type RoomLedgerLine = z.infer<typeof RoomLedgerLine>;
+export type RoomDominoStanding = z.infer<typeof RoomDominoStanding>;
+export type RoomDominoResult = z.infer<typeof RoomDominoResult>;
+export type RoomDomino = z.infer<typeof RoomDomino>;
+/** The sheet of the hand that just ended: in the pause with who opens next, at the end without. */
+export type RoomDominoSheet = NonNullable<RoomDomino['sheet']>;
 export type RoomAct = z.infer<typeof RoomAct>;
 export type RoomActReceipt = z.infer<typeof RoomActReceipt>;
 export type RoomItem = z.infer<typeof RoomItem>;
@@ -972,6 +1608,7 @@ export type RoomGame = z.infer<typeof RoomGame>;
 /** A race of rounds: the game a round is of. */
 export type RoomRaceGame = Extract<RoomGame, { kind: 'race' }>;
 export type RoomBoardGame = Extract<RoomGame, { kind: 'board' }>;
+export type RoomDominoGame = Extract<RoomGame, { kind: 'domino' }>;
 export type RoomSetup = z.infer<typeof RoomSetup>;
 export type RoomRankedPlayer = z.infer<typeof RoomRankedPlayer>;
 export type RoomState = z.infer<typeof RoomState>;

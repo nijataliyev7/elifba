@@ -8,6 +8,7 @@ use App\Domain\Content\Enums\RoomMechanic;
 use App\Domain\Content\Enums\RoomSequenceRule;
 use App\Domain\Content\Support\ContentRepository;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
+use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
@@ -38,6 +39,15 @@ use InvalidArgumentException;
  * the room's own (`RoomSeats`, ADR 036 as amended 2026-11-22). What the
  * choice asks beyond the game and its level is its kind's
  * (`RoomGameDriver::choiceRules()`).
+ *
+ * From Y5 (ADR 038 decisions 11–14) a domino game's choice has no rounds
+ * and no colours: its table (`two`, `three`, `four`, `pairs`), its seats —
+ * a list as long as the table, each place a `room_players.id` or null —
+ * and the computer's level. As posted, the table may be null (by the
+ * number of present players) and the seats null (the room's stand); the
+ * room's choice (`Room::setup()`) is seated by `RoomTableSeats`: its table,
+ * every seat a present player or null — the computer's — and the level
+ * only while a seat is the computer's.
  */
 final readonly class RoomGameSetupData
 {
@@ -45,7 +55,9 @@ final readonly class RoomGameSetupData
      * @param  int|null  $rounds  a race's; null for a board game
      * @param  string|null  $white  a board game's seat of white; null for a race, or while nobody is seated
      * @param  string|null  $black  a board game's seat of black
-     * @param  RoomComputerLevel|null  $computer  a board game's: the level of the computer, which then plays the seat without a player (K3, ADR 036 decision 2); null: two players
+     * @param  RoomComputerLevel|null  $computer  a board game's: the level of the computer, which then plays the seat without a player (K3, ADR 036 decision 2); null: two players. A domino game's: the level of every seat without a player (ADR 038 decision 12)
+     * @param  RoomTable|null  $table  a domino game's table; null for the other kinds, or a posted choice that leaves it to the number of players
+     * @param  list<string|null>|null  $seats  a domino game's seats in the order of the turns, each a `room_players.id` or null; null for the other kinds, or a posted choice that keeps the room's
      */
     public function __construct(
         public RoomMechanic $mechanic,
@@ -54,30 +66,48 @@ final readonly class RoomGameSetupData
         public ?string $white = null,
         public ?string $black = null,
         public ?RoomComputerLevel $computer = null,
+        public ?RoomTable $table = null,
+        public ?array $seats = null,
     ) {
-        $race = $mechanic->kind() === RoomGameKind::Race;
+        $kind = $mechanic->kind();
+        $named = array_values(array_filter($seats ?? [], static fn (?string $seat): bool => $seat !== null));
 
-        if ($race && ($rounds === null || $white !== null || $black !== null || $computer !== null)) {
-            throw new InvalidArgumentException('A race has its rounds, and no seats.');
-        }
+        $wrong = match (true) {
+            $kind === RoomGameKind::Race && ($rounds === null || $white !== null || $black !== null || $computer !== null) => 'A race has its rounds, and no seats.',
+            $kind !== RoomGameKind::Race && $rounds !== null => 'Only a race has rounds.',
+            $kind === RoomGameKind::Board && (($white !== null && $white === $black) || ($computer !== null && $white !== null && $black !== null)) => 'A board game has two different seats — one of them the computer\'s when it plays.',
+            $kind !== RoomGameKind::Domino && ($table !== null || $seats !== null) => 'Only a domino game has a table.',
+            $kind === RoomGameKind::Domino && ($white !== null || $black !== null) => 'A domino game has no colours.',
+            $kind === RoomGameKind::Domino && $seats !== null && (($table !== null && count($seats) !== $table->seats()) || count($named) !== count(array_unique($named))) => 'A domino game\'s seats are its table\'s, each player named once.',
+            default => null,
+        };
 
-        if (! $race && ($rounds !== null || ($white !== null && $white === $black) || ($computer !== null && $white !== null && $black !== null))) {
-            throw new InvalidArgumentException('A board game has no rounds, and two different seats — one of them the computer\'s when it plays.');
+        if ($wrong !== null) {
+            throw new InvalidArgumentException($wrong);
         }
     }
 
     /**
      * A choice of this game at this level, in its kind's shape: a race with
-     * `$rounds` — or none, when there are no rounds to give it — and a board
+     * `$rounds` — or none, when there are no rounds to give it —, a board
      * game without them, its seats and the computer's level from `$seats`
-     * (`RoomSeats`), asked only for a board game.
+     * (`RoomSeats`), asked only for a board game, and a domino game with its
+     * table, seats and computer's level from `$table` (`RoomTableSeats`),
+     * asked only for a domino game.
      *
      * @param  (Closure(): array{0: string|null, 1: string|null, 2: RoomComputerLevel|null})|null  $seats
+     * @param  (Closure(): array{0: RoomTable|null, 1: list<string|null>|null, 2: RoomComputerLevel|null})|null  $table
      */
-    public static function of(RoomMechanic $mechanic, int $difficulty, ?int $rounds, ?Closure $seats = null): ?self
+    public static function of(RoomMechanic $mechanic, int $difficulty, ?int $rounds, ?Closure $seats = null, ?Closure $table = null): ?self
     {
         if ($mechanic->kind() === RoomGameKind::Race) {
             return $rounds === null ? null : new self($mechanic, $difficulty, $rounds);
+        }
+
+        if ($mechanic->kind() === RoomGameKind::Domino) {
+            [$at, $places, $computer] = $table === null ? [null, null, null] : $table();
+
+            return new self($mechanic, $difficulty, null, null, null, $computer, $at, $places);
         }
 
         [$white, $black, $computer] = $seats === null ? [null, null, null] : $seats();
@@ -125,7 +155,7 @@ final readonly class RoomGameSetupData
 
         $kept = $room !== null && $room->setup()->mechanic->kind() !== $mechanic->kind();
 
-        /** @var array{mechanic: string, difficulty: int|string, rounds?: int|string, white?: string|null, black?: string|null, computer?: int|string|null} $validated */
+        /** @var array{mechanic: string, difficulty: int|string, rounds?: int|string, white?: string|null, black?: string|null, computer?: int|string|null, table?: string|null, seats?: list<string|null>} $validated */
         $validated = Validator::make($input, self::rules($mechanic, $kept))->validate();
         $rounds = isset($validated['rounds']) ? (int) $validated['rounds'] : null;
 
@@ -134,13 +164,17 @@ final readonly class RoomGameSetupData
         }
 
         $seats = [isset($validated['white']) ? strtolower($validated['white']) : null, isset($validated['black']) ? strtolower($validated['black']) : null];
-        // A board game chosen after a race says nothing of the computer: the room's stands, as its seats do.
+        // A board game chosen after a race says nothing of the computer: the room's stands, as its seats do. A domino
+        // game's level is never carried into a board game's choice, nor a board game's into a domino game's (ADR 038 decision 75).
         $computer = match (true) {
             isset($validated['computer']) => RoomComputerLevel::from((int) $validated['computer']),
-            $kept && ! array_key_exists('computer', $validated) && $mechanic->kind() === RoomGameKind::Board => $room->setup_computer,
+            $kept && ! array_key_exists('computer', $validated) && $mechanic->kind() === RoomGameKind::Board && $room->setup()->mechanic->kind() === RoomGameKind::Race => $room->setup_computer,
             default => null,
         };
-        $setup = self::of($mechanic, (int) $validated['difficulty'], $rounds, static fn (): array => [...$seats, $computer]);
+        // A domino game's table and seats (ADR 038 decision 11): absent, the room's stand.
+        [$table, $places] = $mechanic->kind() === RoomGameKind::Domino ? self::table($validated, $room) : [null, null];
+
+        $setup = self::of($mechanic, (int) $validated['difficulty'], $rounds, static fn (): array => [...$seats, $computer], static fn (): array => [$table, $places, $computer]);
 
         // Each value may be a level's while the pair is none.
         if ($setup === null || ! in_array($setup->mechanic->value.'.'.$setup->difficulty, self::playablePairs(), true)) {
@@ -148,6 +182,37 @@ final readonly class RoomGameSetupData
         }
 
         return $setup;
+    }
+
+    /**
+     * A domino game's table and seats as posted (ADR 038 decision 11): each
+     * absent is the room's stand — its stored seats fitted to the table —,
+     * a table null leaves it to the number of players, and posted seats
+     * come with a table, as many as it has, each player named once.
+     *
+     * @param  array{table?: string|null, seats?: list<string|null>}  $validated
+     * @return array{0: RoomTable|null, 1: list<string|null>|null}
+     *
+     * @throws ValidationException
+     */
+    private static function table(array $validated, ?Room $room): array
+    {
+        $table = array_key_exists('table', $validated) ? ($validated['table'] === null ? null : RoomTable::from($validated['table'])) : $room?->setup_table;
+
+        if (! array_key_exists('seats', $validated)) {
+            $kept = $room?->setup_seats;
+
+            return [$table, $kept === null || $table === null ? $kept : array_pad(array_slice($kept, 0, $table->seats()), $table->seats(), null)];
+        }
+
+        $places = array_map(static fn (?string $seat): ?string => $seat === null ? null : strtolower($seat), $validated['seats']);
+        $named = array_values(array_filter($places, static fn (?string $seat): bool => $seat !== null));
+
+        if ($table === null || count($places) !== $table->seats() || count($named) !== count(array_unique($named))) {
+            throw ValidationException::withMessages(['seats' => __('validation.in', ['attribute' => 'seats'])]);
+        }
+
+        return [$table, $places];
     }
 
     /**
@@ -179,13 +244,16 @@ final readonly class RoomGameSetupData
 
     /**
      * The choice with the room's seats and the computer's level, for a
-     * board game (`RoomSeats`, asked only then); a race's as it is.
+     * board game (`RoomSeats`, asked only then), and with the room's table,
+     * seats and computer's level for a domino game (`RoomTableSeats`, asked
+     * only then); a race's as it is.
      *
      * @param  Closure(): array{0: string|null, 1: string|null, 2: RoomComputerLevel|null}  $seats
+     * @param  (Closure(): array{0: RoomTable, 1: list<string|null>, 2: RoomComputerLevel|null})|null  $table
      */
-    public function seated(Closure $seats): self
+    public function seated(Closure $seats, ?Closure $table = null): self
     {
-        return self::of($this->mechanic, $this->difficulty, $this->rounds, $seats) ?? $this;
+        return self::of($this->mechanic, $this->difficulty, $this->rounds, $seats, $table) ?? $this;
     }
 
     /**
@@ -204,6 +272,11 @@ final readonly class RoomGameSetupData
             return $game->rounds->count() === $this->rounds;
         }
 
+        // A domino game: the same table, the same players in the same seats, the same computer (ADR 038 decision 14).
+        if ($this->table !== null) {
+            return $game->dominoTable() === $this->table && $game->seats === $this->seats && $game->computer === $this->computer;
+        }
+
         $seats = [$this->white, $this->black];
         $played = [$game->white_player_id, $game->black_player_id];
         sort($seats);
@@ -211,6 +284,15 @@ final readonly class RoomGameSetupData
 
         return $game->computer === $this->computer && $seats === $played
             && ($this->computer === null ? $this->white !== null && $this->black !== null : $this->white !== $this->black);
+    }
+
+    /**
+     * A domino game's level as a turn's time (ADR 038 decision 22); null for
+     * the other kinds.
+     */
+    public function turnMs(): ?int
+    {
+        return app(ContentRepository::class)->roomLevel($this->mechanic, $this->difficulty)->turnMs;
     }
 
     /**
@@ -275,7 +357,7 @@ final readonly class RoomGameSetupData
      * clock — and the bounds of the rounds. The room page names them
      * (docs/frontend.md rule 15); it never lists them itself.
      *
-     * @return array{mechanics: list<array{mechanic: string, family: string, difficulties: list<int>, levels: list<array{difficulty: int, study_ms: int, answer_ms: int, count: array{min: int, max: int}|null, grid: array{cols: int, rows: int}|null, rules: list<string>|null, terms: int|null, range: array{min: int, max: int}|null, source: string|null, options: int|null, letters: array{min: int, max: int}|null, swaps: int|null, clock?: array{base_ms: int, increment_ms: int}}>}>, rounds: array{min: int, max: int}}
+     * @return array{mechanics: list<array{mechanic: string, family: string, difficulties: list<int>, levels: list<array{difficulty: int, study_ms: int, answer_ms: int, count: array{min: int, max: int}|null, grid: array{cols: int, rows: int}|null, rules: list<string>|null, terms: int|null, range: array{min: int, max: int}|null, source: string|null, options: int|null, letters: array{min: int, max: int}|null, swaps: int|null, clock?: array{base_ms: int, increment_ms: int}, turn_ms?: int}>}>, rounds: array{min: int, max: int}}
      */
     public static function options(): array
     {
@@ -314,7 +396,7 @@ final readonly class RoomGameSetupData
      * mechanic is null. A board game's level adds its `clock` (D3), which a
      * race's level has not.
      *
-     * @return array{difficulty: int, study_ms: int, answer_ms: int, count: array{min: int, max: int}|null, grid: array{cols: int, rows: int}|null, rules: list<string>|null, terms: int|null, range: array{min: int, max: int}|null, source: string|null, options: int|null, letters: array{min: int, max: int}|null, swaps: int|null, clock?: array{base_ms: int, increment_ms: int}}
+     * @return array{difficulty: int, study_ms: int, answer_ms: int, count: array{min: int, max: int}|null, grid: array{cols: int, rows: int}|null, rules: list<string>|null, terms: int|null, range: array{min: int, max: int}|null, source: string|null, options: int|null, letters: array{min: int, max: int}|null, swaps: int|null, clock?: array{base_ms: int, increment_ms: int}, turn_ms?: int}
      */
     private static function levelOption(RoomLevelData $level): array
     {
@@ -335,6 +417,7 @@ final readonly class RoomGameSetupData
             'letters' => $level->wordLength === null ? null : ['min' => $level->wordLength->min, 'max' => $level->wordLength->max],
             'swaps' => $level->swaps,
             ...($clock === null ? [] : ['clock' => $clock->toArray()]),
+            ...($level->turnMs === null ? [] : ['turn_ms' => $level->turnMs]),
         ];
     }
 

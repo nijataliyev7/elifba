@@ -173,6 +173,12 @@ final class ContentValidator
     /** A board level's increment is whole seconds, from 0 to this many. */
     public const int MAX_BOARD_INCREMENT_SECONDS = 30;
 
+    /** A domino level's turn is whole seconds, from this many (ADR 038 decision 22). */
+    public const int MIN_DOMINO_TURN_SECONDS = 10;
+
+    /** … to this many. */
+    public const int MAX_DOMINO_TURN_SECONDS = 120;
+
     private const int MINUTE_MS = 60_000;
 
     /**
@@ -934,7 +940,11 @@ final class ContentValidator
      * of a race level; `clock_ms` is whole minutes from 1 to 30 and
      * `increment_ms` whole seconds from 0 to 30; it has two to four levels
      * numbered from 1 without a gap, and a shorter clock at each higher
-     * number. A race mechanic keeps "all four or none".
+     * number. A domino mechanic (Y5, ADR 038 decision 22) likewise: its level
+     * is a turn's time, `{mechanic, difficulty, turn_ms}` and no key of a
+     * race's or a board game's level; `turn_ms` is whole seconds from 10 to
+     * 120; two to four levels numbered from 1 without a gap, and a shorter
+     * turn at each higher number. A race mechanic keeps "all four or none".
      *
      * The words are counted only when `words.json` is sound.
      *
@@ -962,14 +972,20 @@ final class ContentValidator
 
         /** @var array<string, list<int>> $difficulties */
         $difficulties = [];
-        /** @var array<string, array<int, int|null>> $clocks a board mechanic's clocks, by difficulty */
+        /** @var array<string, array<int, int|null>> $clocks a board mechanic's clocks, a domino mechanic's turns, by difficulty */
         $clocks = [];
 
         foreach ($levels as $index => $level) {
             $where = "levels[{$index}]";
             $mechanic = is_array($level) && is_string($level['mechanic'] ?? null) ? RoomMechanic::tryFrom($level['mechanic']) : null;
-            $board = $mechanic?->kind() === RoomGameKind::Board;
-            $every = $board ? ['mechanic', 'difficulty', 'clock_ms', 'increment_ms'] : ['mechanic', 'difficulty', 'study_ms', 'answer_ms'];
+            $kind = $mechanic?->kind();
+            $board = $kind === RoomGameKind::Board;
+            $domino = $kind === RoomGameKind::Domino;
+            $every = match (true) {
+                $board => ['mechanic', 'difficulty', 'clock_ms', 'increment_ms'],
+                $domino => ['mechanic', 'difficulty', 'turn_ms'],
+                default => ['mechanic', 'difficulty', 'study_ms', 'answer_ms'],
+            };
 
             // An unknown mechanic is reported once, not with each of its keys.
             $level = $mechanic === null
@@ -993,8 +1009,8 @@ final class ContentValidator
                 $difficulties[$mechanic->value][] = $difficulty;
             }
 
-            if ($board) {
-                $clock = $this->boardLevel($level, $file, $where);
+            if ($board || $domino) {
+                $clock = $board ? $this->boardLevel($level, $file, $where) : $this->dominoLevel($level, $file, $where);
 
                 if (is_int($difficulty)) {
                     $clocks[$mechanic->value][$difficulty] = $clock;
@@ -1023,13 +1039,13 @@ final class ContentValidator
                 RoomMechanic::NextInSequence => $this->nextInSequenceLevel($level, $file, $where),
                 RoomMechanic::OddOneOut => $this->oddOneOutLevel($level, $file, $where),
                 RoomMechanic::Anagram, RoomMechanic::Spelling => $this->wordLevel($mechanic, $level, $file, $where, $words),
-                RoomMechanic::Draughts, null => null,
+                RoomMechanic::Draughts, RoomMechanic::Domino101, null => null,
             };
         }
 
         foreach ($difficulties as $mechanic => $given) {
             if (array_key_exists($mechanic, $clocks)) {
-                $this->boardLevels($mechanic, $given, $clocks[$mechanic], $file);
+                $this->boardLevels($mechanic, $given, $clocks[$mechanic], $file, RoomMechanic::from($mechanic)->kind() === RoomGameKind::Domino ? 'turn' : 'clock');
 
                 continue;
             }
@@ -1067,13 +1083,34 @@ final class ContentValidator
     }
 
     /**
-     * A board game's levels together: two to four, numbered from 1 without a
-     * gap, a shorter clock at each higher number.
+     * A domino game's level: a turn's time (ADR 038 decision 22).
+     *
+     * @param  array<string, mixed>  $level
+     * @return int|null its `turn_ms` when it is sound
+     */
+    private function dominoLevel(array $level, string $file, string $where): ?int
+    {
+        $turn = $level['turn_ms'];
+
+        if (! is_int($turn) || $turn < self::MIN_DOMINO_TURN_SECONDS * 1_000 || $turn > self::MAX_DOMINO_TURN_SECONDS * 1_000 || $turn % 1_000 !== 0) {
+            $this->problem($file, "{$where}.turn_ms must be whole seconds from ".self::MIN_DOMINO_TURN_SECONDS.' to '.self::MAX_DOMINO_TURN_SECONDS);
+
+            return null;
+        }
+
+        return $turn;
+    }
+
+    /**
+     * A board or domino game's levels together: two to four, numbered from 1
+     * without a gap, a shorter clock — a domino game's turn — at each higher
+     * number.
      *
      * @param  list<int>  $given  the difficulties of its levels
-     * @param  array<int, int|null>  $clocks  each sound level's `clock_ms`, by difficulty
+     * @param  array<int, int|null>  $clocks  each sound level's `clock_ms` or `turn_ms`, by difficulty
+     * @param  'clock'|'turn'  $what  what a level's time is called
      */
-    private function boardLevels(string $mechanic, array $given, array $clocks, string $file): void
+    private function boardLevels(string $mechanic, array $given, array $clocks, string $file, string $what): void
     {
         $count = count($given);
 
@@ -1088,7 +1125,7 @@ final class ContentValidator
 
         foreach ($clocks as $difficulty => $clock) {
             if ($clock !== null && $previous !== null && $clock >= $previous) {
-                $this->problem($file, "the level of difficulty {$difficulty} of {$mechanic} must have a shorter clock than the level before it");
+                $this->problem($file, "the level of difficulty {$difficulty} of {$mechanic} must have a shorter {$what} than the level before it");
             }
 
             $previous = $clock ?? $previous;
@@ -1109,7 +1146,7 @@ final class ContentValidator
             RoomMechanic::OddOneOut => ['source', 'options'],
             RoomMechanic::Anagram => ['word_length', 'clue'],
             RoomMechanic::Spelling => ['word_length', 'swaps'],
-            RoomMechanic::Draughts => [],
+            RoomMechanic::Draughts, RoomMechanic::Domino101 => [],
         };
     }
 

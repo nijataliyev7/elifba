@@ -1,0 +1,65 @@
+{
+    "v": 10,
+    "revision": 3,
+    "server_ms": 1795534802500,
+    "room": {
+        "id": "01kaqrx1zd7w4n5v6b8c9defgh",
+        "status": "open",
+        "locked": false,
+        "code": "482913",
+        "taunts": true,
+        "screen": false
+    },
+    "me": {
+        "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+        "host": false
+    },
+    "players": [
+        {
+            "id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "name": "Rəşad Quliyev",
+            "present": true,
+            "host": true,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "name": "Aygün Məmmədova",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx4bc5d6e7f8g9h0jkmnp",
+            "name": "Tural Əliyev",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        }
+    ],
+    "game": null,
+    "round": null,
+    "match": null,
+    "domino": null,
+    "ranking": [],
+    "setup": {
+        "kind": "domino",
+        "mechanic": "domino_101",
+        "difficulty": 2,
+        "turn_ms": 30000,
+        "table": "pairs",
+        "seats": [
+            "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "01kaqrx4bc5d6e7f8g9h0jkmnp",
+            null
+        ],
+        "computer": 2,
+        "played": false
+    },
+    "taunts": null,
+    "voice": null
+}

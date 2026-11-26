@@ -201,16 +201,18 @@ it('shows rooms only when the switch is on', function (): void {
     $families = [];
 
     foreach (RoomFamily::cases() as $family) {
-        $families[] = [
-            'key' => $family->value,
-            'mechanics' => array_values(array_map(
-                static fn (RoomMechanic $mechanic): string => $mechanic->value,
-                array_filter(RoomPlayable::mechanics(), static fn (RoomMechanic $mechanic): bool => $mechanic->family() === $family),
-            )),
-        ];
+        $mechanics = array_values(array_map(
+            static fn (RoomMechanic $mechanic): string => $mechanic->value,
+            array_filter(RoomPlayable::mechanics(), static fn (RoomMechanic $mechanic): bool => $mechanic->family() === $family),
+        ));
+
+        // A family with no game offered yet — «Domino» until Y6 draws «101» (ADR 038 as amended 2026-11-26, Y5) — is not shown.
+        if ($mechanics !== []) {
+            $families[] = ['key' => $family->value, 'mechanics' => $mechanics];
+        }
     }
 
-    expect(array_merge(...array_column($families, 'mechanics')))->toHaveCount(count(RoomMechanic::cases()));
+    expect(array_merge(...array_column($families, 'mechanics')))->toHaveCount(count(array_filter(RoomMechanic::cases(), static fn (RoomMechanic $mechanic): bool => $mechanic->offered())));
 
     $this->withSession(['locale' => 'en'])
         ->get(route('home'))

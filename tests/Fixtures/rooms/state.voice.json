@@ -1,5 +1,5 @@
 {
-    "v": 9,
+    "v": 10,
     "revision": 7,
     "server_ms": 1795534200000,
     "room": {
@@ -59,6 +59,7 @@
     "game": null,
     "round": null,
     "match": null,
+    "domino": null,
     "ranking": [],
     "setup": {
         "kind": "race",

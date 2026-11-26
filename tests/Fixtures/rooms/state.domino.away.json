@@ -1,0 +1,198 @@
+{
+    "v": 10,
+    "revision": 3,
+    "server_ms": 1795534806500,
+    "room": {
+        "id": "01kaqrx1zd7w4n5v6b8c9defgh",
+        "status": "open",
+        "locked": false,
+        "code": "482913",
+        "taunts": true,
+        "screen": false
+    },
+    "me": {
+        "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+        "host": false
+    },
+    "players": [
+        {
+            "id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "name": "Rəşad Quliyev",
+            "present": true,
+            "host": true,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "name": "Aygün Məmmədova",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx6de7f8g9h0jkmnpqrst",
+            "name": "Kamal Səfərov",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        }
+    ],
+    "game": {
+        "kind": "domino",
+        "id": "01kaqs0a1b2c3d4e5f6g7h8j9k",
+        "mechanic": "domino_101",
+        "difficulty": 2,
+        "turn_ms": 30000,
+        "table": "two",
+        "target": 101,
+        "computer": null,
+        "phase": "live"
+    },
+    "round": null,
+    "match": null,
+    "domino": {
+        "phase": "play",
+        "starts_ms": 1795534802000,
+        "seats": [
+            {
+                "seat": 0,
+                "player_id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+                "side": 0,
+                "tiles": 5,
+                "standing": "playing"
+            },
+            {
+                "seat": 1,
+                "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+                "side": 1,
+                "tiles": 5,
+                "standing": "away"
+            }
+        ],
+        "sides": [
+            {
+                "side": 0,
+                "seats": [0],
+                "balance": 0,
+                "open": false,
+                "waiting": 0,
+                "tries": 0,
+                "place": 1
+            },
+            {
+                "side": 1,
+                "seats": [1],
+                "balance": 0,
+                "open": false,
+                "waiting": 0,
+                "tries": 0,
+                "place": 1
+            }
+        ],
+        "bank": 0,
+        "hand": {
+            "number": 1,
+            "opens_ms": 1795534802000,
+            "opener": 0,
+            "why": "lowest_double"
+        },
+        "ply": 4,
+        "turn": 0,
+        "since_ms": 1795534806000,
+        "flag_ms": 1795534836000,
+        "line": [
+            {
+                "tile": "3-0",
+                "left": 0,
+                "right": 3
+            },
+            {
+                "tile": "6-3",
+                "left": 3,
+                "right": 6
+            },
+            {
+                "tile": "6-5",
+                "left": 6,
+                "right": 5
+            },
+            {
+                "tile": "5-5",
+                "left": 5,
+                "right": 5
+            }
+        ],
+        "first": 3,
+        "ends": [
+            {
+                "end": "left",
+                "number": 0
+            },
+            {
+                "end": "right",
+                "number": 5
+            }
+        ],
+        "boneyard": {
+            "tiles": 14,
+            "reserve": 2,
+            "closed": false
+        },
+        "last": {
+            "seat": 1,
+            "kind": "play",
+            "tile": "3-0",
+            "end": "left",
+            "stood_in": true,
+            "then": []
+        },
+        "mine": {
+            "seat": 1,
+            "tiles": ["4-1", "6-0", "4-3", "5-3", "6-1"],
+            "drawn": [],
+            "legal": null,
+            "may_yield": false,
+            "away": true
+        },
+        "sheet": null,
+        "result": null
+    },
+    "ranking": [
+        {
+            "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx6de7f8g9h0jkmnpqrst",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "points": 0,
+            "place": null
+        }
+    ],
+    "setup": {
+        "kind": "domino",
+        "mechanic": "domino_101",
+        "difficulty": 2,
+        "turn_ms": 30000,
+        "table": "two",
+        "seats": ["01kaqrx2ab3c4d5e6f7g8h9jkm", "01kaqrx3mn4p5q6r7s8t9vwxyz"],
+        "computer": null,
+        "played": false
+    },
+    "taunts": {
+        "open": true,
+        "balance": 3,
+        "ready_ms": null,
+        "received": [],
+        "shown": null
+    },
+    "voice": null
+}

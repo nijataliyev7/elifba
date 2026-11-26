@@ -18,7 +18,11 @@ use Illuminate\Support\Sleep;
  * (docs/architecture.md §12 "The computer's seat", ADR 036 decisions
  * 8–10): an act without a player, of the kind `move` alone — the computer
  * never offers a draw, accepts one or resigns, and an offer made to it is
- * declined by its reply. `RoomActController` after an accepted act and
+ * declined by its reply. From Y5 (§12 "Domino" → "Time", ADR 038 decisions
+ * 25–28) also the one writer of every play nobody's device sent in a domino
+ * game — a computer's seat's, and a seat's whose player is out of time,
+ * away or gone —: an act of the kind its driver gives (`play`), never a
+ * give or a return. `RoomActController` after an accepted act and
  * `RoomStateController` after a read hand it to `defer()`, so it runs
  * after a response and never inside one; nothing queues or schedules it.
  *
@@ -31,7 +35,10 @@ use Illuminate\Support\Sleep;
  *    that finds the same turn does nothing.
  * 3. It chooses (`computerChoice()`: one of the judge's moves) and waits
  *    until the move is due — `elifba.rooms.computer.think_ms` after the
- *    computer's turn began — so a page draws the player's own move first.
+ *    computer's turn began — so a page draws the player's own move first;
+ *    and, when the driver asks it (`least_ms`, a domino game's), no
+ *    sooner than that long after the search began, so the moment it stores
+ *    never tells how long the search took (ADR 038 decision 7).
  * 4. In one transaction under the room row's lock (`RoomLock`) it asks
  *    again, and stores the move only if the running game is the same and
  *    still stands at that ply with the computer to move and its move due:
@@ -42,7 +49,7 @@ use Illuminate\Support\Sleep;
 final readonly class PlayComputerMove
 {
     /** A move due later than this is left to a later read. */
-    private const int PATIENCE_MS = 5_000;
+    public const int PATIENCE_MS = 5_000;
 
     /** How long one search holds its game and ply. */
     private const int HELD_SECONDS = 10;
@@ -71,10 +78,11 @@ final readonly class PlayComputerMove
         }
 
         try {
-            $path = $driver->computerChoice($game, $nowMs);
-            $waitMs = $turn['due_ms'] - RoomClock::nowMs();
+            $choice = $driver->computerChoice($game, $nowMs);
+            // Never sooner than `least_ms` after the search began: its time is not the store's (ADR 038 decision 7).
+            $waitMs = max($turn['due_ms'], $nowMs + ($turn['least_ms'] ?? 0)) - RoomClock::nowMs();
 
-            if ($path === null) {
+            if ($choice === null) {
                 return;
             }
 
@@ -82,18 +90,18 @@ final readonly class PlayComputerMove
                 Sleep::for($waitMs)->milliseconds();
             }
 
-            self::store($room, $game->id, $turn['ply'], $path);
+            self::store($room, $game->id, $turn['ply'], $choice['kind'], $choice['path']);
         } finally {
             $held->release();
         }
     }
 
     /**
-     * @param  list<string>  $path
+     * @param  list<string>|null  $path
      */
-    private static function store(Room $room, string $gameId, int $ply, array $path): void
+    private static function store(Room $room, string $gameId, int $ply, RoomActKind $kind, ?array $path): void
     {
-        DB::transaction(static function () use ($room, $gameId, $ply, $path): void {
+        DB::transaction(static function () use ($room, $gameId, $ply, $kind, $path): void {
             $locked = RoomLock::room($room);
             $nowMs = RoomClock::nowMs();
             $game = $locked !== null && $locked->isOpen() ? $locked->runningGame($nowMs) : null;
@@ -111,7 +119,7 @@ final readonly class PlayComputerMove
             $stored = new RoomAct;
             $stored->room_game_id = $game->id;
             $stored->room_player_id = null;
-            $stored->kind = RoomActKind::Move;
+            $stored->kind = $kind;
             $stored->ply = $ply;
             $stored->path = $path;
             $stored->acted_ms = $nowMs;

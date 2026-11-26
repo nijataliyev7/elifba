@@ -6,7 +6,7 @@ namespace App\Domain\Content\Enums;
  * The families of adults' room games (docs/architecture.md §12 "Room
  * games", "Board games", ADRs 023 and 034): «Yaddaş», «Məntiq və
  * ardıcıllıq», «Söz oyunları» — races of rounds — and from D3 «Taxta
- * oyunları», the board games. A family is offered once it has a mechanic
+ * oyunları», the board games, and from Y5 «Domino» (ADR 038 decision 1). A family is offered once it has a mechanic
  * `Rooms\Support\RoomPlayable` lists, and it says the kind of its games
  * (`kind()`). Separate from the children's `Mechanic` and `Unit`.
  */
@@ -24,10 +24,17 @@ enum RoomFamily: string
     /** Two seats take turns on one board: draughts (D3, ADR 034). */
     case Board = 'board';
 
-    /** A race of rounds, or a board game (ADR 034 decision 1). */
+    /** Two to four seats play tiles from hands nobody else sees: «101» (Y5, ADR 038). */
+    case Domino = 'domino';
+
+    /** A race of rounds, a board game or a domino game (ADR 034 decision 1, ADR 038 decision 1). */
     public function kind(): RoomGameKind
     {
-        return $this === self::Board ? RoomGameKind::Board : RoomGameKind::Race;
+        return match ($this) {
+            self::Board => RoomGameKind::Board,
+            self::Domino => RoomGameKind::Domino,
+            self::Memory, self::Logic, self::Words => RoomGameKind::Race,
+        };
     }
 
     /**

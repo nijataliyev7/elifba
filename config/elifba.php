@@ -156,6 +156,23 @@ return [
             'think_ms' => 800,
         ],
 
+        // A domino game (§12 "Domino", ADR 038 decisions 14, 24–28): the
+        // server plays a turn for a computer's seat, a seat whose player
+        // left and an away seat no sooner than `think_ms` after the turn
+        // began, the same time whatever the seat holds; a seat is away
+        // after `away_after` turns in a row were played for it; a game
+        // copies `sheet_ms`, the pause on a hand's sheet before the next
+        // hand opens, as `room_games.reveal_ms` at its start. `offered`
+        // offers «101» (`RoomMechanic::offered()`) before Y6 draws it: false
+        // here, true only in the tests that play it; Y6 removes the key (ADR
+        // 038 as amended 2026-11-26, Y5).
+        'domino' => [
+            'offered' => false,
+            'think_ms' => 1_200,
+            'away_after' => 2,
+            'sheet_ms' => 10_000,
+        ],
+
         // Live voice (§12 "Live voice", ADR 031 decision 28): the switch,
         // false unless set, read only through `RoomsArea::voice()`; the voice
         // server's API key and secret (also its `LIVEKIT_KEYS`), which sign

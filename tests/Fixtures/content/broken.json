@@ -1181,6 +1181,51 @@
         "set": { "levels.25.clock_ms": 600000 },
         "problem": "rooms/levels.json: the level of difficulty 2 of draughts must have a shorter clock than the level before it"
     },
+    "rooms levels: a domino level with a race level's key": {
+        "file": "rooms/levels.json",
+        "set": { "levels.27.answer_ms": 10000 },
+        "problem": "rooms/levels.json: levels[27] has an unknown key `answer_ms`"
+    },
+    "rooms levels: a domino level with a board level's clock": {
+        "file": "rooms/levels.json",
+        "set": { "levels.27.clock_ms": 60000 },
+        "problem": "rooms/levels.json: levels[27] has an unknown key `clock_ms`"
+    },
+    "rooms levels: a domino level without its turn": {
+        "file": "rooms/levels.json",
+        "unset": ["levels.27.turn_ms"],
+        "problem": "rooms/levels.json: levels[27] needs `turn_ms`"
+    },
+    "rooms levels: a domino turn that is not whole seconds": {
+        "file": "rooms/levels.json",
+        "set": { "levels.28.turn_ms": 30500 },
+        "problem": "rooms/levels.json: levels[28].turn_ms must be whole seconds from 10 to 120"
+    },
+    "rooms levels: a domino turn under 10 seconds": {
+        "file": "rooms/levels.json",
+        "set": { "levels.29.turn_ms": 9000 },
+        "problem": "rooms/levels.json: levels[29].turn_ms must be whole seconds from 10 to 120"
+    },
+    "rooms levels: a domino turn above 120 seconds": {
+        "file": "rooms/levels.json",
+        "set": { "levels.27.turn_ms": 121000 },
+        "problem": "rooms/levels.json: levels[27].turn_ms must be whole seconds from 10 to 120"
+    },
+    "rooms levels: a domino game of one level": {
+        "file": "rooms/levels.json",
+        "keep": { "levels": 28 },
+        "problem": "rooms/levels.json: domino_101 must have two to four levels numbered from 1 without a gap"
+    },
+    "rooms levels: a domino game's levels with a gap": {
+        "file": "rooms/levels.json",
+        "set": { "levels.29.difficulty": 4 },
+        "problem": "rooms/levels.json: domino_101 must have two to four levels numbered from 1 without a gap"
+    },
+    "rooms levels: a domino level no shorter than the one before": {
+        "file": "rooms/levels.json",
+        "set": { "levels.28.turn_ms": 60000 },
+        "problem": "rooms/levels.json: the level of difficulty 2 of domino_101 must have a shorter turn than the level before it"
+    },
     "rooms levels: too little time to answer": {
         "file": "rooms/levels.json",
         "set": { "levels.0.answer_ms": 4999 },

@@ -269,7 +269,8 @@ it('reads the room levels', function (): void {
 
     // B3: «Ardıcıllığı yadda saxla» at the four difficulties, digits first,
     // then digits, letters and (B4) shapes; B4: «Xanaları yadda saxla»;
-    // B5: the two logic games; B6: «Anaqram» and «Düzgün yazılış»; D3: «Şaşki»'s three clocks.
+    // B5: the two logic games; B6: «Anaqram» and «Düzgün yazılış»; D3: «Şaşki»'s three clocks;
+    // Y5: «101»'s three turns (ADR 038 decision 22).
     expect($content->roomVersion())->toBeGreaterThanOrEqual(5)
         ->and(array_map(static fn (RoomLevelData $level): array => [$level->mechanic, $level->difficulty], $levels))->toBe([
             [RoomMechanic::RecallOrder, 1],
@@ -299,6 +300,9 @@ it('reads the room levels', function (): void {
             [RoomMechanic::Draughts, 1],
             [RoomMechanic::Draughts, 2],
             [RoomMechanic::Draughts, 3],
+            [RoomMechanic::Domino101, 1],
+            [RoomMechanic::Domino101, 2],
+            [RoomMechanic::Domino101, 3],
         ])
         ->and($orders[0]->kinds)->toBe([RoomItemKind::Digit])
         ->and($orders[3]->kinds)->toBe([RoomItemKind::Digit, RoomItemKind::Letter, RoomItemKind::Shape])
@@ -394,7 +398,7 @@ it('reads the room levels', function (): void {
     // A fixture root reads its own.
     $fixture = new ContentRepository(ContentFixture::make());
 
-    expect(array_map(static fn (RoomLevelData $level): ?int => $level->length?->max, $fixture->roomLevels()))->toBe([3, 4, 8, 12, ...array_fill(0, 23, null)])
+    expect(array_map(static fn (RoomLevelData $level): ?int => $level->length?->max, $fixture->roomLevels()))->toBe([3, 4, 8, 12, ...array_fill(0, 26, null)])
         ->and($fixture->roomLevel(RoomMechanic::NextInSequence, 4)->terms)->toBe(7)
         ->and($fixture->roomLevel(RoomMechanic::OddOneOut, 2)->source)->toBe(RoomSource::Numbers)
         ->and($fixture->roomLevel(RoomMechanic::Spelling, 2)->wordLength?->min)->toBe(5)

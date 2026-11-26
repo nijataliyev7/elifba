@@ -1,5 +1,5 @@
 {
-    "version": 6,
+    "version": 7,
     "levels": [
         {
             "mechanic": "recall_order",
@@ -227,6 +227,21 @@
             "difficulty": 3,
             "clock_ms": 180000,
             "increment_ms": 2000
+        },
+        {
+            "mechanic": "domino_101",
+            "difficulty": 1,
+            "turn_ms": 60000
+        },
+        {
+            "mechanic": "domino_101",
+            "difficulty": 2,
+            "turn_ms": 30000
+        },
+        {
+            "mechanic": "domino_101",
+            "difficulty": 3,
+            "turn_ms": 15000
         }
     ]
 }

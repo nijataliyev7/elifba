@@ -1,0 +1,246 @@
+{
+    "v": 10,
+    "revision": 3,
+    "server_ms": 1795534808500,
+    "room": {
+        "id": "01kaqrx1zd7w4n5v6b8c9defgh",
+        "status": "open",
+        "locked": false,
+        "code": "482913",
+        "taunts": true,
+        "screen": true
+    },
+    "me": {
+        "player_id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+        "host": true
+    },
+    "players": [
+        {
+            "id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "name": "Rəşad Quliyev",
+            "present": true,
+            "host": true,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "name": "Aygün Məmmədova",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx4bc5d6e7f8g9h0jkmnp",
+            "name": "Tural Əliyev",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx5cd6e7f8g9h0jkmnpqr",
+            "name": "Leyla Həsənova",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        },
+        {
+            "id": "01kaqrx6de7f8g9h0jkmnpqrst",
+            "name": "Kamal Səfərov",
+            "present": true,
+            "host": false,
+            "voice": null,
+            "ready": false
+        }
+    ],
+    "game": {
+        "kind": "domino",
+        "id": "01kaqs0a1b2c3d4e5f6g7h8j9k",
+        "mechanic": "domino_101",
+        "difficulty": 2,
+        "turn_ms": 30000,
+        "table": "pairs",
+        "target": 101,
+        "computer": null,
+        "phase": "live"
+    },
+    "round": null,
+    "match": null,
+    "domino": {
+        "phase": "play",
+        "starts_ms": 1795534802000,
+        "seats": [
+            {
+                "seat": 0,
+                "player_id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+                "side": 0,
+                "tiles": 6,
+                "standing": "playing"
+            },
+            {
+                "seat": 1,
+                "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+                "side": 1,
+                "tiles": 6,
+                "standing": "playing"
+            },
+            {
+                "seat": 2,
+                "player_id": "01kaqrx4bc5d6e7f8g9h0jkmnp",
+                "side": 0,
+                "tiles": 5,
+                "standing": "playing"
+            },
+            {
+                "seat": 3,
+                "player_id": "01kaqrx5cd6e7f8g9h0jkmnpqr",
+                "side": 1,
+                "tiles": 5,
+                "standing": "playing"
+            }
+        ],
+        "sides": [
+            {
+                "side": 0,
+                "seats": [0, 2],
+                "balance": 0,
+                "open": false,
+                "waiting": 0,
+                "tries": 0,
+                "place": 1
+            },
+            {
+                "side": 1,
+                "seats": [1, 3],
+                "balance": 0,
+                "open": false,
+                "waiting": 0,
+                "tries": 0,
+                "place": 1
+            }
+        ],
+        "bank": 0,
+        "hand": {
+            "number": 1,
+            "opens_ms": 1795534802000,
+            "opener": 2,
+            "why": "lowest_double"
+        },
+        "ply": 6,
+        "turn": 0,
+        "since_ms": 1795534808000,
+        "flag_ms": 1795534838000,
+        "line": [
+            {
+                "tile": "5-5",
+                "left": 5,
+                "right": 5
+            },
+            {
+                "tile": "5-1",
+                "left": 5,
+                "right": 1
+            },
+            {
+                "tile": "1-1",
+                "left": 1,
+                "right": 1
+            },
+            {
+                "tile": "4-1",
+                "left": 1,
+                "right": 4
+            },
+            {
+                "tile": "4-0",
+                "left": 4,
+                "right": 0
+            },
+            {
+                "tile": "0-0",
+                "left": 0,
+                "right": 0
+            }
+        ],
+        "first": 2,
+        "ends": [
+            {
+                "end": "left",
+                "number": 5
+            },
+            {
+                "end": "right",
+                "number": 0
+            }
+        ],
+        "boneyard": {
+            "tiles": 0,
+            "reserve": 2,
+            "closed": false
+        },
+        "last": {
+            "seat": 3,
+            "kind": "play",
+            "tile": "0-0",
+            "end": "right",
+            "stood_in": false,
+            "then": []
+        },
+        "mine": null,
+        "sheet": null,
+        "result": null
+    },
+    "ranking": [
+        {
+            "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx6de7f8g9h0jkmnpqrst",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx5cd6e7f8g9h0jkmnpqr",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "points": 0,
+            "place": null
+        },
+        {
+            "player_id": "01kaqrx4bc5d6e7f8g9h0jkmnp",
+            "points": 0,
+            "place": null
+        }
+    ],
+    "setup": {
+        "kind": "domino",
+        "mechanic": "domino_101",
+        "difficulty": 2,
+        "turn_ms": 30000,
+        "table": "pairs",
+        "seats": [
+            "01kaqrx2ab3c4d5e6f7g8h9jkm",
+            "01kaqrx3mn4p5q6r7s8t9vwxyz",
+            "01kaqrx4bc5d6e7f8g9h0jkmnp",
+            "01kaqrx5cd6e7f8g9h0jkmnpqr"
+        ],
+        "computer": null,
+        "played": false
+    },
+    "taunts": {
+        "open": true,
+        "balance": 3,
+        "ready_ms": null,
+        "received": [],
+        "shown": []
+    },
+    "voice": null
+}

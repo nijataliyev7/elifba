@@ -1,5 +1,5 @@
 {
-    "v": 9,
+    "v": 10,
     "revision": 8,
     "server_ms": 1795534800500,
     "room": {
@@ -205,6 +205,7 @@
         "can_offer": false,
         "result": null
     },
+    "domino": null,
     "ranking": [
         {
             "player_id": "01kaqrx3mn4p5q6r7s8t9vwxyz",

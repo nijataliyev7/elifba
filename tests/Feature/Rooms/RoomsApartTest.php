@@ -323,7 +323,8 @@ it('keeps the domains apart', function (): void {
 it('asks for a game\'s kind in one place on the server', function (): void {
     // ADR 034 decision 3: the kind is read by `RoomGameDriver::of()` and by the
     // data classes that hold a shape by kind; nothing else in Rooms asks for it,
-    // compares a mechanic with a board game's or looks at which driver it got.
+    // compares a mechanic with a board or domino game's or looks at which driver
+    // it got (ADR 038 decision 2: three drivers).
     $readers = [];
     $compares = [];
 
@@ -337,7 +338,7 @@ it('asks for a game\'s kind in one place on the server', function (): void {
         }
 
         if (! str_starts_with($file, 'app/Domain/Rooms/Support/Drivers/')
-            && preg_match('/[=!]==\s*RoomMechanic::Draughts|RoomMechanic::Draughts\s*([=!]==|=>)|instanceof\s+(RaceDriver|BoardDriver)|\b(RaceDriver|BoardDriver)::class/', $code) === 1) {
+            && preg_match('/[=!]==\s*RoomMechanic::(Draughts|Domino101)|RoomMechanic::(Draughts|Domino101)\s*([=!]==|=>)|instanceof\s+(RaceDriver|BoardDriver|DominoDriver)|\b(RaceDriver|BoardDriver|DominoDriver)::class/', $code) === 1) {
             $compares[] = $file;
         }
     }
@@ -351,6 +352,22 @@ it('asks for a game\'s kind in one place on the server', function (): void {
         'app/Domain/Rooms/Data/RoomStateData.php',
         'app/Domain/Rooms/Support/Drivers/RoomGameDriver.php',
     ])->and($compares)->toBe([]);
+});
+
+it('asks which rules a domino game plays by in one place, its driver', function (): void {
+    // ADR 038 decision 2: `DominoDriver::variantOf()` gives the game's `DominoVariant`;
+    // nothing else in Rooms but the rules themselves names «101»'s.
+    $names = [];
+
+    foreach (phpFilesUnder(app_path('Domain/Rooms')) as $path) {
+        $file = str_replace(base_path().'/', '', $path);
+
+        if (! str_starts_with($file, 'app/Domain/Rooms/Support/Domino/') && preg_match('/(?<!::)\bDomino101\b/', (string) file_get_contents($path)) === 1) {
+            $names[] = $file;
+        }
+    }
+
+    expect($names)->toBe(['app/Domain/Rooms/Support/Drivers/DominoDriver.php']);
 });
 
 it('sells a letter by the round\'s question, never by the mechanic\'s name', function (): void {

@@ -30,8 +30,11 @@ use InvalidArgumentException;
  */
 final class RoomPointsRule
 {
-    /** A board match won (ADR 034 decision 10): the winner's points in the room's standing. */
+    /** A board match won (ADR 034 decision 10): the winner's points in the room's standing; from Y5 also each player's of the side that wins a domino game (ADR 038 decision 30). */
     public const int MATCH_WIN = 3;
+
+    /** A domino game won dry (R26): each player's of the winning side, the app counting it double (ADR 038 decision 30). */
+    public const int DRY_WIN = 6;
 
     /** A board match drawn: each player's points in the room's standing. */
     public const int MATCH_DRAW = 1;

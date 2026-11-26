@@ -85,7 +85,7 @@ final class RoomState
     {
         $state = self::build($room, $viewer, $screen, $voice);
 
-        // A flag fall is derived from the clock alone, and an act stamped before it under the
+        // A match's flag fall is derived from the clock alone, and an act stamped before it under the
         // room's lock but not yet committed would take it back: a read that finds one is made
         // again under the room row's shared lock, its moment read after any write in flight
         // (`RoomLock::shared()`). Every other read takes no lock, so no write waits for readers.
@@ -102,7 +102,7 @@ final class RoomState
         $rows = RoomRanking::players($room);
         $mine = $rows->first(static fn (RoomPlayer $row): bool => $row->user_id === $viewer->id);
         $game = $room->latestGame();
-        $part = $game === null ? ['live' => false, 'round' => null, 'match' => null] : RoomGameDriver::of($game->mechanic)->part($room, $game, $rows, $mine, $nowMs, $screen);
+        $part = $game === null ? ['live' => false, 'round' => null, 'match' => null, 'domino' => null] : RoomGameDriver::of($game->mechanic)->part($room, $game, $rows, $mine, $nowMs, $screen);
         $live = $game !== null && $part['live'];
         $setup = $room->isOpen() ? $room->setup() : null;
         $voiceData = $voice && $room->isOpen() ? new RoomVoiceData($room->voiceIsOn(), $viewer->voice_agreed_at !== null) : null;
@@ -131,6 +131,7 @@ final class RoomState
             setup: $setup === null ? null : RoomSetupData::of($setup, $game !== null && ! $live && $setup->playedIn($game)),
             taunts: $game !== null && $live ? self::taunts($room, $game, $mine, $nowMs, $screen) : null,
             voice: $voiceData,
+            domino: $part['domino'],
         );
     }
 

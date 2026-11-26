@@ -4,10 +4,10 @@ namespace App\Domain\Rooms\Support;
 
 use App\Domain\Language\Support\DateLabel;
 use App\Domain\Language\Support\Ordinal;
-use App\Domain\Rooms\Data\RoomGameData;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
+use App\Domain\Rooms\Support\Drivers\RoomGameDriver;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,10 +28,13 @@ use Illuminate\Support\Facades\Config;
  * and never stored; null for a host who did not play. No name is listed
  * here: a room has none, and its players are on its own page. A board
  * game also gives its clock beside its mechanic and difficulty (D3, ADR
- * 034 decision 17), so a page writes «Şaşki · 5+3» without a catalog.
+ * 034 decision 17), so a page writes «Şaşki · 5+3» without a catalog,
+ * and from Y5 a domino game its turn's time, its table, the computer's
+ * level and its final balances (ADR 038 decision 38), so a page writes
+ * «101 · 30 san · Para 2×2» and «101 : 43» — what the game's driver lists.
  *
  * @phpstan-type OpenRoomArray array{id: string, code: string|null, host: bool, players: int, mechanic: string, running: bool}
- * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int, clock?: array{base_ms: int, increment_ms: int}, computer?: int|null}>, mine: array{points: int, place: string|null}|null}
+ * @phpstan-type PastRoomArray array{id: string, date: string, host: bool, players: int, games: list<array{mechanic: string, difficulty: int, rounds?: int, clock?: array{base_ms: int, increment_ms: int}, turn_ms?: int, table?: string, computer?: int|null, balances?: list<int>}>, mine: array{points: int, place: string|null}|null}
  */
 final class RoomList
 {
@@ -95,7 +98,7 @@ final class RoomList
                 'games' => array_values($room->games->map(static fn (RoomGame $game): array => [
                     'mechanic' => $game->mechanic->value,
                     'difficulty' => $game->difficulty,
-                    ...self::clock($game),
+                    ...RoomGameDriver::of($game->mechanic)->listed($game, $nowMs, false),
                 ])->all()),
                 'mine' => $own === null ? null : [
                     'points' => $own['points'],
@@ -105,18 +108,6 @@ final class RoomList
         }
 
         return $past;
-    }
-
-    /**
-     * A board game's clock, as its row keeps it; nothing for a race.
-     *
-     * @return array{clock?: array{base_ms: int, increment_ms: int}, computer?: int|null}
-     */
-    private static function clock(RoomGame $game): array
-    {
-        $clock = RoomGameData::clockOf($game);
-
-        return $clock === null ? [] : ['clock' => $clock->toArray(), 'computer' => $game->computer?->value];
     }
 
     /**
