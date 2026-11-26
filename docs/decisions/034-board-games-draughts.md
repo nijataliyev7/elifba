@@ -7,6 +7,7 @@
 - **Why it is hard to reverse:** the tables, the state every device reads, the facts a phone posts, the rule that only the server judges a move, and the rules of the game themselves — a game played under one draw rule cannot be replayed under another.
 - **Amended by:** [035](035-ready-for-the-next-game.md) (2026-11-21) — decision 17: the state is `v: 7`, each player with `ready`; a match is a room game for the «Hazıram» between games like a race. [036](036-the-computers-seat.md) (2026-11-21) — the owner reversed "no computer opponent": one seat of a match may be the computer's, at three levels; decisions 7–9, 17, 21–23 and 25–26 as amended there, the state `v: 8`.
 - **Amended by:** [037](037-anagram-clue-shuffle-letter.md) (2026-11-21) — decision 17: the state is `v: 9` (after ADR 036's `v: 8`), an anagram's question with `clue` and `orders`; a match has no question, and nothing of it changes.
+- **Amended by:** [038](038-domino-101.md) (2026-11-26, domino «101») — decision 3: three kinds and three drivers — a domino game is a kind of its own (`RoomGameKind::Domino`, `DominoDriver`), not a second board game; decision 9: `room_acts` also holds a domino game's `play`, `yield` and `back`, and `path` is what an act did in its game's own notation; decision 17: the state is `v: 10`, with `domino`. A match is as written.
 
 ## Context
 

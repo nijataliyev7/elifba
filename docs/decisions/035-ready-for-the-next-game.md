@@ -1,6 +1,7 @@
 # 035 — Ready for the next game: a player's «Hazıram» between games, seen by the host and the screen
 
 - **Status:** Accepted, 2026-11-21, from the owner's words below; everything the owner did not say is this record's recommendation, taken under the owner's standing rule of 2026-11-18 (a session that would ask the owner takes its recommended option and says so) — "Taken without asking" lists it. **Amended 2026-11-21 (the call)**, the owner's word that the question should stand out and be announced with sound and motion: "Amended 2026-11-21 — the call" at the end replaces decision 10 for a player's phone and the look of decision 7. Built the same day on the branch `feat/rooms-ready` ("As built" at the end).
+- **Amended by:** [038](038-domino-101.md) (2026-11-26, domino «101») — a domino game is a room game for the «Hazıram» between games like a race and a match; nothing is asked between its hands.
 - **Sections:** architecture.md §1 `room_players`, §12 "Ready for the next game (2026-11-21)" and "Adults' privacy"; docs/frontend.md rule 15 "Ready for the next game"; glossary.md "Ready for the next game"; CLAUDE.md "Rooms"
 - **Amends:**
     - [021](021-room-race-protocol.md) "The state": `v: 7` — each player gains `ready` (decision 6). `room.changed` stays `{v: 1, revision}`; nothing else of the protocol changes.
