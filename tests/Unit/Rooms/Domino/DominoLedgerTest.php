@@ -4,6 +4,7 @@ use App\Domain\Rooms\Enums\RoomHandEnding;
 use App\Domain\Rooms\Enums\RoomLedgerLine;
 use App\Domain\Rooms\Support\Domino\Domino101;
 use App\Domain\Rooms\Support\Domino\DominoLedger;
+use Tests\Support\Domino;
 
 /*
  * The account of «101» between hands (docs/architecture.md §12 "Domino",
@@ -239,4 +240,90 @@ it('orders the sides by balance, then by side, with dense places (ADR 038 decisi
         ['side' => 0, 'place' => 2],
         ['side' => 1, 'place' => 3],
     ]);
+});
+
+/*
+ * The oracle's sequences (`ledger.json`, ADR 038 decision 58): hands'
+ * results — ties and void hands among them — folded through R20–R26 to a
+ * game's end, with the whole account after each; and the study's results
+ * (`study.json`), the 25 it recomputed and the bot practice's seven, to
+ * what the app showed.
+ */
+
+/**
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureSequences(): array
+{
+    $sequences = [];
+
+    foreach (Domino::fixture('ledger')['sequences'] as $sequence) {
+        $sequences["{$sequence['id']}, {$sequence['sides']} sides"] = [$sequence];
+    }
+
+    return $sequences;
+}
+
+/**
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureStudyResults(): array
+{
+    $sequences = [];
+
+    foreach (Domino::fixture('study')['results'] as $sequence) {
+        $sequences["{$sequence['id']}: {$sequence['note']}"] = [$sequence];
+    }
+
+    return $sequences;
+}
+
+it('folds the oracle\'s sequence to the same account after every hand (ADR 038 R19–R26)', function (array $sequence): void {
+    $ledger = dominoLedger($sequence['sides']);
+
+    foreach ($sequence['results'] as $index => $result) {
+        $ledger = Domino::fold($ledger, $result);
+        $lines = implode(', ', array_unique(array_column($sequence['after'][$index]['lines'], 'line')));
+
+        expect(Domino::canon(Domino::account($ledger)))->toBe(Domino::canon($sequence['after'][$index]), "ledger.json {$sequence['id']} · after result ".($index + 1)." ({$lines})");
+    }
+})->with(dominoFixtureSequences());
+
+it('folds the study\'s results to the balances, waiting points and bank the app showed (ADR 038 R20–R26)', function (array $sequence): void {
+    $ledger = dominoLedger($sequence['sides']);
+
+    foreach ($sequence['hands'] as $index => $hand) {
+        $ledger = Domino::fold($ledger, $hand['result']);
+        $account = Domino::account($ledger);
+        $shown = [
+            'account' => array_column($account['sides'], 'balance'),
+            'waiting' => array_column($account['sides'], 'waiting'),
+            'bank' => $account['bank'],
+            'over' => $account['over'],
+            'dry' => $account['dry'],
+        ];
+
+        expect(Domino::canon(Domino::only($shown, $hand['app'])))->toBe(Domino::canon($hand['app']), "study {$sequence['id']} · hand ".($index + 1));
+    }
+})->with(dominoFixtureStudyResults());
+
+it('holds the study\'s 25 results and every line of the account in the oracle\'s sequences (ADR 038 decision 58)', function (): void {
+    $study = array_column(Domino::fixture('study')['results'], null, 'id');
+    $lines = [];
+
+    foreach (Domino::fixture('ledger')['sequences'] as $sequence) {
+        foreach ($sequence['after'] as $after) {
+            foreach ($after['lines'] as $line) {
+                $lines[$line['line']] = true;
+            }
+        }
+    }
+
+    $kinds = array_map(static fn (RoomLedgerLine $line): string => $line->value, RoomLedgerLine::cases());
+
+    sort($kinds);
+    ksort($lines);
+
+    expect(count($study['v1']['hands']) + count($study['g2']['hands']) + count($study['g3']['hands']) + count($study['g4']['hands']))->toBe(25)
+        ->and(array_keys($lines))->toBe($kinds);
 });

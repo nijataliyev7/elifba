@@ -3,7 +3,6 @@
 namespace App\Domain\Rooms\Support\Domino;
 
 use App\Domain\Rooms\Enums\RoomOpenerWhy;
-use App\Domain\Rooms\Enums\RoomTable;
 
 /**
  * What differs between domino games (docs/architecture.md §12 "Domino",
@@ -30,14 +29,13 @@ interface DominoVariant
     public function reserve(): int;
 
     /**
-     * Who opens a hand dealt so, and why: from the hand before, or from the
-     * deal when the hand before leaves it to the deal.
+     * Who opens a hand dealt so, and why: the seat the hand before gave the
+     * right to (`next()`), or the deal's when it gave none.
      *
-     * @param  DominoHand|null  $before  the hand before; null for a game's first hand
-     * @param  bool  $anyOpen  whether any side's account is open after the hand before
+     * @param  array{0: int|null, 1: RoomOpenerWhy}|null  $right  what the hand before said (`next()`); null for a game's first hand
      * @return array{0: int, 1: RoomOpenerWhy}
      */
-    public function opener(RoomTable $table, DominoDeal $deal, ?DominoHand $before, bool $anyOpen): array;
+    public function opener(DominoDeal $deal, ?array $right): array;
 
     /**
      * Who opens the hand after this one, as far as this hand tells: a seat,

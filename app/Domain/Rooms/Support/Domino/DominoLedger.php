@@ -14,11 +14,11 @@ use InvalidArgumentException;
  * tries, and the bank. Pure and immutable — each hand gives a new ledger
  * and the lines that changed it (`lines`), in the order they happened.
  *
- * The order of the lines of one hand (ADR 038 silent: decision 38 asks for
- * them "in order" and names none): the winner's own — `gained`, or
- * `opened` then `released`, or `waited` then `burnt_third` —, then the
- * bank — `bank_taken` or `bank_burnt` —, then each burnt rival in the
- * order of the sides. A change of nothing is no line.
+ * The lines of one hand come in the order the account changed (ADR 038
+ * decision 70): the winner's own — `gained`, or `opened` then `released`,
+ * or `waited` then `burnt_third` —, then the bank — `bank_taken` or
+ * `bank_burnt` —, then each burnt rival in the order of the sides; the
+ * bank's lines name no side. A change of nothing is no line.
  *
  * @phpstan-type Side array{open: bool, balance: int, waiting: int, tries: int}
  * @phpstan-type Line array{side: int|null, line: RoomLedgerLine, points: int}

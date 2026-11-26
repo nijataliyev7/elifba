@@ -113,8 +113,7 @@ final class DominoRules
     /**
      * The line with a tile put at an end (R10): the end's open number is
      * then the tile's other number. A hand's first tile lies as its name
-     * reads, the larger number on the left (ADR 038 silent: decision 38's
-     * `line` gives each tile "as it lies" and names no side for the first).
+     * is written, the larger number at the left (ADR 038 decision 62).
      *
      * @param  list<Placed>  $line
      * @return list<Placed>
@@ -144,7 +143,10 @@ final class DominoRules
      * seat has passed, the mover too, the hand is blocked (R15): the turn
      * is null. Drawing takes the variant's draw size, but never below its
      * reserve — ADR 038 decision 34, reading R12: with three left a seat
-     * draws one.
+     * draws one —, and a seat looks at its tiles again only after the whole
+     * draw (decision 67). `then` names each seat that drew or passed, in
+     * the order of the turns from the mover; the seat that is to move only
+     * when it drew (decision 68).
      *
      * @param  list<list<DominoTile>>  $tiles  every seat's tiles after the play
      * @param  list<DominoTile>  $boneyard  in the order it is drawn

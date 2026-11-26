@@ -141,7 +141,7 @@ function dominoFourBlocked(): DominoHand
 /** A hand opened as a later hand of a game with an account open, after `$before`. */
 function dominoAfter(DominoHand $before, DominoDeal $deal): DominoHand
 {
-    return DominoHand::open(new Domino101, $deal, $before->number + 1, $before, true, 0);
+    return DominoHand::open(new Domino101, $deal, $before->number + 1, (new Domino101)->next($before, true), 0);
 }
 
 it('turns round the seats in their order, one tile a turn (ADR 038 R3)', function (): void {
@@ -227,11 +227,11 @@ it('gives the right among seats with the same fewest pips to the winning side fi
         ->and((new Domino101)->next($before, true))->toBe([3, RoomOpenerWhy::Fewest]);
 });
 
-it('gives the right among partners with the same fewest pips to the first in turn from the last play (ADR 038 R8, reading)', function (): void {
+it('gives the right among partners with the same fewest pips to the first in turn from the last play, that seat itself first (ADR 038 R8, reading; decision 63)', function (): void {
     $before = dominoPairsFewestWithin();
 
-    // ADR 038 silent: "from the seat that made the last play" counts that
-    // seat first — seat 2 here, where the next in turn would be seat 0.
+    // "From the seat that made the last play" counts that seat first —
+    // seat 2 here, where the next in turn would be seat 0.
     expect($before->by)->toBe(2)
         ->and($before->count['left'] ?? null)->toBe([14, 18, 14, 38])
         ->and($before->count['winner'] ?? null)->toBe(0)
@@ -262,7 +262,7 @@ it('gives the right to open after a void hand to the same seat again (ADR 038 R8
 
 it('leaves the opener to the next deal while no account is open (ADR 038 R6, R8)', function (): void {
     $before = dominoPairsFinished();
-    $hand = DominoHand::open(new Domino101, dominoFour(RoomTable::Pairs), 2, $before, false, 0);
+    $hand = DominoHand::open(new Domino101, dominoFour(RoomTable::Pairs), 2, (new Domino101)->next($before, false), 0);
 
     expect((new Domino101)->next($before, false))->toBe([null, RoomOpenerWhy::LowestDouble])
         ->and($hand->opener)->toBe(0)
@@ -482,15 +482,15 @@ it('keeps the hand when one opponent can answer the first tile (ADR 038 R5)', fu
         ->and($hand->turn)->toBe(2);
 });
 
-it('makes the opening tile of the partner a void hand too when the opponents cannot answer it (ADR 038 R5, R9)', function (): void {
+it('makes the opening tile of the partner a void hand too when the opponents cannot answer it (ADR 038 R5, R9; decision 64)', function (): void {
     $opened = dominoAfter(dominoPairsFinished(), Domino::deal(RoomTable::Pairs, [
         ['1-1', '4-1', '5-1', '6-1', '3-3', '4-4', '6-2'],
         ['0-0', '2-0', '3-0', '2-2', '3-2', '4-2', '6-6'],
         ['3-1', '1-0', '2-1', '6-5', '6-4', '5-4', '6-3'],
         ['4-0', '5-0', '6-0', '5-5', '5-2', '5-3', '4-3'],
     ]));
-    // ADR 038 silent: after «Sən aç», "the same seat again" is the seat
-    // that had the right — seat 2 — and not its partner who opened.
+    // After «Sən aç», "the same seat again" is the seat that had the right
+    // — seat 2 — and not its partner who opened.
     $void = Domino::play($opened, 'give', '1-1');
 
     expect($void->ending)->toBe(RoomHandEnding::Void)
@@ -505,4 +505,338 @@ it('lists the ends a tile fits, the left alone where both show one number (ADR 0
         ->and(DominoRules::endsFor(DominoTile::of('3-3'), ['left' => 3, 'right' => 3]))->toBe(['left'])
         ->and(DominoRules::endsFor(DominoTile::of('5-4'), ['left' => 3, 'right' => 1]))->toBe([])
         ->and(DominoRules::endsFor(DominoTile::of('6-1'), ['left' => 3, 'right' => 1]))->toBe(['right']);
+});
+
+/*
+ * The oracle's fixtures (ADR 038 decisions 58–59; their format is
+ * `scripts/domino-oracle/README.md`'s): `cases.json`, a case or more for
+ * each of R1–R26 and one marked `reading` for each row of decision 34,
+ * in named groups; `hands.json`, hands at every table played out play by
+ * play; `study.json`, the study's 18 replayed hands move by move. Legal
+ * plays compare as sets, and every failure cites the case's rule.
+ */
+
+/** @var array<string, list<string>> the named groups of `cases.json`, each with the rules it holds */
+const DOMINO_CASE_GROUPS = [
+    'the tiles, the tables and the deal (ADR 038 R1–R4)' => ['R1', 'R2', 'R3', 'R4'],
+    'no reply, and who opens (ADR 038 R5–R9)' => ['R5', 'R6', 'R7', 'R8', 'R9'],
+    'a play (ADR 038 R10–R11)' => ['R10', 'R11'],
+    'the boneyard (ADR 038 R12–R13)' => ['R12', 'R13'],
+    'a pass, and the end of a hand (ADR 038 R14–R15)' => ['R14', 'R15'],
+    'the count, and a finished hand (ADR 038 R16–R17)' => ['R16', 'R17'],
+    'the blocked hand (ADR 038 R18)' => ['R18'],
+    'the tie and the bank (ADR 038 R19, R24)' => ['R19', 'R24'],
+    'the account (ADR 038 R20)' => ['R20'],
+    'the 13 rule (ADR 038 R21)' => ['R21'],
+    'waiting (ADR 038 R22)' => ['R22'],
+    'burning (ADR 038 R22–R23)' => ['R22', 'R23'],
+    'the end, and a dry win (ADR 038 R25–R26)' => ['R25', 'R26'],
+];
+
+/**
+ * The cases of `cases.json` whose rule is one of `$rules`, by their rule
+ * and name.
+ *
+ * @param  list<string>  $rules
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureCases(array $rules): array
+{
+    $cases = [];
+
+    foreach (Domino::fixture('cases')['cases'] as $case) {
+        if (in_array(substr($case['rule'], strlen('ADR 038 ')), $rules, true)) {
+            $cases["{$case['rule']}: {$case['name']}"] = [$case];
+        }
+    }
+
+    return $cases;
+}
+
+/**
+ * Check one case of `cases.json` against the judge and the account.
+ *
+ * @param  array<string, mixed>  $case
+ */
+function dominoFixtureCase(array $case): void
+{
+    $cite = "{$case['rule']}: {$case['name']}";
+
+    match ($case['kind']) {
+        'tiles' => dominoFixtureTiles($case, $cite),
+        'tables' => dominoFixtureTables($case, $cite),
+        'deal' => dominoFixtureDeal($case, $cite),
+        'deals' => dominoFixtureTries($case, $cite),
+        'hand' => dominoFixtureHand($case, $cite),
+        'ledger' => dominoFixtureLedger($case, $cite),
+    };
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureTiles(array $case, string $cite): void
+{
+    $tiles = array_values(DominoTile::all());
+    $pips = array_map(static fn (DominoTile $tile): int => $tile->pips(), $tiles);
+
+    expect(DominoTile::names($tiles))->toBe($case['tiles'], $cite)
+        ->and($pips)->toBe($case['pips'], $cite)
+        ->and(DominoTile::names(array_values(array_filter($tiles, static fn (DominoTile $tile): bool => $tile->isDouble()))))->toBe($case['doubles'], $cite)
+        ->and(array_sum($pips))->toBe($case['total'], $cite);
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureTables(array $case, string $cite): void
+{
+    foreach ($case['tables'] as $expected) {
+        $table = RoomTable::from($expected['table']);
+
+        expect([
+            'table' => $table->value,
+            'seats' => $table->seats(),
+            'hand' => RoomTable::HAND,
+            'boneyard' => $table->boneyard(),
+            'sides' => array_map($table->seatsOf(...), range(0, $table->sides() - 1)),
+        ])->toBe($expected, "{$cite} · {$table->value}");
+    }
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureDeal(array $case, string $cite): void
+{
+    $deal = Domino::dealOf(RoomTable::from($case['table']), $case['deal']);
+
+    expect(['verdict' => $deal->thrown() ? 'thrown' : 'stands', 'why' => Domino::reasonsSet($deal->reasons())])
+        ->toBe(['verdict' => $case['verdict'], 'why' => Domino::reasonsSet($case['why'])], $cite);
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureTries(array $case, string $cite): void
+{
+    $table = RoomTable::from($case['table']);
+    $tries = array_map(static fn (array $deal): DominoDeal => Domino::dealOf($table, $deal), $case['tries']);
+    $game = Domino::game($table, Domino::source([1 => $tries]), [], Domino::STARTS);
+
+    foreach (array_slice($tries, 0, $case['used'] + 1) as $try => $deal) {
+        expect($deal->thrown())->toBe($try < $case['used'], "{$cite} · try {$try}");
+    }
+
+    expect(Domino::dealShape($game->hand()?->deal ?? throw new RuntimeException('No hand dealt.')))->toBe($case['tries'][$case['used']], $cite);
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureHand(array $case, string $cite): void
+{
+    $hand = Domino::opened($case);
+    $states = [$hand];
+
+    foreach ($case['acts'] as $index => $act) {
+        $hand = Domino::act($hand, $act, $index + 1);
+
+        expect($hand)->not->toBeNull("{$cite} · act ".($index + 1).' '.json_encode($act).' is not taken');
+
+        $states[] = $hand;
+    }
+
+    foreach ($case['checks'] as $check) {
+        $after = $check['after'];
+        unset($check['after']);
+
+        if (isset($check['legal'])) {
+            $check['legal'] = Domino::asSet($check['legal']);
+        }
+
+        $actual = Domino::only(Domino::checked($states[$after], $case['open']), $check);
+
+        if (isset($check['end'], $actual['end'])) {
+            $actual['end'] = Domino::only($actual['end'], $check['end']);
+        }
+
+        expect(Domino::canon($actual))->toBe(Domino::canon($check), "{$cite} · after {$after} acts");
+    }
+}
+
+/** @param  array<string, mixed>  $case */
+function dominoFixtureLedger(array $case, string $cite): void
+{
+    $ledger = (new Domino101)->ledger($case['sides']);
+
+    foreach ($case['results'] as $index => $result) {
+        $ledger = Domino::fold($ledger, $result);
+        $expected = $case['after'][$index];
+
+        expect(Domino::canon(Domino::only(Domino::account($ledger), $expected)))->toBe(Domino::canon($expected), "{$cite} · after result ".($index + 1));
+    }
+}
+
+/**
+ * The hands of `hands.json`, by their id and what each shows.
+ *
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureHands(): array
+{
+    $hands = [];
+
+    foreach (Domino::fixture('hands')['hands'] as $entry) {
+        $hands["{$entry['id']} (".implode(', ', $entry['shows']).')'] = [$entry];
+    }
+
+    return $hands;
+}
+
+/**
+ * The study's hands, each with the hands of its game before it.
+ *
+ * @return array<string, array{0: list<array<string, mixed>>, 1: int}>
+ */
+function dominoFixtureStudyHands(): array
+{
+    $hands = [];
+
+    foreach (Domino::fixture('study')['games'] as $game) {
+        foreach ($game['hands'] as $index => $hand) {
+            $hands[$hand['id']] = [$game['hands'], $index];
+        }
+    }
+
+    return $hands;
+}
+
+/**
+ * Replay a study hand's rows through the judge: each row's seat is the
+ * seat to move, each play is taken — at the end that shows the number it
+ * covers, the left where both do —, and each `pass` row is the next pass
+ * the judge made by itself; the passes that end a blocked hand may be left
+ * unwritten, as the app leaves them.
+ *
+ * @param  array<string, mixed>  $entry
+ * @param  array{0: int, 1: RoomOpenerWhy}|null  $right
+ */
+function dominoFixtureStudyHand(array $entry, int $number, ?array $right): DominoHand
+{
+    $hand = DominoHand::open(new Domino101, Domino::dealOf(RoomTable::Pairs, $entry['deal']), $number, $right, 0);
+    $passes = [];
+
+    foreach ($entry['rows'] as $index => $row) {
+        $cite = "study {$entry['id']} · row ".($index + 1).' '.json_encode($row);
+
+        if ($row[1] === 'pass') {
+            expect(array_shift($passes))->toBe($row[0], "{$cite}: the judge's own pass");
+
+            continue;
+        }
+
+        expect($passes)->toBe([], "{$cite}: a pass the judge made is not written")
+            ->and($hand->turn)->toBe($row[0], "{$cite}: the seat to move");
+
+        if ($row[1] === 'yield') {
+            $next = $hand->give($index + 1);
+        } else {
+            $ends = $hand->ends();
+            $end = match (true) {
+                ! isset($row[3]) => null,
+                ($ends[DominoTile::LEFT] ?? null) === $row[3] => DominoTile::LEFT,
+                ($ends[DominoTile::RIGHT] ?? null) === $row[3] => DominoTile::RIGHT,
+                default => throw new RuntimeException("{$cite}: no end shows {$row[3]}."),
+            };
+            $next = $hand->play(DominoTile::of($row[2]), $end, $index + 1, false);
+        }
+
+        expect($next)->not->toBeNull("{$cite}: taken");
+
+        $hand = $next;
+        $passes = array_column(array_filter($hand->last['then'] ?? [], static fn (array $step): bool => $step['passed']), 'seat');
+    }
+
+    expect($hand->over())->toBeTrue("study {$entry['id']}: over");
+
+    return $hand;
+}
+
+it('names every rule R1–R26 in a case, every row of decision 34 in a reading, and puts every case in a named group (ADR 038 decisions 33, 34, 59)', function (): void {
+    $cases = Domino::fixture('cases')['cases'];
+    $rules = array_unique(array_map(static fn (array $case): string => $case['rule'], $cases));
+    $readings = array_unique(array_filter(array_map(static fn (array $case): ?int => $case['reading'] ?? null, $cases)));
+    $grouped = array_unique(array_merge(...array_values(DOMINO_CASE_GROUPS)));
+
+    sort($rules);
+    sort($readings);
+    sort($grouped);
+
+    $all = array_map(static fn (int $rule): string => "R{$rule}", range(1, 26));
+    sort($all);
+
+    expect($rules)->toBe(array_map(static fn (string $rule): string => "ADR 038 {$rule}", $all))
+        ->and($readings)->toBe(range(1, 11))
+        ->and($grouped)->toBe($all);
+});
+
+foreach (DOMINO_CASE_GROUPS as $group => $rules) {
+    describe($group, function () use ($rules): void {
+        it('passes the case', function (array $case): void {
+            dominoFixtureCase($case);
+        })->with(dominoFixtureCases($rules));
+    });
+}
+
+describe('the oracle\'s hands (hands.json)', function (): void {
+    it('plays the hand as the oracle does, play by play, to the same end', function (array $entry): void {
+        $cite = "hands.json {$entry['id']} (".implode(', ', $entry['shows']).')';
+        $walk = Domino::walk($entry);
+
+        foreach ($walk['steps'] as $step) {
+            expect(Domino::canon($step['actual']))->toBe(Domino::canon($step['expected']), "{$cite} · turn {$step['turn']}");
+        }
+
+        $hand = $walk['hand'];
+        $end = Domino::endOf($hand, $entry['open']);
+
+        expect(['seat' => $hand->opener, 'why' => $hand->why->value])->toBe($entry['opener'], "{$cite} · the opener")
+            ->and(Domino::canon($end === null ? null : Domino::only($end, $entry['end'])))->toBe(Domino::canon($entry['end']), "{$cite} · the end");
+    })->with(dominoFixtureHands());
+
+    it('holds hands at every table, each ending, and every rule a hand can show', function (): void {
+        $hands = Domino::fixture('hands')['hands'];
+        $tables = array_count_values(array_map(static fn (array $entry): string => $entry['table'], $hands));
+        $endings = array_count_values(array_map(static fn (array $entry): string => $entry['end']['ending'], $hands));
+        $shows = array_unique(array_merge(...array_map(static fn (array $entry): array => $entry['shows'], $hands)));
+
+        ksort($tables);
+        ksort($endings);
+        sort($shows);
+
+        expect(array_keys($tables))->toBe(['four', 'pairs', 'three', 'two'])
+            ->and(array_keys($endings))->toBe(['blocked', 'finished', 'tied', 'void'])
+            ->and($shows)->toBe(['R12', 'R12 odd tile', 'R13', 'R14', 'R16 lone 0-0', 'R17', 'R18', 'R19', 'R5', 'R6', 'R7', 'R8', 'R9']);
+    });
+});
+
+describe('the study\'s hands (study.json)', function (): void {
+    it('replays the hand move by move to what the app showed: the opener, the ending, the hand\'s points and the account', function (array $hands, int $index): void {
+        $variant = new Domino101;
+        $ledger = $variant->ledger(2);
+        $before = null;
+
+        foreach (array_slice($hands, 0, $index + 1) as $number => $entry) {
+            $right = $before === null ? null : $variant->next($before, $ledger->anyOpen());
+            $hand = dominoFixtureStudyHand($entry, $number + 1, $right);
+            $ledger = Domino::afterHand($ledger, $hand);
+            $before = $hand;
+        }
+
+        $entry = $hands[$index];
+        $count = $hand->count ?? throw new RuntimeException('Not counted.');
+        $points = array_map(static fn (int $side): int => $side === $count['winner'] ? $count['gain'] : 0, [0, 1]);
+
+        expect([
+            'opener' => array_values(array_filter($hand->events, static fn (array $event): bool => $event['kind'] === 'play'))[0]['seat'],
+            'ending' => $hand->ending?->value,
+            'hand' => $points,
+            'account' => array_column($ledger->sides, 'balance'),
+        ])->toBe($entry['app'], "study {$entry['id']}");
+    })->with(dominoFixtureStudyHands());
+
+    it('holds the 18 hands of the three replayed games', function (): void {
+        expect(array_keys(dominoFixtureStudyHands()))->toBe(['g2·1', 'g2·2', 'g2·3', 'g2·4', 'g2·5', 'g2·6', 'g3·1', 'g3·2', 'g3·3', 'g3·4', 'g3·5', 'g4·1', 'g4·2', 'g4·3', 'g4·4', 'g4·5', 'g4·6', 'g4·7']);
+    });
 });

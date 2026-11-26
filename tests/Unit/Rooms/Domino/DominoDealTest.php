@@ -170,3 +170,29 @@ it('refuses a deal set by hand that is not the 28 tiles, seven a seat', function
         ['4-3', '4-4', '5-0', '5-1', '5-2', '5-3', '5-4'],
     ], ['5-5', '6-0', '6-1', '6-2', '6-3', '6-4', '6-5']],
 ]);
+
+/*
+ * The oracle's deals (`hands.json`, ADR 038 decision 58): deals at every
+ * table with R4's verdict and its reasons, a seat at a time.
+ */
+
+/**
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureDeals(): array
+{
+    $deals = [];
+
+    foreach (Domino::fixture('hands')['deals'] as $index => $entry) {
+        $deals['deal '.($index + 1).": {$entry['table']}, {$entry['verdict']}"] = [$entry];
+    }
+
+    return $deals;
+}
+
+it('throws away the oracle\'s deal for the same reasons, or keeps it (ADR 038 R4, reading)', function (array $entry): void {
+    $deal = Domino::dealOf(RoomTable::from($entry['table']), $entry['deal']);
+
+    expect(['verdict' => $deal->thrown() ? 'thrown' : 'stands', 'why' => Domino::reasonsSet($deal->reasons())])
+        ->toBe(['verdict' => $entry['verdict'], 'why' => Domino::reasonsSet($entry['why'])], 'ADR 038 R4: '.json_encode($entry['why']));
+})->with(dominoFixtureDeals());

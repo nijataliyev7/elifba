@@ -37,8 +37,8 @@ use LogicException;
  *
  * Away (decision 26): a present player's seat is away while its last
  * `$awayAfter` turns were all played for it and no `back` came after them.
- * ADR 038 silent: the turns are counted over the whole game, across
- * hands, as `ply` is; a `back` is taken in any phase of a live game.
+ * The turns are counted over the whole game, across hands, as `ply` is,
+ * and a `back` is taken in any phase of a live game (ADR 038 decision 72).
  *
  * @phpstan-import-type Play from DominoRules
  * @phpstan-import-type Line from DominoLedger
@@ -249,7 +249,9 @@ final class DominoGame
 
     /**
      * Who opens the next hand, in the phase `sheet`: a seat, or null while
-     * the next deal decides it, and why (R6–R8); null otherwise.
+     * the next deal decides it, and why (R6–R8); null otherwise — and so
+     * null on the sheet of a game that is over, which no hand follows (ADR
+     * 038 decision 66).
      *
      * @return array{0: int|null, 1: RoomOpenerWhy}|null
      */
@@ -338,10 +340,10 @@ final class DominoGame
     /**
      * Open the next hand: its deal is the first try R4 does not throw away
      * (ADR 038 decision 34, reading R4: dealt again before anyone sees it).
-     * ADR 038 silent: hands are numbered from 1 and tries from 0, as
-     * `RoomSeed::deal()` is keyed; a void hand is a hand of its own — its
-     * sheet names it — so the deal after it is the next hand's, not another
-     * try of the void one.
+     * Hands are numbered from 1 and tries from 0, as `RoomSeed::deal()` is
+     * keyed; a void hand is a hand of its own — its sheet names it — so the
+     * deal after it is the next hand's, not another try of the void one
+     * (ADR 038 decision 71).
      */
     private function deal(int $opensMs, ?DominoHand $before): void
     {
@@ -355,7 +357,8 @@ final class DominoGame
             }
 
             if (! $deal->thrown()) {
-                $this->hands[] = DominoHand::open($this->variant, $deal, $number, $before, $this->ledger->anyOpen(), $opensMs);
+                $right = $before === null ? null : $this->variant->next($before, $this->ledger->anyOpen());
+                $this->hands[] = DominoHand::open($this->variant, $deal, $number, $right, $opensMs);
 
                 return;
             }

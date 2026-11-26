@@ -91,27 +91,42 @@ final readonly class DominoDeal
     /**
      * Whether R4 throws the deal away before anyone is shown it: some seat
      * holds five doubles or more, or five or more of the six tiles that pair
-     * one number with another. ADR 038 decision 34, reading R4: the
-     * number's double is not counted either way.
+     * one number with another.
      */
     public function thrown(): bool
     {
-        foreach ($this->hands as $hand) {
+        return $this->reasons() !== [];
+    }
+
+    /**
+     * Why R4 throws the deal away, a seat at a time — its doubles when it
+     * holds five or more, then each number 0–6 of which it holds five or
+     * more of the six tiles that pair it with another —, or nothing for a
+     * deal that stands. ADR 038 decision 34, reading R4: the number's
+     * double is not counted either way.
+     *
+     * @return list<array{seat: int, doubles: int}|array{seat: int, number: int, tiles: int}>
+     */
+    public function reasons(): array
+    {
+        $reasons = [];
+
+        foreach ($this->hands as $seat => $hand) {
             $doubles = count(array_filter($hand, static fn (DominoTile $tile): bool => $tile->isDouble()));
 
             if ($doubles >= 5) {
-                return true;
+                $reasons[] = ['seat' => $seat, 'doubles' => $doubles];
             }
 
             foreach (range(0, 6) as $number) {
                 $of = count(array_filter($hand, static fn (DominoTile $tile): bool => ! $tile->isDouble() && $tile->has($number)));
 
                 if ($of >= 5) {
-                    return true;
+                    $reasons[] = ['seat' => $seat, 'number' => $number, 'tiles' => $of];
                 }
             }
         }
 
-        return false;
+        return $reasons;
     }
 }

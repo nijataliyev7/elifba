@@ -251,7 +251,7 @@ class Hand:
         return any(self.fits(t) for t in self.hands[seat])
 
     def closed(self) -> bool:
-        """R13 (decision 34): for each open number the six tiles that pair it with another number all lie in the line."""
+        """R13 (decision 34): for each open number the six tiles that pair it with another number all lie in the line; never at a table without a boneyard (decision 69)."""
         if self.ends is None or self.table not in WITH_BONEYARD:
             return False
         on_line = {entry[0] for entry in self.line}
@@ -726,6 +726,8 @@ def make_games() -> dict:
                 end = hand.result()
                 end["line"] = [list(entry) for entry in hand.line]
                 lines = ledger.apply(hand.ledger_result())
+                if ledger.over:
+                    end["next"] = None  # ADR 038 decision 66: no hand follows a game's last, so nobody opens it
                 hands.append({
                     "hand": len(hands) + 1,
                     "thrown": [t["why"] for t in tries],
@@ -738,7 +740,7 @@ def make_games() -> dict:
                     "account": ledger.snapshot(lines),
                 })
                 nxt = end["next"]
-                right = None if nxt["seat"] is None else (nxt["seat"], nxt["why"])
+                right = None if nxt is None or nxt["seat"] is None else (nxt["seat"], nxt["why"])
                 assert len(hands) < 80
             games.append({
                 "game": f"{table}-{k + 1}",

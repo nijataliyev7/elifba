@@ -92,11 +92,14 @@ final class DominoHand
 
     /**
      * A hand dealt and opened at `$opensMs`, its opener asked of the
-     * variant from the hand before and the account (R6–R8).
+     * variant (R6–R8): the seat with the right the hand before gave, or
+     * the deal's.
+     *
+     * @param  array{0: int|null, 1: RoomOpenerWhy}|null  $right  the hand before's `next()`; null for a game's first hand
      */
-    public static function open(DominoVariant $variant, DominoDeal $deal, int $number, ?self $before, bool $anyOpen, int $opensMs): self
+    public static function open(DominoVariant $variant, DominoDeal $deal, int $number, ?array $right, int $opensMs): self
     {
-        [$seat, $why] = $variant->opener($deal->table, $deal, $before, $anyOpen);
+        [$seat, $why] = $variant->opener($deal, $right);
 
         return new self($variant, $deal->table, $number, $deal, $seat, $opensMs, $why);
     }

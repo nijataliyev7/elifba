@@ -56,14 +56,10 @@ final class Domino101 implements DominoVariant
      * (R7; ADR 038 decision 34, reading R7: the standard list, no opening
      * draw). Once an account is open, the seat with the right (R8).
      */
-    public function opener(RoomTable $table, DominoDeal $deal, ?DominoHand $before, bool $anyOpen): array
+    public function opener(DominoDeal $deal, ?array $right): array
     {
-        if ($before !== null) {
-            [$seat, $why] = $this->next($before, $anyOpen);
-
-            if ($seat !== null) {
-                return [$seat, $why];
-            }
+        if ($right !== null && $right[0] !== null) {
+            return [$right[0], $right[1]];
         }
 
         foreach (range(1, 6) as $number) {
@@ -93,8 +89,9 @@ final class Domino101 implements DominoVariant
      * R8 after a hand, while an account is open; R6 again — the deal
      * decides — while none is, and after a void hand that was opened so
      * (R5: who opens is decided again as it was for the void hand). The
-     * sheet then names no seat and the lowest double (ADR 038 silent: R7
-     * would tell that no seat holds a double of a deal not yet played).
+     * sheet then names no seat and the lowest double at every table (ADR
+     * 038 decision 66: R7 would tell that no seat holds a double of a deal
+     * not yet played).
      */
     public function next(DominoHand $before, bool $anyOpen): array
     {
@@ -106,8 +103,8 @@ final class Domino101 implements DominoVariant
             RoomHandEnding::Finished => [$before->by, RoomOpenerWhy::Finished],
             RoomHandEnding::Blocked => [$this->fewest($before), RoomOpenerWhy::Fewest],
             RoomHandEnding::Tied => [$before->by, RoomOpenerWhy::Blocker],
-            // R8 (d): "the same seat again" — ADR 038 silent after «Sən aç»:
-            // the seat that had the right, which may give it again.
+            // R8 (d): "the same seat again" — the seat that had the right,
+            // before any «Sən aç», which may give it again (ADR 038 decision 64).
             RoomHandEnding::Void => [$before->entitled, RoomOpenerWhy::Again],
             null => throw new LogicException('A hand that has not ended opens nothing.'),
         };
@@ -156,13 +153,14 @@ final class Domino101 implements DominoVariant
      * open number, the six tiles that pair it with another number all lie
      * in the line — nobody draws. ADR 038 decision 34, reading R13: a fact
      * of the line alone, the same for every seat; a seat that holds the
-     * double still plays it (R11). ADR 038 silent: the fact is the line's
-     * at every table and whatever the boneyard holds — at four seats it
-     * shuts nothing, and `DominoHand::drawable()` says what may be drawn.
+     * double still plays it (R11). ADR 038 decision 69: R13 is the
+     * boneyard's — at `two` and `three` the line's fact whatever the
+     * boneyard holds, at a table without a boneyard (R2) never; there a
+     * seat passes because nothing is left to draw (R14).
      */
     public function closed(DominoHand $hand): bool
     {
-        if ($hand->line === []) {
+        if ($hand->line === [] || $hand->table->boneyard() === 0) {
             return false;
         }
 
@@ -229,7 +227,9 @@ final class Domino101 implements DominoVariant
      * count gains the counts of all the others; the boneyard counts for
      * nobody. R19: a tie for the lowest — ADR 038 decision 34, reading R19:
      * any tie, at three and four sides too — gives nobody anything and
-     * sends every seat's pips to the bank. A void hand counts nothing (R5).
+     * sends every seat's pips to the bank. A void hand counts nothing (R5):
+     * its tiles and counts stand as facts, with no winner and no gain (ADR
+     * 038 decision 65).
      */
     public function count(DominoHand $hand): array
     {
@@ -291,8 +291,8 @@ final class Domino101 implements DominoVariant
      * R8 (b): after a blocked hand a side won, the seat with the fewest pips
      * left by R16, whichever its side. ADR 038 decision 34, reading R8: of
      * several, one of the winning side first; then the first in the order
-     * of the turns from the seat that made the last play (ADR 038 silent:
-     * that seat itself counts first).
+     * of the turns from the seat that made the last play — that seat itself
+     * first (ADR 038 decision 63).
      */
     private function fewest(DominoHand $before): int
     {

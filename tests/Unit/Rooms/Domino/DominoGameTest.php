@@ -302,6 +302,37 @@ it('makes a seat away when its last two turns were played for it, until it comes
     expect($played->away(0))->toBeFalse();
 });
 
+it('counts the turns played for a seat across hands: the pause is no back (ADR 038 decisions 26, 72)', function (): void {
+    // Seat 2's last turn of hand 1 is ply 18, its first of hand 2 ply 19 (R8 a).
+    $acts = array_map(
+        static fn (DominoAct $act): DominoAct => in_array($act->ply, [18, 19], true) ? new DominoAct($act->kind, $act->ply, $act->path, null, true, $act->actedMs) : $act,
+        dominoHandTwo(1),
+    );
+    $pause = dominoPairs(array_slice($acts, 0, 19), DOMINO_HAND_ONE_ENDS + 1_000);
+    $game = dominoPairs($acts, DOMINO_HAND_TWO_OPENS + 1_500);
+
+    expect($pause->phase)->toBe(RoomDominoPhase::Sheet)
+        ->and($pause->away(2))->toBeFalse()
+        ->and($game->hand()?->number)->toBe(2)
+        ->and($game->ply)->toBe(20)
+        ->and($game->away(2))->toBeTrue();
+});
+
+it('takes a back in the pause between hands (ADR 038 decisions 26, 72)', function (): void {
+    // Seat 2's last two turns of hand 1 are plies 16 and 18.
+    $acts = array_map(
+        static fn (DominoAct $act): DominoAct => in_array($act->ply, [16, 18], true) ? new DominoAct($act->kind, $act->ply, $act->path, null, true, $act->actedMs) : $act,
+        dominoHandOne(),
+    );
+    $away = dominoPairs($acts, DOMINO_HAND_ONE_ENDS + 2_000);
+    $back = dominoPairs([...$acts, DominoAct::back(2, 19, DOMINO_HAND_ONE_ENDS + 1_000)], DOMINO_HAND_ONE_ENDS + 2_000);
+
+    expect($away->phase)->toBe(RoomDominoPhase::Sheet)
+        ->and($away->away(2))->toBeTrue()
+        ->and($back->phase)->toBe(RoomDominoPhase::Sheet)
+        ->and($back->away(2))->toBeFalse();
+});
+
 it('passes over a back from a seat that is not away (ADR 038 decision 16)', function (): void {
     $acts = array_map(
         static fn (DominoAct $act): DominoAct => in_array($act->ply, [2, 9], true) ? new DominoAct($act->kind, $act->ply, $act->path, null, true, $act->actedMs) : $act,
@@ -458,3 +489,166 @@ it('plays seeded games to 101 at every table (ADR 038 R1–R26)', function (Room
         }
     }
 })->with(RoomTable::cases());
+
+/*
+ * The oracle's games (`games.json`, ADR 038 decision 58): whole games to
+ * 101 at each table — deals R4 threw before a hand, every play, every
+ * hand's end and the account after it. Each hand is walked turn by turn
+ * through the judge, and the game is replayed from its acts at every
+ * hand's opening and end, a second a play and the pause between hands.
+ */
+
+/**
+ * @return array<string, array{0: array<string, mixed>}>
+ */
+function dominoFixtureGames(): array
+{
+    $games = [];
+
+    foreach (Domino::fixture('games')['games'] as $game) {
+        $games["{$game['game']}: ".count($game['hands']).' hands'] = [$game];
+    }
+
+    return $games;
+}
+
+/** A deal at a table that R4 throws away: seat 0 holds five doubles. */
+function dominoFixtureThrown(RoomTable $table): DominoDeal
+{
+    $first = ['0-0', '1-1', '2-2', '3-3', '4-4', '1-0', '2-1'];
+    $rest = array_values(array_diff(array_keys(DominoTile::all()), $first));
+    $hands = [$first];
+
+    foreach (range(1, $table->seats() - 1) as $seat) {
+        $hands[] = array_slice($rest, ($seat - 1) * RoomTable::HAND, RoomTable::HAND);
+    }
+
+    return DominoDeal::set($table, $hands, array_slice($rest, ($table->seats() - 1) * RoomTable::HAND));
+}
+
+/**
+ * A game of `games.json` as a room would hold it: each hand's tries — a
+ * deal R4 throws for each the oracle threw, then its deal —, its acts a
+ * second apart from the hand's opening, and when each hand opened and
+ * ended.
+ *
+ * @param  array<string, mixed>  $game
+ * @return array{deals: Closure(int, int): DominoDeal, acts: list<DominoAct>, opens: list<int>, ends: list<int>}
+ */
+function dominoFixtureGame(array $game): array
+{
+    $table = RoomTable::from($game['table']);
+    $tries = [];
+    $acts = [];
+    $opens = [];
+    $ends = [];
+    $at = Domino::STARTS;
+
+    foreach ($game['hands'] as $hand) {
+        $tries[$hand['hand']] = [
+            ...array_fill(0, count($hand['thrown']), dominoFixtureThrown($table)),
+            Domino::dealOf($table, $hand['deal']),
+        ];
+        $opens[] = $at;
+
+        foreach ($hand['turns'] as $index => $turn) {
+            $actedMs = $at + ($index + 1) * 1000;
+            $acts[] = $turn['act'][0] === 'yield'
+                ? DominoAct::yield(count($acts), $actedMs)
+                : DominoAct::play(count($acts), array_slice($turn['act'], 1), $actedMs);
+        }
+
+        $ends[] = $at + count($hand['turns']) * 1000;
+        $at = $ends[count($ends) - 1] + Domino::REVEAL;
+    }
+
+    return ['deals' => Domino::source($tries), 'acts' => $acts, 'opens' => $opens, 'ends' => $ends];
+}
+
+/*
+ * A hand walked on its own knows nothing of the game after it, so who opens
+ * the next hand is the replay's to check below: on a game's last hand it
+ * is null (ADR 038 decision 66).
+ */
+it('plays every hand of the oracle\'s game as the oracle does, turn by turn, to the same end (ADR 038 R1–R19)', function (array $game): void {
+    foreach ($game['hands'] as $hand) {
+        $cite = "games.json {$game['game']} · hand {$hand['hand']}";
+        $walk = Domino::walk([...$hand, 'table' => $game['table']], $hand['hand']);
+
+        foreach ($walk['steps'] as $step) {
+            expect(Domino::canon($step['actual']))->toBe(Domino::canon($step['expected']), "{$cite} · turn {$step['turn']}");
+        }
+
+        $end = Domino::endOf($walk['hand'], $hand['open']);
+        unset($hand['end']['next']);
+
+        expect(['seat' => $walk['hand']->opener, 'why' => $walk['hand']->why->value])->toBe($hand['opener'], "{$cite} · the opener")
+            ->and(Domino::canon($end === null ? null : Domino::only($end, $hand['end'])))->toBe(Domino::canon($hand['end']), "{$cite} · the end");
+    }
+})->with(dominoFixtureGames());
+
+it('replays the oracle\'s game from its acts: the deal R4 keeps, the opener, every hand\'s end, the account after it and the winner (ADR 038 decisions 20, 24, R4–R26)', function (array $game): void {
+    $table = RoomTable::from($game['table']);
+    ['deals' => $deals, 'acts' => $acts, 'opens' => $opens, 'ends' => $ends] = dominoFixtureGame($game);
+    $last = count($game['hands']) - 1;
+
+    foreach ($game['hands'] as $index => $hand) {
+        $cite = "games.json {$game['game']} · hand {$hand['hand']}";
+        $opened = Domino::game($table, $deals, $acts, $opens[$index]);
+        $first = $opened->hand() ?? throw new RuntimeException("{$cite}: not dealt.");
+
+        expect($opened->phase)->toBe(RoomDominoPhase::Play, "{$cite} · opened")
+            ->and($first->number)->toBe($hand['hand'], "{$cite} · its number")
+            ->and(Domino::dealShape($first->deal))->toBe($hand['deal'], "{$cite} · the deal R4 keeps, after ".count($hand['thrown']).' thrown')
+            ->and(array_column($opened->ledger->sides, 'open'))->toBe($hand['open'], "{$cite} · the accounts open")
+            ->and(['seat' => $first->opener, 'why' => $first->why->value])->toBe($hand['right'] ?? $hand['opener'], "{$cite} · who has the right");
+
+        $ended = Domino::game($table, $deals, $acts, $ends[$index]);
+        $played = $ended->hand() ?? throw new RuntimeException("{$cite}: no hand.");
+        $count = $played->count ?? throw new RuntimeException("{$cite}: not over.");
+        [$seat, $why] = $ended->next() ?? [null, null];
+        $end = [
+            'ending' => $played->ending?->value,
+            'by' => $played->by,
+            'winner' => $count['winner'],
+            'left' => array_map(static fn (int $seat): array => ['seat' => $seat, 'tiles' => DominoTile::names($played->tiles[$seat]), 'pips' => $count['left'][$seat]], array_keys($played->tiles)),
+            'counts' => array_map(static fn (int $side): array => ['side' => $side, 'pips' => $count['counts'][$side]], array_keys($count['counts'])),
+            'gain' => $count['gain'],
+            'next' => $why === null ? null : ['seat' => $seat, 'why' => $why->value],
+            'line' => Domino::lineOf($played),
+        ];
+
+        expect($ended->phase)->toBe($index === $last ? RoomDominoPhase::Over : RoomDominoPhase::Sheet, "{$cite} · the phase at its end")
+            ->and($ended->sheet())->toBe($played, "{$cite} · its sheet")
+            ->and(['seat' => $played->opener, 'why' => $played->why->value])->toBe($hand['opener'], "{$cite} · the opener")
+            ->and(Domino::canon($end))->toBe(Domino::canon($hand['end']), "{$cite} · the end")
+            ->and(Domino::canon(Domino::account($ended->ledger)))->toBe(Domino::canon($hand['account']), "{$cite} · the account")
+            ->and($ended->lines[$hand['hand']] ?? null)->toBe($ended->ledger->lines, "{$cite} · the hand's lines");
+    }
+
+    $over = Domino::game($table, $deals, $acts, $ends[$last] + Domino::REVEAL);
+
+    expect($over->phase)->toBe(RoomDominoPhase::Over)
+        ->and($over->overMs)->toBe($ends[$last])
+        ->and($over->winner)->toBe($game['winner'])
+        ->and($over->dry())->toBe($game['dry'])
+        ->and($over->ply)->toBe(count($acts))
+        ->and(count($over->hands))->toBe(count($game['hands']));
+})->with(dominoFixtureGames());
+
+it('holds games at every table, thrown deals, gives, every ending and dry wins (ADR 038 decision 58)', function (): void {
+    $games = Domino::fixture('games')['games'];
+    $hands = array_merge(...array_map(static fn (array $game): array => $game['hands'], $games));
+    $tables = array_unique(array_column($games, 'table'));
+    $endings = array_unique(array_map(static fn (array $hand): string => $hand['end']['ending'], $hands));
+    $turns = array_merge(...array_map(static fn (array $hand): array => $hand['turns'], $hands));
+
+    sort($tables);
+    sort($endings);
+
+    expect($tables)->toBe(['four', 'pairs', 'three', 'two'])
+        ->and($endings)->toBe(['blocked', 'finished', 'tied', 'void'])
+        ->and(array_filter($hands, static fn (array $hand): bool => $hand['thrown'] !== []))->not->toBeEmpty()
+        ->and(array_filter($turns, static fn (array $turn): bool => $turn['act'] === ['yield']))->not->toBeEmpty()
+        ->and(array_filter($games, static fn (array $game): bool => $game['dry']))->not->toBeEmpty();
+});
