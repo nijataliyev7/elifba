@@ -1,0 +1,143 @@
+# The «101» oracle
+
+`make.py` is the rules of «101» written a second time, in plain Python, from ADR 038's text alone — decisions 15 and 18, the rules R1–R26 of decision 33 and the eleven readings of decision 34 — by a session that was never shown the PHP judge (docs/architecture.md §12 "Domino (Y4–Y6)" → "The rules", ADR 038 decision 58). No library plays these local rules, so the independence is the writer's. The judge of a game played in a room is PHP's `Rooms\Support\Domino\{DominoRules,DominoLedger}`; this script decides nothing about it. Neither CI, the app nor an image runs Python: the gate reads the committed fixtures, and `DominoRulesTest`, `DominoLedgerTest`, `DominoDealTest` and `DominoGameTest` (Y4c) read them. Where the oracle and the PHP judge disagree, ADR 038's text decides and the loser is fixed; where the text is silent (the list below), the answer is an amendment of ADR 038, never a choice in code.
+
+| File (`tests/Fixtures/rooms/domino/`) | Holds                                                                                                                                                | Made by                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `hands.json`                          | deals with R4's verdict, and hands at every table played out with seeded random legal plays, play by play — each picked hand named for what it shows | `make.py`               |
+| `ledger.json`                         | sequences of hand results (ties and void hands among them) folded through R20–R26 to a game's end, with the account after each hand                  | `make.py`               |
+| `games.json`                          | whole games to 101 at each table: deals, plays, every hand's end and the account after it                                                            | `make.py`               |
+| `cases.json`                          | one case or more for each of R1–R26, naming its rule, and for each row of decision 34 one or more marked `reading`                                   | by hand, from the text  |
+| `study.json`                          | the study's 18 replayed hands `g2·1`–`g4·7` move by move with their deals, and its 25 recomputed results (v1's seven among them) as ledger sequences | by hand, from the study |
+
+`make.py` writes its three files an entry a line, so a diff shows what changed; `vite.config.ts` keeps the formatter off them, as off the draughts oracle's. Never edit them by hand: change the script and run it. `cases.json` and `study.json` are written by hand and formatted with `npx vp fmt`; the script only reads them.
+
+## Regenerate
+
+Python 3.8 or later, standard library only, no network.
+
+```sh
+python3 scripts/domino-oracle/make.py              # writes hands.json, ledger.json, games.json, then replays cases.json and study.json
+python3 scripts/domino-oracle/make.py --out /tmp/x # writes the three files elsewhere (the replay still reads the committed cases and study)
+python3 scripts/domino-oracle/make.py --check      # only the replay of cases.json and study.json
+```
+
+A run takes about 13 seconds, most of it the search for a hand at three where no seat holds a double (R7). Every deal comes from the script's own source — SplitMix64 from the fixed `SEED`, with unbiased draws and a Fisher–Yates shuffle — never from Python's `random`, so two runs, on any machine, give the same bytes (checked: two runs into two folders, SHA-256 equal). The run ends with a non-zero status when a case of `cases.json` or a hand or result of `study.json` differs from the oracle, when a rule R1–R26 has no case, or when a row of decision 34 has no reading. The script knows nothing of a room's seed: every hand sets its deal, and `DominoDeal` can be set the same way.
+
+## The format
+
+Common shapes, in every file:
+
+- **A tile** is its two numbers, the larger first, `6-5` (decision 15). **An end** is `left` or `right`. **A seat** is a number from 0 in the order of the turns; **a side** is the seat at `two`, `three` and `four`, and at `pairs` side 0 is seats 0 and 2, side 1 seats 1 and 3.
+- **A deal** is `{"seats": [[7 tiles] for each seat], "boneyard": [tiles, the first drawn first]}` — 14 at `two`, 7 at `three`, none at `four` and `pairs`. A seat's list is in the order it was dealt; tiles it draws go to its end.
+- **`open`** is a list of booleans, one a side: whose account is open when the hand starts. R6 and R7 hold while every one is false, R8 once any is true.
+- **`right`** is `{"seat", "why"}` — under R8 the seat with the right to open and why (`finished`, `fewest`, `blocker` or `again`) — or null while no account is open. A hand on its own is told it; in a game it is the hand before's `next`.
+- **`opener`** is `{"seat", "why"}`: who plays the hand's first tile, why being an `OpenerWhy` (decision 38): `lowest_double` (R6), `lowest_tile` (R7), `finished`, `fewest`, `blocker`, `again` (R8) or `given` (R9).
+- **An act** is `["play", tile]` for a hand's first tile, `["play", tile, end]` for a later one, or `["yield"]` («Sən aç»). Drawing and passing are no acts (decision 18).
+- **A turn** (`hands.json`, `games.json`): `{"seat", "legal", "may_yield", "act", "then", "line", "ends", "boneyard", "closed"}` —
+    - `legal`: `[[tile, [ends]], …]`, the plays of the seat to move, in the order the seat holds its tiles; compare it as a set. Ends are empty for a hand's first tile; where both ends show one number a fitting tile lists `left` alone (decision 38).
+    - `may_yield`: whether `["yield"]` is open to the seat (R9).
+    - `then`: what followed the act by itself, in the order of the turns from the actor (decision 18): `{"seat", "drew": [tiles, in order], "passed"}` for every seat that drew or passed. The seat that moves next is in it only when it drew (with `passed` false). When the act leaves nobody able to play, every seat's pass is there, the actor's last.
+    - `line`: `[[tile, left number, right number], …]` from the left end to the right, each tile as it lies (`hands.json` only; `games.json` gives the line once, at the hand's end). `ends`: `[left, right]` after the act. `boneyard`: how many tiles it holds. `closed`: R13 — always false at `four` and `pairs`, which have no boneyard.
+- **A hand's end**: `{"ending", "by", "winner", "left", "counts", "gain", "next"}` — `ending` a `RoomHandEnding` (`finished`, `blocked`, `tied`, `void`); `by` who finished, who made the last play of a blocked or tied hand, a void hand's opener; `winner` a side or null; `left` every seat's tiles left with their pips (R16); `counts` each side's pips; `gain` what the winner gained (0 for a tied or void hand); `next` who opens the next hand — `{"seat": null, "why": "lowest_double"}` while no account is open after the hand, when the next deal decides it.
+- **A result** (the ledger's input): `{"ending", "winner", "gain"}`, and `"pot"` for a tied hand — the pips of all seats, for the bank (R19). `ending` may be missing where the study does not know it; only `void` and a null winner change what the ledger does.
+- **An account** (the ledger's output): `{"sides": [{"balance", "open", "waiting", "tries"}], "bank", "lines": [{"side", "line", "points"}], "over", "winner", "dry"}` — `line` a `LedgerLine` (decision 38), in the order the account changed (see "The oracle's choices").
+
+`hands.json`: `{"about", "seed", "deals", "hands"}`. `deals`: `{"table", "deal", "verdict": "stands" | "thrown", "why"}`, `why` R4's reasons — `{"seat", "doubles"}` or `{"seat", "number", "tiles"}`, a seat at a time, doubles first, then the numbers 0–6. `hands`: `{"id", "table", "open", "right", "deal", "opener", "turns", "end", "shows"}`. `shows` is for a reader and for picking hands, not a check: the rules a hand shows (`R6`, `R7`, `R8`, `R9`, `R12`, `R12 odd tile`, `R13` — a seat passed for the closed boneyard while it held more than two tiles —, `R14`, `R16 lone 0-0`, `R5`, `R17`, `R18`, `R19`). Its ids: `{table}-first-{n}` and `{table}-later-{n}` (four of each at each table, `later` with random open accounts and a random seat with the right), and `{table}-{feature}` for the first hand of a source of their own that shows the feature.
+
+`ledger.json`: `{"about", "seed", "sequences"}`, each `{"id", "sides", "results", "after"}` — `after[i]` is the account after `results[i]`; the last is the game's end.
+
+`games.json`: `{"about", "seed", "games"}`, each `{"game", "table", "hands", "winner", "dry"}`; a hand is `{"hand", "thrown", "deal", "open", "right", "opener", "turns", "end", "account"}` — `thrown` R4's reasons for the tries dealt again before this deal (decision 34: never a hand), `end` also holds the `line`, `account` the account after the hand. A void hand is a hand of its own (it has a sheet); a thrown deal is not.
+
+`cases.json`: `{"about", "cases"}`, each `{"rule": "ADR 038 R13", "name", "kind", "reading"?, …}`. `reading` is the row of decision 34's table, 1–11 in its order: 1 R4 (the double not counted), 2 R4 (dealt again unseen), 3 R5, 4 R7 (the standard list), 5 R7 (equal pips; `0-0`), 6 R8 (equal fewest), 7 R12 (three left), 8 R13, 9 R19, 10 R22, 11 R26. The kinds:
+
+| `kind`   | Body                                                                                                                                                                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tiles`  | `tiles` (the 28 in the order `0-0`, `1-0`, `1-1`, `2-0` …), `pips` of each, `doubles`, `total` (168)                                                                                                                                                                                                                                |
+| `tables` | `tables`: `{"table", "seats", "hand", "boneyard", "sides"}` for each table                                                                                                                                                                                                                                                          |
+| `deal`   | `table`, `deal`, `verdict`, `why` — as `hands.json`'s `deals`                                                                                                                                                                                                                                                                       |
+| `deals`  | `table`, `tries` (deals in the order they are dealt), `used` (the index of the first that stands: the hand's deal)                                                                                                                                                                                                                  |
+| `hand`   | `table`, `deal`, `open`, `right`, `acts`, `checks`: each `{"after": n, …}` holds the state after the first n acts — any of `turn` (null once the hand is over), `legal` (as a set), `may_yield`, `opener`, `then` (of the n-th act), `line`, `ends`, `boneyard`, `closed`, `end` (null while the hand goes on; else the keys given) |
+| `ledger` | `sides`, `results`, `after`: the account after each result, only the keys given                                                                                                                                                                                                                                                     |
+
+`study.json`: `{"about", "games", "results"}`. A game is `{"game", "table": "pairs", "hands"}`; a hand `{"id", "deal", "rows", "app"}`. A row is `[seat, "play", tile]` for the hand's first tile, `[seat, "play", tile, covers]` for a later one, `[seat, "pass"]` or `[seat, "yield"]`. `app` is what the app showed: `opener` (who played the first tile), `ending`, `hand` («bu əldə», per side) and `account` («hesab», per side). A result sequence is `{"id", "sides", "note", "hands": [{"result", "app"}]}` with `app` any of `account`, `waiting`, `bank`, `over`, `dry`. To replay a game: its hands in order through the judge and the ledger, each hand's `right` the hand before's `next`; each row's seat must be the seat to move; each `pass` row must be a pass the judge makes by itself, in order (the app does not write the passes that end a blocked hand); a play goes to the end that shows `covers`, the left where both do.
+
+## The counts
+
+| File          | Entries                                                                                                                                                                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hands.json`  | 24 deals (8 stand, 16 thrown: 8 for five doubles, 8 for five of a number); 53 hands — 14 at `two`, 14 at `three`, 11 at `four`, 14 at `pairs` — 1 061 turns; 27 finished, 19 blocked, 5 tied, 2 void                                          |
+| `ledger.json` | 22 sequences — 10 of two sides, 6 of three, 6 of four — 173 results, 5 dry wins; every `LedgerLine`: `gained` 69, `opened` 43, `waited` 35, `burnt_rival` 19, `bank_added` 17, `bank_taken` 11, `released` 8, `bank_burnt` 4, `burnt_third` 2 |
+| `games.json`  | 12 games, three at each table; 71 hands, 1 477 turns; 55 finished, 13 blocked, 2 tied, 1 void; 4 deals thrown by R4, 4 yields, 2 dry wins                                                                                                     |
+| `cases.json`  | 54 cases — 33 hands, 13 ledgers, 5 deals, 1 of tries, 1 of tiles, 1 of tables — every rule R1–R26 at least once, 14 readings covering the 11 rows of decision 34                                                                              |
+| `study.json`  | 18 hands with 465 rows (395 plays, 64 passes, 6 yields); 5 result sequences: v1 (7), g2 (6), g3 (5), g4 (7) — the 25 — and the bot practice B1–B7 (7, not among the 25)                                                                       |
+
+## The study
+
+The study lies outside the repository (ADR 038's status line says where; its v2 §2 and §4 here); its pictures show real people and never leave it. It is cited by hand: v1's seven, `g2·1`–`g4·7`, `B1`–`B7`. `study.json` holds seats, never names: at each of the three replayed games seat 0 is the replay's own seat and the seats follow the order of the turns, so the study's «Siz», «Rəqib 1», «Tərəfdaş», «Rəqib 2» are seats 0, 1, 2, 3, and partners are 0 and 2.
+
+- **Plays and passes** come from the replays' move-by-move text, in order. **The tiles left** at each hand's end were read from the picture of the hand's end, which shows all four hands face up, and checked: each seat's plays and tiles left are seven, the 28 are all different, the tiles not played are the count and the pips of the study's «Atılmamış (xal)» column for every hand, each side's pips are the app's «bu əldə», and every `pass` row is a pass the oracle makes by itself — which places a tile with one partner and not the other. One picture was misread at first and caught this way: at `g2·1` seat 1 holds `4-2` and seat 2 `4-1`, not the other way round (the side's 12 decides it).
+- **`covers`, not the end the app named.** While both ends showed one number the app wrote «sol qola» 20 times and «sağ qola» 35 times; the judge lists the left alone there (decision 38), so the two give one position mirrored. Copied literally, every later «sol» and «sağ» of the hand would name the wrong end. A row gives the open number the tile covered instead, which is the same in the app's line and the judge's; the end the app named was used only to find that number, in the app's own orientation, where every play of the 18 hands is consistent.
+- **Tile names** are the larger number first: the study's prose writes the bot hands' openers «3-5» (B4), «2-5» (B5) and «2-4» (B7), which are `5-3`, `5-2` and `4-2`; the replay text already wrote every tile so.
+
+### Study vs oracle
+
+Every hand replays through the oracle: each row's seat is the seat to move, each play is legal, each pass the oracle's own, and the opener, ending, gain and account are the app's. The 25 results, and B1–B7, fold to the app's balances, waiting points and bank.
+
+| Hand | Opener (rule)            | Ending        | Counts (0 : 1) | Won        | Lines                  | Account  | Next          |
+| ---- | ------------------------ | ------------- | -------------- | ---------- | ---------------------- | -------- | ------------- |
+| g2·1 | 3 (R6)                   | finished by 3 | 12 : 13        | side 1 +12 | waited 12              | 0 : 0    | the next deal |
+| g2·2 | 1 (R6)                   | finished by 3 | 48 : 24        | side 1 +48 | opened 48, released 12 | 0 : 60   | 3 (finished)  |
+| g2·3 | 3 (R8a)                  | finished by 0 | 2 : 18         | side 0 +18 | opened 18              | 18 : 60  | 0 (finished)  |
+| g2·4 | 0 (R8a), gives to 2 (R9) | finished by 2 | 7 : 24         | side 0 +24 | gained 24              | 42 : 60  | 2 (finished)  |
+| g2·5 | 2 (R8a)                  | blocked by 3  | 24 : 36        | side 0 +36 | gained 36              | 78 : 60  | 3 (fewest)    |
+| g2·6 | 3 (R8b)                  | blocked by 1  | 56 : 32        | side 1 +56 | gained 56              | 78 : 116 | — (over)      |
+| g3·1 | 1 (R6)                   | finished by 3 | 20 : 16        | side 1 +20 | opened 20              | 0 : 20   | 3 (finished)  |
+| g3·2 | 3 (R8a), gives to 1 (R9) | finished by 3 | 25 : 6         | side 1 +25 | gained 25              | 0 : 45   | 3 (finished)  |
+| g3·3 | 3 (R8a), gives to 1 (R9) | finished by 1 | 9 : 2          | side 1 +9  | gained 9               | 0 : 54   | 1 (finished)  |
+| g3·4 | 1 (R8a)                  | finished by 1 | 28 : 6         | side 1 +28 | gained 28              | 0 : 82   | 1 (finished)  |
+| g3·5 | 1 (R8a)                  | finished by 1 | 27 : 10        | side 1 +27 | gained 27              | 0 : 109  | — (over, dry) |
+| g4·1 | 0 (R6)                   | blocked by 2  | 11 : 17        | side 0 +17 | opened 17              | 17 : 0   | 2 (fewest)    |
+| g4·2 | 2 (R8b)                  | finished by 0 | 6 : 17         | side 0 +17 | gained 17              | 34 : 0   | 0 (finished)  |
+| g4·3 | 0 (R8a)                  | finished by 0 | 17 : 23        | side 0 +23 | gained 23              | 57 : 0   | 0 (finished)  |
+| g4·4 | 0 (R8a), gives to 2 (R9) | blocked by 0  | 18 : 24        | side 0 +24 | gained 24              | 81 : 0   | 0 (fewest)    |
+| g4·5 | 0 (R8b), gives to 2 (R9) | blocked by 0  | 43 : 27        | side 1 +43 | opened 43              | 81 : 43  | 3 (fewest)    |
+| g4·6 | 3 (R8b)                  | finished by 0 | 11 : 18        | side 0 +18 | gained 18              | 99 : 43  | 0 (finished)  |
+| g4·7 | 0 (R8a), gives to 2 (R9) | finished by 0 | 5 : 28         | side 0 +28 | gained 28              | 127 : 43 | — (over)      |
+
+**Disagreements with ADR 038's text: none.** What the replay found in the study's own text:
+
+- **`g4·1` was blocked, not finished.** The study's table says seat 2 finished; its text and its picture say seat 2 made the last play (`4-1`) and still held `4-0`, every seat held a tile, and all seven tiles with a 1 lay in the line with both ends at 1. The gain is 17 either way (side 0 had 11, side 1 17), and R8(b) gives the next hand to seat 2 with the fewest pips (4) — who opened `g4·2`, as the app showed.
+- **`g4·3` is R16 at work.** The study's table names no rule for it; seat 1 was left with `0-0` alone, which counted 10: the gain 23 is seat 3's 13 and that 10.
+- **`g4·4`** shows R16 deciding R8(b): seat 2's lone `0-0` counted 10, so seat 0 (8) had the fewest pips and gave the opening to seat 2, as the study noted.
+
+## The oracle's choices
+
+Where ADR 038 fixes no form, the oracle chose one; a test may compare these loosely, and none is a rule:
+
+- The order of `legal` (the seat's own order), of `then` (the order of the turns) and of `deals[].why` (seat by seat, doubles first).
+- **The order of an account's lines within one hand:** the winner's line — `gained`; or `opened` and then `released` when points waited; or `waited` and then, at the third try, `burnt_third` (its points the waiting points with the third gain) —, then the bank's (`bank_taken` or `bank_burnt`), then `burnt_rival` for each closed side with points waiting, in the order of the sides. A tied hand writes `bank_added`; a void hand writes nothing.
+- **`side` of a line:** null for `bank_added` and `bank_burnt` (the bank is nobody's), the winner's for `bank_taken`, the burnt side's for `burnt_rival`.
+- **`tries` of an open account** is 0: it is set back when the account opens, and never read again.
+- `closed` is false at the tables without a boneyard.
+
+## Where the text is silent
+
+For Y4c: the oracle took one answer for each, and the PHP judge may have taken another. A disagreement here is settled by an amendment of ADR 038, never by changing one side to match the other.
+
+1. **How a hand's first tile lies.** The text names the ends `left` and `right` but not which number of a non-double first tile is at which end. The oracle lays it as its name is written, the larger number at the left (`6-5`: ends 6 and 5) — the R8(a) case of `cases.json` checks it. The other way mirrors every later `left` and `right` of that hand.
+2. **R8(b)'s tie-break "in the order of the turns from the seat that made the last play"** — does the count start at that seat? The oracle counts it first. The two differ only when the last player is among the tied seats after "the winning side first" has not decided.
+3. **R8(d) "after a void hand, the same seat again"** — the seat that had the right to open the void hand (which may give it again under R9), or the seat that played its first tile? The oracle takes the first: R5 says the opener "is decided again by R6–R8 as it was for the void hand", and R9's gift is no part of R8. The two differ only after a void hand opened by a partner it was given to.
+4. **A void hand's `counts`.** R5 says "nothing is counted"; the oracle still gives each side's pips by R16 (as facts of the tiles left), with `winner` null and `gain` 0. A judge that writes no counts for a void hand is as faithful.
+5. **`next` on the game's last hand.** The sheet's type has no null `next`; the oracle gives the rules' answer as if the game went on. A judge may give nothing there.
+6. **`next.why` while the next deal decides.** With no account open after a hand the oracle writes `{"seat": null, "why": "lowest_double"}` even at `two` and `three`, where the next deal may hold no double and R7 decide; the hand's own `opener` then says `lowest_tile`.
+7. **A pair drawn whole.** R12 draws "two tiles at a time … until it holds a fitting tile": the oracle draws the pair whole even when its first tile fits, and the seat plays after the pair (`cases.json`, R12's first case). Reading it a tile at a time would be R12's «tək-tək», which decision 35 does not offer.
+8. **Who is in `then`.** Decision 38's `last.then` is "what followed by itself"; the oracle lists every seat that drew or passed, so the seat to move next appears only when it drew, and a blocked hand's `then` ends with the last player's own pass. A judge that lists the mover without a draw, or stops before the last player's pass, differs in form only.
+9. **The bank's and the tries' form** as "The oracle's choices" says: the order of lines, `side` null for the bank, `released` a line of its own after `opened`, `waited` before `burnt_third`, `tries` 0 once an account is open.
+
+## Oracle vs PHP judge
+
+Y4c fills this table when `DominoRulesTest`, `DominoLedgerTest`, `DominoDealTest` and `DominoGameTest` first read the fixtures: each place where the PHP judge and the oracle differ, which of them ADR 038's text supports, and what was fixed — or, for a place the text does not settle, the amendment it needs.
+
+| Fixture | Case or hand | The oracle | The PHP judge | ADR 038 says | Fixed |
+| ------- | ------------ | ---------- | ------------- | ------------ | ----- |
