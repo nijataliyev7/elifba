@@ -38,6 +38,19 @@ final class RoomSeed
         return new Randomizer(new RoomRandomEngine(hash_hmac('sha256', 'room-computer:'.$gameId.':'.$ply, is_string($key) ? $key : '', true)));
     }
 
+    /**
+     * The source of the `$try`-th deal of hand `$hand` of a domino game with
+     * this seed (Y4, ADR 038 decision 5): the same each time, a key of its
+     * own for each hand and try, so a hand played says nothing of the next
+     * deal, and a deal R4 throws away nothing of the try after it.
+     */
+    public static function deal(int $seed, int $hand, int $try): Randomizer
+    {
+        $key = Config::get('app.key');
+
+        return new Randomizer(new RoomRandomEngine(hash_hmac('sha256', 'room-deal:'.$seed.':'.$hand.':'.$try, is_string($key) ? $key : '', true)));
+    }
+
     /** The source a game with this seed builds its rounds from, the same each time. */
     public static function random(int $seed): Randomizer
     {
