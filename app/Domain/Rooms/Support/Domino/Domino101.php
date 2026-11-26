@@ -14,6 +14,8 @@ use LogicException;
  * double (R13), the void hand (R5), the count (R16–R19), the account with
  * its 13 (R20–R24, `DominoLedger`) and 101 (R25). Each reading of decision
  * 34 is marked where it is taken, so a correction is a case and a line.
+ *
+ * @phpstan-import-type Count from DominoVariant
  */
 final class Domino101 implements DominoVariant
 {
@@ -160,17 +162,30 @@ final class Domino101 implements DominoVariant
      */
     public function closed(DominoHand $hand): bool
     {
-        if ($hand->line === [] || $hand->table->boneyard() === 0) {
-            return false;
-        }
-
         $lying = [];
 
         foreach ($hand->line as $placed) {
             $lying[$placed['tile']->name()] = true;
         }
 
-        foreach (array_unique($hand->ends()) as $number) {
+        return self::shut($hand->table, $hand->ends(), $lying);
+    }
+
+    /**
+     * R13 of a line given by its ends and the names of the tiles that lie
+     * in it — `closed()` for a hand, and for whatever plays a hand on
+     * without one (`DominoEngine`).
+     *
+     * @param  array<string, int>  $ends
+     * @param  array<string, true>  $lying
+     */
+    public static function shut(RoomTable $table, array $ends, array $lying): bool
+    {
+        if ($ends === [] || $table->boneyard() === 0) {
+            return false;
+        }
+
+        foreach (array_unique($ends) as $number) {
             foreach (range(0, 6) as $other) {
                 if ($other !== $number && ! isset($lying[DominoTile::pair($number, $other)->name()])) {
                     return false;
@@ -189,19 +204,34 @@ final class Domino101 implements DominoVariant
      */
     public function void(DominoHand $hand): bool
     {
-        if ($hand->table !== RoomTable::Pairs || count($hand->line) !== 1 || $hand->first === null) {
+        if (count($hand->line) !== 1 || $hand->first === null) {
             return false;
         }
 
-        $first = $hand->line[$hand->first]['tile'];
-        $side = $hand->table->sideOf($hand->opener);
+        return self::unanswered($hand->table, $hand->opener, $hand->line[$hand->first]['tile'], $hand->tiles);
+    }
 
-        foreach ($hand->tiles as $seat => $tiles) {
-            if ($hand->table->sideOf($seat) === $side) {
+    /**
+     * R5 of a first tile `$opener` played, every seat holding `$tiles`
+     * after it — `void()` for a hand, and for whatever plays a hand on
+     * without one (`DominoEngine`).
+     *
+     * @param  list<list<DominoTile>>  $tiles
+     */
+    public static function unanswered(RoomTable $table, int $opener, DominoTile $first, array $tiles): bool
+    {
+        if ($table !== RoomTable::Pairs) {
+            return false;
+        }
+
+        $side = $table->sideOf($opener);
+
+        foreach ($tiles as $seat => $held) {
+            if ($table->sideOf($seat) === $side) {
                 continue;
             }
 
-            foreach ($tiles as $tile) {
+            foreach ($held as $tile) {
                 if ($tile->has($first->high) || $tile->has($first->low)) {
                     return false;
                 }
@@ -233,8 +263,20 @@ final class Domino101 implements DominoVariant
      */
     public function count(DominoHand $hand): array
     {
-        $table = $hand->table;
-        $left = array_map($this->pips(...), $hand->tiles);
+        return $this->counted($hand->table, $hand->ending, $hand->by, $hand->tiles);
+    }
+
+    /**
+     * `count()` of a hand given by how it ended, who ended it and every
+     * seat's tiles left — for whatever plays a hand on without one
+     * (`DominoEngine`).
+     *
+     * @param  list<list<DominoTile>>  $tiles
+     * @return Count
+     */
+    public function counted(RoomTable $table, ?RoomHandEnding $ending, ?int $by, array $tiles): array
+    {
+        $left = array_map($this->pips(...), $tiles);
         $counts = array_map(
             static fn (int $side): int => array_sum(array_map(static fn (int $seat): int => $left[$seat], $table->seatsOf($side))),
             range(0, $table->sides() - 1),
@@ -242,9 +284,9 @@ final class Domino101 implements DominoVariant
 
         $nobody = ['winner' => null, 'tied' => false, 'left' => $left, 'counts' => $counts, 'gain' => 0, 'bank' => 0];
 
-        switch ($hand->ending) {
+        switch ($ending) {
             case RoomHandEnding::Finished:
-                $winner = $table->sideOf($hand->by ?? throw new LogicException('A finished hand has a finisher.'));
+                $winner = $table->sideOf($by ?? throw new LogicException('A finished hand has a finisher.'));
 
                 return [...$nobody, 'winner' => $winner, 'gain' => array_sum($counts) - $counts[$winner]];
             case RoomHandEnding::Blocked:

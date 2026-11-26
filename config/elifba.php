@@ -139,6 +139,17 @@ return [
             ],
             'max_ms' => 3_000,
 
+            // Domino «101» (§12 "Domino (Y4–Y6)" → "The computer", ADR 038
+            // decision 55): «Asan» plays one of its plays at random, «Orta»
+            // the one that sheds the most pips; «Çətin» deals the tiles it
+            // has not seen `deals` times, in ways that agree with every pass
+            // and draw it saw, and plays each of its plays out to the hand's
+            // end in each (`DominoEngine`). A count, never a time: the same
+            // view gets the same play on every machine.
+            'domino' => [
+                3 => ['deals' => 40],
+            ],
+
             // Its move is stored no sooner than this after its turn began
             // (ADR 036 decision 8), so a page draws the player's own move
             // before the answer arrives.

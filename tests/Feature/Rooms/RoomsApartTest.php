@@ -639,3 +639,20 @@ it('keeps the voice library inside the room\'s voice module', function (): void 
         && preg_match('/import\\.meta\\.glob\\s*\\(|\\bimport\\s*\\(\\s*(?:\\/\\*.*?\\*\\/\\s*)*[^\'"`\\s\\/]/s', (string) file_get_contents("{$js}/{$path}")) === 1));
     expect($unread)->toBe([]);
 });
+
+it('lets the domino computer read what its seat has seen and nothing else', function (): void {
+    // ADR 038 decisions 9, 54: `DominoEngine`, and the deals it guesses, name no
+    // game, hand, deal, act, seed, row or framework service — only the view, the
+    // tiles, the judge's pure rules and the enums.
+    $domino = ['DominoEngine', 'DominoUnseen', 'DominoView', 'DominoTile', 'DominoRules', 'Domino101'];
+    $enums = ['RoomComputerLevel', 'RoomHandEnding', 'RoomOpenerWhy', 'RoomTable'];
+
+    foreach (['DominoEngine', 'DominoUnseen'] as $class) {
+        $path = app_path("Domain/Rooms/Support/Domino/{$class}.php");
+        preg_match_all('/\bDomino[A-Z0-9]\w*/', (string) file_get_contents($path), $named);
+
+        expect(array_values(array_diff($named[0], $domino)))->toBe([], $class)
+            ->and(array_values(array_diff(appNamesIn($path), ['App\\Domain\\Rooms\\Support\\Domino', ...array_map(static fn (string $enum): string => "App\\Domain\\Rooms\\Enums\\{$enum}", $enums)])))->toBe([], $class)
+            ->and((string) file_get_contents($path))->not->toContain('Illuminate\\')->not->toContain('RoomSeed');
+    }
+});
