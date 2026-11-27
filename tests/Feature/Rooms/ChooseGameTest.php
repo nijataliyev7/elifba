@@ -76,7 +76,8 @@ it('opens a room behind the chosen game', function (): void {
         ->component('rooms/show')
         ->where('state.setup', ['kind' => 'race', 'mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 10, 'played' => false])
         ->where('state.game', null)
-        ->has('catalog.mechanics', 7));
+        // Every game a room plays, «101» among them from Y6 (ADR 038 decision 73).
+        ->has('catalog.mechanics', 8));
 });
 
 it('takes the difficulty and the rounds of the host\'s newest game, else the defaults', function (): void {

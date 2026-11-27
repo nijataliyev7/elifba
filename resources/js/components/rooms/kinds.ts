@@ -1,5 +1,8 @@
 import { createElement } from 'react';
 import type { ComponentType, ReactNode } from 'react';
+import { DominoEnd } from '@/components/rooms/domino/domino-end';
+import { DominoTitle, LiveDomino } from '@/components/rooms/domino/live-domino';
+import { ScreenDomino } from '@/components/rooms/domino/screen-domino';
 import { LiveMatch, MatchTitle } from '@/components/rooms/draughts/live-match';
 import { MatchEnd } from '@/components/rooms/draughts/match-end';
 import { ScreenMatch } from '@/components/rooms/draughts/screen-match';
@@ -13,6 +16,8 @@ import type { RoomSound } from '@/components/rooms/use-room-sound';
 import type { ServerClock } from '@/rooms/clock';
 import type {
     RoomBoardGame,
+    RoomDomino,
+    RoomDominoGame,
     RoomGame,
     RoomMatch,
     RoomRaceGame,
@@ -22,15 +27,16 @@ import type {
 
 /*
  * A room game's views by its kind (docs/frontend.md rule 15 "Board games",
- * ADR 034 decision 27): `GAME_VIEWS` is the one table of what a page draws
- * for a race and for a board game — the live view's title in the game
+ * ADR 034 decision 27, ADR 038 decision 44): `GAME_VIEWS` is the one table
+ * of what a page draws for a race, a board game and a domino game — the
+ * live view's title in the game
  * frame's top bar, the live view on a phone and on the screen, and its end
  * — and `liveGame()` the one place a page asks which kind is live. The
  * pages draw through `GameTitle`, `PhoneGame`, `ScreenGame` and `GameEnd`
  * and never compare a kind or a mechanic themselves.
  */
 
-/** A live game with the part of the state it is drawn from: a race's round, a board game's match. */
+/** A live game with the part of the state it is drawn from: a race's round, a board game's match, a domino game's table. */
 export type LiveGame =
     | { kind: 'race'; state: RoomState; game: RoomRaceGame; round: RoomRound }
     | {
@@ -38,6 +44,12 @@ export type LiveGame =
           state: RoomState;
           game: RoomBoardGame;
           match: RoomMatch;
+      }
+    | {
+          kind: 'domino';
+          state: RoomState;
+          game: RoomDominoGame;
+          domino: RoomDomino;
       };
 
 /** The state's live game, or null outside one. */
@@ -54,6 +66,10 @@ export function liveGame(state: RoomState | null): LiveGame | null {
 
     if (game.kind === 'board' && state.match !== null) {
         return { kind: 'board', state, game, match: state.match };
+    }
+
+    if (game.kind === 'domino' && state.domino !== null) {
+        return { kind: 'domino', state, game, domino: state.domino };
     }
 
     return null;
@@ -94,7 +110,11 @@ type Views<K extends LiveGame['kind']> = {
     stop: string;
 };
 
-export const GAME_VIEWS: { race: Views<'race'>; board: Views<'board'> } = {
+export const GAME_VIEWS: {
+    race: Views<'race'>;
+    board: Views<'board'>;
+    domino: Views<'domino'>;
+} = {
     race: {
         Title: ({ live, motion }) =>
             createElement(RoundTitle, {
@@ -149,6 +169,30 @@ export const GAME_VIEWS: { race: Views<'race'>; board: Views<'board'> } = {
             }),
         stop: 'rooms.match.stop_description',
     },
+    domino: {
+        Title: ({ live, motion }) =>
+            createElement(DominoTitle, {
+                game: live.game,
+                domino: live.domino,
+                motion: motion.round,
+            }),
+        Phone: ({ live, ...parts }) =>
+            createElement(LiveDomino, {
+                ...parts,
+                state: live.state,
+                game: live.game,
+                domino: live.domino,
+            }),
+        Screen: ({ live, ...parts }) =>
+            createElement(ScreenDomino, {
+                ...parts,
+                state: live.state,
+                game: live.game,
+                domino: live.domino,
+            }),
+        // A domino game the host stops ends without a result, as a match does (ADR 038 decision 30).
+        stop: 'rooms.match.stop_description',
+    },
 };
 
 /** The live game's title in the game frame's top bar. */
@@ -159,16 +203,26 @@ export function GameTitle({
     live: LiveGame;
     motion: RoomMotion;
 }) {
-    return live.kind === 'race'
-        ? createElement(GAME_VIEWS.race.Title, { live, motion })
-        : createElement(GAME_VIEWS.board.Title, { live, motion });
+    switch (live.kind) {
+        case 'race':
+            return createElement(GAME_VIEWS.race.Title, { live, motion });
+        case 'board':
+            return createElement(GAME_VIEWS.board.Title, { live, motion });
+        default:
+            return createElement(GAME_VIEWS.domino.Title, { live, motion });
+    }
 }
 
 /** The live game on a phone: the game frame's children. */
 export function PhoneGame({ live, ...parts }: PhoneParts & { live: LiveGame }) {
-    return live.kind === 'race'
-        ? createElement(GAME_VIEWS.race.Phone, { ...parts, live })
-        : createElement(GAME_VIEWS.board.Phone, { ...parts, live });
+    switch (live.kind) {
+        case 'race':
+            return createElement(GAME_VIEWS.race.Phone, { ...parts, live });
+        case 'board':
+            return createElement(GAME_VIEWS.board.Phone, { ...parts, live });
+        default:
+            return createElement(GAME_VIEWS.domino.Phone, { ...parts, live });
+    }
 }
 
 /** The live game on the screen. */
@@ -176,12 +230,17 @@ export function ScreenGame({
     live,
     ...parts
 }: ScreenParts & { live: LiveGame }) {
-    return live.kind === 'race'
-        ? createElement(GAME_VIEWS.race.Screen, { ...parts, live })
-        : createElement(GAME_VIEWS.board.Screen, { ...parts, live });
+    switch (live.kind) {
+        case 'race':
+            return createElement(GAME_VIEWS.race.Screen, { ...parts, live });
+        case 'board':
+            return createElement(GAME_VIEWS.board.Screen, { ...parts, live });
+        default:
+            return createElement(GAME_VIEWS.domino.Screen, { ...parts, live });
+    }
 }
 
-/** What «Oyunu bitir» says: a race keeps its closed rounds' points; a match ends without a result. */
+/** What «Oyunu bitir» says: a race keeps its closed rounds' points; a match and a domino game end without a result. */
 export function stopLine(live: LiveGame): string {
     return GAME_VIEWS[live.kind].stop;
 }
@@ -189,7 +248,8 @@ export function stopLine(live: LiveGame): string {
 /**
  * A game's end, once it is over: a race's final of the room's standing, a
  * match's own final with its result, its board and the room's standing
- * under it (`MatchEnd`). `big` is the screen's.
+ * under it (`MatchEnd`), a domino game's with its score, its last sheet
+ * and its table (`DominoEnd`). `big` is the screen's.
  */
 export function GameEnd({
     state,
@@ -204,6 +264,17 @@ export function GameEnd({
     motion: RoomMotion;
     big?: boolean;
 }) {
+    if (game.kind === 'domino' && state.domino?.phase === 'over') {
+        return createElement(DominoEnd, {
+            state,
+            game,
+            domino: state.domino,
+            placeLabels,
+            motion,
+            big,
+        });
+    }
+
     if (game.kind === 'board' && state.match?.phase === 'over') {
         return createElement(MatchEnd, {
             state,

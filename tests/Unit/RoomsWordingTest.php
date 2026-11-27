@@ -131,9 +131,10 @@ it('says «otaq» only where the thing itself is named', function (): void {
         ->and($az)->not->toHaveKey('rooms.show.title');
 });
 
-it('words the rivalry strip in exactly the strings ADR 027 and ADR 034 list, in both languages', function (): void {
-    // ADR 027 decision 19: the strip's and the lanes' words, nothing more; ADR 034 decision 23: a match's gap in pieces.
-    $keys = ['ahead', 'away', 'behind', 'label', 'leads', 'level', 'level_others', 'more', 'more_short', 'no_points', 'pieces_ahead', 'pieces_behind', 'pieces_leads', 'took_lead', 'took_lead_you', 'you'];
+it('words the rivalry strip in exactly the strings ADR 027, ADR 034 and ADR 038 list, in both languages', function (): void {
+    // ADR 027 decision 19: the strip's and the lanes' words, nothing more; ADR 034 decision 23: a match's gap in pieces;
+    // ADR 038 decision 48: a domino game's sides, its target, a closed account and the bank.
+    $keys = ['ahead', 'away', 'behind', 'label', 'leads', 'level', 'level_others', 'more', 'more_short', 'no_points', 'pieces_ahead', 'pieces_behind', 'pieces_leads', 'took_lead', 'took_lead_you', 'you', 'us', 'them', 'target', 'closed', 'waiting', 'bank'];
 
     foreach (['az', 'en'] as $locale) {
         /** @var array<string, string> $translations */
@@ -337,6 +338,21 @@ it('words the invitation link in exactly the strings ADR 033 lists, in both lang
 });
 
 /**
+ * The privacy notice's rows in force: the latest record that rewords it —
+ * ADR 038 as built in Y6, which adds a domino game's plays to the line
+ * «Cavablar:» that ADR 037 wrote.
+ *
+ * @return array{az: array<string, string>, en: array<string, string>}
+ */
+function roomNoticeInForce(): array
+{
+    $rows = roomWordingOf('038-domino-101.md');
+    $notice = static fn (array $texts): array => array_filter($texts, static fn (string $key): bool => str_starts_with($key, 'privacy.'), ARRAY_FILTER_USE_KEY);
+
+    return ['az' => $notice($rows['az']), 'en' => $notice($rows['en'])];
+}
+
+/**
  * The rows of a record's wording table — `| + `key` | az | en |` for a new
  * key, `~` for a changed one, a line break as `\n` — by locale and key.
  *
@@ -365,12 +381,11 @@ it('words the ready mark in exactly the strings ADR 035 lists, in both languages
         [$listed['az'][$key], $listed['en'][$key]] = [str_replace('\n', "\n", trim($az)), str_replace('\n', "\n", trim($en))];
     }
 
-    // A later record that rewords the notice is the one in force: ADR 037 part 2 adds the bought letters to its «Cavablar:» line.
-    foreach (roomWordingOf('037-anagram-clue-shuffle-letter.md') as $locale => $rows) {
+    // A later record that rewords the notice is the one in force: ADR 037 part 2 adds the bought letters to its
+    // «Cavablar:» line, ADR 038 as built in Y6 a domino game's plays (`roomNoticeInForce()`).
+    foreach (roomNoticeInForce() as $locale => $rows) {
         foreach ($rows as $key => $text) {
-            if (str_starts_with($key, 'privacy.')) {
-                $listed[$locale][$key] = $text;
-            }
+            $listed[$locale][$key] = $text;
         }
     }
 
@@ -407,6 +422,12 @@ it('words the anagram\'s clue, shuffle and bought letter in exactly the strings 
         ->and(array_keys($listed['en']))->toBe(array_keys($listed['az']))
         ->and($listed['az']['privacy.rooms.stored'])->toContain('«Anaqram»da hər oyunçunun raundda neçə hərf aldığı');
 
+    // A later record rewords the notice (ADR 038 as built in Y6): the one in force keeps ADR 037's line word for word.
+    foreach (roomNoticeInForce() as $locale => $rows) {
+        expect($rows['privacy.rooms.stored'])->toContain(explode("\n", $listed[$locale]['privacy.rooms.stored'])[2]);
+        $listed[$locale] = [...$listed[$locale], ...$rows];
+    }
+
     foreach (['az', 'en'] as $locale) {
         /** @var array<string, string> $translations */
         $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
@@ -431,5 +452,47 @@ it('words the anagram\'s clue, shuffle and bought letter in exactly the strings 
         if (! str_starts_with($key, 'privacy.')) {
             expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
         }
+    }
+});
+
+it('words the domino pages in exactly the keys docs/frontend.md rule 15 "Domino" lists, in both languages', function (): void {
+    // docs/frontend.md rule 15 "Domino" → "Words": the page's keys, each `a.{b,c}` a key per name, nothing more.
+    $rule = (string) file_get_contents(base_path('docs/frontend.md'));
+    $start = strpos($rule, '- **Words.** Every string is in `lang/az.json` and `lang/en.json`: `rooms.setup.families.domino`');
+
+    expect($start)->not->toBeFalse('rule 15 "Domino" has its words');
+
+    $words = substr($rule, (int) $start, (int) strpos($rule, "\n", (int) $start) - (int) $start);
+    preg_match_all('/`([a-z_.0-9]+)(?:\.\{([a-z_0-9,]+)\})?`/', $words, $matches, PREG_SET_ORDER);
+    $listed = [];
+
+    foreach ($matches as $match) {
+        if (! str_starts_with($match[1], 'rooms.')) {
+            continue;
+        }
+
+        foreach (isset($match[2]) && $match[2] !== '' ? explode(',', $match[2]) : [null] as $name) {
+            $listed[] = $name === null ? $match[1] : "{$match[1]}.{$name}";
+        }
+    }
+
+    $own = static fn (string $key): bool => str_starts_with($key, 'rooms.domino.') || str_starts_with($key, 'rooms.table.') || str_starts_with($key, 'rooms.turn.')
+        || $key === 'rooms.setup.families.domino' || str_starts_with($key, 'rooms.mechanics.domino_101.');
+
+    foreach (['az', 'en'] as $locale) {
+        /** @var array<string, string> $translations */
+        $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+        $keys = array_keys(array_filter($translations, $own, ARRAY_FILTER_USE_KEY));
+
+        expect($keys)->toEqualCanonicalizing(array_values(array_filter($listed, $own)), $locale)
+            ->and(array_filter(array_map(promisesInRoomText(...), array_intersect_key($translations, array_flip($keys)))))->toBe([], $locale);
+    }
+
+    // «oyun» for what a person does; «otaq» never on a game's page (ADR 026 decision 2).
+    /** @var array<string, string> $az */
+    $az = json_decode((string) file_get_contents(lang_path('az.json')), true);
+
+    foreach (array_filter($az, $own, ARRAY_FILTER_USE_KEY) as $key => $text) {
+        expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
     }
 });

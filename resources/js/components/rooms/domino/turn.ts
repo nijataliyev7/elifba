@@ -131,3 +131,47 @@ export function yourPlay(
         domino.seats[seat]?.standing === 'playing'
     );
 }
+
+/** A count as a turn's steps change it: `value` from `from` ms of the moment on. */
+export type SteppedCount = { from: number; value: number }[];
+
+/**
+ * The counts a turn's steps change, over its one timeline (ADR 038
+ * decision 47): the boneyard's going down and each drawing seat's going
+ * up at its step — from the counts the steps began with, which are the
+ * state's less what the steps drew — so a page that saw the moment arrive
+ * shows each count change as its step is drawn. The last value of each
+ * is the state's own.
+ */
+export function stepCounts(
+    domino: Pick<RoomDomino, 'last' | 'seats' | 'boneyard'>,
+): { pile: SteppedCount; seats: SteppedCount[] } {
+    const draws = turnSteps(domino).steps.flatMap((step) =>
+        step.kind === 'draw' ? [step] : [],
+    );
+    const drawn = draws.reduce((sum, step) => sum + step.count, 0);
+    const pile: SteppedCount = [
+        { from: 0, value: domino.boneyard.tiles + drawn },
+    ];
+    let left = domino.boneyard.tiles + drawn;
+
+    for (const step of draws) {
+        left -= step.count;
+        pile.push({ from: step.at, value: left });
+    }
+
+    const seats = domino.seats.map((seat): SteppedCount => {
+        const own = draws.filter((step) => step.seat === seat.seat);
+        let held = seat.tiles - own.reduce((sum, step) => sum + step.count, 0);
+        const counts: SteppedCount = [{ from: 0, value: held }];
+
+        for (const step of own) {
+            held += step.count;
+            counts.push({ from: step.at, value: held });
+        }
+
+        return counts;
+    });
+
+    return { pile, seats };
+}

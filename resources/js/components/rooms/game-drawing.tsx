@@ -6,7 +6,8 @@ import type { RoomMechanic } from '@/rooms/contract';
  * A game's drawing (docs/frontend.md rule 15 "Games first", "A game's
  * drawing"): a small picture of its round in the tokens — a row of tiles,
  * a grid with lit cells, a rising row with a dashed place, three alike and
- * one apart, tiles under dashed places, four lines with one stronger. No
+ * one apart, tiles under dashed places, four lines with one stronger, two
+ * domino tiles end to end on the felt. No
  * letter, word or number, since content is data. Drawn in `em`: the font
  * size the caller gives (`text-[48px]`, `text-[6vh]`) is its side, so one
  * component serves 32px to 110px. `framed` puts it on its own `bg-muted`
@@ -130,6 +131,76 @@ function Glyph({ mechanic }: { mechanic: RoomMechanic }) {
                     );
                 })}
             </span>
+        );
+    }
+
+    if (mechanic === 'domino_101') {
+        // Two tiles end to end on the table's felt (ADR 038, docs/frontend.md rule 15 "Domino"): ivory, a divider, their pips.
+        const tile = (
+            x: number,
+            near: [number, number][],
+            far: [number, number][],
+        ) => (
+            <g transform={`translate(${x} 4.05)`}>
+                <rect
+                    width="3.7"
+                    height="1.9"
+                    rx="0.35"
+                    style={{
+                        fill: 'var(--domino-face)',
+                        stroke: 'var(--domino-edge)',
+                    }}
+                    strokeWidth="0.12"
+                />
+                <line
+                    x1="1.85"
+                    y1="0.3"
+                    x2="1.85"
+                    y2="1.6"
+                    style={{ stroke: 'var(--domino-divider)' }}
+                    strokeWidth="0.12"
+                />
+                {[
+                    ...near,
+                    ...far.map(([px, py]): [number, number] => [px + 1.85, py]),
+                ].map(([px, py]) => (
+                    <circle
+                        key={`${px}:${py}`}
+                        cx={px}
+                        cy={py}
+                        r="0.2"
+                        style={{ fill: 'var(--domino-pip)' }}
+                    />
+                ))}
+            </g>
+        );
+
+        return (
+            <svg viewBox="0 0 10 10" className="size-[0.72em]">
+                <rect
+                    width="10"
+                    height="10"
+                    rx="1.6"
+                    style={{ fill: 'var(--domino-felt)' }}
+                />
+                {tile(
+                    1.1,
+                    [
+                        [0.5, 0.5],
+                        [1.35, 1.4],
+                    ],
+                    [[0.93, 0.95]],
+                )}
+                {tile(
+                    5.2,
+                    [[0.93, 0.95]],
+                    [
+                        [0.5, 0.5],
+                        [0.93, 0.95],
+                        [1.35, 1.4],
+                    ],
+                )}
+            </svg>
         );
     }
 

@@ -2,8 +2,8 @@ import { ChevronsDown, ChevronsUp, Equal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
-    COMPUTER_SEAT,
     computerOf,
+    isComputerKey,
     seatName,
 } from '@/components/rooms/computer';
 import { REVEAL_MS } from '@/components/rooms/motion';
@@ -130,6 +130,7 @@ export function GameStrip({
     marks,
     ribbonInGap,
     big = false,
+    naming,
     children,
 }: {
     rivalry: Rivalry & { key: string };
@@ -141,6 +142,8 @@ export function GameStrip({
     marks?: SideMarks;
     ribbonInGap?: boolean;
     big?: boolean;
+    /** A domino game's names, target and bank (`StripNaming`). */
+    naming?: StripNaming;
     children?: ReactNode;
 }) {
     if (rivalry.pair === null) {
@@ -165,6 +168,7 @@ export function GameStrip({
             marks={marks}
             ribbonInGap={ribbonInGap}
             big={big}
+            naming={naming}
         />
     );
 
@@ -185,6 +189,23 @@ export function GameStrip({
  * key (`seatKey()`), with `Bot` where a player's side has its piece.
  */
 export type SideMarks = Record<string, { lead?: ReactNode; tail?: ReactNode }>;
+
+/**
+ * What a domino game's strip says beyond a race's and a match's
+ * (docs/frontend.md rule 15 "Domino" → "The strip", ADR 038 decision 48):
+ * a side's name by its key — a pair by its two first names, «Onlar» on a
+ * seat's phone —, the viewer's own as «Siz» or, at pairs, «Biz», the
+ * target between the two names, and the bank while it holds points, in
+ * the gap's row.
+ */
+export type StripNaming = {
+    nameOf: (key: string | null) => string;
+    you: string;
+    target: number;
+    bank: number;
+    /** Under a side, in the gap's row: a closed account's words. */
+    notes?: Record<string, ReactNode>;
+};
 
 /**
  * Rivals face to face (docs/frontend.md rule 15 "Rivals face to face",
@@ -227,6 +248,7 @@ export function RivalryStrip({
     marks,
     ribbonInGap = false,
     big = false,
+    naming,
 }: {
     pair: RivalPair;
     previous: RivalPair | null;
@@ -249,6 +271,7 @@ export function RivalryStrip({
     /** A match on a phone fits 375 × 667 with nothing to spare: the ribbon takes the gap's place, never a row of its own. */
     ribbonInGap?: boolean;
     big?: boolean;
+    naming?: StripNaming;
 }) {
     const { t } = useTranslation();
     const [animate] = useState(() => moves && !reducedMotion());
@@ -276,7 +299,10 @@ export function RivalryStrip({
     const split = sliding && step === 0 ? before.split : drawn.split;
     const words = animate && step < 2 && previous !== null ? previous : drawn;
     const names = new Map(players.map((player) => [player.id, player]));
-    const nameOf = (id: string | null) => seatName(t, players, id, computer);
+    const nameOf = (id: string | null) =>
+        naming !== undefined
+            ? naming.nameOf(id)
+            : seatName(t, players, id, computer);
     const ribbon = overtake !== null && (!animate || step >= 3);
     const leftTook = overtake !== null && overtake === pair.left?.player_id;
     const overGap = ribbon && !big && ribbonInGap;
@@ -312,7 +338,11 @@ export function RivalryStrip({
                         row={drawn.left}
                         side="left"
                         pair={drawn}
-                        name={drawn.mine ? t('rooms.rivalry.you') : null}
+                        name={
+                            drawn.mine
+                                ? (naming?.you ?? t('rooms.rivalry.you'))
+                                : null
+                        }
                         nameOf={nameOf}
                         players={names}
                         placeLabels={placeLabels}
@@ -320,6 +350,22 @@ export function RivalryStrip({
                         marks={marks}
                         big={big}
                     />
+                    {naming !== undefined && (
+                        <span
+                            data-target={naming.target}
+                            aria-label={t('rooms.rivalry.target', {
+                                count: naming.target,
+                            })}
+                            className={cn(
+                                'shrink-0 self-center rounded-full border bg-background/70 font-bold text-muted-foreground tabular-nums',
+                                big
+                                    ? 'px-[1.2vh] text-[2.2vh]'
+                                    : 'px-1.5 text-[11px] leading-4',
+                            )}
+                        >
+                            {naming.target}
+                        </span>
+                    )}
                     <Side
                         row={drawn.right}
                         side="right"
@@ -347,10 +393,20 @@ export function RivalryStrip({
 
                 <div
                     className={cn(
-                        'flex justify-center',
+                        'flex items-center justify-center',
+                        big ? 'gap-[1.4vh]' : 'gap-1.5',
+                        naming?.notes !== undefined &&
+                            'grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)]',
                         overGap && 'invisible',
                     )}
                 >
+                    {naming?.notes !== undefined && (
+                        <span className="flex min-w-0 justify-start">
+                            {drawn.left === null
+                                ? null
+                                : naming.notes[drawn.left.player_id]}
+                        </span>
+                    )}
                     <Gap
                         key={gapWords(t, words, nameOf)}
                         pair={words}
@@ -363,6 +419,35 @@ export function RivalryStrip({
                         }
                         big={big}
                     />
+                    {naming !== undefined && naming.bank > 0 && (
+                        <span
+                            data-bank={naming.bank}
+                            className={cn(
+                                'inline-flex shrink-0 items-center rounded-full bg-muted font-semibold text-foreground tabular-nums',
+                                big
+                                    ? 'px-[1.4vh] text-[2.4vh] leading-[1.6]'
+                                    : 'px-2 text-xs leading-[18px]',
+                            )}
+                        >
+                            {t('rooms.rivalry.bank', { count: naming.bank })}
+                        </span>
+                    )}
+                    {naming?.notes !== undefined && (
+                        <>
+                            {naming.bank <= 0 && <span />}
+                            {/* Clear of the throw's badge on the strip's bottom-right corner. */}
+                            <span
+                                className={cn(
+                                    'flex min-w-0 justify-end',
+                                    !big && 'pr-8',
+                                )}
+                            >
+                                {drawn.right === null
+                                    ? null
+                                    : naming.notes[drawn.right.player_id]}
+                            </span>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -492,7 +577,7 @@ function Side({
 }) {
     const { t } = useTranslation();
     const right = side === 'right';
-    const computer = row?.player_id === COMPUTER_SEAT;
+    const computer = isComputerKey(row?.player_id ?? null);
 
     if (row === null) {
         return (
@@ -747,7 +832,7 @@ function Total({
         duration: SLIDE_MS,
     });
 
-    return <>{shown}</>;
+    return <span data-strip-total={points}>{shown}</span>;
 }
 
 /**

@@ -2,8 +2,6 @@
 
 namespace App\Domain\Content\Enums;
 
-use Illuminate\Support\Facades\Config;
-
 /**
  * The rules of an adults' room round (docs/architecture.md §12 "Room
  * games", ADR 023). The rules are code in `Rooms` (a builder in
@@ -79,18 +77,6 @@ enum RoomMechanic: string
             self::Draughts => RoomFamily::Board,
             self::Domino101 => RoomFamily::Domino,
         };
-    }
-
-    /**
-     * Whether a room offers the game: every one but «101», which Y5 builds
-     * without its pages and offers only while `elifba.rooms.domino.offered`
-     * is on — off in every instance, on in the tests that play it — until
-     * Y6 draws it and removes this (ADR 038 as amended 2026-11-26, Y5).
-     * `Rooms\Support\RoomPlayable` and the welcome page's section ask it.
-     */
-    public function offered(): bool
-    {
-        return $this !== self::Domino101 || Config::boolean('elifba.rooms.domino.offered');
     }
 
     /** A race of rounds or a board game: the family's (ADR 034 decision 1). */

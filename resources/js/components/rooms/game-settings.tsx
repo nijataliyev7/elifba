@@ -19,7 +19,11 @@ import type {
     SetupChoice,
     SetupLevel,
 } from '@/components/rooms/catalog';
-import { COMPUTER_LEVELS } from '@/components/rooms/computer';
+import { COMPUTER_DEFAULT, COMPUTER_LEVELS } from '@/components/rooms/computer';
+import {
+    TableSeats,
+    TableSegments,
+} from '@/components/rooms/domino/table-seats';
 import { SeatRows } from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
 import { seconds } from '@/components/rooms/seconds';
@@ -46,6 +50,7 @@ export type ChoiceControl =
     | 'difficulty'
     | 'rounds'
     | 'seats'
+    | 'table'
     | 'computer';
 
 /** The room's choice as a page shows it and changes it (`useRoomChoice()`). */
@@ -81,7 +86,7 @@ export function useRoomChoice({
     /** After a write: the page asks for the state now rather than wait for the signal. */
     onChanged: () => void;
 }): RoomChoice {
-    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}:${choice.computer}`;
+    const key = `${choice.mechanic}:${choice.difficulty}:${choice.rounds}:${choice.white}:${choice.black}:${choice.computer}:${choice.table}:${(choice.seats ?? []).join(',')}`;
 
     // The tap, and the state's choice it was made over: once that moves, the state has answered.
     const [tap, setTap] = useState<{
@@ -254,7 +259,9 @@ export function GamePicker({
 /**
  * «Çətinlik»: four segments over one muted line of what the level holds,
  * from the server's `levels`; a board game's «Vaxt» (ADR 034 decision 6):
- * each segment its level's clock («5+3», tabular), never «Asan».
+ * each segment its level's clock («5+3», tabular), never «Asan»; a domino
+ * game's «Gediş vaxtı» (ADR 038 decision 22): each its turn's seconds
+ * («30 san», tabular).
  */
 export function DifficultySegments({
     game,
@@ -279,6 +286,7 @@ export function DifficultySegments({
                 {game.difficulties.map((difficulty) => {
                     const pressed = difficulty === choice.shown.difficulty;
                     const clock = levelOf(game, difficulty)?.clock;
+                    const turn = levelOf(game, difficulty)?.turn_ms;
 
                     return (
                         <button
@@ -294,12 +302,17 @@ export function DifficultySegments({
                             }
                             className={cn(
                                 segment(pressed, big),
-                                clock !== undefined && 'tabular-nums',
+                                (clock !== undefined || turn !== undefined) &&
+                                    'tabular-nums',
                             )}
                         >
-                            {clock !== undefined
-                                ? clockLevelText(t, clock)
-                                : t(`rooms.difficulty.${difficulty}`)}
+                            {turn !== undefined
+                                ? t('rooms.turn.level', {
+                                      seconds: Math.round(turn / 1000),
+                                  })
+                                : clock !== undefined
+                                  ? clockLevelText(t, clock)
+                                  : t(`rooms.difficulty.${difficulty}`)}
                         </button>
                     );
                 })}
@@ -448,7 +461,11 @@ export function LevelLine({
     const answer = seconds(level.answer_ms, mark);
     let line: string | null = null;
 
-    if (level.clock !== undefined) {
+    if (level.turn_ms !== undefined) {
+        line = t('rooms.turn.line', {
+            seconds: Math.round(level.turn_ms / 1000),
+        });
+    } else if (level.clock !== undefined) {
         line = t('rooms.clock.line', clockLevel(level.clock));
     } else if (level.rules !== null) {
         line = t('rooms.setup.levels.sequence', {
@@ -635,7 +652,9 @@ export function GameSettings({
                             <legend className={legend}>
                                 {parts.second === 'seats'
                                     ? t('rooms.clock.label')
-                                    : t('rooms.setup.difficulty')}
+                                    : parts.second === 'table'
+                                      ? t('rooms.turn.label')
+                                      : t('rooms.setup.difficulty')}
                             </legend>
                             <DifficultySegments
                                 game={game}
@@ -643,13 +662,51 @@ export function GameSettings({
                                 big={big}
                             />
                         </fieldset>
+                        {parts.table !== null && (
+                            <fieldset className="flex min-w-0 flex-col">
+                                <legend className={legend}>
+                                    {t('rooms.table.label')}
+                                </legend>
+                                <TableSegments
+                                    table={parts.table}
+                                    choice={choice}
+                                    big={big}
+                                />
+                            </fieldset>
+                        )}
                         <fieldset className="flex min-w-0 flex-col">
                             <legend className={legend}>
                                 {parts.second === 'seats'
                                     ? t('rooms.seats.title')
-                                    : t('rooms.setup.rounds')}
+                                    : parts.second === 'table'
+                                      ? t('rooms.table.seats')
+                                      : t('rooms.setup.rounds')}
                             </legend>
-                            {parts.second === 'seats' ? (
+                            {parts.table !== null ? (
+                                <div
+                                    className={cn(
+                                        'flex flex-col gap-3',
+                                        big && 'gap-[1.6vh]',
+                                    )}
+                                >
+                                    <TableSeats
+                                        table={parts.table}
+                                        players={players}
+                                        choice={choice}
+                                        big={big}
+                                    />
+                                    {parts.table.seats.includes(null) && (
+                                        <ComputerLevelSegments
+                                            level={
+                                                parts.table.computer ??
+                                                COMPUTER_DEFAULT
+                                            }
+                                            choice={choice}
+                                            big={big}
+                                        />
+                                    )}
+                                </div>
+                            ) : parts.second === 'seats' ? (
                                 <div
                                     className={cn(
                                         'flex flex-col gap-3',

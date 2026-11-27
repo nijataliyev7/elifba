@@ -1,5 +1,8 @@
-import { useState } from 'react';
 import type { Arrival } from '@/components/rooms/draughts/draughts-board';
+import {
+    nextShown,
+    useArrival as useShownArrival,
+} from '@/components/rooms/use-arrival';
 import type { RoomMatch, RoomPiece } from '@/rooms/contract';
 
 /** What a page drew last of a match: its game, ply and position, and the move it saw arrive there. */
@@ -10,13 +13,22 @@ export type DrawnMatch = {
     arrival: Arrival | null;
 };
 
+/** The move that arrived at `match`'s ply, its piece sliding from the position drawn before. */
+function moveOf(game: string, match: RoomMatch) {
+    return (before: RoomPiece[]): Arrival | null =>
+        match.last === null
+            ? null
+            : { last: match.last, before, key: `${game}:${match.ply}` };
+}
+
 /**
- * What a page draws for `match` after `drawn` (ADR 034 decision 30): a
- * move arrived when the state's `ply` is one more than the ply the page
- * drew last in the same game, so its piece slides from the position the
- * page drew; a page opened on a position (`drawn` null), a state more than
- * one ply ahead and another game draw still; a state fetched again at the
- * same ply keeps what it drew.
+ * What a page draws for `match` after `drawn` (ADR 034 decision 30), as
+ * every game played act by act (`nextShown()`): a move arrived when the
+ * state's `ply` is one more than the ply the page drew last in the same
+ * game, so its piece slides from the position the page drew; a page
+ * opened on a position (`drawn` null), a state more than one ply ahead
+ * and another game draw still; a state fetched again at the same ply
+ * keeps what it drew.
  */
 export function nextDrawn(
     drawn: DrawnMatch | null,
@@ -27,24 +39,26 @@ export function nextDrawn(
         return drawn;
     }
 
-    const arrived =
-        drawn !== null &&
-        drawn.game === game &&
-        match.ply === drawn.ply + 1 &&
-        match.last !== null;
+    const next = nextShown(
+        drawn === null
+            ? null
+            : {
+                  game: drawn.game,
+                  ply: drawn.ply,
+                  value: drawn.position,
+                  arrival: drawn.arrival,
+              },
+        game,
+        match.ply,
+        match.position,
+        moveOf(game, match),
+    );
 
     return {
-        game,
-        ply: match.ply,
-        position: match.position,
-        arrival:
-            arrived && match.last !== null
-                ? {
-                      last: match.last,
-                      before: drawn.position,
-                      key: `${game}:${match.ply}`,
-                  }
-                : null,
+        game: next.game,
+        ply: next.ply,
+        position: next.value,
+        arrival: next.arrival,
     };
 }
 
@@ -69,17 +83,14 @@ export function ownArrival(
 
 /**
  * The move the page saw arrive (`nextDrawn()`), or null: the page keeps
- * only what it drew; nothing here keeps a clock or a sound.
+ * only what it drew, through the rooms' one `useArrival()`; nothing here
+ * keeps a clock or a sound.
  */
 export function useArrival(game: string, match: RoomMatch): Arrival | null {
-    const [drawn, setDrawn] = useState<DrawnMatch>(() =>
-        nextDrawn(null, game, match),
+    return useShownArrival(
+        game,
+        match.ply,
+        match.position,
+        moveOf(game, match),
     );
-    const next = nextDrawn(drawn, game, match);
-
-    if (next !== drawn) {
-        setDrawn(next);
-    }
-
-    return next.arrival;
 }

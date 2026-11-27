@@ -919,3 +919,90 @@
     border: 1px solid var(--border);
     box-shadow: inset 0 2px 5px var(--anagram-hollow);
 }
+
+/*
+ * Domino (docs/frontend.md rule 15 "Domino", ADR 038 decision 86): the
+ * owner's look from Y3's variant page. «Fil» tiles — ivory faces with a
+ * brass pin and black pips, the same in both themes, since a tile is a
+ * thing lying on the table and not a surface of the app; the tile is our
+ * own SVG (`DominoTile`), its gradients' stops these tokens. «Mahud» — a
+ * green felt with a soft vignette and two fractal-noise speckles, a little
+ * darker in the dark theme (`domino-felt`). `--domino-target` draws a
+ * target's dashed edge and the frame round the last tile beside `primary`,
+ * `--domino-ink` the words and marks on the felt. Never the room's emerald
+ * or red (right, wrong), the lamp's amber, the strip's sky or orange as a
+ * person's colour, the taunt's violet or the voice's indigo.
+ */
+:root {
+    --domino-felt: #2f6a4f;
+    --domino-felt-vignette: rgba(0, 0, 0, 0.32);
+    --domino-felt-grain:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85 0.85' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.448 0 0 0 -0.1984'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85 0.85' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.448 0 0 0 0.2496'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --domino-target: rgba(255, 255, 255, 0.92);
+    --domino-ink: #f3faf5;
+    --domino-face: #fffbf2;
+    --domino-face-mid: #f6eedc;
+    --domino-face-end: #e9dcc0;
+    --domino-edge: #b3a283;
+    --domino-lip: rgba(255, 255, 255, 0.75);
+    --domino-divider: #a8977a;
+    --domino-pin: #fff1b8;
+    --domino-pin-mid: #d6a640;
+    --domino-pin-end: #8a6420;
+    --domino-pin-edge: #7d5c22;
+    --domino-pip: #000000;
+    --domino-pip-mid: #1d1915;
+    --domino-pip-end: #4a4033;
+    --domino-back: #eadfc6;
+    --domino-back-end: #d6c6a2;
+    --domino-back-mark: #bba97f;
+    --domino-shadow: rgba(0, 0, 0, 0.38);
+}
+
+.dark {
+    --domino-felt: #1c4433;
+    --domino-felt-vignette: rgba(0, 0, 0, 0.45);
+    --domino-target: rgba(255, 255, 255, 0.85);
+    --domino-ink: #e6f2ea;
+}
+
+@theme inline {
+    --color-domino-felt: var(--domino-felt);
+    --color-domino-target: var(--domino-target);
+    --color-domino-ink: var(--domino-ink);
+    --color-domino-back: var(--domino-back);
+}
+
+/* The table's felt: the grain over a vignette clear to 45 % at 50 % 45 %, over the felt's green. */
+@utility domino-felt {
+    background:
+        var(--domino-felt-grain),
+        radial-gradient(
+            ellipse at 50% 45%,
+            transparent 45%,
+            var(--domino-felt-vignette)
+        ),
+        var(--domino-felt);
+}
+
+/*
+ * A domino turn's steps on a page that saw them arrive (ADR 038 decision
+ * 89): what a step shows — «Bazar 2×», «PAS», a count as it changes —
+ * stands only in its window of the turn's one timeline, from its step's
+ * moment (`animation-delay`) for its length (`animation-duration`), and is
+ * hidden outside it. Visibility only, no movement: the windows keep their
+ * moments under `prefers-reduced-motion` too, where nothing pops.
+ */
+@keyframes domino-window {
+    from,
+    to {
+        visibility: visible;
+    }
+}
+
+@utility domino-window {
+    visibility: hidden;
+    animation-name: domino-window;
+    animation-timing-function: step-end;
+}

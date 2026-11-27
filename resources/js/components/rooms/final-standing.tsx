@@ -2,8 +2,8 @@ import { Bot, Medal, Trophy } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import {
-    COMPUTER_SEAT,
     computerOf,
+    isComputerKey,
     seatName,
 } from '@/components/rooms/computer';
 import {
@@ -324,7 +324,7 @@ function Place({
                                 mine && tier !== 'first' && 'bg-accent',
                             )}
                         >
-                            {row.player_id === COMPUTER_SEAT && (
+                            {isComputerKey(row.player_id) && (
                                 <Bot
                                     aria-hidden
                                     className="size-[1em] shrink-0"

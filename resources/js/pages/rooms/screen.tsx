@@ -14,6 +14,7 @@ import { useMemo, useState, useSyncExternalStore } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
 import { choiceParts } from '@/components/rooms/catalog';
+import { TableLine } from '@/components/rooms/domino/table-seats';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
 import { SeatNext, SeatPair } from '@/components/rooms/draughts/seat-rows';
 import { GameDrawing } from '@/components/rooms/game-drawing';
@@ -498,6 +499,13 @@ function ScreenStart({
                         {parts.second === 'seats' && (
                             <SeatPair
                                 seats={parts.seats}
+                                players={state.players}
+                                big
+                            />
+                        )}
+                        {parts.table !== null && (
+                            <TableLine
+                                table={parts.table}
                                 players={state.players}
                                 big
                             />

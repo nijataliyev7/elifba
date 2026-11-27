@@ -827,6 +827,8 @@ it('offers the setup of a game to the host of an open room alone, as the server 
         ['mechanic' => 'anagram', 'family' => 'words', 'difficulties' => [1, 2, 3, 4]],
         ['mechanic' => 'spelling', 'family' => 'words', 'difficulties' => [1, 2, 3, 4]],
         ['mechanic' => 'draughts', 'family' => 'board', 'difficulties' => [1, 2, 3]],
+        // Y6 lists «101» (ADR 038 decision 73): a turn's time at each level.
+        ['mechanic' => 'domino_101', 'family' => 'domino', 'difficulties' => [1, 2, 3]],
     ], 'rounds' => ['min' => 5, 'max' => 20]];
     $setup = $this->actingAs($this->host)->get(route('rooms.show', $this->room))->viewData('page')['props']['catalog'];
     expect([
@@ -838,9 +840,10 @@ it('offers the setup of a game to the host of an open room alone, as the server 
 
     foreach ($offered['mechanics'] as $offer) {
         foreach ($offer['difficulties'] as $difficulty) {
-            // A race's rounds, a board game's two seats (D3): each kind reads its own.
+            // A race's rounds, a board game's two seats (D3): each kind reads its own; a domino game's table is the room's (ADR 038 decision 75).
             $seats = ['white' => Str::lower((string) Str::ulid()), 'black' => Str::lower((string) Str::ulid())];
-            expect(RoomGameSetupData::validate(['mechanic' => $offer['mechanic'], 'difficulty' => $difficulty, 'rounds' => 5, ...$seats])->difficulty)->toBe($difficulty);
+            $choice = $offer['family'] === 'domino' ? [] : ['rounds' => 5, ...$seats];
+            expect(RoomGameSetupData::validate(['mechanic' => $offer['mechanic'], 'difficulty' => $difficulty, ...$choice])->difficulty)->toBe($difficulty);
         }
     }
 

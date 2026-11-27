@@ -27,9 +27,8 @@ use InvalidArgumentException;
  * them: tiles under the word's places, four spellings in one column).
  * D3 lists `draughts`, a board game (ADR 034), whose rules are
  * `Rooms\Support\Draughts` and which builds no rounds; D4 draws it.
- * Y5 builds `domino_101` (ADR 038) without its pages: until Y6 draws it
- * and lists it here, it is listed only while it is offered
- * (`RoomMechanic::offered()`, ADR 038 as amended 2026-11-26, Y5).
+ * Y5 builds `domino_101` (ADR 038), a domino game, which builds no rounds
+ * either; Y6 draws it and lists it here (ADR 038 decision 73).
  */
 final class RoomPlayable
 {
@@ -39,8 +38,7 @@ final class RoomPlayable
     public static function mechanics(): array
     {
         return [
-            RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts,
-            ...(RoomMechanic::Domino101->offered() ? [RoomMechanic::Domino101] : []),
+            RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts, RoomMechanic::Domino101,
         ];
     }
 

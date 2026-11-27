@@ -73,15 +73,10 @@ it('lists a board game with its clocks, two to four of them from 1, each shorter
         ->toBe([[600_000, 5_000], [300_000, 3_000], [180_000, 2_000]]);
 });
 
-it('offers «101» only while it is offered, with its turns, two to four of them from 1, each shorter than the one before', function (): void {
-    // Until Y6 draws it, no instance offers it (ADR 038 as amended 2026-11-26, Y5).
-    expect(RoomPlayable::plays(RoomMechanic::Domino101))->toBeFalse()
-        ->and(RoomMechanic::Domino101->offered())->toBeFalse()
-        ->and(playableOf(RoomGameKind::Domino))->toBe([]);
-
-    Config::set('elifba.rooms.domino.offered', true);
-
-    expect(playableOf(RoomGameKind::Domino))->toBe([RoomMechanic::Domino101]);
+it('offers «101», with its turns, two to four of them from 1, each shorter than the one before', function (): void {
+    // Y6 draws it and lists it (ADR 038 decision 73): every instance offers it.
+    expect(RoomPlayable::plays(RoomMechanic::Domino101))->toBeTrue()
+        ->and(playableOf(RoomGameKind::Domino))->toBe([RoomMechanic::Domino101]);
 
     $difficulties = playableDifficulties(RoomMechanic::Domino101);
     $turns = array_map(static fn (int $difficulty): ?int => app(ContentRepository::class)->roomLevel(RoomMechanic::Domino101, $difficulty)->turnMs, $difficulties);
@@ -93,7 +88,7 @@ it('offers «101» only while it is offered, with its turns, two to four of them
         ->and(app(ContentRepository::class)->roomLevel(RoomMechanic::Domino101, 2)->answerMs)->toBe(0);
 });
 
-it('has a builder for every race, and none for a board game', function (): void {
+it('has a builder for every race, and none for a board game or a domino game', function (): void {
     foreach (RoomMechanic::cases() as $mechanic) {
         if ($mechanic->kind() === RoomGameKind::Race) {
             expect(RoomPlayable::builder($mechanic))->not->toBeNull();
@@ -102,7 +97,7 @@ it('has a builder for every race, and none for a board game', function (): void 
         }
     }
 
-    expect(RoomPlayable::mechanics())->toBe([RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts]);
+    expect(RoomPlayable::mechanics())->toBe([RoomMechanic::RecallOrder, RoomMechanic::RecallCells, RoomMechanic::NextInSequence, RoomMechanic::OddOneOut, RoomMechanic::Anagram, RoomMechanic::Spelling, RoomMechanic::Draughts, RoomMechanic::Domino101]);
 });
 
 // The validator may not reach a builder's arithmetic — whether a rule of

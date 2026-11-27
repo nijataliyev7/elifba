@@ -8,17 +8,20 @@ use App\Domain\Content\Support\VoiceClips;
 use App\Domain\Language\Support\Ordinal;
 use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Enums\RoomPhase;
+use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomAnswer;
 use App\Domain\Rooms\Models\RoomGame;
 use App\Domain\Rooms\Models\RoomPlayer;
 use App\Domain\Rooms\Models\RoomRound;
+use App\Domain\Rooms\Support\Domino\DominoTile;
 use App\Domain\Rooms\Support\RoomClock;
 use App\Domain\Rooms\Support\RoomJoinLink;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\DominoRooms;
 use Tests\Support\RoomPhones;
 use Tests\Support\Rooms;
 
@@ -536,8 +539,9 @@ it('names the family of each game the setup offers and what each level holds', f
 
     $setup = pagesProps($this->actingAs($this->resad)->get(route('rooms.show', $room)))['catalog'];
 
-    expect(array_column($setup['mechanics'], 'mechanic'))->toBe(['recall_order', 'recall_cells', 'next_in_sequence', 'odd_one_out', 'anagram', 'spelling', 'draughts'])
-        ->and(array_column($setup['mechanics'], 'family'))->toBe(['memory', 'memory', 'logic', 'logic', 'words', 'words', 'board']);
+    // Y6 lists «101» (ADR 038 decision 73).
+    expect(array_column($setup['mechanics'], 'mechanic'))->toBe(['recall_order', 'recall_cells', 'next_in_sequence', 'odd_one_out', 'anagram', 'spelling', 'draughts', 'domino_101'])
+        ->and(array_column($setup['mechanics'], 'family'))->toBe(['memory', 'memory', 'logic', 'logic', 'words', 'words', 'board', 'domino']);
 
     foreach ($setup['mechanics'] as $offer) {
         $mechanic = RoomMechanic::from($offer['mechanic']);
@@ -566,6 +570,7 @@ it('names the family of each game the setup offers and what each level holds', f
                 'letters' => $level->wordLength === null ? null : ['min' => $level->wordLength->min, 'max' => $level->wordLength->max],
                 'swaps' => $level->swaps,
                 ...($level->clockMs === null ? [] : ['clock' => ['base_ms' => $level->clockMs, 'increment_ms' => $level->incrementMs]]),
+                ...($level->turnMs === null ? [] : ['turn_ms' => $level->turnMs]),
             ]);
         }
     }
@@ -726,5 +731,53 @@ it('shows nothing of a room at the door', function (): void {
 
     foreach ([(string) $room->code, $room->id, 'Rəşad', 'Aygün', RoomJoinLink::tag($room)] as $secret) {
         expect($json)->not->toContain($secret);
+    }
+});
+
+it('sends a domino game\'s seat its own tiles, and a watcher and the screen none, in the page\'s props', function (): void {
+    // docs/frontend.md rule 15 "Domino" → "One state, one of everything, and a hand nobody else is sent" (ADR 038 decisions 6 and 44).
+    DominoRooms::on();
+    $this->leyla = User::factory()->player()->create(['name' => 'Leyla Həsənova', 'email' => 'leyla@example.com']);
+    $kamal = User::factory()->player()->create(['name' => 'Kamal Səfərov', 'email' => 'kamal@example.com']);
+    $game = DominoRooms::start($this->resad, [$this->aygun, $this->tural, $this->leyla], RoomTable::Pairs);
+    $room = $game->room;
+    Rooms::join($room, $kamal);
+    $this->travelTo(now()->addSeconds(10));
+    $hand = DominoRooms::truth($game)->hand();
+    $seats = $game->refresh()->seats ?? [];
+    $seatOf = static fn (User $account): int => (int) array_search(pagesRow($room, $account)->id, $seats, true);
+
+    expect($hand)->not->toBeNull();
+
+    $viewers = [
+        ['account' => $this->aygun, 'route' => route('rooms.show', $room), 'component' => 'rooms/show', 'seat' => $seatOf($this->aygun)],
+        ['account' => $kamal, 'route' => route('rooms.show', $room), 'component' => 'rooms/show', 'seat' => null],
+        ['account' => $this->resad, 'route' => route('rooms.screen', $room), 'component' => 'rooms/screen', 'seat' => null],
+    ];
+
+    foreach ($viewers as $viewer) {
+        $response = $this->actingAs($viewer['account'])->get($viewer['route'])->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page->component($viewer['component']));
+        $props = pagesProps($response);
+        $domino = $props['state']['domino'];
+        $json = json_encode($props, JSON_THROW_ON_ERROR);
+
+        expect($props['state']['game']['kind'])->toBe('domino')
+            ->and($domino['phase'])->toBe('play')
+            ->and($domino['mine'] === null)->toBe($viewer['seat'] === null, $viewer['component']);
+
+        foreach ($hand?->tiles ?? [] as $seat => $tiles) {
+            $names = DominoTile::names($tiles);
+
+            if ($seat === $viewer['seat']) {
+                expect($domino['mine']['tiles'])->toBe($names);
+
+                continue;
+            }
+
+            // Another seat's tiles are a count, never a name, in any prop.
+            expect(array_values(array_filter($names, static fn (string $tile): bool => str_contains($json, "\"{$tile}\""))))->toBe([], "{$viewer['component']}: seat {$seat}'s tiles")
+                ->and($domino['seats'][$seat]['tiles'])->toBe(count($names));
+        }
     }
 });

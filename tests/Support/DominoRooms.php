@@ -55,14 +55,13 @@ final class DominoRooms
     public const int LONG = 41;
 
     /**
-     * Turns the rooms area on and offers «101». The deals are keyed by the
+     * Turns the rooms area on. The deals are keyed by the
      * instance's `app.key` (ADR 038 decision 5), so the tests fix one: the
      * same seed deals the same hands on every machine.
      */
     public static function on(): void
     {
         Rooms::on();
-        Config::set('elifba.rooms.domino.offered', true);
         Config::set('app.key', 'base64:'.base64_encode(str_repeat('d', 32)));
     }
 

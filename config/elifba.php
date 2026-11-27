@@ -162,12 +162,8 @@ return [
         // began, the same time whatever the seat holds; a seat is away
         // after `away_after` turns in a row were played for it; a game
         // copies `sheet_ms`, the pause on a hand's sheet before the next
-        // hand opens, as `room_games.reveal_ms` at its start. `offered`
-        // offers «101» (`RoomMechanic::offered()`) before Y6 draws it: false
-        // here, true only in the tests that play it; Y6 removes the key (ADR
-        // 038 as amended 2026-11-26, Y5).
+        // hand opens, as `room_games.reveal_ms` at its start.
         'domino' => [
-            'offered' => false,
             'think_ms' => 1_200,
             'away_after' => 2,
             'sheet_ms' => 10_000,

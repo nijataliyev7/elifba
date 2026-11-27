@@ -17,6 +17,7 @@ import type { ReactNode } from 'react';
 import InputError from '@/components/input-error';
 import { choiceParts } from '@/components/rooms/catalog';
 import type { GameSetupOptions } from '@/components/rooms/catalog';
+import { TableLine, TableNote } from '@/components/rooms/domino/table-seats';
 import {
     SeatNext,
     SeatNote,
@@ -495,6 +496,12 @@ function HostRoom({
                                 players={state.players}
                             />
                         )}
+                        {parts.table !== null && (
+                            <TableLine
+                                table={parts.table}
+                                players={state.players}
+                            />
+                        )}
                         <section className="flex flex-col gap-2">
                             <h2 className="text-sm font-semibold">
                                 {t('rooms.start.joined_count', {
@@ -776,6 +783,13 @@ function PlayerRoom({
                         {setupParts.second === 'seats' && (
                             <SeatNote
                                 seats={setupParts.seats}
+                                me={state.me.player_id}
+                            />
+                        )}
+                        {setupParts.table !== null && (
+                            <TableNote
+                                table={setupParts.table}
+                                players={state.players}
                                 me={state.me.player_id}
                             />
                         )}
