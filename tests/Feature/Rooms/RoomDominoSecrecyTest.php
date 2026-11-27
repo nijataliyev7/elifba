@@ -105,6 +105,32 @@ function secrecyAllowed(DominoGame $truth, ?int $seat): array
 }
 
 /**
+ * A seat's own part exactly as the truth gives that seat (decision 6): these
+ * fields and no other, its own tiles in the order dealt and drawn, the
+ * tiles it drew after the latest turn act — among its own —, its plays in
+ * its own turn and none otherwise, whether it may give the opening, and
+ * whether it is away. Held to the value, not to the names in it, so no
+ * other seat's tile reaches a seat in an encoding a name does not show.
+ *
+ * @return array{seat: int, tiles: list<string>, drawn: list<string>, legal: list<array{tile: string, ends: list<string>}>|null, may_yield: bool, away: bool}
+ */
+function secrecyMine(DominoGame $truth, int $seat): array
+{
+    $hand = $truth->hand();
+    $turn = $truth->turn() === $seat;
+    $legal = $turn ? $truth->legal() : [];
+
+    return [
+        'seat' => $seat,
+        'tiles' => $hand === null ? [] : DominoTile::names($hand->tiles[$seat]),
+        'drawn' => $hand === null ? [] : DominoTile::names($hand->drawn[$seat] ?? []),
+        'legal' => $legal === [] ? null : array_map(static fn (array $play): array => ['tile' => $play['tile']->name(), 'ends' => $play['ends']], $legal),
+        'may_yield' => $turn && $truth->mayGive(),
+        'away' => $truth->away($seat),
+    ];
+}
+
+/**
  * A scripted game's viewers: each seat's player, a watcher, the host —
  * who may or may not sit — and the screen, reading with the host's account.
  *
@@ -176,7 +202,10 @@ function secrecyCheck(RoomGame $game, array $viewers, array $answers, string $wh
         expect($state['domino']['mine'] === null)->toBe($viewer['seat'] === null, "{$viewer['name']} {$when}: mine");
 
         if ($viewer['seat'] !== null) {
-            expect($state['domino']['mine']['seat'])->toBe($viewer['seat']);
+            $mine = $state['domino']['mine'];
+
+            expect(array_values(array_diff($mine['drawn'], $mine['tiles'])))->toBe([], "{$viewer['name']} {$when}: mine draws only its own tiles")
+                ->and($mine)->toBe(secrecyMine($truth, $viewer['seat']), "{$viewer['name']} {$when}: mine is its seat's own part, and nothing more");
         }
 
         // The page's props: the screen's page, or the room's page.
@@ -253,7 +282,8 @@ function secrecyRefusals(RoomGame $game, DominoGame $truth, array $bySeat): arra
 /**
  * Plays a scripted game through the room's routes — the seat to move plays
  * its first play a second into its turn, a pause is waited out — checking
- * everything after the start and after every act, until `$stop` says so.
+ * everything after the start, after every act and at a pause's last
+ * moment, until `$stop` says so.
  *
  * @param  list<array{name: string, account: User, seat: int|null, screen: bool}>  $viewers
  * @param  callable(DominoGame): bool  $stop
@@ -285,6 +315,9 @@ function secrecyPlay(RoomGame $game, array $viewers, callable $stop): DominoGame
         }
 
         if ($truth->phase === RoomDominoPhase::Sheet) {
+            // The pause's last moment, when a read arms the server's play of the next hand's opener (decision 83).
+            test()->travelTo(RoomClock::at((int) $truth->untilMs() - 1));
+            secrecyCheck($game, $viewers, [], "as the pause after hand {$truth->hand()?->number} ends");
             test()->travelTo(RoomClock::at((int) $truth->untilMs()));
             secrecyCheck($game, $viewers, [], "as hand {$truth->hand()?->number} opens");
 

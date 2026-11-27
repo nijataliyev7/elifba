@@ -14,6 +14,7 @@ import {
 } from '@/components/rooms/domino/names';
 import { sheetView, toTarget } from '@/components/rooms/domino/sheet';
 import { sideKey } from '@/components/rooms/domino/sides';
+import { sheetColumns } from '@/components/rooms/domino/stage';
 import { TileSvg } from '@/components/rooms/domino/tile';
 import { secondsUntil } from '@/components/rooms/use-server-now';
 import { useTranslation } from '@/hooks/use-translation';
@@ -51,6 +52,12 @@ const LINE_ICONS: Record<RoomLedgerLine, LucideIcon> = {
  * balances after it and how far each stands from 101; who opens next and
  * why; and a bar that runs out as the next hand is dealt. Every number is
  * the state's.
+ *
+ * On the screen's panel it stands in two columns (`sheetColumns()`) — the
+ * hand's tiles and counts beside the account, the balances, who opens next
+ * and the bar — and the screen fits it to the table (`ScreenFit`); each
+ * seat's tiles left are a row of their own, so a name is never squeezed
+ * out by its tiles.
  *
  * On a page that saw the hand end it rises when the hand's steps are over
  * (`rises`, ms into the moment); otherwise, and under reduced motion, it is
@@ -93,6 +100,10 @@ export function HandSheet({
     if (view === null) {
         return null;
     }
+
+    const columns = sheetColumns(big, still);
+    // The two parts of the sheet: the hand's tiles and counts, then the account; side by side on the screen's panel.
+    const part = cn('flex min-w-0 flex-col', big ? 'gap-[1.6vh]' : 'gap-3');
 
     const sideName = (side: number) => {
         const one = domino.sides.find((each) => each.side === side);
@@ -139,11 +150,15 @@ export function HandSheet({
         <section
             data-sheet={view.hand}
             aria-labelledby={`sheet-${view.hand}`}
+            data-columns={columns}
             className={cn(
-                'flex min-h-0 flex-col overflow-y-auto bg-card text-card-foreground',
+                'bg-card text-card-foreground',
+                columns === 2
+                    ? 'grid grid-cols-2 items-start gap-x-[3vh]'
+                    : 'flex min-h-0 flex-col',
                 big
-                    ? 'gap-[1.6vh] rounded-[2.4vh] border p-[2.6vh] shadow-2xl'
-                    : 'gap-3 rounded-t-2xl border-t px-4 pt-4 pb-5 shadow-[0_-8px_24px_rgb(0_0_0/0.25)]',
+                    ? 'gap-y-[1.6vh] rounded-[2.4vh] border p-[2.6vh] shadow-2xl'
+                    : 'gap-3 overflow-y-auto rounded-t-2xl border-t px-4 pt-4 pb-5 shadow-[0_-8px_24px_rgb(0_0_0/0.25)]',
                 rises !== null &&
                     (big
                         ? 'motion-safe:animate-room-pop'
@@ -154,7 +169,12 @@ export function HandSheet({
                 rises === null ? undefined : { animationDelay: `${rises}ms` }
             }
         >
-            <header className="flex flex-col gap-0.5">
+            <header
+                className={cn(
+                    'flex flex-col gap-0.5',
+                    columns === 2 && 'col-span-2',
+                )}
+            >
                 <h2
                     id={`sheet-${view.hand}`}
                     className={cn(
@@ -169,158 +189,178 @@ export function HandSheet({
                 </p>
             </header>
 
-            <div className="flex flex-col gap-1.5">
-                <h3
-                    className={cn('font-semibold text-muted-foreground', small)}
-                >
-                    {t('rooms.domino.sheet.left')}
-                </h3>
-                <ul
-                    className={cn(
-                        'grid gap-1.5',
-                        big ? 'grid-cols-2 gap-[1vh]' : 'grid-cols-1',
-                    )}
-                >
-                    {view.left.map((seat) => (
-                        <li
-                            key={seat.seat}
-                            data-left={seat.seat}
-                            className={cn('flex items-center gap-2', text)}
-                        >
-                            {mark(domino.seats[seat.seat]?.side ?? null)}
-                            <span className="min-w-0 flex-1 truncate">
-                                {nameOf(seat.seat)}
-                            </span>
-                            <span className="flex shrink-0 gap-0.5">
-                                {seat.tiles.map((tile) => (
-                                    <TileSvg
-                                        key={tile}
-                                        tile={tile}
-                                        className={
-                                            big
-                                                ? 'h-[4vh] w-[2vh]'
-                                                : 'h-7 w-3.5'
-                                        }
+            <div className={part}>
+                <div className="flex flex-col gap-1.5">
+                    <h3
+                        className={cn(
+                            'font-semibold text-muted-foreground',
+                            small,
+                        )}
+                    >
+                        {t('rooms.domino.sheet.left')}
+                    </h3>
+                    {/* A seat a row: a name never gives way to the tiles beside it. */}
+                    <ul
+                        className={cn(
+                            'grid grid-cols-1',
+                            big ? 'gap-[1vh]' : 'gap-1.5',
+                        )}
+                    >
+                        {view.left.map((seat) => (
+                            <li
+                                key={seat.seat}
+                                data-left={seat.seat}
+                                className={cn('flex items-center gap-2', text)}
+                            >
+                                {mark(domino.seats[seat.seat]?.side ?? null)}
+                                <span className="min-w-[6rem] flex-1 truncate">
+                                    {nameOf(seat.seat)}
+                                </span>
+                                <span className="flex shrink-0 gap-0.5">
+                                    {seat.tiles.map((tile) => (
+                                        <TileSvg
+                                            key={tile}
+                                            tile={tile}
+                                            className={
+                                                big
+                                                    ? 'h-[4vh] w-[2vh]'
+                                                    : 'h-7 w-3.5'
+                                            }
+                                        />
+                                    ))}
+                                </span>
+                                <span className="min-w-14 shrink-0 text-right font-semibold tabular-nums">
+                                    {seat.loneBlank
+                                        ? t('rooms.domino.sheet.lone_blank', {
+                                              count: seat.pips,
+                                          })
+                                        : t('rooms.game.points', {
+                                              count: seat.pips,
+                                          })}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {view.counts !== null && (
+                    <div className={cn('flex flex-col gap-1', text)}>
+                        <p className="flex flex-wrap gap-x-4 gap-y-1">
+                            {view.counts.map((count) => (
+                                <span
+                                    key={count.side}
+                                    className="flex items-center gap-1.5"
+                                >
+                                    {mark(count.side)}
+                                    {sideName(count.side)}:{' '}
+                                    <b className="tabular-nums">{count.pips}</b>
+                                </span>
+                            ))}
+                        </p>
+                        {view.lower !== null && (
+                            <p className="font-medium">
+                                {t(view.lower.key, view.lower.params)}
+                            </p>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <div className={part}>
+                {view.lines.length > 0 && (
+                    <ol className="flex flex-col gap-1.5">
+                        {view.lines.map((line, index) => {
+                            const Icon = LINE_ICONS[line.line];
+
+                            return (
+                                <li
+                                    key={index}
+                                    data-line={line.line}
+                                    className={cn(
+                                        'flex items-center gap-2',
+                                        text,
+                                    )}
+                                >
+                                    {mark(line.side)}
+                                    <Icon
+                                        aria-hidden
+                                        className={cn(
+                                            icon,
+                                            line.burnt &&
+                                                'text-red-600 dark:text-red-400',
+                                        )}
                                     />
-                                ))}
+                                    <span className="min-w-0">
+                                        {line.side !== null && (
+                                            <span className="font-semibold">
+                                                {sideName(line.side)}:{' '}
+                                            </span>
+                                        )}
+                                        {t(line.key, line.params)}
+                                    </span>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                )}
+
+                <ul className={cn('flex flex-col gap-1', text)}>
+                    {domino.sides.map((side) => (
+                        <li
+                            key={side.side}
+                            data-balance={side.side}
+                            className="flex items-center gap-2"
+                        >
+                            {mark(side.side)}
+                            <span className="min-w-0 flex-1 truncate font-medium">
+                                {sideName(side.side)}
                             </span>
-                            <span className="min-w-14 shrink-0 text-right font-semibold tabular-nums">
-                                {seat.loneBlank
-                                    ? t('rooms.domino.sheet.lone_blank', {
-                                          count: seat.pips,
-                                      })
-                                    : t('rooms.game.points', {
-                                          count: seat.pips,
-                                      })}
+                            <b className="tabular-nums">{side.balance}</b>
+                            <span
+                                className={cn('text-muted-foreground', small)}
+                            >
+                                {t('rooms.domino.sheet.to_target', {
+                                    count: toTarget(side.balance, target),
+                                })}
                             </span>
                         </li>
                     ))}
                 </ul>
-            </div>
 
-            {view.counts !== null && (
-                <div className={cn('flex flex-col gap-1', text)}>
-                    <p className="flex flex-wrap gap-x-4 gap-y-1">
-                        {view.counts.map((count) => (
-                            <span
-                                key={count.side}
-                                className="flex items-center gap-1.5"
-                            >
-                                {mark(count.side)}
-                                {sideName(count.side)}:{' '}
-                                <b className="tabular-nums">{count.pips}</b>
-                            </span>
-                        ))}
-                    </p>
-                    {view.lower !== null && (
-                        <p className="font-medium">
-                            {t(view.lower.key, view.lower.params)}
-                        </p>
-                    )}
-                </div>
-            )}
-
-            {view.lines.length > 0 && (
-                <ol className="flex flex-col gap-1.5">
-                    {view.lines.map((line, index) => {
-                        const Icon = LINE_ICONS[line.line];
-
-                        return (
-                            <li
-                                key={index}
-                                data-line={line.line}
-                                className={cn('flex items-center gap-2', text)}
-                            >
-                                {mark(line.side)}
-                                <Icon
-                                    aria-hidden
-                                    className={cn(
-                                        icon,
-                                        line.burnt &&
-                                            'text-red-600 dark:text-red-400',
-                                    )}
-                                />
-                                <span className="min-w-0">
-                                    {line.side !== null && (
-                                        <span className="font-semibold">
-                                            {sideName(line.side)}:{' '}
-                                        </span>
-                                    )}
-                                    {t(line.key, line.params)}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ol>
-            )}
-
-            <ul className={cn('flex flex-col gap-1', text)}>
-                {domino.sides.map((side) => (
-                    <li
-                        key={side.side}
-                        data-balance={side.side}
-                        className="flex items-center gap-2"
+                {view.next !== null && !still && (
+                    <p
+                        className={cn(
+                            'flex items-center gap-2 font-medium',
+                            text,
+                        )}
                     >
-                        {mark(side.side)}
-                        <span className="min-w-0 flex-1 truncate font-medium">
-                            {sideName(side.side)}
-                        </span>
-                        <b className="tabular-nums">{side.balance}</b>
+                        <CircleCheck aria-hidden className={icon} />
+                        {t(view.next.key, {
+                            ...view.next.params,
+                            why:
+                                typeof view.next.params.why === 'string'
+                                    ? t(view.next.params.why)
+                                    : '',
+                        })}
+                    </p>
+                )}
+
+                {until !== null && !still && (
+                    <div className="flex flex-col gap-1">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                            <div
+                                className="h-full rounded-full bg-primary"
+                                style={{ width: `${share * 100}%` }}
+                            />
+                        </div>
                         <span className={cn('text-muted-foreground', small)}>
-                            {t('rooms.domino.sheet.to_target', {
-                                count: toTarget(side.balance, target),
+                            {t('rooms.domino.sheet.until', {
+                                seconds: left ?? 0,
                             })}
                         </span>
-                    </li>
-                ))}
-            </ul>
-
-            {view.next !== null && !still && (
-                <p className={cn('flex items-center gap-2 font-medium', text)}>
-                    <CircleCheck aria-hidden className={icon} />
-                    {t(view.next.key, {
-                        ...view.next.params,
-                        why:
-                            typeof view.next.params.why === 'string'
-                                ? t(view.next.params.why)
-                                : '',
-                    })}
-                </p>
-            )}
-
-            {until !== null && !still && (
-                <div className="flex flex-col gap-1">
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                        <div
-                            className="h-full rounded-full bg-primary"
-                            style={{ width: `${share * 100}%` }}
-                        />
                     </div>
-                    <span className={cn('text-muted-foreground', small)}>
-                        {t('rooms.domino.sheet.until', { seconds: left ?? 0 })}
-                    </span>
-                </div>
-            )}
+                )}
+            </div>
         </section>
     );
 }

@@ -168,7 +168,7 @@ final readonly class RoomGameSetupData
         // game's level is never carried into a board game's choice, nor a board game's into a domino game's (ADR 038 decision 75).
         $computer = match (true) {
             isset($validated['computer']) => RoomComputerLevel::from((int) $validated['computer']),
-            $kept && ! array_key_exists('computer', $validated) && $mechanic->kind() === RoomGameKind::Board && $room->setup()->mechanic->kind() === RoomGameKind::Race => $room->setup_computer,
+            $kept && ! array_key_exists('computer', $validated) && $mechanic->kind() !== RoomGameKind::Race => self::carried($room, $mechanic),
             default => null,
         };
         // A domino game's table and seats (ADR 038 decision 11): absent, the room's stand.
@@ -185,10 +185,31 @@ final readonly class RoomGameSetupData
     }
 
     /**
-     * A domino game's table and seats as posted (ADR 038 decision 11): each
-     * absent is the room's stand — its stored seats fitted to the table —,
-     * a table null leaves it to the number of players, and posted seats
-     * come with a table, as many as it has, each player named once.
+     * The computer's level a choice of `$next` that names none keeps from
+     * the room's choice (ADR 036 decision 2, ADR 038 decision 75) — the one
+     * rule of `ChooseRoomGame` and of `OpenRoom` for a game chosen on
+     * «Oyunlar»: the room's `setup_computer` while the next game is of the
+     * kind the room's choice is, or neither of them is a domino game — a
+     * race and a board game keep a match's level for each other —; none
+     * when the kinds differ and one of them is a domino game, whose level is
+     * never carried into a match, nor a match's into it. Asked before the
+     * room's choice changes.
+     */
+    public static function carried(Room $room, RoomMechanic $next): ?RoomComputerLevel
+    {
+        $kind = $room->setup()->mechanic->kind();
+        $carries = $kind === $next->kind() || ($kind !== RoomGameKind::Domino && $next->kind() !== RoomGameKind::Domino);
+
+        return $carries ? $room->setup_computer : null;
+    }
+
+    /**
+     * A domino game's table and seats as posted (ADR 038 decision 11): the
+     * table absent is the room's, and null leaves it to the number of
+     * players; the seats absent are the room's stand — null here, for
+     * `ChooseRoomGame` to fit the stored seats to the table under the room's
+     * lock —, and posted seats come with a table, as many as it has, each
+     * player named once.
      *
      * @param  array{table?: string|null, seats?: list<string|null>}  $validated
      * @return array{0: RoomTable|null, 1: list<string|null>|null}
@@ -200,9 +221,7 @@ final readonly class RoomGameSetupData
         $table = array_key_exists('table', $validated) ? ($validated['table'] === null ? null : RoomTable::from($validated['table'])) : $room?->setup_table;
 
         if (! array_key_exists('seats', $validated)) {
-            $kept = $room?->setup_seats;
-
-            return [$table, $kept === null || $table === null ? $kept : array_pad(array_slice($kept, 0, $table->seats()), $table->seats(), null)];
+            return [$table, null];
         }
 
         $places = array_map(static fn (?string $seat): ?string => $seat === null ? null : strtolower($seat), $validated['seats']);

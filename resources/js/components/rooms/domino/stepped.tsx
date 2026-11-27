@@ -7,15 +7,20 @@ import { cn } from '@/lib/utils';
  * the moment arrive (`moving`), each value stands in its window of the
  * turn's timeline — the first from the start, the last from its step on —
  * stacked in one place; otherwise, and under reduced motion, the state's
- * own value alone. Visibility only (`domino-window`): nothing moves.
+ * own value alone. Visibility only (`domino-window`): nothing moves. Each
+ * window is keyed by its moment (`moment`), so a window of the next moment
+ * is a new one whose animation starts again — never one that already ran.
  */
 export function Stepped({
     counts,
     moving,
+    moment,
     render,
 }: {
     counts: SteppedCount;
     moving: boolean;
+    /** The moment the counts belong to: the next moment's windows are new and start again. */
+    moment: string;
     render: (value: number) => ReactNode;
 }) {
     const last = counts[counts.length - 1];
@@ -39,7 +44,7 @@ export function Stepped({
 
                 return (
                     <span
-                        key={index}
+                        key={`${moment}:${index}`}
                         aria-hidden
                         className={cn(
                             'domino-window col-start-1 row-start-1 motion-reduce:hidden',

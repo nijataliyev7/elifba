@@ -251,34 +251,41 @@ it('orders the sides by balance, then by side, with dense places (ADR 038 decisi
  */
 
 /**
- * @return array<string, array{0: array<string, mixed>}>
+ * Each sequence's index in `ledger.json`, named by its id and sides: the
+ * test loads its entry, so the run does not hold the fixture.
+ *
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureSequences(): array
 {
     $sequences = [];
 
-    foreach (Domino::fixture('ledger')['sequences'] as $sequence) {
-        $sequences["{$sequence['id']}, {$sequence['sides']} sides"] = [$sequence];
+    foreach (Domino::fixture('ledger')['sequences'] as $index => $sequence) {
+        $sequences["{$sequence['id']}, {$sequence['sides']} sides"] = [$index];
     }
 
     return $sequences;
 }
 
 /**
- * @return array<string, array{0: array<string, mixed>}>
+ * Each of the study's results by its index in `study.json`, named by its
+ * id and note.
+ *
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureStudyResults(): array
 {
     $sequences = [];
 
-    foreach (Domino::fixture('study')['results'] as $sequence) {
-        $sequences["{$sequence['id']}: {$sequence['note']}"] = [$sequence];
+    foreach (Domino::fixture('study')['results'] as $index => $sequence) {
+        $sequences["{$sequence['id']}: {$sequence['note']}"] = [$index];
     }
 
     return $sequences;
 }
 
-it('folds the oracle\'s sequence to the same account after every hand (ADR 038 R19–R26)', function (array $sequence): void {
+it('folds the oracle\'s sequence to the same account after every hand (ADR 038 R19–R26)', function (int $index): void {
+    $sequence = Domino::fixture('ledger')['sequences'][$index];
     $ledger = dominoLedger($sequence['sides']);
 
     foreach ($sequence['results'] as $index => $result) {
@@ -289,7 +296,8 @@ it('folds the oracle\'s sequence to the same account after every hand (ADR 038 R
     }
 })->with(dominoFixtureSequences());
 
-it('folds the study\'s results to the balances, waiting points and bank the app showed (ADR 038 R20–R26)', function (array $sequence): void {
+it('folds the study\'s results to the balances, waiting points and bank the app showed (ADR 038 R20–R26)', function (int $index): void {
+    $sequence = Domino::fixture('study')['results'][$index];
     $ledger = dominoLedger($sequence['sides']);
 
     foreach ($sequence['hands'] as $index => $hand) {

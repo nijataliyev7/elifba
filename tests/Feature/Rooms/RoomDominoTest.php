@@ -1,7 +1,11 @@
 <?php
 
 use App\Domain\Content\Enums\RoomMechanic;
+use App\Domain\Rooms\Actions\EndRoomGame;
 use App\Domain\Rooms\Actions\PlayComputerMove;
+use App\Domain\Rooms\Actions\RecordRoomAct;
+use App\Domain\Rooms\Actions\StartRoomGame;
+use App\Domain\Rooms\Data\RoomActData;
 use App\Domain\Rooms\Enums\RoomActKind;
 use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomTable;
@@ -169,6 +173,47 @@ it('takes a domino choice\'s seats only of present players named once, as many a
     expect([$room->refresh()->setup_table, $room->setup_seats, $room->setup_computer, $room->setup_rounds])->toBe([RoomTable::Two, [$aygun->id, $resad->id], null, 7]);
 });
 
+it('never refuses the seats a choice keeps: a kept place whose player left is empty, and only posted seats are refused (ADR 038 decisions 11, 12, 75)', function (): void {
+    $room = Rooms::open($this->resad, mechanic: RoomMechanic::Domino101);
+    $this->travel(1)->seconds();
+    $aygun = Rooms::join($room, $this->aygun)->id;
+    $resad = $room->rowOf($this->resad)->id;
+    $put = fn (array $choice) => $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $room), $choice);
+    $setup = fn (): array => array_intersect_key(DominoRooms::state($this->resad, $room)['setup'], array_flip(['mechanic', 'table', 'seats', 'computer']));
+
+    // A level tap on the start screen posts the whole choice the state shows: its table and both seats, stored.
+    $shown = DominoRooms::state($this->resad, $room)['setup'];
+    $put(['mechanic' => 'domino_101', 'difficulty' => 3, 'table' => $shown['table'], 'seats' => $shown['seats'], 'computer' => null])->assertNoContent();
+
+    expect($room->refresh()->setup_seats)->toBe([$resad, $aygun]);
+
+    $this->actingAs($this->aygun)->post(route('rooms.leave', $room))->assertRedirect();
+
+    // «Anaqram», then «101» as a page sends a choice of another kind — the game and its level — and the room fills the rest.
+    $put(['mechanic' => 'anagram', 'difficulty' => 2, 'rounds' => 5])->assertNoContent();
+    $put(['mechanic' => 'domino_101', 'difficulty' => 2])->assertNoContent();
+
+    expect($setup())->toBe(['mechanic' => 'domino_101', 'table' => 'two', 'seats' => [$resad, null], 'computer' => 2])
+        ->and($room->refresh()->setup_seats)->toBe([$resad, null]);
+
+    // A kept place she held is empty on the same kind too: with a level alone, and with a table alone, which fits the seats to it.
+    $room->forceFill(['setup_seats' => [$resad, $aygun]])->save();
+    $put(['mechanic' => 'domino_101', 'difficulty' => 1])->assertNoContent();
+
+    expect($room->refresh()->setup_seats)->toBe([$resad, null]);
+
+    $room->forceFill(['setup_seats' => [$aygun, $resad]])->save();
+    $put(['mechanic' => 'domino_101', 'difficulty' => 1, 'table' => 'three'])->assertNoContent();
+
+    expect($room->refresh()->setup_seats)->toBe([null, $resad, null])
+        ->and($setup())->toBe(['mechanic' => 'domino_101', 'table' => 'three', 'seats' => [null, $resad, null], 'computer' => 2]);
+
+    // Posted, a player who is gone is refused, and nothing changes.
+    $put(['mechanic' => 'domino_101', 'difficulty' => 1, 'table' => 'two', 'seats' => [$resad, $aygun]])->assertUnprocessable()->assertJsonValidationErrors('seats');
+
+    expect($room->refresh()->setup_table)->toBe(RoomTable::Three);
+});
+
 it('stores «Orta» as no choice, so a board game chosen after it plays two players', function (): void {
     $room = Rooms::open($this->resad, mechanic: RoomMechanic::Domino101);
     Rooms::join($room, $this->aygun);
@@ -257,6 +302,34 @@ it('refuses every play the judge does not take with one answer, whatever was wro
     ] as $why => $path) {
         $response = DominoRooms::play($mover, $game, $path)->assertUnprocessable();
         $refusals[$why] = $response->json();
+    }
+
+    expect(array_values(array_unique(array_map(json_encode(...), $refusals))))->toBe([json_encode(['message' => __('rooms.domino.illegal'), 'errors' => ['path' => [__('rooms.domino.illegal')]]])])
+        ->and(dominoActs($game))->toBe([['play', 0, true]]);
+});
+
+it('refuses a play whose end is null or empty by the act\'s rules, with the one answer, though it comes out of turn or at another ply (ADR 038 decision 78)', function (): void {
+    $game = DominoRooms::start($this->resad, [$this->aygun], RoomTable::Two);
+    $accounts = dominoAccounts($game, [$this->resad, $this->aygun]);
+    $this->travelTo(RoomClock::at($game->started_ms));
+    DominoRooms::play(dominoMover($game, $accounts, $this->resad), $game)->assertOk()->assertJsonPath('status', 'accepted');
+
+    $mover = dominoMover($game, $accounts, $this->resad);
+    $other = collect($accounts)->first(static fn (User $account): bool => $account->isNot($mover));
+    $tile = DominoRooms::peek($other, $game->room)['mine']['tiles'][0];
+    $refusals = [];
+
+    // A form the act's rules take is `late` from these seats; a form they refuse is the one 422, whatever else is wrong.
+    DominoRooms::play($other, $game, [$tile, 'left'])->assertOk()->assertJsonPath('status', 'late');
+
+    foreach ([
+        'an end of no name' => [$tile, 'middle'],
+        'a null end' => [$tile, null],
+        // A JSON body's empty string reaches the rules as null.
+        'an empty end' => [$tile, ''],
+    ] as $why => $path) {
+        $refusals["{$why}, out of turn"] = DominoRooms::play($other, $game, $path)->assertUnprocessable()->json();
+        $refusals["{$why}, at another ply"] = DominoRooms::play($mover, $game, $path, ply: 7)->assertUnprocessable()->json();
     }
 
     expect(array_values(array_unique(array_map(json_encode(...), $refusals))))->toBe([json_encode(['message' => __('rooms.domino.illegal'), 'errors' => ['path' => [__('rooms.domino.illegal')]]])])
@@ -685,6 +758,151 @@ it('stores the server\'s play once, the same play when asked twice, and none whi
         ->and($mover)->not->toBeNull();
 });
 
+/**
+ * A room of one against the computer, dealt from the tests' seed, played
+ * until `$stop` names the turn: the host plays a second into its own turns,
+ * the server the computer's.
+ *
+ * @param  callable(array<string, mixed>): bool  $stop
+ * @return array{0: Room, 1: RoomGame, 2: array<string, mixed>}
+ */
+function dominoAlone(User $host, callable $stop): array
+{
+    $room = Rooms::open($host, mechanic: RoomMechanic::Domino101);
+    test()->actingAs($host)->postJson(route('rooms.games.store', $room))->assertSuccessful();
+    $game = $room->games()->sole();
+    $game->forceFill(['seed' => DominoRooms::SEED])->save();
+    test()->travelTo(RoomClock::at($game->started_ms));
+
+    for ($step = 0; $step < 100; $step++) {
+        $domino = DominoRooms::peek($host, $room);
+
+        if ($domino['phase'] === 'play' && $stop($domino)) {
+            return [$room, $game->refresh(), $domino];
+        }
+
+        match ($domino['phase']) {
+            'countdown' => test()->travelTo(RoomClock::at($domino['starts_ms'])),
+            'sheet' => test()->travelTo(RoomClock::at($domino['sheet']['until_ms'])),
+            default => $domino['turn'] === 0
+                ? [test()->travelTo(RoomClock::at($domino['since_ms'] + 1_000)), DominoRooms::play($host, $game)->assertOk()]
+                : [test()->travelTo(RoomClock::at($domino['since_ms'] + Config::integer('elifba.rooms.domino.think_ms'))), app(PlayComputerMove::class)->handle($room)],
+        };
+    }
+
+    throw new RuntimeException('No such turn.');
+}
+
+/**
+ * Runs `$inside` once, inside the next wait of the server's play — after
+ * its choice and before it stores under the room's lock — and leaves the
+ * clock where that wait ends, or later if `$inside` moved it there.
+ *
+ * @param  callable(): void  $inside
+ */
+function dominoInsideSleep(callable $inside): void
+{
+    $done = false;
+
+    Sleep::whenFakingSleep(static function () use (&$done, $inside): void {
+        if ($done) {
+            return;
+        }
+
+        $done = true;
+        $wake = RoomClock::nowMs();
+        $inside();
+
+        if (RoomClock::nowMs() < $wake) {
+            test()->travelTo(RoomClock::at($wake));
+        }
+    });
+}
+
+it('stores nothing at a ply the seat played while the server waited to play it, the computer to move next (ADR 038 decision 28)', function (): void {
+    [$room, $game, $domino] = dominoAlone($this->resad, static fn (array $domino): bool => $domino['turn'] === 0 && $domino['ply'] > 0);
+    $ply = $domino['ply'];
+    $flag = $domino['flag_ms'];
+    $before = count(dominoActs($game));
+    $legal = $domino['mine']['legal'][0];
+    $path = $legal['ends'] === [] ? [$legal['tile']] : [$legal['tile'], $legal['ends'][0]];
+
+    // The server holds the seat's turn for its flag; the seat plays before the flag, while the server waits.
+    dominoInsideSleep(function () use ($room, $game, $ply, $flag, $path): void {
+        $this->travelTo(RoomClock::at($flag - 2_000));
+        $receipt = app(RecordRoomAct::class)->handle($room->refresh(), $this->resad, new RoomActData(strtolower((string) Str::ulid()), $game->id, RoomActKind::Play, $ply, $path));
+
+        expect($receipt->status->value)->toBe('accepted');
+    });
+
+    $this->travelTo(RoomClock::at($flag - 4_000));
+    app(PlayComputerMove::class)->handle($room);
+
+    // At the wake the computer's turn is due, at the next ply: nothing is stored at the seat's.
+    expect(array_slice(dominoActs($game), $before))->toBe([['play', $ply, true]]);
+});
+
+it('stores nothing in either game when the host ends the game and starts another while the server waited to play (ADR 038 decision 28)', function (): void {
+    [$room, $game, $domino] = dominoAlone($this->resad, static fn (array $domino): bool => $domino['ply'] === 0);
+    $due = $domino['turn'] === 0 ? $domino['flag_ms'] : $domino['since_ms'] + Config::integer('elifba.rooms.domino.think_ms');
+    $second = null;
+
+    dominoInsideSleep(function () use ($room, &$second): void {
+        app(EndRoomGame::class)->handle($room->refresh());
+        $second = app(StartRoomGame::class)->handle($room->refresh());
+        $second->forceFill(['seed' => DominoRooms::SEED])->save();
+        // The new game's first turn is due by the time the server stores.
+        $this->travelTo(RoomClock::at($second->started_ms + (int) $second->turn_ms));
+    });
+
+    $this->travelTo(RoomClock::at($due - 1_000));
+    app(PlayComputerMove::class)->handle($room);
+
+    expect($second)->toBeInstanceOf(RoomGame::class)
+        ->and(dominoActs($game))->toBe([])
+        ->and(dominoActs($second))->toBe([]);
+});
+
+it('stores nothing for a seat whose player came back while the server waited to play it, and plays it at its flag (ADR 038 decisions 27, 28)', function (): void {
+    $game = DominoRooms::start($this->resad, [$this->aygun], RoomTable::Two);
+    $room = $game->room;
+    $aygunSeat = array_search($room->rowOf($this->aygun)->id, $game->seats, true);
+    $this->travelTo(RoomClock::at($game->started_ms));
+    $this->actingAs($this->aygun)->post(route('rooms.leave', $room))->assertRedirect();
+
+    for ($step = 0; ($domino = DominoRooms::peek($this->resad, $room))['phase'] !== 'play' || $domino['turn'] !== $aygunSeat; $step++) {
+        expect($step)->toBeLessThan(100);
+
+        match ($domino['phase']) {
+            'countdown' => $this->travelTo(RoomClock::at($domino['starts_ms'])),
+            'sheet' => $this->travelTo(RoomClock::at($domino['sheet']['until_ms'])),
+            default => [$this->travelTo(RoomClock::at($domino['since_ms'] + 1_000)), DominoRooms::play($this->resad, $game)->assertOk()],
+        };
+    }
+
+    expect($domino['seats'][$aygunSeat]['standing'])->toBe('left');
+    $ply = $domino['ply'];
+    $since = $domino['since_ms'];
+    $before = count(dominoActs($game));
+
+    // She comes back while the server waits to play her seat at a computer's pace: her turn is due at its flag now.
+    dominoInsideSleep(function () use ($room): void {
+        Rooms::join($room, $this->aygun);
+    });
+
+    $this->travelTo(RoomClock::at($since));
+    app(PlayComputerMove::class)->handle($room);
+
+    expect(array_slice(dominoActs($game), $before))->toBe([])
+        ->and(DominoRooms::peek($this->resad, $room)['seats'][$aygunSeat]['standing'])->toBe('playing');
+
+    $this->travelTo(RoomClock::at($since + (int) $game->turn_ms));
+    app(PlayComputerMove::class)->handle($room);
+
+    expect(array_slice(dominoActs($game), $before))->toBe([['play', $ply, false]])
+        ->and(RoomAct::query()->where('room_game_id', $game->id)->orderByDesc('id')->first()?->acted_ms)->toBeGreaterThanOrEqual($since + (int) $game->turn_ms);
+});
+
 it('never carries a domino game\'s computer into a board game chosen after it, directly or through a race', function (): void {
     $room = Rooms::open($this->resad, mechanic: RoomMechanic::Domino101);
     Rooms::join($room, $this->aygun);
@@ -705,6 +923,51 @@ it('never carries a domino game\'s computer into a board game chosen after it, d
     $put(['mechanic' => 'draughts', 'difficulty' => 2]);
 
     expect($setup()['computer'])->toBeNull();
+});
+
+it('carries no computer between a domino game and a board game chosen on «Oyunlar», directly or through a race, and keeps a match\'s own (ADR 038 decision 75, ADR 036 decision 2)', function (): void {
+    $room = Rooms::open($this->resad, mechanic: RoomMechanic::Domino101);
+    $this->travel(1)->seconds();
+    Rooms::join($room, $this->aygun);
+    $resad = $room->rowOf($this->resad)->id;
+    $aygun = $room->rowOf($this->aygun)->id;
+    $put = fn (array $choice) => $this->actingAs($this->resad)->putJson(route('rooms.setup.update', $room), $choice)->assertNoContent();
+    // A game tapped on «Oyunlar» while the host's room is open (`OpenRoom`).
+    $games = fn (string $mechanic) => $this->actingAs($this->resad)->post(route('rooms.store'), ['mechanic' => $mechanic])->assertRedirect(route('rooms.show', $room));
+    $setup = fn (): array => DominoRooms::state($this->resad, $room)['setup'];
+
+    // «101» at «Çətin», then «Şaşki» on «Oyunlar»: the two players play each other.
+    $put(['mechanic' => 'domino_101', 'difficulty' => 2, 'table' => 'pairs', 'computer' => 3]);
+    $games('draughts');
+
+    expect([$setup()['mechanic'], $setup()['computer'], $setup()['black']])->toBe(['draughts', null, $aygun]);
+
+    // Through a race chosen on «Oyunlar», then the start screen's «Şaşki»: still no computer.
+    $put(['mechanic' => 'domino_101', 'difficulty' => 2, 'table' => 'pairs', 'computer' => 3]);
+    $games('anagram');
+
+    expect($room->refresh()->setup_computer)->toBeNull();
+
+    $put(['mechanic' => 'draughts', 'difficulty' => 2]);
+
+    expect([$setup()['computer'], $setup()['black']])->toBe([null, $aygun]);
+
+    // A match's «Çətin», then «101» on «Oyunlar»: its computer's seats take «Orta».
+    $put(['mechanic' => 'draughts', 'difficulty' => 2, 'white' => $resad, 'black' => null, 'computer' => 3]);
+    $games('domino_101');
+
+    expect([$setup()['mechanic'], $setup()['table'], $setup()['seats'], $setup()['computer']])->toBe(['domino_101', 'pairs', [$resad, $aygun, null, null], 2]);
+
+    // A match's own level stays when «Şaşki» is chosen again on «Oyunlar», directly or through a race (ADR 036 decision 2).
+    $put(['mechanic' => 'draughts', 'difficulty' => 2, 'white' => $resad, 'black' => null, 'computer' => 3]);
+    $games('draughts');
+
+    expect([$setup()['computer'], $setup()['white'], $setup()['black']])->toBe([3, $resad, null]);
+
+    $games('anagram');
+    $games('draughts');
+
+    expect([$setup()['computer'], $setup()['white'], $setup()['black']])->toBe([3, $resad, null]);
 });
 
 it('plays a computer\'s opening of a hand after a read that came just before it opened', function (): void {

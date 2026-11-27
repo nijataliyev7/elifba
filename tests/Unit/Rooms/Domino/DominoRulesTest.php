@@ -534,19 +534,20 @@ const DOMINO_CASE_GROUPS = [
 ];
 
 /**
- * The cases of `cases.json` whose rule is one of `$rules`, by their rule
- * and name.
+ * The cases of `cases.json` whose rule is one of `$rules`, each by its
+ * index there, named by its rule and name: the test loads its entry, so
+ * the run does not hold the fixture.
  *
  * @param  list<string>  $rules
- * @return array<string, array{0: array<string, mixed>}>
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureCases(array $rules): array
 {
     $cases = [];
 
-    foreach (Domino::fixture('cases')['cases'] as $case) {
+    foreach (Domino::fixture('cases')['cases'] as $index => $case) {
         if (in_array(substr($case['rule'], strlen('ADR 038 ')), $rules, true)) {
-            $cases["{$case['rule']}: {$case['name']}"] = [$case];
+            $cases["{$case['rule']}: {$case['name']}"] = [$index];
         }
     }
 
@@ -669,33 +670,36 @@ function dominoFixtureLedger(array $case, string $cite): void
 }
 
 /**
- * The hands of `hands.json`, by their id and what each shows.
+ * The hands of `hands.json`, each by its index there, named by its id and
+ * what it shows: the test loads its entry, so the run does not hold the
+ * fixture.
  *
- * @return array<string, array{0: array<string, mixed>}>
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureHands(): array
 {
     $hands = [];
 
-    foreach (Domino::fixture('hands')['hands'] as $entry) {
-        $hands["{$entry['id']} (".implode(', ', $entry['shows']).')'] = [$entry];
+    foreach (Domino::fixture('hands')['hands'] as $index => $entry) {
+        $hands["{$entry['id']} (".implode(', ', $entry['shows']).')'] = [$index];
     }
 
     return $hands;
 }
 
 /**
- * The study's hands, each with the hands of its game before it.
+ * The study's hands, each by its game's index in `study.json` and its own
+ * in that game — the test loads the game's hands before it.
  *
- * @return array<string, array{0: list<array<string, mixed>>, 1: int}>
+ * @return array<string, array{0: int, 1: int}>
  */
 function dominoFixtureStudyHands(): array
 {
     $hands = [];
 
-    foreach (Domino::fixture('study')['games'] as $game) {
-        foreach ($game['hands'] as $index => $hand) {
-            $hands[$hand['id']] = [$game['hands'], $index];
+    foreach (Domino::fixture('study')['games'] as $game => $entry) {
+        foreach ($entry['hands'] as $index => $hand) {
+            $hands[$hand['id']] = [$game, $index];
         }
     }
 
@@ -773,14 +777,15 @@ it('names every rule R1–R26 in a case, every row of decision 34 in a reading, 
 
 foreach (DOMINO_CASE_GROUPS as $group => $rules) {
     describe($group, function () use ($rules): void {
-        it('passes the case', function (array $case): void {
-            dominoFixtureCase($case);
+        it('passes the case', function (int $index): void {
+            dominoFixtureCase(Domino::fixture('cases')['cases'][$index]);
         })->with(dominoFixtureCases($rules));
     });
 }
 
 describe('the oracle\'s hands (hands.json)', function (): void {
-    it('plays the hand as the oracle does, play by play, to the same end', function (array $entry): void {
+    it('plays the hand as the oracle does, play by play, to the same end', function (int $index): void {
+        $entry = Domino::fixture('hands')['hands'][$index];
         $cite = "hands.json {$entry['id']} (".implode(', ', $entry['shows']).')';
         $walk = Domino::walk($entry);
 
@@ -812,7 +817,8 @@ describe('the oracle\'s hands (hands.json)', function (): void {
 });
 
 describe('the study\'s hands (study.json)', function (): void {
-    it('replays the hand move by move to what the app showed: the opener, the ending, the hand\'s points and the account', function (array $hands, int $index): void {
+    it('replays the hand move by move to what the app showed: the opener, the ending, the hand\'s points and the account', function (int $game, int $index): void {
+        $hands = Domino::fixture('study')['games'][$game]['hands'];
         $variant = new Domino101;
         $ledger = $variant->ledger(2);
         $before = null;

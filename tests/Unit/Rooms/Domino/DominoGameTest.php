@@ -499,14 +499,17 @@ it('plays seeded games to 101 at every table (ADR 038 R1–R26)', function (Room
  */
 
 /**
- * @return array<string, array{0: array<string, mixed>}>
+ * Each game's index in `games.json`, named by the game and its number of
+ * hands: a test loads its entry, so the run does not hold the fixture.
+ *
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureGames(): array
 {
     $games = [];
 
-    foreach (Domino::fixture('games')['games'] as $game) {
-        $games["{$game['game']}: ".count($game['hands']).' hands'] = [$game];
+    foreach (Domino::fixture('games')['games'] as $index => $game) {
+        $games["{$game['game']}: ".count($game['hands']).' hands'] = [$index];
     }
 
     return $games;
@@ -570,7 +573,9 @@ function dominoFixtureGame(array $game): array
  * the next hand is the replay's to check below: on a game's last hand it
  * is null (ADR 038 decision 66).
  */
-it('plays every hand of the oracle\'s game as the oracle does, turn by turn, to the same end (ADR 038 R1–R19)', function (array $game): void {
+it('plays every hand of the oracle\'s game as the oracle does, turn by turn, to the same end (ADR 038 R1–R19)', function (int $index): void {
+    $game = Domino::fixture('games')['games'][$index];
+
     foreach ($game['hands'] as $hand) {
         $cite = "games.json {$game['game']} · hand {$hand['hand']}";
         $walk = Domino::walk([...$hand, 'table' => $game['table']], $hand['hand']);
@@ -587,7 +592,8 @@ it('plays every hand of the oracle\'s game as the oracle does, turn by turn, to 
     }
 })->with(dominoFixtureGames());
 
-it('replays the oracle\'s game from its acts: the deal R4 keeps, the opener, every hand\'s end, the account after it and the winner (ADR 038 decisions 20, 24, R4–R26)', function (array $game): void {
+it('replays the oracle\'s game from its acts: the deal R4 keeps, the opener, every hand\'s end, the account after it and the winner (ADR 038 decisions 20, 24, R4–R26)', function (int $index): void {
+    $game = Domino::fixture('games')['games'][$index];
     $table = RoomTable::from($game['table']);
     ['deals' => $deals, 'acts' => $acts, 'opens' => $opens, 'ends' => $ends] = dominoFixtureGame($game);
     $last = count($game['hands']) - 1;

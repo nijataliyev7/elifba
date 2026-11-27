@@ -135,25 +135,28 @@ export function ScreenDomino({
                     </div>
                 )}
                 {domino.phase === 'sheet' && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center p-[3vh]">
-                        <div className="flex max-h-full w-[min(72vw,64rem)] flex-col">
-                            <HandSheet
-                                key={`sheet:${domino.sheet.hand}`}
-                                domino={domino}
-                                target={game.target}
-                                players={state.players}
-                                computer={computerOf(game)}
-                                viewer={null}
-                                now={now}
-                                rises={
-                                    arrival !== null
-                                        ? turnSteps(domino).ends +
-                                          AFTER_STEPS_MS
-                                        : null
-                                }
-                                big
-                            />
-                        </div>
+                    <div className="absolute inset-0 z-20 flex flex-col items-center p-[3vh]">
+                        {/* Fitted to the table it covers: nobody scrolls a screen on a wall. */}
+                        <ScreenFit className="h-full w-[min(72vw,64rem)]">
+                            <div data-sheet-panel className="my-auto">
+                                <HandSheet
+                                    key={`sheet:${domino.sheet.hand}`}
+                                    domino={domino}
+                                    target={game.target}
+                                    players={state.players}
+                                    computer={computerOf(game)}
+                                    viewer={null}
+                                    now={now}
+                                    rises={
+                                        arrival !== null
+                                            ? turnSteps(domino).ends +
+                                              AFTER_STEPS_MS
+                                            : null
+                                    }
+                                    big
+                                />
+                            </div>
+                        </ScreenFit>
                     </div>
                 )}
             </div>

@@ -893,7 +893,7 @@
     "rooms.setup.done": "Done",
     "rooms.setup.failed": "The game could not be started. Try again.",
     "rooms.setup.families.board": "Board games",
-    "rooms.setup.families.domino": "Dominoes",
+    "rooms.setup.families.domino": "Domino",
     "rooms.setup.families.logic": "Logic and sequences",
     "rooms.setup.families.memory": "Memory",
     "rooms.setup.families.words": "Word games",

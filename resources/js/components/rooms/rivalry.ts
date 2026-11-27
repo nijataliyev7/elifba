@@ -80,6 +80,17 @@ const SPLIT_MIN = 12;
 const SPLIT_MAX = 88;
 
 /**
+ * Where a domino strip draws the accounts' words under its sides
+ * (docs/frontend.md rule 15 "Domino" → "The strip"; ADR 038 "As built
+ * (Y7)"): on the screen in the gap's row, which is wide; on a phone in a
+ * row of their own under it, since at 375px the gap's words and the
+ * throw's badge leave them too little to say «Gözləmədə 12 · 2/3».
+ */
+export function notesRow(big: boolean): 'gap' | 'below' {
+    return big ? 'gap' : 'below';
+}
+
+/**
  * The left side's share of the bar, in %: `left ÷ (left + right)`, held
  * between 12 and 88, and 50 at 0 : 0.
  */

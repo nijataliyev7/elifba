@@ -135,7 +135,8 @@ export function DominoEnd({
             now={null}
             big={big}
             still
-            className={big ? 'h-[44vh]' : 'h-64'}
+            // On the screen a third of its height, so the end stands on one screen with the last sheet under it.
+            className={big ? 'h-[30vh]' : 'h-64'}
         />
     );
 

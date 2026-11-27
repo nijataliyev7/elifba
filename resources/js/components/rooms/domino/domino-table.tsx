@@ -16,12 +16,20 @@ import {
     seatPlaces,
 } from '@/components/rooms/domino/places';
 import type { SeatPlace } from '@/components/rooms/domino/places';
+import {
+    chipLines,
+    flies,
+    flightFrames,
+    flyReady,
+    markBelow,
+    PHONE_CHIP_PX,
+    stepKey,
+} from '@/components/rooms/domino/stage';
 import { Stepped, StepMark } from '@/components/rooms/domino/stepped';
 import type { PlayPath } from '@/components/rooms/domino/taps';
 import { BackSvg, TileFace, tileNumbers } from '@/components/rooms/domino/tile';
 import {
     PASS_SHOWN_MS,
-    PLAY_MS,
     stepCounts,
     turnSteps,
     viewerSeat,
@@ -48,6 +56,10 @@ const URGENT_S = 5;
 
 /** How long «Bazar :count×» stands on a chip after its step begins. */
 const DRAW_SHOWN_MS = 1600;
+
+/** The band of a phone's table its chips take at the top and at the bottom: 6px, a 36px chip and 4px. */
+const PHONE_CHIP_ROW =
+    PHONE_CHIP_PX.edge + PHONE_CHIP_PX.height + PHONE_CHIP_PX.gap;
 
 /** The size of a box, measured when it is drawn and when the window changes it. */
 function useBoxSize(box: RefObject<HTMLElement | null>): {
@@ -139,11 +151,12 @@ function chainBox(
     }
 
     if (!big) {
+        // A phone's chips are two lines (36px) 6px from the table's top and bottom edges.
         return {
             left: 4,
-            top: 38,
+            top: PHONE_CHIP_ROW,
             width: Math.max(0, width - 8),
-            height: Math.max(0, height - 38 - 40),
+            height: Math.max(0, height - 2 * PHONE_CHIP_ROW),
         };
     }
 
@@ -241,11 +254,17 @@ export function DominoTable({
     const moving = arrival !== null && !still;
     const steps = moving ? turnSteps(domino).steps : [];
     const counts = stepCounts(domino);
-    const flying =
-        moving && arrival.tile !== null && !reducedMotion() ? arrival : null;
     const [landed, setLanded] = useState<string | null>(null);
-    const hidden =
-        flying !== null && landed !== flying.key ? flying.tile : null;
+    // Drawn while it flies, never once it landed: the line's own tile shows then (ADR 038 "As built (Y7)").
+    const flying =
+        moving &&
+        arrival.tile !== null &&
+        !reducedMotion() &&
+        flies(arrival.key, landed)
+            ? arrival
+            : null;
+    const hidden = flying?.tile ?? null;
+    const moment = moving ? arrival.key : '';
     const last =
         domino.last?.kind === 'play' && pending === null
             ? domino.last.tile
@@ -276,6 +295,8 @@ export function DominoTable({
                 seconds={seconds}
                 counts={counts.seats[seat] ?? []}
                 moving={moving}
+                moment={moment}
+                below={markBelow(big, places[seat], seat === (own ?? 0))}
                 steps={steps.filter(
                     (step) =>
                         (step.kind === 'draw' || step.kind === 'pass') &&
@@ -408,6 +429,7 @@ export function DominoTable({
                                 domino={domino}
                                 counts={counts.pile}
                                 moving={moving}
+                                moment={moment}
                             />
                         )}
                     </div>
@@ -419,6 +441,7 @@ export function DominoTable({
                         domino={domino}
                         counts={counts.pile}
                         moving={moving}
+                        moment={moment}
                         big
                     />
                 </div>
@@ -430,6 +453,7 @@ export function DominoTable({
                     chips={chipRefs}
                     seat={flying.seat}
                     box={box}
+                    measured={size}
                     layout={layout}
                     area={area}
                     tile={layout.tiles.find((one) => one.tile === flying.tile)}
@@ -582,14 +606,18 @@ function ChainSvg({
 /**
  * A play's flight («oturma», ADR 038 decision 89): the tile lifts at its
  * seat's chip (90 ms, its shadow growing), flies to its place turning to
- * lie as the line has it (280 ms) and settles (140 ms); then the line's
- * own tile shows. Transform and opacity only, and never under reduced
- * motion, where the tile is at its end at once.
+ * lie as the line has it (280 ms) and settles (140 ms); then it is gone
+ * and the line's own tile shows. It starts once the table was measured at
+ * the size it has, so it lands where the line is drawn. The tile and its
+ * shadow — a layer of its own under it — move in transform and opacity
+ * only (`flightFrames()`), and never under reduced motion, where the tile
+ * is at its end at once.
  */
 function Fly({
     chips,
     seat,
     box,
+    measured,
     layout,
     area,
     tile,
@@ -598,18 +626,21 @@ function Fly({
     chips: RefObject<(HTMLElement | null)[]>;
     seat: number;
     box: RefObject<HTMLDivElement | null>;
+    measured: { width: number; height: number };
     layout: ChainLayout;
     area: { left: number; top: number };
     tile: ChainTile | undefined;
     onLanded: () => void;
 }) {
     const element = useRef<HTMLDivElement>(null);
+    const shadow = useRef<HTMLDivElement>(null);
     const flown = useRef(false);
     const unit = layout.unit;
 
     // Once, as its moment arrives: a state drawn again does not fly it again.
     useLayoutEffect(() => {
         const fly = element.current;
+        const under = shadow.current;
         const table = box.current;
         const from = chips.current[seat] ?? null;
 
@@ -617,9 +648,26 @@ function Fly({
             return;
         }
 
+        if (
+            table !== null &&
+            typeof ResizeObserver !== 'undefined' &&
+            !flyReady(measured, {
+                width: table.clientWidth,
+                height: table.clientHeight,
+            })
+        ) {
+            // The table changed size in this moment: fly once the line is laid out for it.
+            return;
+        }
+
         flown.current = true;
 
-        if (fly === null || tile === undefined || table === null) {
+        if (
+            fly === null ||
+            under === null ||
+            tile === undefined ||
+            table === null
+        ) {
             onLanded();
 
             return;
@@ -638,47 +686,16 @@ function Fly({
             area.left + (tile.x - layout.viewBox[0]) * unit,
             area.top + (tile.y - layout.viewBox[1]) * unit,
         ];
-        const at = (
-            point: [number, number],
-            angle: number,
-            scale: number,
-            lift = 0,
-        ) =>
-            `translate(${point[0] - unit / 2}px, ${point[1] - unit - lift}px) rotate(${angle}deg) scale(${scale})`;
-        const total = PLAY_MS.lift + PLAY_MS.fly + PLAY_MS.settle;
-        const animation = fly.animate(
-            [
-                {
-                    transform: at(origin, 0, 0.9),
-                    filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.25))',
-                    offset: 0,
-                },
-                {
-                    transform: at(origin, 0, 1.08, 10),
-                    filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.35))',
-                    offset: PLAY_MS.lift / total,
-                },
-                {
-                    transform: at(to, tile.angle, 1.06, 4),
-                    filter: 'drop-shadow(0 8px 6px rgb(0 0 0 / 0.3))',
-                    offset: (PLAY_MS.lift + PLAY_MS.fly) / total,
-                },
-                {
-                    transform: at(to, tile.angle, 0.97),
-                    filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.25))',
-                    offset: (PLAY_MS.lift + PLAY_MS.fly + 70) / total,
-                },
-                {
-                    transform: at(to, tile.angle, 1),
-                    filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.25))',
-                    offset: 1,
-                },
-            ],
-            { duration: total, easing: 'ease-in-out', fill: 'forwards' },
-        );
+        const frames = flightFrames(origin, to, tile.angle, unit);
+        const timing: KeyframeAnimationOptions = {
+            duration: frames.duration,
+            easing: 'ease-in-out',
+            fill: 'both',
+        };
 
-        animation.finished.then(onLanded, onLanded);
-    }, [chips, seat, box, layout, area, tile, unit, onLanded]);
+        under.animate(frames.shadow, timing);
+        fly.animate(frames.tile, timing).finished.then(onLanded, onLanded);
+    }, [chips, seat, box, measured, layout, area, tile, unit, onLanded]);
 
     if (tile === undefined) {
         return null;
@@ -688,10 +705,15 @@ function Fly({
         <div
             ref={element}
             aria-hidden
-            className="pointer-events-none absolute top-0 left-0 z-20 origin-center"
+            data-flying={tile.tile}
+            className="pointer-events-none absolute top-0 left-0 z-20 origin-center opacity-0"
             style={{ width: unit, height: unit * 2 }}
         >
-            <svg viewBox="0 0 1 2" className="block size-full">
+            <div
+                ref={shadow}
+                className="absolute inset-0 rounded-[18%] bg-black opacity-0 blur-[3px]"
+            />
+            <svg viewBox="0 0 1 2" className="relative block size-full">
                 <TileFace near={tile.near} far={tile.far} />
             </svg>
         </div>
@@ -704,7 +726,11 @@ function Fly({
  * the viewer's partner, its tiles as backs with their count («×5»), and
  * while it is that seat's turn a ring in its side's colour with the
  * seconds left, the wrong colour with `Timer` in the last five. A step of
- * the turn shows on it in its window: «Bazar :count×», «PAS» with `Flag`.
+ * the turn shows on it in its window: «Bazar :count×», «PAS» with `Flag` —
+ * under a chip along the table's top edge (`below`), so the edge never
+ * cuts it, and keyed by its moment, so a seat that passes again shows it
+ * again. On a phone the chip is two lines — the name over the tiles and
+ * the seconds — so three chips across 375px keep their names.
  */
 function SeatChip({
     ref,
@@ -717,6 +743,8 @@ function SeatChip({
     seconds,
     counts,
     moving,
+    moment,
+    below,
     steps,
     backs,
     upright: stacked,
@@ -732,6 +760,10 @@ function SeatChip({
     seconds: number | null;
     counts: SteppedCount;
     moving: boolean;
+    /** The moment the steps belong to (`stepKey()`). */
+    moment: string;
+    /** A step's mark stands under the chip, not over it. */
+    below: boolean;
     steps: ReturnType<typeof turnSteps>['steps'];
     /** How many backs it draws at most beside the count. */
     backs: number;
@@ -744,133 +776,186 @@ function SeatChip({
     const urgent = seconds !== null && seconds <= URGENT_S;
     const icon = big ? 'size-[2.4vh] shrink-0' : 'size-3.5 shrink-0';
 
-    return (
+    const mark = (
         <span
-            ref={ref}
-            data-seat-chip
-            data-turn={seconds !== null ? '' : undefined}
-            aria-label={t('rooms.domino.seat_tiles', {
-                name: fullName,
-                count: tiles,
-            })}
+            aria-hidden
             className={cn(
-                'relative flex min-w-0 items-center bg-card/95 text-foreground shadow-[0_2px_6px_rgb(0_0_0/0.3)]',
-                big
-                    ? stacked
-                        ? 'max-w-[15vw] flex-wrap justify-center gap-x-[1vh] gap-y-[0.4vh] rounded-[2vh] px-[1.6vh] py-[1vh] text-[max(1rem,2.6vh)]'
-                        : 'h-[max(2.75rem,6vh)] gap-[1vh] rounded-full px-[1.6vh] text-[max(1rem,2.6vh)]'
-                    : 'h-7 max-w-[8.5rem] gap-1 rounded-full px-2 text-xs',
-                seconds !== null &&
-                    (tone === 'left'
-                        ? 'ring-[3px] ring-rival-left'
-                        : 'ring-[3px] ring-rival-right'),
-                seconds !== null && urgent && 'ring-red-600 dark:ring-red-400',
+                'shrink-0 rounded-full',
+                big ? 'size-[1.2vh]' : 'size-2',
+                tone === 'left' ? 'bg-rival-left' : 'bg-rival-right',
+            )}
+        />
+    );
+    const named = (
+        <span
+            className={cn(
+                'min-w-0 truncate font-semibold',
+                stacked && 'max-w-full basis-[calc(100%-3vh)] text-center',
+            )}
+            aria-hidden
+        >
+            {computer ? t('rooms.computer.name') : name}
+        </span>
+    );
+    const bot = (computer || playedFor) && <Bot aria-hidden className={icon} />;
+    const playedForWords = playedFor && (
+        <span className="sr-only">
+            {t('rooms.domino.played_for', { name: fullName })}
+        </span>
+    );
+    const partnerBadge = partner && (
+        <span
+            className={cn(
+                'shrink-0 text-muted-foreground',
+                big ? 'text-[1.8vh]' : 'text-[10px]',
+            )}
+        >
+            {t('rooms.domino.partner_badge')}
+        </span>
+    );
+    const held = (
+        <span aria-hidden className="flex shrink-0 items-center gap-px">
+            {Array.from({ length: Math.min(tiles, backs) }, (_, index) => (
+                <BackSvg
+                    key={index}
+                    className={big ? 'h-[2.6vh] w-[1.3vh]' : 'h-3 w-1.5'}
+                />
+            ))}
+            <span
+                className={cn(
+                    'ml-0.5 text-muted-foreground tabular-nums',
+                    big ? 'text-[2vh]' : 'text-[11px]',
+                )}
+            >
+                <Stepped
+                    counts={counts}
+                    moving={moving}
+                    moment={moment}
+                    render={(value) => `×${value}`}
+                />
+            </span>
+        </span>
+    );
+    const time = seconds !== null && (
+        <span
+            className={cn(
+                'flex shrink-0 items-center gap-0.5 font-bold tabular-nums',
+                tone === 'left'
+                    ? 'text-rival-left-text'
+                    : 'text-rival-right-text',
+                urgent && 'text-red-600 dark:text-red-400',
+            )}
+        >
+            {urgent && <Timer aria-hidden className={icon} />}
+            {seconds}
+        </span>
+    );
+    const marks = steps.map((step) => (
+        <StepMark
+            key={stepKey(moment, step)}
+            step={`${step.kind}:${step.seat}`}
+            at={step.at}
+            length={step.kind === 'pass' ? PASS_SHOWN_MS : DRAW_SHOWN_MS}
+            className={cn(
+                'absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap',
+                below
+                    ? big
+                        ? 'top-full mt-[0.8vh]'
+                        : 'top-full mt-1'
+                    : big
+                      ? '-top-[3.4vh]'
+                      : '-top-5',
             )}
         >
             <span
-                aria-hidden
                 className={cn(
-                    'shrink-0 rounded-full',
-                    big ? 'size-[1.2vh]' : 'size-2',
-                    tone === 'left' ? 'bg-rival-left' : 'bg-rival-right',
+                    'inline-flex items-center gap-1 rounded-full font-bold text-white shadow',
+                    big
+                        ? 'px-[1.2vh] py-[0.3vh] text-[2.2vh]'
+                        : 'px-2 py-0.5 text-[11px]',
+                    step.kind === 'pass'
+                        ? 'bg-neutral-800 dark:bg-neutral-700'
+                        : 'bg-neutral-700 dark:bg-neutral-600',
                 )}
-            />
-            {(computer || playedFor) && <Bot aria-hidden className={icon} />}
-            <span
-                className={cn(
-                    'min-w-0 truncate font-semibold',
-                    stacked && 'max-w-full basis-[calc(100%-3vh)] text-center',
-                )}
-                aria-hidden
             >
-                {computer ? t('rooms.computer.name') : name}
+                {step.kind === 'pass' ? (
+                    <>
+                        <Flag aria-hidden className={icon} />
+                        {t('rooms.domino.pass')}
+                    </>
+                ) : (
+                    t('rooms.domino.drew', {
+                        count: step.kind === 'draw' ? step.count : 0,
+                    })
+                )}
             </span>
-            {playedFor && (
-                <span className="sr-only">
-                    {t('rooms.domino.played_for', { name: fullName })}
+        </StepMark>
+    ));
+    const label = t('rooms.domino.seat_tiles', {
+        name: fullName,
+        count: tiles,
+    });
+    const ring =
+        seconds !== null &&
+        cn(
+            tone === 'left'
+                ? 'ring-[3px] ring-rival-left'
+                : 'ring-[3px] ring-rival-right',
+            urgent && 'ring-red-600 dark:ring-red-400',
+        );
+
+    if (!big && chipLines(big, stacked) === 2) {
+        return (
+            <span
+                ref={ref}
+                role="group"
+                data-seat-chip
+                data-turn={seconds !== null ? '' : undefined}
+                aria-label={label}
+                className={cn(
+                    'relative flex h-9 max-w-[8.5rem] min-w-0 flex-col items-center justify-center rounded-xl bg-card/95 px-2 text-xs leading-4 text-foreground shadow-[0_2px_6px_rgb(0_0_0/0.3)]',
+                    ring,
+                )}
+            >
+                <span className="flex max-w-full min-w-0 items-center gap-1">
+                    {mark}
+                    {bot}
+                    {named}
                 </span>
-            )}
-            {partner && (
-                <span
-                    className={cn(
-                        'shrink-0 text-muted-foreground',
-                        big ? 'text-[1.8vh]' : 'text-[10px]',
-                    )}
-                >
-                    {t('rooms.domino.partner_badge')}
+                <span className="flex items-center gap-1">
+                    {partnerBadge}
+                    {held}
+                    {time}
                 </span>
-            )}
-            <span aria-hidden className="flex shrink-0 items-center gap-px">
-                {Array.from({ length: Math.min(tiles, backs) }, (_, index) => (
-                    <BackSvg
-                        key={index}
-                        className={big ? 'h-[2.6vh] w-[1.3vh]' : 'h-3 w-1.5'}
-                    />
-                ))}
-                <span
-                    className={cn(
-                        'ml-0.5 text-muted-foreground tabular-nums',
-                        big ? 'text-[2vh]' : 'text-[11px]',
-                    )}
-                >
-                    <Stepped
-                        counts={counts}
-                        moving={moving}
-                        render={(value) => `×${value}`}
-                    />
-                </span>
+                {playedForWords}
+                {marks}
             </span>
-            {seconds !== null && (
-                <span
-                    className={cn(
-                        'flex shrink-0 items-center gap-0.5 font-bold tabular-nums',
-                        tone === 'left'
-                            ? 'text-rival-left-text'
-                            : 'text-rival-right-text',
-                        urgent && 'text-red-600 dark:text-red-400',
-                    )}
-                >
-                    {urgent && <Timer aria-hidden className={icon} />}
-                    {seconds}
-                </span>
+        );
+    }
+
+    return (
+        <span
+            ref={ref}
+            role="group"
+            data-seat-chip
+            data-turn={seconds !== null ? '' : undefined}
+            aria-label={label}
+            className={cn(
+                'relative flex min-w-0 items-center bg-card/95 text-foreground shadow-[0_2px_6px_rgb(0_0_0/0.3)]',
+                stacked
+                    ? 'max-w-[15vw] flex-wrap justify-center gap-x-[1vh] gap-y-[0.4vh] rounded-[2vh] px-[1.6vh] py-[1vh] text-[max(1rem,2.6vh)]'
+                    : 'h-[max(2.75rem,6vh)] gap-[1vh] rounded-full px-[1.6vh] text-[max(1rem,2.6vh)]',
+                ring,
             )}
-            {steps.map((step) => (
-                <StepMark
-                    key={`${step.kind}:${step.at}`}
-                    step={`${step.kind}:${step.seat}`}
-                    at={step.at}
-                    length={
-                        step.kind === 'pass' ? PASS_SHOWN_MS : DRAW_SHOWN_MS
-                    }
-                    className={cn(
-                        'absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap',
-                        big ? '-top-[3.4vh]' : '-top-5',
-                    )}
-                >
-                    <span
-                        className={cn(
-                            'inline-flex items-center gap-1 rounded-full font-bold text-white shadow',
-                            big
-                                ? 'px-[1.2vh] py-[0.3vh] text-[2.2vh]'
-                                : 'px-2 py-0.5 text-[11px]',
-                            step.kind === 'pass'
-                                ? 'bg-neutral-800 dark:bg-neutral-700'
-                                : 'bg-neutral-700 dark:bg-neutral-600',
-                        )}
-                    >
-                        {step.kind === 'pass' ? (
-                            <>
-                                <Flag aria-hidden className={icon} />
-                                {t('rooms.domino.pass')}
-                            </>
-                        ) : (
-                            t('rooms.domino.drew', {
-                                count: step.kind === 'draw' ? step.count : 0,
-                            })
-                        )}
-                    </span>
-                </StepMark>
-            ))}
+        >
+            {mark}
+            {bot}
+            {named}
+            {playedForWords}
+            {partnerBadge}
+            {held}
+            {time}
+            {marks}
         </span>
     );
 }
@@ -885,11 +970,13 @@ function Boneyard({
     domino,
     counts,
     moving,
+    moment,
     big = false,
 }: {
     domino: RoomDomino;
     counts: SteppedCount;
     moving: boolean;
+    moment: string;
     big?: boolean;
 }) {
     const { t } = useTranslation();
@@ -923,6 +1010,7 @@ function Boneyard({
                     <Stepped
                         counts={counts}
                         moving={moving}
+                        moment={moment}
                         render={(value) =>
                             t('rooms.domino.boneyard', { count: value })
                         }

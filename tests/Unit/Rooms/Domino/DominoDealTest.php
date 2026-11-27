@@ -177,20 +177,24 @@ it('refuses a deal set by hand that is not the 28 tiles, seven a seat', function
  */
 
 /**
- * @return array<string, array{0: array<string, mixed>}>
+ * Each deal's index in `hands.json`, named by its table and verdict: the
+ * test loads its entry, so the run does not hold the fixture.
+ *
+ * @return array<string, array{0: int}>
  */
 function dominoFixtureDeals(): array
 {
     $deals = [];
 
     foreach (Domino::fixture('hands')['deals'] as $index => $entry) {
-        $deals['deal '.($index + 1).": {$entry['table']}, {$entry['verdict']}"] = [$entry];
+        $deals['deal '.($index + 1).": {$entry['table']}, {$entry['verdict']}"] = [$index];
     }
 
     return $deals;
 }
 
-it('throws away the oracle\'s deal for the same reasons, or keeps it (ADR 038 R4, reading)', function (array $entry): void {
+it('throws away the oracle\'s deal for the same reasons, or keeps it (ADR 038 R4, reading)', function (int $index): void {
+    $entry = Domino::fixture('hands')['deals'][$index];
     $deal = Domino::dealOf(RoomTable::from($entry['table']), $entry['deal']);
 
     expect(['verdict' => $deal->thrown() ? 'thrown' : 'stands', 'why' => Domino::reasonsSet($deal->reasons())])

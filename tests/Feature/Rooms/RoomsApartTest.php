@@ -385,17 +385,31 @@ it('sells a letter by the round\'s question, never by the mechanic\'s name', fun
         ->and((string) file_get_contents(app_path('Domain/Rooms/Support/RoomLetters.php')))->toContain('->orders !== []');
 });
 
-it('asks for a game\'s kind in one place per concern on the page side', function (): void {
-    // ADR 034 decision 27, ADR 038 decision 44: a page looks at the kind of a
-    // game through one function per concern — `roomMoment()`, `phaseEnds()`
-    // and `waitsForOthers()`, `roomCues()`, `stripRows()`, `finalRows()`,
-    // `GAME_VIEWS` and `choiceParts()` — and the draughts and domino parts
-    // themselves; no other file compares a kind or a mechanic with a board or
-    // a domino game's, or reads the state's match or domino (a game's drawing
-    // has a case per mechanic).
-    $js = resource_path('js');
+/**
+ * How a page looks at a game's kind (ADR 034 decision 27, ADR 038 decision
+ * 44): a kind compared — after a dot or not, either way round, or as a
+ * `switch` case — or written as one; `kindOf()`; one kind's mechanic schema
+ * asked (`RoomDominoMechanic.safeParse()`, `.options`); the state's match or
+ * domino, or a field of either, however reached; and a board or domino
+ * game's mechanic by name, in any quotes. A translation key
+ * (`rooms.domino.…`, `rooms.match.…`) is no field.
+ */
+const PAGE_KIND_PATTERN = '/\bkind\s*[!=]==?\s*[\'"`](race|board|domino)[\'"`]|[\'"`](race|board|domino)[\'"`]\s*[!=]==?\s*[\w$.?]*\bkind\b'
+    .'|\bcase\s+[\'"`](race|board|domino)[\'"`]\s*:|\bkind:\s*[\'"`](race|board|domino)[\'"`]|\bkindOf\(|\bRoom(Race|Board|Domino)Mechanic\.(safeParse|parse|options|enum|Enum|extract|exclude)\b'
+    .'|\bstate\??\.(match|domino)\b|(?<![\w$])(?<!rooms\.)match\??\.(phase|ply|sides|position|legal|offer|can_offer|result|last|moves|turn|since_ms|flag_ms|starts_ms)\b'
+    .'|(?<![\w$])(?<!rooms\.)domino\??\.(phase|ply|sides|seats|hand|turn|since_ms|flag_ms|starts_ms|line|first|ends|boneyard|last|mine|sheet|result|bank)\b'
+    .'|[\'"`](draughts|domino_101)[\'"`]/';
+
+/**
+ * The page files under `$js` that look at a game's kind (`PAGE_KIND_PATTERN`):
+ * every `.ts` and `.tsx` but the tests and the draughts and domino parts,
+ * which are where those games are drawn.
+ *
+ * @return list<string>
+ */
+function pageKindReaders(string $js): array
+{
     $readers = [];
-    $pattern = "/\\.kind\\s*[!=]==\\s*'(race|board|domino)'|kind:\\s*'(race|board|domino)'|\\bkindOf\\(|\\bstate\\??\\.(match|domino)\\b|(?<![.\\w])match\\??\\.(phase|ply|sides|position|legal|offer|can_offer|result|last|moves|turn|since_ms|flag_ms|starts_ms)\\b|(?<![.\\w])domino\\??\\.(phase|ply|sides|seats|hand|turn|since_ms|flag_ms|starts_ms|line|first|ends|boneyard|last|mine|sheet|result|bank)\\b|'draughts'|'domino_101'/";
 
     foreach (File::allFiles($js) as $file) {
         $path = str_replace($js.'/', '', $file->getPathname());
@@ -407,14 +421,25 @@ it('asks for a game\'s kind in one place per concern on the page side', function
             continue;
         }
 
-        if (preg_match($pattern, (string) file_get_contents($file->getPathname())) === 1) {
+        if (preg_match(PAGE_KIND_PATTERN, (string) file_get_contents($file->getPathname())) === 1) {
             $readers[] = $path;
         }
     }
 
     sort($readers);
 
-    expect($readers)->toBe([
+    return $readers;
+}
+
+it('asks for a game\'s kind in one place per concern on the page side', function (): void {
+    // ADR 034 decision 27, ADR 038 decision 44: a page looks at the kind of a
+    // game through one function per concern — `roomMoment()`, `phaseEnds()`
+    // and `waitsForOthers()`, `roomCues()`, `stripRows()`, `finalRows()`,
+    // `GAME_VIEWS` and `choiceParts()` — and the draughts and domino parts
+    // themselves; no other file compares a kind or a mechanic with a board or
+    // a domino game's, or reads the state's match or domino (a game's drawing
+    // has a case per mechanic).
+    expect(pageKindReaders(resource_path('js')))->toBe([
         'components/rooms/catalog.ts',
         'components/rooms/final.ts',
         'components/rooms/game-drawing.tsx',
@@ -425,6 +450,35 @@ it('asks for a game\'s kind in one place per concern on the page side', function
         'rooms/clock.ts',
         'rooms/contract.ts',
     ]);
+});
+
+it('sees a page look at a game\'s kind in every form it may be written, and not in a translation key', function (): void {
+    foreach ([
+        "if (game.kind === 'domino') {}",
+        "switch (live.kind) {\n    case 'domino':\n        return null;\n}",
+        "const { kind } = game;\nif (kind !== 'board') {}",
+        "if ('race' === game.kind) {}",
+        'const parts = { kind: `domino` };',
+        'if (RoomDominoMechanic.safeParse(game.mechanic).success) {}',
+        'if (RoomBoardMechanic.options.includes(choice.mechanic)) {}',
+        'if (state.domino !== null) {}',
+        "if (live.domino.phase === 'play') {}",
+        'const sides = match?.sides;',
+        'if (game.mechanic === `domino_101`) {}',
+        'if (game.mechanic === "draughts") {}',
+        'const kind = kindOf(mechanic);',
+    ] as $code) {
+        expect(preg_match(PAGE_KIND_PATTERN, $code))->toBe(1, $code);
+    }
+
+    foreach ([
+        "t('rooms.domino.sheet.title')",
+        "t('rooms.match.illegal')",
+        "if (item.kind === 'letter') {}",
+        "const mechanic = 'anagram';",
+    ] as $code) {
+        expect(preg_match(PAGE_KIND_PATTERN, $code))->toBe(0, $code);
+    }
 });
 
 it('takes no rules library and names no checkers on the server or the pages', function (): void {

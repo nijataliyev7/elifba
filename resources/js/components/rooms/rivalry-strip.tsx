@@ -17,6 +17,7 @@ import {
     stripMoment,
     stripRows,
 } from '@/components/rooms/rivalry';
+import { notesRow } from '@/components/rooms/rivalry';
 import type { RivalPair, TotalChange } from '@/components/rooms/rivalry';
 import { useCountUp } from '@/components/rooms/use-motion';
 import { useTranslation } from '@/hooks/use-translation';
@@ -203,7 +204,7 @@ export type StripNaming = {
     you: string;
     target: number;
     bank: number;
-    /** Under a side, in the gap's row: a closed account's words. */
+    /** Under a side, a closed account's words: in the gap's row on the screen, in a row of their own on a phone (`notesRow()`). */
     notes?: Record<string, ReactNode>;
 };
 
@@ -306,6 +307,18 @@ export function RivalryStrip({
     const ribbon = overtake !== null && (!animate || step >= 3);
     const leftTook = overtake !== null && overtake === pair.left?.player_id;
     const overGap = ribbon && !big && ribbonInGap;
+    const notesAt = naming?.notes === undefined ? null : notesRow(big);
+    const leftNote = naming?.notes !== undefined && (
+        <span className="flex min-w-0 justify-start">
+            {drawn.left === null ? null : naming.notes[drawn.left.player_id]}
+        </span>
+    );
+    // Clear of the throw's badge on the strip's bottom-right corner.
+    const rightNote = naming?.notes !== undefined && (
+        <span className={cn('flex min-w-0 justify-end', !big && 'pr-8')}>
+            {drawn.right === null ? null : naming.notes[drawn.right.player_id]}
+        </span>
+    );
 
     return (
         <div
@@ -395,18 +408,12 @@ export function RivalryStrip({
                     className={cn(
                         'flex items-center justify-center',
                         big ? 'gap-[1.4vh]' : 'gap-1.5',
-                        naming?.notes !== undefined &&
+                        notesAt === 'gap' &&
                             'grid grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)]',
                         overGap && 'invisible',
                     )}
                 >
-                    {naming?.notes !== undefined && (
-                        <span className="flex min-w-0 justify-start">
-                            {drawn.left === null
-                                ? null
-                                : naming.notes[drawn.left.player_id]}
-                        </span>
-                    )}
+                    {notesAt === 'gap' && leftNote}
                     <Gap
                         key={gapWords(t, words, nameOf)}
                         pair={words}
@@ -432,23 +439,28 @@ export function RivalryStrip({
                             {t('rooms.rivalry.bank', { count: naming.bank })}
                         </span>
                     )}
-                    {naming?.notes !== undefined && (
+                    {notesAt === 'gap' && (
                         <>
-                            {naming.bank <= 0 && <span />}
-                            {/* Clear of the throw's badge on the strip's bottom-right corner. */}
-                            <span
-                                className={cn(
-                                    'flex min-w-0 justify-end',
-                                    !big && 'pr-8',
-                                )}
-                            >
-                                {drawn.right === null
-                                    ? null
-                                    : naming.notes[drawn.right.player_id]}
-                            </span>
+                            {naming?.bank !== undefined && naming.bank <= 0 && (
+                                <span />
+                            )}
+                            {rightNote}
                         </>
                     )}
                 </div>
+                {/* On a phone the accounts' words have a row of their own, always there, so none is cut and nothing jumps. */}
+                {notesAt === 'below' && (
+                    <div
+                        data-notes
+                        className={cn(
+                            'grid h-4 grid-cols-2 items-center gap-1.5',
+                            overGap && 'invisible',
+                        )}
+                    >
+                        {leftNote}
+                        {rightNote}
+                    </div>
+                )}
             </div>
 
             {ribbon && (

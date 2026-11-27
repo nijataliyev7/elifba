@@ -104,7 +104,7 @@ final class DominoDriver extends RoomGameDriver
 
     public function choiceRules(bool $kept = false): array
     {
-        // Absent, each is the room's stand (`RoomGameSetupData::validate()`); a table null leaves it to the number of players.
+        // Absent, each is the room's stand (`RoomGameSetupData::validate()`, `ChooseRoomGame`); a table null leaves it to the number of players.
         return [
             'table' => ['sometimes', 'nullable', 'string', Rule::enum(RoomTable::class)],
             'seats' => ['sometimes', 'array', 'list', 'min:2', 'max:4'],

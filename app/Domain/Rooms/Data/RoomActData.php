@@ -113,10 +113,8 @@ final readonly class RoomActData
             return false;
         }
 
-        $tile = $value[0];
-        $end = $value[1] ?? null;
-
-        return is_string($tile) && DominoTile::tryOf($tile) !== null && ($end === null || (is_string($end) && DominoTile::isEnd($end)));
+        // An end is named when there is one: `[tile, null]` is no path (ADR 038 decision 78).
+        return is_string($value[0]) && DominoTile::tryOf($value[0]) !== null && (count($value) === 1 || (is_string($value[1]) && DominoTile::isEnd($value[1])));
     }
 
     /**

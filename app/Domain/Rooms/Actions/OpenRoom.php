@@ -3,6 +3,7 @@
 namespace App\Domain\Rooms\Actions;
 
 use App\Domain\Rooms\Data\OpenRoomData;
+use App\Domain\Rooms\Data\RoomGameSetupData;
 use App\Domain\Rooms\Exceptions\RoomGameRunning;
 use App\Domain\Rooms\Models\Room;
 use App\Domain\Rooms\Models\RoomPlayer;
@@ -31,8 +32,11 @@ use Illuminate\Support\Facades\DB;
  * - It hosts an open room with no game running: no second room. That
  *   room's choice takes this game and keeps its difficulty and rounds
  *   (the game's defaults when it has no level at that difficulty), under
- *   the room row's lock; the room is active, its revision rises and it is
- *   signalled. Its voice stays as it is.
+ *   the room row's lock, and the computer's level only where a choice of
+ *   this game naming none would keep it (`RoomGameSetupData::carried()`,
+ *   ADR 038 decision 75): never from a domino game into a match or a race,
+ *   nor from a match or a race into a domino game. The room is active,
+ *   its revision rises and it is signalled. Its voice stays as it is.
  * - It hosts an open room with a game running: nothing is written
  *   (`RoomGameRunning`).
  */
@@ -97,10 +101,13 @@ final readonly class OpenRoom
         }
 
         $setup = $locked->setup()->withMechanic($data->mechanic) ?? RoomDefaults::for($locked->host, $data->mechanic);
+        // Asked of the room's choice before it changes.
+        $computer = RoomGameSetupData::carried($locked, $setup->mechanic);
         $locked->setup_mechanic = $setup->mechanic;
         $locked->setup_difficulty = $setup->difficulty;
         // A board game's choice has no rounds: the room keeps its number for the next race.
         $locked->setup_rounds = $setup->rounds ?? $locked->setup_rounds;
+        $locked->setup_computer = $computer;
         $locked->last_activity_at = now();
         RoomSignal::raise($locked);
 

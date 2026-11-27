@@ -495,4 +495,110 @@ it('words the domino pages in exactly the keys docs/frontend.md rule 15 "Domino"
     foreach (array_filter($az, $own, ARRAY_FILTER_USE_KEY) as $key => $text) {
         expect(preg_match('/\botaq|\botağ/u', Az::lower($text)))->toBe(0, $key);
     }
+
+    // English says "Domino" and "101" (rule 15 "Domino" → "Words"), as the glossary names the family (ADR 038 "As built (Y7)" d1.12).
+    /** @var array<string, string> $en */
+    $en = json_decode((string) file_get_contents(lang_path('en.json')), true);
+
+    expect($en['rooms.setup.families.domino'])->toBe('Domino')
+        ->and($az['rooms.setup.families.domino'])->toBe('Domino')
+        ->and($en['rooms.mechanics.domino_101.name'])->toBe('101');
+});
+
+/**
+ * ADR 038 decision 61's words in Azerbaijani, matched inside words whatever
+ * the case: a coin, a stake (two words for it), a rating, a rank, a grade, a
+ * streak, experience, an evaluation, a currency, an entry fee, a profile and
+ * a level — «səviyyə», which the computer's level alone may say
+ * (`rooms.computer.level.*`, ADR 036).
+ */
+const ROOM_NEVER_SAID = ['sikkə', 'mərc', 'stavka', 'reytinq', 'rütbə', 'dərəcə', 'seriya', 'təcrübə', 'qiymətləndirmə', 'valyuta', 'giriş haqqı', 'profil', 'səviyyə'];
+
+/**
+ * The same words in English, each a whole word: a coin, a currency, a stake,
+ * a bet, a wager, a fee, a rating, a rank, a streak, experience, XP, a
+ * profile — and a level only as a grade: "levels", "level up", or "level"
+ * followed by a number or a placeholder. A tie is "level" (ADR 027: "You are
+ * level", "The hand was blocked level", "Level: :count points went to the
+ * bank"), which stays allowed.
+ */
+const ROOM_NEVER_SAID_EN = '/(?<!\pL)(?:coins?|currenc(?:y|ies)|stakes?|bets?|betting|wagers?|fees?|ratings?|ranks?|ranked|ranking|streaks?|experience|xp|profiles?|levels|level(?:led|ling)?\s+up)(?!\pL)|(?<!\pL)level\s+(?:\d|:\pL)/u';
+
+/**
+ * The words of ADR 038 decision 61 the text of `$key` holds, whatever its
+ * case — Azerbaijani lowered with Azerbaijani casing, English with the plain
+ * rules.
+ *
+ * @return list<string>
+ */
+function neverSaidInRoomText(string $key, string $text): array
+{
+    $lowered = [Az::lower($text), mb_strtolower($text)];
+    $found = array_values(array_filter(
+        ROOM_NEVER_SAID,
+        static fn (string $stem): bool => array_any($lowered, static fn (string $lower): bool => str_contains($lower, $stem))
+            && ($stem !== 'səviyyə' || ! str_starts_with($key, 'rooms.computer.level.')),
+    ));
+    preg_match_all(ROOM_NEVER_SAID_EN, $lowered[1], $matches);
+
+    return [...$found, ...array_values(array_unique($matches[0]))];
+}
+
+/**
+ * The strings of the domino pages and of the rivalry strip in
+ * `$translations` that say a word of ADR 038 decision 61, with the words.
+ *
+ * @param  array<string, string>  $translations
+ * @return array<string, list<string>>
+ */
+function neverSaidOnDominoPages(array $translations): array
+{
+    $own = static fn (string $key): bool => str_starts_with($key, 'rooms.domino.') || str_starts_with($key, 'rooms.table.') || str_starts_with($key, 'rooms.turn.')
+        || str_starts_with($key, 'rooms.rivalry.') || $key === 'rooms.setup.families.domino' || str_starts_with($key, 'rooms.mechanics.domino_101.');
+
+    $found = [];
+
+    foreach (array_filter($translations, $own, ARRAY_FILTER_USE_KEY) as $key => $text) {
+        $words = neverSaidInRoomText($key, $text);
+
+        if ($words !== []) {
+            $found[$key] = $words;
+        }
+    }
+
+    return $found;
+}
+
+it('finds a word of ADR 038 decision 61 however it is cased, and nothing in a tie, the bank or the computer\'s level', function (): void {
+    foreach ([
+        'Mərc: 24', 'Bazar · 7 sikkə', 'REYTİNQ +25', 'Rütbə: usta', 'Dərəcə: usta', 'Seriya: 3', 'Təcrübə +50', 'Qiymətləndirmə',
+        'Səviyyə 4', 'Giriş haqqı', 'Valyuta', 'Profiliniz', 'Stavka',
+        'Stake: 24', 'Coins · 7', 'Rating +25', 'Rank: master', 'Streak: 3', 'Level 4', 'Level :count', 'LEVELS', 'You levelled up',
+        'Entry fee', '+50 XP', 'Your profile', 'Place your bet', 'Currency', 'A wager', 'Experience',
+    ] as $text) {
+        expect(neverSaidInRoomText('rooms.domino.sheet.title', $text))->not->toBe([], $text);
+    }
+
+    foreach ([
+        'Level: :count points went to the bank', 'The hand was blocked level', 'You are level', 'Level', 'Bərabərsiniz', 'Bərabər',
+        'Bazar · :count', 'Bank: :count', 'Between the hands', 'Kompüter (:level)', ':seconds s', 'Rəqib', 'Frankly', 'Feels',
+    ] as $text) {
+        expect(neverSaidInRoomText('rooms.domino.sheet.title', $text))->toBe([], $text);
+    }
+
+    expect(neverSaidInRoomText('rooms.computer.level.2', 'Orta səviyyə'))->toBe([])
+        ->and(neverSaidInRoomText('rooms.domino.sheet.title', 'Orta səviyyə'))->toBe(['səviyyə']);
+});
+
+it('says no coin, stake, rating, rank, streak, level or profile on a domino page or the rivalry strip, in both languages (ADR 038 decision 61)', function (): void {
+    // docs/frontend.md rule 15 "Domino" → "Words" and ADR 038 decision 59 name this test for decision 61's words.
+    foreach (['az', 'en'] as $locale) {
+        /** @var array<string, string> $translations */
+        $translations = json_decode((string) file_get_contents(lang_path("{$locale}.json")), true);
+
+        expect(neverSaidOnDominoPages($translations))->toBe([], "{$locale}: ADR 038 decision 61")
+            // The check holds: one such word in a copy of the strings is found.
+            ->and(neverSaidOnDominoPages([...$translations, 'rooms.rivalry.bank' => $locale === 'az' ? 'Mərc: :count' : 'Stake: :count']))
+            ->toBe(['rooms.rivalry.bank' => [$locale === 'az' ? 'mərc' : 'stake']], $locale);
+    }
 });

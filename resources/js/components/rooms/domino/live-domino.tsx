@@ -9,6 +9,11 @@ import { DominoStrip } from '@/components/rooms/domino/domino-strip';
 import { DominoTable } from '@/components/rooms/domino/domino-table';
 import type { DominoArrival } from '@/components/rooms/domino/domino-table';
 import { HandSheet } from '@/components/rooms/domino/hand-sheet';
+import {
+    dealtNow,
+    PHONE_PX,
+    tableArrival,
+} from '@/components/rooms/domino/stage';
 import { DominoDefs } from '@/components/rooms/domino/tile';
 import {
     AFTER_STEPS_MS,
@@ -118,7 +123,8 @@ export function LiveDomino({
     const seat = viewerSeat(domino, viewer);
     const turn = yourPlay(domino, viewer);
     const arrival = useDominoArrival(game.id, domino);
-    const dealt = useDealt(game.id, domino) && motion.phase;
+    // Only in the moment the hand opens: a tile that comes later is drawn as what it is (ADR 038 "As built (Y7)").
+    const dealt = dealtNow(useDealt(game.id, domino), domino) && motion.phase;
     const rivalry = useRivalry(state, viewer);
     const acts = useDominoActs({
         roomId,
@@ -129,7 +135,7 @@ export function LiveDomino({
         onGone,
         sound,
     });
-    // The viewer's own play already stands at its end: only another seat's flies.
+    // The viewer's own play already stands at its end: only another seat's flies, but what followed it is drawn here too.
     const own =
         arrival !== null &&
         acts.posted !== null &&
@@ -152,7 +158,11 @@ export function LiveDomino({
                 data-ply={domino.ply}
                 data-hand={domino.hand?.number}
                 data-motion={motion.phase ? 'on' : undefined}
-                className="relative mx-auto flex h-[calc(100svh-3.5rem-env(safe-area-inset-top))] min-h-[29rem] w-full max-w-xl flex-col"
+                className="relative mx-auto flex min-h-[29rem] w-full max-w-xl flex-col"
+                // The frame's top bar is 56px and its 1px border: nothing scrolls at 375 × 667.
+                style={{
+                    height: `calc(100svh - ${PHONE_PX.bar}px - env(safe-area-inset-top))`,
+                }}
             >
                 {/* The strip, 99px with its gap (docs/frontend.md rule 15 "Domino"): 8 above it, 4 under it. */}
                 <div className="shrink-0 px-4 pt-2 pb-1">
@@ -198,7 +208,7 @@ export function LiveDomino({
                         targets={acts.targets}
                         onTarget={acts.tapTarget}
                         pending={acts.pending}
-                        arrival={own ? null : arrival}
+                        arrival={tableArrival(arrival, own)}
                         className="flex-1"
                     />
                     {domino.phase === 'countdown' && (
