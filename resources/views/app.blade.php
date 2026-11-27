@@ -3,6 +3,13 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{--
+            The page draws its own light and dark themes: a browser's forced dark
+            (Chrome's dark theme for web pages, Samsung Internet's dark mode) never
+            repaints it, which turned a domino tile's ivory face dark under its
+            black pips (ADR 038 "As built (Y8)", docs/frontend.md rule 7).
+        --}}
+        <meta name="color-scheme" content="only light">
 
         {{-- What a shared link shows (WhatsApp, search), in the page's locale (docs/frontend.md rule 10) --}}
         <meta name="description" content="{{ __('welcome.meta.description') }}">
@@ -38,6 +45,7 @@
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {
+                color-scheme: only light;
                 background-color: oklch(1 0 0);
             }
 

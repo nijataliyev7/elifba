@@ -28,6 +28,21 @@ it('links the manifest, the theme colour and the touch icon on every page', func
     'classes' => ['/classes', true],
 ]);
 
+it('keeps a browser\'s forced dark off every page, so a tile\'s pips stay on its ivory face', function (string $url, bool $signedIn): void {
+    if ($signedIn) {
+        $this->actingAs(User::factory()->create());
+    }
+
+    $this->get($url)
+        ->assertOk()
+        ->assertSee('<meta name="color-scheme" content="only light">', escape: false)
+        ->assertSee('color-scheme: only light;', escape: false);
+})->with([
+    'welcome' => ['/', false],
+    'login' => ['/login', false],
+    'classes' => ['/classes', true],
+]);
+
 it('serves a manifest Chrome can install from', function (): void {
     $response = $this->get(route('manifest'))
         ->assertOk()
