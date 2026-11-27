@@ -465,3 +465,101 @@ it('chooses the pinned play at each level with the configured deals: integers an
         }
     }
 });
+
+it('takes its only play at every level, wherever the judge lists one (ADR 038 decision 55, "As built (Y5)")', function (RoomComputerLevel $level): void {
+    $only = [];
+
+    foreach (dominoEnginePositions() as $position) {
+        $hand = $position['hand'];
+        $view = dominoEngineView($hand, $hand->turn ?? throw new RuntimeException('No turn.'));
+        $plays = dominoEngineLegal($view);
+
+        if (count($plays) === 1) {
+            expect(dominoEnginePlay(DominoEngine::choose($view, $level, dominoEngineRandom(crc32($position['cite'])))))->toBe($plays[0], $position['cite']);
+            $at = $view->line === [] ? 'first' : 'later';
+            $only[$at] = ($only[$at] ?? 0) + 1;
+        }
+    }
+
+    // A hand's first tile under R6 or R7 is the one play, and so is a tile that alone fits.
+    expect($only['first'] ?? 0)->toBeGreaterThan(20)
+        ->and($only['later'] ?? 0)->toBeGreaterThan(100);
+})->with(RoomComputerLevel::cases());
+
+/**
+ * Two levels over `$deals` seeded deals at a table, each deal played twice
+ * with the levels swapped between the sides — the duplicate format, so a
+ * deal's luck falls to both — through the judge alone: every play is the
+ * engine's from the view of the seat to move, and `DominoHand` takes it or
+ * the test fails. Half the deals open by the deal (R6, R7), half by right
+ * (R8 a), where the first tile is a choice. The seeds are the bench's of
+ * Y5 (architecture §12 "Domino (Y4–Y6)" → "The computer"), so the rates
+ * here are the ones written there.
+ *
+ * @return array{hands: int, won: array{0: int, 1: int}, points: array{0: int, 1: int}}
+ */
+function dominoEngineDuel(RoomTable $table, RoomComputerLevel $first, RoomComputerLevel $second, int $deals): array
+{
+    $levels = [$first, $second];
+    $won = [0, 0];
+    $points = [0, 0];
+
+    for ($index = 0; $index < $deals; $index++) {
+        $try = 0;
+
+        do {
+            $deal = DominoDeal::shuffled($table, dominoEngineRandom(1_000_003 * $index + $try++));
+        } while ($deal->thrown());
+
+        $right = $index % 2 === 0 ? null : [$index % $table->seats(), RoomOpenerWhy::Finished];
+
+        foreach ([0, 1] as $swap) {
+            $hand = DominoHand::open(new Domino101, $deal, 1, $right, 0);
+            $ply = 0;
+
+            while (! $hand->over()) {
+                $seat = $hand->turn ?? throw new RuntimeException('No turn.');
+                $choice = DominoEngine::choose(dominoEngineView($hand, $seat), $levels[($table->sideOf($seat) + $swap) % 2], dominoEngineRandom(crc32("{$index}:{$swap}:{$ply}")));
+                $hand = $hand->play($choice['tile'], $choice['end'], ++$ply, false) ?? throw new RuntimeException("Deal {$index}: the judge refused the computer's play.");
+            }
+
+            $count = $hand->count ?? throw new RuntimeException("Deal {$index}: no count.");
+
+            if ($count['winner'] !== null) {
+                $level = ($count['winner'] + $swap) % 2;
+                $won[$level]++;
+                $points[$level] += $count['gain'];
+            }
+        }
+    }
+
+    return ['hands' => 2 * $deals, 'won' => $won, 'points' => $points];
+}
+
+it('wins more at each level than at the one below, over 300 seeded hands at `two` and at `pairs` (ADR 038 decision 55)', function (RoomTable $table): void {
+    // «101» is played to 101 points, so a level beats another by the points
+    // of the hands it wins. «Orta» wins about as many hands as «Asan» — a
+    // hand goes to who empties first — but sheds the heavy tiles, so it wins
+    // more when it wins and gives less when it loses; «Çətin» also wins most
+    // hands. The levels come in the bench's order, the lower first, so the
+    // rates are the ones written in architecture §12; 300 hands are one
+    // sample — with the levels the other way round «Asan» draws other plays
+    // and «Orta» won 55 % and 53 % of the hands — so the bounds stand well
+    // inside both, and a change that weakens a level fails here.
+    $medium = dominoEngineDuel($table, RoomComputerLevel::Easy, RoomComputerLevel::Medium, 150);
+    $hard = dominoEngineDuel($table, RoomComputerLevel::Medium, RoomComputerLevel::Hard, 150);
+
+    foreach (['«Asan» against «Orta»' => $medium, '«Orta» against «Çətin»' => $hard] as $pairing => $duel) {
+        fwrite(STDERR, sprintf(
+            "\n  %s, %s: %d hands — won %d (%.0f %%) to %d (%.0f %%), points %d to %d",
+            $table->value, $pairing, $duel['hands'],
+            $duel['won'][0], 100 * $duel['won'][0] / $duel['hands'], $duel['won'][1], 100 * $duel['won'][1] / $duel['hands'],
+            $duel['points'][0], $duel['points'][1],
+        ));
+    }
+
+    expect($medium['points'][1])->toBeGreaterThan(intdiv(115 * $medium['points'][0], 100))
+        ->and($medium['won'][1])->toBeGreaterThan(intdiv(90 * $medium['won'][0], 100))
+        ->and($hard['points'][1])->toBeGreaterThan(2 * $hard['points'][0])
+        ->and($hard['won'][1])->toBeGreaterThan(2 * $hard['won'][0]);
+})->with([RoomTable::Two, RoomTable::Pairs])->group('slow');

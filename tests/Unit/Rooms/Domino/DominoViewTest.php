@@ -1,10 +1,14 @@
 <?php
 
+use App\Domain\Rooms\Enums\RoomComputerLevel;
 use App\Domain\Rooms\Enums\RoomTable;
 use App\Domain\Rooms\Support\Domino\DominoDeal;
+use App\Domain\Rooms\Support\Domino\DominoEngine;
 use App\Domain\Rooms\Support\Domino\DominoGame;
 use App\Domain\Rooms\Support\Domino\DominoTile;
 use App\Domain\Rooms\Support\Domino\DominoView;
+use Random\Engine\Xoshiro256StarStar;
+use Random\Randomizer;
 use Tests\Support\Domino;
 
 /*
@@ -12,8 +16,9 @@ use Tests\Support\Domino;
  * decisions 9 and 54): its own tiles, the line, the counts, every play,
  * draw and pass by seat, the account — and no field for another seat's
  * tile, the boneyard's order or the seed. Two games that differ only in
- * tiles a seat has not seen give that seat an equal view; the computer,
- * deciding from a view alone (Y5), cannot peek.
+ * tiles a seat has not seen give that seat an equal view, and so the same
+ * choice of the computer at every level: deciding from a view alone (Y5),
+ * it cannot peek.
  */
 
 /**
@@ -122,3 +127,47 @@ it('gives the seats that did not draw an equal view of two games where another s
         }
     }
 });
+
+it('gives the same choice at every level in two games that differ only in tiles the seat to move has not seen (ADR 038 decisions 9, 54–55)', function (RoomComputerLevel $level): void {
+    // The two pairs of games above: seats 1 and 3 hold `6-6` and `5-5` the
+    // other way round; seat 1 drew the same tiles in another order.
+    $pairs = static fn (string $one, string $three): array => [
+        ['5-0', '0-0', '4-1', '4-0', '5-3', '4-3', '6-0'],
+        ['6-3', $one, '3-1', '1-0', '3-0', '6-2', '2-0'],
+        ['4-2', '5-1', '1-1', '4-4', '6-5', '2-1', '6-1'],
+        ['3-3', '3-2', $three, '5-2', '5-4', '6-4', '2-2'],
+    ];
+    $three = [
+        ['2-0', '5-4', '5-2', '5-1', '6-0', '5-3', '3-0'],
+        ['6-1', '4-4', '4-1', '4-0', '3-1', '6-3', '0-0'],
+        ['4-3', '5-0', '6-2', '2-1', '6-6', '2-2', '3-3'],
+    ];
+    $games = [
+        [RoomTable::Pairs, Domino::deal(RoomTable::Pairs, $pairs('6-6', '5-5')), Domino::deal(RoomTable::Pairs, $pairs('5-5', '6-6')), [0, 2],
+            ['1-1', '4-1 left', '3-1 right', '4-4 left', '3-3 right', '4-3 right', '4-2 left', '3-2 left', '4-0 right', '1-0 right', '2-1 right', '2-2 right', '5-3 left', '2-0 right', '5-1 left']],
+        [RoomTable::Three, Domino::deal(RoomTable::Three, $three, ['6-4', '4-2', '6-5', '5-5', '3-2', '1-0', '1-1']), Domino::deal(RoomTable::Three, $three, ['4-2', '6-4', '6-5', '5-5', '1-1', '3-2', '1-0']), [0, 2],
+            ['2-2', '2-0 left', '0-0 left', '5-0 left', '5-2 right', '6-5 left', '6-6 left', '5-4 right', '4-1 right', '6-2 left', '5-1 right', '4-2 left', '4-3 left', '5-3 left', '5-5 left']],
+    ];
+    $chose = 0;
+
+    foreach ($games as [$table, $one, $other, $blind, $plays]) {
+        foreach (range(0, count($plays) - 1) as $count) {
+            $a = dominoSeen($table, $one, array_slice($plays, 0, $count));
+            $b = dominoSeen($table, $other, array_slice($plays, 0, $count));
+            $seat = $a->turn();
+
+            if (! in_array($seat, $blind, true)) {
+                continue;
+            }
+
+            $seed = 1_009 * $count + $seat;
+
+            expect($a->view($seat))->toEqual($b->view($seat), "{$table->value} · ply {$count}")
+                ->and(DominoEngine::choose($a->view($seat), $level, new Randomizer(new Xoshiro256StarStar($seed))))
+                ->toBe(DominoEngine::choose($b->view($seat), $level, new Randomizer(new Xoshiro256StarStar($seed))), "{$table->value} · ply {$count}");
+            $chose++;
+        }
+    }
+
+    expect($chose)->toBeGreaterThan(10);
+})->with(RoomComputerLevel::cases());
