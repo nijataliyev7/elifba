@@ -113,16 +113,7 @@ export function tileNumbers(tile: string): [number, number] {
 export function TileFace({ near, far }: { near: number; far: number }) {
     return (
         <>
-            <rect
-                x="0.03"
-                y="0.03"
-                width="0.94"
-                height="1.94"
-                rx="0.13"
-                fill="url(#dm-face)"
-                style={{ stroke: 'var(--domino-edge)' }}
-                strokeWidth="0.03"
-            />
+            <TileOutline />
             <rect
                 x="0.075"
                 y="0.075"
@@ -167,6 +158,27 @@ export function TileFace({ near, far }: { near: number; far: number }) {
                 )),
             )}
         </>
+    );
+}
+
+/**
+ * An upright tile's face without its marks — the shape a shadow is cast
+ * from. A line draws its shadow from these alone, in a layer under the
+ * tiles: Safari (WebKit) left out pips of tiles drawn inside a filtered
+ * group (ADR 038 "As built (Y8)").
+ */
+export function TileOutline() {
+    return (
+        <rect
+            x="0.03"
+            y="0.03"
+            width="0.94"
+            height="1.94"
+            rx="0.13"
+            fill="url(#dm-face)"
+            style={{ stroke: 'var(--domino-edge)' }}
+            strokeWidth="0.03"
+        />
     );
 }
 

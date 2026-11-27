@@ -27,7 +27,12 @@ import {
 } from '@/components/rooms/domino/stage';
 import { Stepped, StepMark } from '@/components/rooms/domino/stepped';
 import type { PlayPath } from '@/components/rooms/domino/taps';
-import { BackSvg, TileFace, tileNumbers } from '@/components/rooms/domino/tile';
+import {
+    BackSvg,
+    TileFace,
+    TileOutline,
+    tileNumbers,
+} from '@/components/rooms/domino/tile';
 import {
     PASS_SHOWN_MS,
     stepCounts,
@@ -464,8 +469,39 @@ export function DominoTable({
     );
 }
 
+/** The frame round the last tile played, or the one being placed, in the tile's own units. */
+function TileFrame({ pending }: { pending: boolean }) {
+    return (
+        <>
+            <rect
+                x="-0.09"
+                y="-0.09"
+                width="1.18"
+                height="2.18"
+                rx="0.2"
+                fill="none"
+                style={{ stroke: 'var(--domino-target)' }}
+                strokeOpacity="0.7"
+                strokeWidth="0.14"
+            />
+            <rect
+                x="-0.08"
+                y="-0.08"
+                width="1.16"
+                height="2.16"
+                rx="0.19"
+                fill="none"
+                style={{
+                    stroke: pending ? 'var(--rival-left)' : 'var(--primary)',
+                }}
+                strokeWidth="0.07"
+            />
+        </>
+    );
+}
+
 /** The line as one SVG: the tiles with their shadow, the last one framed, the lit targets and the two ends' badges. */
-function ChainSvg({
+export function ChainSvg({
     layout,
     width,
     height,
@@ -499,7 +535,26 @@ function ChainSvg({
             aria-label={label}
             className="block"
         >
-            <g filter="url(#dm-shadow)">
+            {/*
+                The shadow in a layer of its own, cast from the tiles' outlines
+                and their frames, under every tile: Safari (WebKit) left out
+                pips of tiles drawn inside a filtered group (ADR 038 "As built (Y8)").
+            */}
+            <g filter="url(#dm-shadow)" aria-hidden>
+                {layout.tiles.map((tile) => (
+                    <g
+                        key={tile.tile}
+                        opacity={tile.tile === hidden ? 0 : 1}
+                        transform={`translate(${tile.x} ${tile.y}) rotate(${tile.angle}) translate(-0.5 -1)`}
+                    >
+                        <TileOutline />
+                        {(tile.tile === last || tile.tile === pending) && (
+                            <TileFrame pending={tile.tile === pending} />
+                        )}
+                    </g>
+                ))}
+            </g>
+            <g>
                 {layout.tiles.map((tile) => (
                     <g
                         key={tile.tile}
@@ -509,34 +564,7 @@ function ChainSvg({
                     >
                         <TileFace near={tile.near} far={tile.far} />
                         {(tile.tile === last || tile.tile === pending) && (
-                            <>
-                                <rect
-                                    x="-0.09"
-                                    y="-0.09"
-                                    width="1.18"
-                                    height="2.18"
-                                    rx="0.2"
-                                    fill="none"
-                                    style={{ stroke: 'var(--domino-target)' }}
-                                    strokeOpacity="0.7"
-                                    strokeWidth="0.14"
-                                />
-                                <rect
-                                    x="-0.08"
-                                    y="-0.08"
-                                    width="1.16"
-                                    height="2.16"
-                                    rx="0.19"
-                                    fill="none"
-                                    style={{
-                                        stroke:
-                                            tile.tile === pending
-                                                ? 'var(--rival-left)'
-                                                : 'var(--primary)',
-                                    }}
-                                    strokeWidth="0.07"
-                                />
-                            </>
+                            <TileFrame pending={tile.tile === pending} />
                         )}
                     </g>
                 ))}
