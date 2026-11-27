@@ -1849,3 +1849,273 @@ describe('roomCues in a match', () => {
         ).toEqual([{ sound: 'close', at: 0 }]);
     });
 });
+
+describe('roomCues in a domino game (ADR 038 decisions 53 and 90)', () => {
+    const AYGUN = '01kaqrx3mn4p5q6r7s8t9vwxyz';
+    const LEYLA = '01kaqrx5cd6e7f8g9h0jkmnpqr';
+
+    const d = (name: string) => state(`domino.${name}`);
+
+    /** The same state at another ply — or in another phase — of the same game, as the page heard it before. */
+    function before(source: State, ply: number, phase?: 'play'): State {
+        const domino = source.domino;
+
+        if (domino === null) {
+            throw new Error('a domino game is needed');
+        }
+
+        return {
+            ...source,
+            domino: {
+                ...domino,
+                ply,
+                ...(phase === undefined
+                    ? {}
+                    : {
+                          phase,
+                          turn: null,
+                          since_ms: domino.starts_ms,
+                          flag_ms: domino.starts_ms + 30_000,
+                          sheet: null,
+                      }),
+            },
+        } as State;
+    }
+
+    /** What `speaker` plays as the page goes from `previous` to `current`, each heard at its `server_ms`. */
+    function cues(
+        previous: State | null,
+        current: State,
+        speaker: RoomSpeaker,
+        screen = true,
+    ): RoomCue[] {
+        const room = (one: State) => withScreen(one, screen);
+
+        return roomCues(
+            previous === null
+                ? null
+                : { state: room(previous), now: previous.server_ms },
+            { state: room(current), now: current.server_ms },
+            speaker,
+        );
+    }
+
+    const sounds = (played: RoomCue[]) =>
+        played.map((cue) => [cue.sound, cue.at]);
+
+    it('counts down to the first hand and opens it with `go`; a later hand opens in silence', () => {
+        const countdown = d('countdown');
+        const starts = countdown.domino?.starts_ms ?? 0;
+
+        expect(sounds(cues(d('chosen'), countdown, 'screen'))).toEqual([
+            ['countdown', starts - countdown.server_ms],
+        ]);
+
+        const opened = {
+            ...d('play'),
+            domino: { ...d('play').domino, ply: 0, last: null },
+        } as State;
+
+        expect(sounds(cues(countdown, opened, 'screen'))).toEqual([['go', 0]]);
+        // The opener's own phone feels its turn as the hand opens.
+        expect(sounds(cues(countdown, opened, 'phone'))).toEqual([
+            ['turn', 0],
+            ['buzz', 0],
+        ]);
+        // A later hand's opening: the room plays nothing, the seat to move its own turn.
+        expect(sounds(cues(d('sheet.blocked'), d('opener'), 'screen'))).toEqual(
+            [],
+        );
+        expect(sounds(cues(d('sheet.blocked'), d('opener'), 'phone'))).toEqual([
+            ['turn', 0],
+            ['buzz', 0],
+        ]);
+    });
+
+    it('plays `tile` as a play settles — a double’s too — and the seat to move’s `turn` on its own phone', () => {
+        const play = d('play');
+
+        expect(sounds(cues(before(play, 5), play, 'screen'))).toEqual([
+            ['tile', 510],
+        ]);
+        // The seat to move, with a screen: its own turn, after the tile settles.
+        expect(sounds(cues(before(play, 5), play, 'phone'))).toEqual([
+            ['turn', 510],
+            ['buzz', 510],
+        ]);
+        // Without a screen it carries the room too.
+        expect(sounds(cues(before(play, 5), play, 'phone', false))).toEqual([
+            ['tile', 510],
+            ['turn', 510],
+            ['buzz', 510],
+        ]);
+        // The screen's own state, which names no tile of anyone's: the same `tile`.
+        expect(
+            sounds(cues(before(d('screen'), 5), d('screen'), 'screen')),
+        ).toEqual([['tile', 510]]);
+        // A watcher: nothing of its own; the room's without a screen.
+        expect(
+            sounds(cues(before(d('watch'), 5), d('watch'), 'phone')),
+        ).toEqual([]);
+        expect(
+            sounds(cues(before(d('watch'), 5), d('watch'), 'phone', false)),
+        ).toEqual([['tile', 510]]);
+    });
+
+    it('plays `draw` as a seat’s draw is drawn, and the drawer’s turn after it', () => {
+        const drew = d('drew');
+
+        expect(sounds(cues(before(drew, 20), drew, 'screen'))).toEqual([
+            ['tile', 510],
+            ['draw', 510],
+        ]);
+        expect(sounds(cues(before(drew, 20), drew, 'phone'))).toEqual([
+            ['turn', 1060],
+            ['buzz', 1060],
+        ]);
+    });
+
+    it('knocks at every pass and plays `hand` as the sheet rises after the steps', () => {
+        const blocked = d('sheet.blocked');
+
+        expect(
+            sounds(cues(before(blocked, 20, 'play'), blocked, 'screen')),
+        ).toEqual([
+            ['tile', 510],
+            ['knock', 510],
+            ['knock', 1410],
+            ['knock', 2310],
+            ['knock', 3210],
+            ['hand', 4410],
+        ]);
+        expect(
+            sounds(cues(before(blocked, 20, 'play'), blocked, 'phone')),
+        ).toEqual([]);
+        expect(
+            sounds(
+                cues(
+                    before(d('sheet.tied'), 23, 'play'),
+                    d('sheet.tied'),
+                    'screen',
+                ),
+            ).at(-1),
+        ).toEqual(['hand', 4410]);
+
+        for (const name of ['sheet.finished', 'sheet.void']) {
+            const sheet = d(name);
+            const ply = sheet.domino?.ply ?? 1;
+
+            expect(
+                sounds(cues(before(sheet, ply - 1, 'play'), sheet, 'screen')),
+                name,
+            ).toEqual([
+                ['tile', 510],
+                ['hand', 810],
+            ]);
+        }
+    });
+
+    it('runs the clock in the seat to move’s last 5 s, on the room’s speaker alone', () => {
+        const play = d('play');
+        const flag = play.domino?.flag_ms ?? 0;
+        const early = { state: withScreen(play), now: flag - 8000 };
+        const late = { state: withScreen(play), now: flag - 3000 };
+
+        expect(sounds(roomCues(early, late, 'screen'))).toEqual([
+            ['clock', 3000],
+        ]);
+        expect(roomCues(early, late, 'screen')[0]).toMatchObject({
+            ends: true,
+        });
+        expect(roomCues(early, late, 'phone')).toEqual([]);
+    });
+
+    it('closes the game after its last play and opens its own final with the winning pair’s cheer', () => {
+        const over = d('over');
+        const played = cues(d('play'), over, 'screen');
+
+        expect(sounds(played).slice(0, 2)).toEqual([
+            ['tile', 510],
+            ['close', 810],
+        ]);
+        expect(names(played.map((cue) => ({ cue })))).toEqual(
+            expect.arrayContaining(['place', 'roll', 'fanfare', 'cheer']),
+        );
+        expect(played.find((cue) => cue.sound === 'cheer')).toMatchObject({
+            players: [AYGUN, LEYLA],
+            many: true,
+        });
+        // Neither the last hand's sheet nor a pass sounds at the end.
+        expect(names(played.map((cue) => ({ cue })))).not.toContain('hand');
+
+        // A game the host stopped closes, and has no final.
+        expect(sounds(cues(d('play'), d('stopped'), 'screen'))).toEqual([
+            ['close', 0],
+        ]);
+    });
+
+    it('sounds once per moment the page saw begin: never again for the same state, never for one it opened on or heard late', () => {
+        const play = d('play');
+
+        expect(cues(play, play, 'screen')).toEqual([]);
+        expect(cues(play, play, 'phone')).toEqual([]);
+        expect(cues(null, play, 'screen')).toEqual([]);
+        expect(cues(null, d('sheet.blocked'), 'screen')).toEqual([]);
+
+        const since = play.domino?.since_ms ?? 0;
+        const late = roomCues(
+            { state: withScreen(before(play, 5)), now: since - 1000 },
+            { state: withScreen(play), now: since + STALE_MS + 500 },
+            'screen',
+        );
+
+        expect(late).toEqual([]);
+    });
+
+    it('never buzzes a seat the server plays for while its player is away', () => {
+        const away = d('away');
+        const own = { ...away, domino: { ...away.domino, turn: 1 } } as State;
+
+        expect(sounds(cues(before(away, 3), away, 'screen'))).toEqual([
+            ['tile', 510],
+        ]);
+        expect(cues(before(own, 3), own, 'phone')).toEqual([]);
+    });
+
+    it('plays none of a round’s or a match’s cues, and no `double`', () => {
+        const never = [
+            'sent',
+            'right',
+            'wrong',
+            'move',
+            'capture',
+            'crown',
+            'tap',
+            'double',
+        ];
+        const pairs: [State | null, State][] = [
+            [d('chosen'), d('countdown')],
+            [before(d('play'), 5), d('play')],
+            [before(d('drew'), 20), d('drew')],
+            [before(d('sheet.blocked'), 20, 'play'), d('sheet.blocked')],
+            [d('sheet.blocked'), d('opener')],
+            [d('play'), d('over')],
+            [d('play'), d('stopped')],
+        ];
+
+        for (const [previous, current] of pairs) {
+            for (const speaker of ['screen', 'phone'] as const) {
+                for (const screen of [true, false]) {
+                    for (const cue of cues(
+                        previous,
+                        current,
+                        speaker,
+                        screen,
+                    )) {
+                        expect(never).not.toContain(cue.sound);
+                    }
+                }
+            }
+        }
+    });
+});

@@ -1,4 +1,5 @@
 import type {
+    RoomDomino,
     RoomMatch,
     RoomRankedPlayer,
     RoomRound,
@@ -16,20 +17,28 @@ import type {
 /**
  * The moment of a room a state shows: the game, the round's index and its
  * phase — or, in a board game, the ply and the match's phase (ADR 034
- * decision 29).
+ * decision 29), and in a domino game the ply and its phase (ADR 038
+ * decision 41): a play is a moment, and so is the sheet after a hand's
+ * last play and the next hand's opening.
  */
 export type RoomMoment = {
     game: string | null;
     round: number | null;
-    phase: 'none' | 'lobby' | RoomRound['phase'] | RoomMatch['phase'];
+    phase:
+        | 'none'
+        | 'lobby'
+        | RoomRound['phase']
+        | RoomMatch['phase']
+        | RoomDomino['phase'];
 };
 
 /**
  * What the page draws for a state: nothing (no live state), the lobby
  * before a game, a round of a live race in its phase, a live match at its
- * ply — every move is a moment — or a game's end. This is the one place
- * the moment looks at the game's kind (ADR 034 decision 27): a live race
- * has its `round`, a live board game its `match`.
+ * ply — every move is a moment —, a live domino game at its ply and phase,
+ * or a game's end. This is the one place the moment looks at the game's
+ * kind (ADR 034 decision 27, ADR 038 decision 44): a live race has its
+ * `round`, a live board game its `match`, a live domino game its `domino`.
  */
 export function roomMoment(state: RoomState | null): RoomMoment {
     if (state === null) {
@@ -59,6 +68,14 @@ export function roomMoment(state: RoomState | null): RoomMoment {
             game: game.id,
             round: state.match.ply,
             phase: state.match.phase,
+        };
+    }
+
+    if (state.domino !== null) {
+        return {
+            game: game.id,
+            round: state.domino.ply,
+            phase: state.domino.phase,
         };
     }
 
@@ -102,11 +119,16 @@ export function sawBegin(
  * question it stands still, whatever changed, since nothing on it may say
  * anything about the open round; on a reveal the page opened on it is
  * drawn complete and still. A match hides nothing (ADR 034 decision 24):
- * its strip moves at a move the page saw arrive.
+ * its strip moves at a move the page saw arrive. A domino game's balances
+ * change only at a hand's end (ADR 038 decision 48): its strip moves as a
+ * sheet the page saw begin rises — a play changes no total, so it moves
+ * nothing there.
  */
 export function stripMoves(first: RoomMoment, current: RoomMoment): boolean {
     return (
-        (current.phase === 'reveal' || current.phase === 'play') &&
+        (current.phase === 'reveal' ||
+            current.phase === 'play' ||
+            current.phase === 'sheet') &&
         sawBegin(first, current, 'phase')
     );
 }

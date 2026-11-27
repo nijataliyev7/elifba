@@ -1974,6 +1974,31 @@
         "set": { "sounds.offer": "sounds/chime.mp3" },
         "problem": "rooms/sounds.json: sounds.offer \"sounds/chime.mp3\" must be under content/assets/rooms/sounds/"
     },
+    "rooms sounds: a domino game's tile without a file": {
+        "file": "rooms/sounds.json",
+        "unset": ["sounds.tile"],
+        "problem": "rooms/sounds.json: sounds needs `tile`"
+    },
+    "rooms sounds: a knock that is the draw's file": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.knock": "rooms/sounds/draw.mp3" },
+        "problem": "rooms/sounds.json: sounds.knock \"rooms/sounds/draw.mp3\" is already the file of sounds.draw"
+    },
+    "rooms sounds: a hand that is not there": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.hand": "rooms/sounds/shuffle.mp3" },
+        "problem": "rooms/sounds.json: sounds.hand: content/assets/rooms/sounds/shuffle.mp3 does not exist"
+    },
+    "rooms sounds: a turn in the children's chime": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.turn": "sounds/chime.mp3" },
+        "problem": "rooms/sounds.json: sounds.turn \"sounds/chime.mp3\" must be under content/assets/rooms/sounds/"
+    },
+    "rooms sounds: a double of its own": {
+        "file": "rooms/sounds.json",
+        "set": { "sounds.double": "rooms/sounds/tile.mp3" },
+        "problem": "rooms/sounds.json: sounds has an unknown key `double`"
+    },
     "rooms rivalry: no file": {
         "file": "rooms/rivalry.json",
         "delete": ["rooms/rivalry.json"],

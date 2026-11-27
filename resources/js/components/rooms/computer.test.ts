@@ -7,6 +7,7 @@ import {
     computerName,
     computerOf,
     computerSeat,
+    isComputerKey,
     seatKey,
     seatName,
 } from './computer';
@@ -101,5 +102,33 @@ describe("the computer's seat", () => {
         expect(
             computerSeat({ white: 'a', black: null, computer: null }),
         ).toBeNull();
+    });
+});
+
+describe('the computer’s seats in a domino game (ADR 038 decision 57)', () => {
+    it('keys each seat nobody holds by its seat, and a match’s one as before', () => {
+        expect(seatKey(null, 2)).toBe(`${COMPUTER_SEAT}:2`);
+        expect(seatKey(null, 0)).toBe(`${COMPUTER_SEAT}:0`);
+        expect(seatKey(null)).toBe(COMPUTER_SEAT);
+        expect(seatKey('01kaqrx3mn4p5q6r7s8t9vwxyz', 1)).toBe(
+            '01kaqrx3mn4p5q6r7s8t9vwxyz',
+        );
+
+        expect(isComputerKey(seatKey(null, 3))).toBe(true);
+        expect(isComputerKey(COMPUTER_SEAT)).toBe(true);
+        expect(isComputerKey('01kaqrx3mn4p5q6r7s8t9vwxyz')).toBe(false);
+        expect(isComputerKey('pair:1')).toBe(false);
+        expect(isComputerKey(null)).toBe(false);
+    });
+
+    it('names a computer’s seat «Kompüter (Orta)» whatever its number, and says a domino choice’s level', () => {
+        const t = (key: string, replace?: Record<string, unknown>) =>
+            replace === undefined ? key : `${key}${JSON.stringify(replace)}`;
+
+        expect(seatName(t, [], seatKey(null, 3), 2)).toBe(
+            'rooms.computer.named{"level":"rooms.computer.level.2"}',
+        );
+        expect(computerOf(state('domino.chosen').setup)).toBe(2);
+        expect(computerOf(state('domino.play').game)).toBeNull();
     });
 });

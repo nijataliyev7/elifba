@@ -1,4 +1,4 @@
-import { stripRows } from '@/components/rooms/rivalry';
+import { throwRows } from '@/components/rooms/rivalry';
 import type { RoomState } from '@/rooms/contract';
 import type { StorageLike } from '@/rooms/sound';
 
@@ -233,36 +233,40 @@ export type ThrowChoice = {
 /**
  * Whom the thrower may pick (ADR 029 as amended 2026-11-21, decisions
  * 60–62): exactly whom the server takes, read from the state through the
- * strip's rows (`stripRows()`, the one place the strip looks at the game's
- * kind). In a race those are the state's ranking, so every present player
+ * strip's rows (`throwRows()` beside `stripRows()`, the one place the
+ * strip looks at the game's kind). In a race those are the state's ranking, so every present player
  * but the viewer — never oneself, a player who left, a removed one or a
  * host who does not play — in the ranking's order as the server gave it;
  * in a match the two seats, so the other seat alone, and nobody for a
  * watcher (ADR 034 decision 22) — nor against the computer, whose seat is
- * no player's and never present (ADR 036 decision 13). Nobody while the
- * strip shows no rival, since the button is the rival's side (decision 36).
+ * no player's and never present (ADR 036 decision 13); in a domino game the
+ * present players who sit on another side than the viewer's, in the order
+ * of the seats — never a partner, a computer's seat or a watcher, and
+ * nobody for a viewer who does not sit (ADR 038 decision 32). Nobody while
+ * the strip shows no rival, since the button is the rival's side (decision
+ * 36).
  * The tile throws at
  * `picked` while it may still be picked, else at the strip's rival, else
  * at the first of the row: a picked player who left drops out before any
  * throw. It reads no answer, result or verdict.
  */
 export function throwChoice(
-    state: Pick<RoomState, 'me' | 'players' | 'ranking' | 'match'>,
+    state: Pick<RoomState, 'me' | 'players' | 'ranking' | 'match'> & {
+        domino?: RoomState['domino'];
+    },
     rival: TauntTarget | null,
     picked: string | null,
 ): ThrowChoice {
     const me = state.me.player_id;
-    const { rows, seats } = stripRows(state);
-    const ids = rows.map((row) => row.player_id);
     const present = new Map(
         state.players
             .filter((player) => player.present)
             .map((player) => [player.id, player.name]),
     );
     const targets =
-        me === null || rival === null || (seats && !ids.includes(me))
+        me === null || rival === null
             ? []
-            : ids
+            : throwRows(state)
                   .filter((id) => id !== me && present.has(id))
                   .map((id) => ({ id, name: present.get(id) ?? null }));
     const target =

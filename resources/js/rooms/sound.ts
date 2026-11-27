@@ -70,8 +70,12 @@ export const ROOM_SOUNDS = {
         'move',
         'capture',
         'crown',
+        'tile',
+        'draw',
+        'knock',
+        'hand',
     ],
-    phone: ['tap', 'undo', 'sent', 'right', 'wrong', 'offer'],
+    phone: ['tap', 'undo', 'sent', 'right', 'wrong', 'offer', 'turn'],
 } as const;
 
 export type RoomSpeaker = keyof typeof ROOM_SOUNDS;

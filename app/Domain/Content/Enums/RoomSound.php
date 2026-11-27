@@ -4,7 +4,8 @@ namespace App\Domain\Content\Enums;
 
 /**
  * The sounds of a room game (docs/architecture.md §12 "Room content", ADR
- * 025 "Sound", ADR 028; a board game's four, ADR 034 decision 31), one
+ * 025 "Sound", ADR 028; a board game's four, ADR 034 decision 31; a domino
+ * game's five, ADR 038 decision 90), one
  * file each in `content/rooms/sounds.json`. The page decides when one
  * plays (`components/rooms/sound-cues.ts`, which names the same values);
  * nothing audible before the reveal tells right from wrong: `Clock` is the
@@ -56,6 +57,18 @@ enum RoomSound: string
     /** The screen, in a board game: that move crowned a man, after its `Move` or `Capture`. */
     case Crown = 'crown';
 
+    /** The screen, in a domino game: a play the page saw arrive, a double's too, as its tile settles. */
+    case Tile = 'tile';
+
+    /** The screen, in a domino game: a seat drew from the boneyard, as its step of `last.then` is drawn. */
+    case Draw = 'draw';
+
+    /** The screen, in a domino game: a seat passed. */
+    case Knock = 'knock';
+
+    /** The screen, in a domino game: a hand ended and its sheet rises. */
+    case Hand = 'hand';
+
     /** A phone: the viewer's own tap, the same for every item. */
     case Tap = 'tap';
 
@@ -74,10 +87,13 @@ enum RoomSound: string
     /** A phone, in a board game: a draw offer arrives at the viewer. */
     case Offer = 'offer';
 
+    /** A phone, in a domino game: the viewer's own turn begins — on the seat to move's phone, with a screen too. */
+    case Turn = 'turn';
+
     public function speaker(): RoomSpeaker
     {
         return match ($this) {
-            self::Tap, self::Undo, self::Sent, self::Right, self::Wrong, self::Offer => RoomSpeaker::Phone,
+            self::Tap, self::Undo, self::Sent, self::Right, self::Wrong, self::Offer, self::Turn => RoomSpeaker::Phone,
             default => RoomSpeaker::Screen,
         };
     }

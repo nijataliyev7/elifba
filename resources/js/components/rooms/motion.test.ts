@@ -288,3 +288,63 @@ describe('a match', () => {
         expect(ownArrival(null, { ply: 1, path }, 2)).toBe(false);
     });
 });
+
+describe('a domino game’s moments', () => {
+    const GAME = '01kaqs0a1b2c3d4e5f6g7h8j9k';
+
+    it('are the game, the ply and the phase on every fixture (ADR 038 decision 41)', () => {
+        const moments: Record<string, ReturnType<typeof roomMoment>> = {
+            chosen: { game: null, round: null, phase: 'lobby' },
+            countdown: { game: GAME, round: 0, phase: 'countdown' },
+            play: { game: GAME, round: 6, phase: 'play' },
+            screen: { game: GAME, round: 6, phase: 'play' },
+            watch: { game: GAME, round: 6, phase: 'play' },
+            away: { game: GAME, round: 4, phase: 'play' },
+            drew: { game: GAME, round: 21, phase: 'play' },
+            opener: { game: GAME, round: 21, phase: 'play' },
+            'sheet.blocked': { game: GAME, round: 21, phase: 'sheet' },
+            'sheet.finished': { game: GAME, round: 25, phase: 'sheet' },
+            'sheet.tied': { game: GAME, round: 24, phase: 'sheet' },
+            'sheet.void': { game: GAME, round: 1, phase: 'sheet' },
+            over: { game: GAME, round: null, phase: 'over' },
+            stopped: { game: GAME, round: null, phase: 'over' },
+        };
+
+        expect(
+            Object.keys(fixtures).filter((key) =>
+                key.includes('state.domino.'),
+            ),
+        ).toHaveLength(14);
+
+        for (const [name, moment] of Object.entries(moments)) {
+            expect(roomMoment(state(`domino.${name}`)), name).toEqual(moment);
+        }
+    });
+
+    it('make a play a moment, the sheet after a hand’s last play another, and the next hand’s opening a third', () => {
+        const play = roomMoment(state('domino.play'));
+        const sheet = roomMoment(state('domino.sheet.blocked'));
+        const opened = roomMoment(state('domino.opener'));
+
+        expect(sawBegin(play, sheet, 'phase')).toBe(true);
+        // The sheet and the next hand's opening share the ply: two phases of it.
+        expect(sheet.round).toBe(opened.round);
+        expect(sawBegin(sheet, opened, 'phase')).toBe(true);
+        expect(sawBegin(sheet, opened, 'round')).toBe(false);
+        // A state fetched again is the same moment.
+        expect(sawBegin(play, roomMoment(state('domino.play')), 'phase')).toBe(
+            false,
+        );
+    });
+
+    it('move the strip at a hand’s end the page saw begin, never on a page opened on it', () => {
+        const play = roomMoment(state('domino.play'));
+        const sheet = roomMoment(state('domino.sheet.finished'));
+
+        expect(stripMoves(play, sheet)).toBe(true);
+        expect(stripMoves(sheet, sheet)).toBe(false);
+        expect(stripMoves(play, roomMoment(state('domino.countdown')))).toBe(
+            false,
+        );
+    });
+});

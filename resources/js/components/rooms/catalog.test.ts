@@ -5,6 +5,7 @@ import {
     clockLevel,
     gameLabel,
     gameSummary,
+    kindOf,
     sameChoice,
     withComputer,
     withComputerPicked,
@@ -15,6 +16,7 @@ import {
     withSeatsSwapped,
 } from '@/components/rooms/catalog';
 import type { CatalogGame, SetupChoice } from '@/components/rooms/catalog';
+import { RoomState } from '@/rooms/contract';
 
 const t = (key: string, replace?: Record<string, unknown>) =>
     replace === undefined ? key : `${key}${JSON.stringify(replace)}`;
@@ -351,5 +353,143 @@ describe('a choice against the computer (ADR 036)', () => {
         expect(sameChoice(against, { ...against, computer: 3 })).toBe(false);
         // The computer off and the key not known are both no computer.
         expect(sameChoice(one, { ...one, computer: undefined })).toBe(true);
+    });
+});
+
+describe('a domino game’s choice (ADR 038 decisions 11–14, 57)', () => {
+    const domino: CatalogGame = {
+        mechanic: 'domino_101',
+        family: 'domino',
+        difficulties: [1, 2, 3],
+        levels: [1, 2, 3].map((difficulty) => ({
+            ...level(difficulty),
+            turn_ms: [60_000, 30_000, 15_000][difficulty - 1],
+        })),
+    };
+    // The state's choice in `state.domino.chosen.json`: a table of pairs, one seat the computer's.
+    const chosen: SetupChoice = {
+        mechanic: 'domino_101',
+        difficulty: 2,
+        turn_ms: 30_000,
+        table: 'pairs',
+        seats: ['a', 'b', 'c', null],
+        computer: 2,
+    };
+
+    it('draws the choice of every fixture that has one: its table, its seats, its line', () => {
+        const fixtures = import.meta.glob<unknown>(
+            '../../../../tests/Fixtures/rooms/state.domino.*.json',
+            { eager: true, import: 'default' },
+        );
+
+        expect(Object.keys(fixtures)).toHaveLength(14);
+
+        for (const [name, data] of Object.entries(fixtures)) {
+            const setup = RoomState.parse(data).setup;
+
+            if (setup === null || setup.kind !== 'domino') {
+                continue;
+            }
+
+            const parts = choiceParts(t, setup);
+
+            expect(parts.second, name).toBe('table');
+            expect(parts.table?.seats, name).toEqual(setup.seats);
+            expect(parts.line, name).toContain(`rooms.table.${setup.table}`);
+            expect(parts.line.includes('rooms.computer.named'), name).toBe(
+                setup.computer !== null,
+            );
+        }
+    });
+
+    it('is a third kind', () => {
+        expect(kindOf('domino_101')).toBe('domino');
+        expect(kindOf('draughts')).toBe('board');
+        expect(kindOf('anagram')).toBe('race');
+    });
+
+    it('shows its table and seats, and says the computer’s level once', () => {
+        const parts = choiceParts(t, chosen);
+
+        expect(parts.second).toBe('table');
+        expect(parts.line).toBe(
+            'rooms.turn.level{"seconds":30} · rooms.table.pairs · rooms.computer.named{"level":"rooms.computer.level.2"}',
+        );
+        expect(parts.table).toEqual({
+            table: 'pairs',
+            seats: ['a', 'b', 'c', null],
+            computer: 2,
+        });
+        expect(parts.needs).toBeNull();
+        expect(
+            choiceParts(t, {
+                ...chosen,
+                seats: ['a', 'b', 'c', 'd'],
+                computer: null,
+            }).line,
+        ).toBe('rooms.turn.level{"seconds":30} · rooms.table.pairs');
+        // With nobody to seat it cannot start; a tap the state has not answered says nothing yet.
+        expect(
+            choiceParts(t, { ...chosen, table: 'two', seats: [null, null] })
+                .needs,
+        ).toBe('rooms.errors.needs_one');
+        expect(
+            choiceParts(t, { mechanic: 'domino_101', difficulty: 2 }).needs,
+        ).toBeNull();
+        expect(choiceParts(t, race).table).toBeNull();
+    });
+
+    it('names a played game by its turn’s time and its table', () => {
+        const game = {
+            mechanic: 'domino_101' as const,
+            difficulty: 3,
+            turn_ms: 15_000,
+            table: 'three' as const,
+            computer: 1 as const,
+        };
+        const label =
+            'rooms.mechanics.domino_101.name · rooms.turn.level{"seconds":15} · rooms.table.three · rooms.computer.named{"level":"rooms.computer.level.1"}';
+
+        expect(gameLabel(t, game)).toBe(label);
+        expect(gameSummary(t, game)).toBe(label);
+    });
+
+    it('carries its table, seats and computer only within its own kind, and posts them as the room takes them', () => {
+        // A race at a difficulty «101» has no level at: its lowest, and nothing of the race.
+        expect(withGame(race, domino)).toEqual({
+            mechanic: 'domino_101',
+            difficulty: 1,
+            turn_ms: 60_000,
+        });
+        // A level of the computer is never carried between a board game and a domino game (decision 75).
+        expect(
+            withGame({ ...board, computer: 3 }, domino).computer,
+        ).toBeUndefined();
+        expect(withGame(chosen, draughts).computer).toBeUndefined();
+        expect(withLevel(chosen, domino, 3).turn_ms).toBe(15_000);
+
+        expect(choiceBody(chosen)).toEqual({
+            mechanic: 'domino_101',
+            difficulty: 2,
+            table: 'pairs',
+            seats: ['a', 'b', 'c', null],
+            computer: 2,
+        });
+        // Seats go only with a table; a null table is the room's to fit.
+        expect(choiceBody({ ...chosen, table: null })).toEqual({
+            mechanic: 'domino_101',
+            difficulty: 2,
+            table: null,
+            computer: 2,
+        });
+        expect(choiceBody({ mechanic: 'domino_101', difficulty: 1 })).toEqual({
+            mechanic: 'domino_101',
+            difficulty: 1,
+        });
+        expect(sameChoice(chosen, { ...chosen })).toBe(true);
+        expect(sameChoice(chosen, { ...chosen, table: 'four' })).toBe(false);
+        expect(
+            sameChoice(chosen, { ...chosen, seats: ['a', 'c', 'b', null] }),
+        ).toBe(false);
     });
 });

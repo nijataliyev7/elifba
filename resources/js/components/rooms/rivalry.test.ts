@@ -752,3 +752,300 @@ describe("the computer's seat on the strip", () => {
         ).toMatchObject({ gap: 0, leader: null });
     });
 });
+
+describe('a domino game’s strip (ADR 038 decision 48)', () => {
+    const RESAD = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+    const AYGUN = '01kaqrx3mn4p5q6r7s8t9vwxyz';
+    const TURAL = '01kaqrx4bc5d6e7f8g9h0jkmnp';
+    const LEYLA = '01kaqrx5cd6e7f8g9h0jkmnpqr';
+    const KAMAL = '01kaqrx6de7f8g9h0jkmnpqrst';
+
+    function domino(name: string) {
+        return RoomState.parse(
+            fixtures[
+                `../../../../tests/Fixtures/rooms/state.domino.${name}.json`
+            ],
+        );
+    }
+
+    /** A table of four, each for itself, from a fixture of pairs: the balances and places given, in the server's order. */
+    function four(
+        order: [number, number, number][],
+        seatOf = (side: number) => side,
+    ) {
+        const base = domino('play');
+        const game = base.domino;
+
+        if (game === null) {
+            throw new Error('play has a domino');
+        }
+
+        return {
+            ...base,
+            domino: {
+                ...game,
+                seats: game.seats.map((seat) => ({ ...seat, side: seat.seat })),
+                sides: order.map(([side, balance, place]) => ({
+                    side,
+                    seats: [seatOf(side)],
+                    balance,
+                    open: balance > 0,
+                    waiting: 0,
+                    tries: 0,
+                    place,
+                })),
+            },
+        };
+    }
+
+    it('draws every fixture’s sides in the server’s order, never sorted, their totals the balances', () => {
+        const names = Object.keys(fixtures).filter((key) =>
+            key.includes('state.domino.'),
+        );
+
+        expect(names).toHaveLength(14);
+
+        for (const name of names) {
+            const state = RoomState.parse(fixtures[name]);
+            const { rows, seats } = stripRows(state);
+
+            if (state.domino === null) {
+                expect(seats, name).toBe(false);
+
+                continue;
+            }
+
+            expect(seats, name).toBe(true);
+            expect(
+                rows.map((row) => row.points),
+                name,
+            ).toEqual(state.domino.sides.map((side) => side.balance));
+        }
+
+        // A pair is its own row; 👑 by the higher balance, by neither when level.
+        expect(stripRows(domino('sheet.finished')).rows).toEqual([
+            { player_id: 'pair:1', points: 16, place: 1 },
+            { player_id: 'pair:0', points: 0, place: 2 },
+        ]);
+        expect(stripRows(domino('play')).rows.map((row) => row.place)).toEqual([
+            null,
+            null,
+        ]);
+        expect(
+            stripRows(domino('away')).rows.map((row) => row.player_id),
+        ).toEqual([RESAD, AYGUN]);
+    });
+
+    it('gives every fixture a pair of its sides, the viewer’s own on the left where it sits', () => {
+        for (const name of Object.keys(fixtures).filter((key) =>
+            key.includes('state.domino.'),
+        )) {
+            const state = RoomState.parse(fixtures[name]);
+
+            if (state.domino === null) {
+                continue;
+            }
+
+            const screen = name.endsWith('state.domino.screen.json');
+            const viewer = screen ? null : state.me.player_id;
+            const pair = rivalPair(state, viewer);
+            const keys = stripRows(state).rows.map((row) => row.player_id);
+            const seated = state.domino.seats.some(
+                (seat) => seat.player_id === viewer,
+            );
+
+            expect(pair, name).not.toBeNull();
+            expect(keys, name).toContain(pair?.left?.player_id);
+            expect(keys, name).toContain(pair?.right?.player_id);
+            expect(pair?.mine, name).toBe(seated);
+            expect(pair?.unit, name).toBe('points');
+        }
+    });
+
+    it('shows two sides face to face: the viewer’s own on the left, elsewhere the side of seat 0', () => {
+        const play = rivalPair(domino('play'), RESAD);
+
+        expect(play).toMatchObject({
+            mode: 'duel',
+            unit: 'points',
+            mine: true,
+            left: { player_id: 'pair:0' },
+            right: { player_id: 'pair:1' },
+            gap: 0,
+            leader: null,
+            split: 50,
+        });
+
+        // The server orders the leading pair first; the viewer of the other pair stays on the left.
+        const finished = domino('sheet.finished');
+
+        expect(rivalPair(finished, AYGUN)).toMatchObject({
+            mine: true,
+            left: { player_id: 'pair:1', points: 16 },
+            right: { player_id: 'pair:0', points: 0 },
+            gap: 16,
+            leader: 'pair:1',
+        });
+        expect(rivalPair(finished, RESAD)).toMatchObject({
+            left: { player_id: 'pair:0' },
+            gap: -16,
+            leader: 'pair:1',
+        });
+
+        // A watcher and the screen: seat 0's side on the left whatever the order.
+        for (const viewer of [KAMAL, null]) {
+            expect(rivalPair(finished, viewer)).toMatchObject({
+                mine: false,
+                left: { player_id: 'pair:0' },
+                right: { player_id: 'pair:1' },
+            });
+        }
+
+        // At two, each side is its player.
+        expect(rivalPair(domino('away'), AYGUN)).toMatchObject({
+            mine: true,
+            left: { player_id: AYGUN },
+            right: { player_id: RESAD },
+        });
+    });
+
+    it('shows the viewer against the leader at three and four seats, or the runner-up when leading; elsewhere the first two', () => {
+        // Seat 2 leads; seats 0 and 3 share the second place; seat 1 last.
+        const state = four([
+            [2, 40, 1],
+            [0, 20, 2],
+            [3, 20, 2],
+            [1, 0, 3],
+        ]);
+
+        expect(rivalPair(state, AYGUN)).toMatchObject({
+            mode: 'race',
+            mine: true,
+            left: { player_id: AYGUN, points: 0 },
+            right: { player_id: TURAL, points: 40 },
+            leader: TURAL,
+        });
+        expect(rivalPair(state, TURAL)).toMatchObject({
+            left: { player_id: TURAL },
+            right: { player_id: RESAD },
+            // Leyla shares the runner-up's place.
+            more: 1,
+        });
+        expect(rivalPair(state, null)).toMatchObject({
+            mine: false,
+            left: { player_id: TURAL },
+            right: { player_id: RESAD },
+        });
+        expect(rivalPair(state, KAMAL)?.left?.player_id).toBe(TURAL);
+
+        // Level at the start: every side stands, none crowned.
+        const level = four([
+            [0, 0, 1],
+            [1, 0, 1],
+            [2, 0, 1],
+            [3, 0, 1],
+        ]);
+
+        expect(rivalPair(level, LEYLA)).toMatchObject({
+            left: { player_id: LEYLA, place: null },
+            right: { player_id: RESAD, place: null },
+            more: 0,
+        });
+    });
+
+    it('keys each computer’s side by its seat, and throws at nobody across from it', () => {
+        const state = four([
+            [0, 20, 1],
+            [1, 0, 2],
+            [2, 0, 2],
+            [3, 0, 2],
+        ]);
+        const game = state.domino;
+        const computers = {
+            ...state,
+            domino: {
+                ...game,
+                seats: game.seats.map((seat) =>
+                    seat.seat === 0
+                        ? seat
+                        : {
+                              ...seat,
+                              player_id: null,
+                              standing: 'computer' as const,
+                          },
+                ),
+            },
+        };
+        const pair = rivalPair(computers, RESAD);
+
+        expect(stripRows(computers).rows.map((row) => row.player_id)).toEqual([
+            RESAD,
+            'computer:1',
+            'computer:2',
+            'computer:3',
+        ]);
+        expect(pair?.right?.player_id).toBe('computer:1');
+        expect(rivalOf(pair, computers.players, computers.domino)).toBeNull();
+    });
+
+    it('throws at the pair across through its first present player, in the order of its seats', () => {
+        const state = domino('play');
+        const pair = rivalPair(state, RESAD);
+
+        expect(rivalOf(pair, state.players, state.domino)).toEqual({
+            id: AYGUN,
+            name: 'Aygün Məmmədova',
+        });
+
+        const away = state.players.map((player) =>
+            player.id === AYGUN ? { ...player, present: false } : player,
+        );
+
+        expect(rivalOf(pair, away, state.domino)?.id).toBe(LEYLA);
+        expect(
+            rivalOf(rivalPair(state, KAMAL), state.players, state.domino),
+        ).toBeNull();
+        expect(
+            rivalOf(rivalPair(domino('away'), AYGUN), state.players)?.id,
+        ).toBe(RESAD);
+    });
+
+    it('moves at a hand’s end: its moment is the hand, its count what the sheet wrote, an overtake a new leader', () => {
+        const play = domino('play');
+        const finished = domino('sheet.finished');
+
+        expect(stripMoment(play)).toEqual({
+            key: '01kaqs0a1b2c3d4e5f6g7h8j9k|hand:1|open',
+            moves: false,
+        });
+        expect(stripMoment(finished)).toEqual({
+            key: '01kaqs0a1b2c3d4e5f6g7h8j9k|hand:1|end',
+            moves: true,
+        });
+        expect(stripMoment(domino('countdown')).key).toBe(
+            '01kaqs0a1b2c3d4e5f6g7h8j9k|hand:-|open',
+        );
+
+        expect(stripChange(play)).toEqual({ results: null, spent: [] });
+        expect(stripChange(finished)).toEqual({
+            results: [
+                { player_id: 'pair:1', points: 16 },
+                { player_id: 'pair:0', points: 0 },
+            ],
+            spent: [],
+        });
+
+        // From level to a lead is an overtake; the same leader again is none.
+        const before = rivalPair(play, AYGUN);
+        const after = rivalPair(finished, AYGUN);
+
+        expect(overtakeOf(before, after)).toBe('pair:1');
+        expect(overtakeOf(after, rivalPair(finished, AYGUN))).toBeNull();
+        // The count starts from before the hand.
+        expect(
+            after === null
+                ? null
+                : pairBefore(after, stripChange(finished).results),
+        ).toMatchObject({ gap: 0, leader: null });
+    });
+});

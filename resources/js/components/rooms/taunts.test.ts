@@ -466,3 +466,71 @@ describe('throwChoice', () => {
         });
     });
 });
+
+describe('throwChoice in a domino game (ADR 038 decision 32)', () => {
+    const RESAD = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+    const AYGUN = '01kaqrx3mn4p5q6r7s8t9vwxyz';
+    const TURAL = '01kaqrx4bc5d6e7f8g9h0jkmnp';
+    const LEYLA = '01kaqrx5cd6e7f8g9h0jkmnpqr';
+
+    const throwFor = (game: RoomState, picked: string | null = null) =>
+        throwChoice(
+            game,
+            rivalOf(
+                rivalPair(game, game.me.player_id),
+                game.players,
+                game.domino,
+            ),
+            picked,
+        );
+
+    it('offers the players of the other side in the order of the seats, never a partner — the strip’s rival first', () => {
+        const play = state('domino.play');
+        const choice = throwFor(play);
+
+        expect(choice.targets.map((one) => one.id)).toEqual([AYGUN, LEYLA]);
+        expect(choice.targets.map((one) => one.id)).not.toContain(TURAL);
+        expect(choice.target?.id).toBe(AYGUN);
+        expect(choice.row).toBe(true);
+        expect(throwFor(play, LEYLA).target?.id).toBe(LEYLA);
+        // A partner cannot be picked.
+        expect(throwFor(play, TURAL).target?.id).toBe(AYGUN);
+    });
+
+    it('offers nobody to a watcher, nor a seat across that left or is the computer’s', () => {
+        expect(throwFor(state('domino.watch')).targets).toEqual([]);
+
+        const play = state('domino.play');
+        const game = play.domino;
+
+        if (game === null) {
+            throw new Error('play has a domino');
+        }
+
+        const gone = {
+            ...play,
+            players: play.players.map((player) =>
+                player.id === AYGUN ? { ...player, present: false } : player,
+            ),
+            domino: {
+                ...game,
+                seats: game.seats.map((seat) =>
+                    seat.seat === 3
+                        ? {
+                              ...seat,
+                              player_id: null,
+                              standing: 'computer' as const,
+                          }
+                        : seat,
+                ),
+            },
+        } as RoomState;
+
+        expect(throwFor(gone).targets).toEqual([]);
+
+        // At two, the one player across.
+        const two = state('domino.away');
+
+        expect(throwFor(two).targets.map((one) => one.id)).toEqual([RESAD]);
+    });
+});

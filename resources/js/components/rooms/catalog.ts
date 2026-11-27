@@ -3,13 +3,14 @@ import {
     computerName,
     computerSeat,
 } from '@/components/rooms/computer';
-import { RoomBoardMechanic } from '@/rooms/contract';
+import { RoomBoardMechanic, RoomDominoMechanic } from '@/rooms/contract';
 import type {
     RoomClockLevel,
     RoomComputerLevel,
     RoomGame,
     RoomMatchColor,
     RoomMechanic,
+    RoomTable,
 } from '@/rooms/contract';
 import type { Translate } from '@/hooks/use-translation';
 
@@ -34,6 +35,8 @@ export type SetupLevel = {
     swaps: number | null;
     /** A board game's level: its clock (D3, ADR 034 decision 6). */
     clock?: RoomClockLevel;
+    /** A domino game's level: a turn's time (Y5, ADR 038 decision 22). */
+    turn_ms?: number;
 };
 
 /** One game of the catalog, with the difficulties it has a level at. */
@@ -55,7 +58,10 @@ export type GameSetupOptions = {
  * A race's has its rounds; a board game's (ADR 034 decision 7) its level's
  * clock and its two seats, a player's row or null — and the computer's
  * level while it plays the seat without a player (ADR 036 decision 2),
- * null for two players.
+ * null for two players. A domino game's (ADR 038 decisions 11–14) its
+ * level's turn time, its table and its seats in the order of the turns —
+ * a player's row, or null for the computer's — and the computer's level
+ * while a seat is its.
  */
 export type SetupChoice = {
     mechanic: RoomMechanic;
@@ -65,6 +71,10 @@ export type SetupChoice = {
     white?: string | null;
     black?: string | null;
     computer?: RoomComputerLevel | null;
+    turn_ms?: number;
+    /** Null leaves the table to the number of present players (ADR 038 decision 75). */
+    table?: RoomTable | null;
+    seats?: (string | null)[];
 };
 
 /**
@@ -78,16 +88,27 @@ export type ChoiceSeats = {
     computer: RoomComputerLevel | null;
 };
 
-/** A game's kind: a race of rounds or a board game. */
+/** A domino game's table and its seats as a page draws them, and the computer's one level for every seat it plays. */
+export type ChoiceTable = {
+    table: RoomTable | null;
+    seats: (string | null)[];
+    computer: RoomComputerLevel | null;
+};
+
+/** A game's kind: a race of rounds, a board game or a domino game. */
 export type GameKind = RoomGame['kind'];
 
 /**
- * The kind a game is, from its mechanic (ADR 034 decision 1: the kind
- * follows from the family); a tap's choice has no `kind` until the state
- * answers.
+ * The kind a game is, from its mechanic (ADR 034 decision 1, ADR 038
+ * decision 1: the kind follows from the family); a tap's choice has no
+ * `kind` until the state answers.
  */
 export function kindOf(mechanic: RoomMechanic): GameKind {
-    return RoomBoardMechanic.safeParse(mechanic).success ? 'board' : 'race';
+    if (RoomBoardMechanic.safeParse(mechanic).success) {
+        return 'board';
+    }
+
+    return RoomDominoMechanic.safeParse(mechanic).success ? 'domino' : 'race';
 }
 
 /**
@@ -95,15 +116,20 @@ export function kindOf(mechanic: RoomMechanic): GameKind {
  * the choice looks at the kind): under «Oyun», a race's level and its
  * rounds — «Orta · 10 raund» — or a board game's clock and its two seats —
  * «5+3», and «5+3 · Kompüter (Orta)» while the computer plays one of them
- * (docs/frontend.md rule 15 "Board games", "The computer's seat").
+ * (docs/frontend.md rule 15 "Board games", "The computer's seat") — or a
+ * domino game's turn time, its table and its seats — «30 san · Para 2×2»,
+ * and «· Kompüter (Orta)» once while the computer plays a seat
+ * (docs/frontend.md rule 15 "Domino", ADR 038 decision 57).
  */
 export type ChoiceParts = {
-    /** The control under the level: the rounds' steps, or the seats. */
-    second: 'rounds' | 'seats';
+    /** The control under the level: the rounds' steps, the seats, or the table and its seats. */
+    second: 'rounds' | 'seats' | 'table';
     /** The choice's line, beside its game's name. */
     line: string;
     /** A board game's seats, and the computer's level while it plays one; empty for a race. */
     seats: ChoiceSeats;
+    /** A domino game's table and seats; null for a race and a board game. */
+    table: ChoiceTable | null;
     /**
      * Why the choice cannot start yet: a board game with a seat empty
      * (`rooms.errors.needs_two`) — or, against the computer, with nobody to
@@ -113,7 +139,31 @@ export type ChoiceParts = {
 };
 
 export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
-    if (kindOf(choice.mechanic) === 'board') {
+    const kind = kindOf(choice.mechanic);
+
+    if (kind === 'domino') {
+        const computer = choice.computer ?? null;
+        // Undefined seats are a tap's not yet answered: the room's, which the state will say.
+        const seated =
+            choice.seats === undefined
+                ? null
+                : choice.seats.filter((seat) => seat !== null).length;
+
+        return {
+            second: 'table',
+            line: dominoLine(t, choice),
+            seats: { white: null, black: null, computer: null },
+            table: {
+                table: choice.table ?? null,
+                seats: choice.seats ?? [],
+                computer,
+            },
+            // One seated player is enough: the computer plays the rest (ADR 038 decision 12).
+            needs: seated === 0 ? 'rooms.errors.needs_one' : null,
+        };
+    }
+
+    if (kind === 'board') {
         const computer = choice.computer ?? null;
         // Undefined seats are a tap's not yet answered: the room's seats, which the state will say.
         const empty = [choice.white, choice.black].filter(
@@ -137,6 +187,7 @@ export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
                     : empty === 2
                       ? 'rooms.errors.needs_one'
                       : null,
+            table: null,
         };
     }
 
@@ -150,8 +201,40 @@ export function choiceParts(t: Translate, choice: SetupChoice): ChoiceParts {
                 ? difficulty
                 : `${difficulty} · ${t('rooms.show.rounds', { count: choice.rounds })}`,
         seats: { white: null, black: null, computer: null },
+        table: null,
         needs: null,
     };
+}
+
+/**
+ * A domino game's line: its turn's time, its table and, while the
+ * computer plays a seat, its level once — «30 san · Para 2×2 · Kompüter
+ * (Orta)» (ADR 038 decision 57). What the page does not know yet it leaves
+ * out.
+ */
+function dominoLine(
+    t: Translate,
+    game: {
+        turn_ms?: number;
+        table?: RoomTable | null;
+        computer?: RoomComputerLevel | null;
+    },
+): string {
+    return [
+        ...(game.turn_ms === undefined
+            ? []
+            : [
+                  t('rooms.turn.level', {
+                      seconds: Math.round(game.turn_ms / 1000),
+                  }),
+              ]),
+        ...(game.table === undefined || game.table === null
+            ? []
+            : [t(`rooms.table.${game.table}`)]),
+        ...(game.computer === undefined || game.computer === null
+            ? []
+            : [computerName(t, game.computer)]),
+    ].join(' · ');
 }
 
 /**
@@ -200,9 +283,11 @@ export function gameSummary(
         rounds?: number;
         clock?: RoomClockLevel;
         computer?: RoomComputerLevel | null;
+        turn_ms?: number;
+        table?: RoomTable | null;
     },
 ): string {
-    if (game.clock !== undefined) {
+    if (game.clock !== undefined || game.turn_ms !== undefined) {
         return gameLabel(t, game);
     }
 
@@ -216,7 +301,8 @@ export function gameSummary(
 /**
  * A game's short line, without rounds: «Söz tap · Orta», or a board game's
  * «Şaşki · 5+3» by its clock («Keçmiş oyunlar») — «Şaşki · 5+3 · Kompüter
- * (Orta)» against the computer.
+ * (Orta)» against the computer —, or a domino game's «101 · 30 san · Para
+ * 2×2» by its turn's time, with «· Kompüter (Orta)» while it played a seat.
  */
 export function gameLabel(
     t: Translate,
@@ -225,9 +311,15 @@ export function gameLabel(
         difficulty: number;
         clock?: RoomClockLevel;
         computer?: RoomComputerLevel | null;
+        turn_ms?: number;
+        table?: RoomTable | null;
     },
 ): string {
     const name = t(`rooms.mechanics.${game.mechanic}.name`);
+
+    if (game.turn_ms !== undefined) {
+        return `${name} · ${dominoLine(t, game)}`;
+    }
 
     return game.clock !== undefined
         ? `${name} · ${boardLine(t, game)}`
@@ -295,29 +387,56 @@ export function withGame(choice: SetupChoice, game: CatalogGame): SetupChoice {
     const difficulty = game.difficulties.includes(choice.difficulty)
         ? choice.difficulty
         : (game.difficulties[0] ?? choice.difficulty);
+    const kind = kindOf(game.mechanic);
+    // A level of the computer is never carried between a board game and a domino game (ADR 038 decision 75).
+    const same = kindOf(choice.mechanic) === kind;
 
-    return kindOf(game.mechanic) === 'race'
-        ? { mechanic: game.mechanic, difficulty, rounds: choice.rounds }
-        : withLevel(
-              {
-                  mechanic: game.mechanic,
-                  difficulty,
-                  white: choice.white,
-                  black: choice.black,
-                  computer: choice.computer,
-              },
-              game,
-              difficulty,
-          );
+    if (kind === 'race') {
+        return { mechanic: game.mechanic, difficulty, rounds: choice.rounds };
+    }
+
+    if (kind === 'domino') {
+        return withLevel(
+            same
+                ? {
+                      mechanic: game.mechanic,
+                      difficulty,
+                      table: choice.table,
+                      seats: choice.seats,
+                      computer: choice.computer,
+                  }
+                : { mechanic: game.mechanic, difficulty },
+            game,
+            difficulty,
+        );
+    }
+
+    return withLevel(
+        {
+            mechanic: game.mechanic,
+            difficulty,
+            white: choice.white,
+            black: choice.black,
+            computer: same ? choice.computer : undefined,
+        },
+        game,
+        difficulty,
+    );
 }
 
-/** The choice at another level of its game, with a board game's clock of that level. */
+/** The choice at another level of its game, with a board game's clock or a domino game's turn time of that level. */
 export function withLevel(
     choice: SetupChoice,
     game: CatalogGame,
     difficulty: number,
 ): SetupChoice {
-    const clock = levelOf(game, difficulty)?.clock;
+    const level = levelOf(game, difficulty);
+    const clock = level?.clock;
+    const turn = level?.turn_ms;
+
+    if (turn !== undefined) {
+        return { ...choice, difficulty, turn_ms: turn };
+    }
 
     return clock === undefined
         ? { ...choice, difficulty }
@@ -429,7 +548,7 @@ export function withSeatsSwapped(choice: SetupChoice): SetupChoice {
     return { ...choice, white: choice.black, black: choice.white };
 }
 
-/** Whether two choices are the same game, difficulty, rounds, seats and computer. */
+/** Whether two choices are the same game, difficulty, rounds, seats, table and computer. */
 export function sameChoice(a: SetupChoice, b: SetupChoice): boolean {
     return (
         a.mechanic === b.mechanic &&
@@ -437,7 +556,9 @@ export function sameChoice(a: SetupChoice, b: SetupChoice): boolean {
         a.rounds === b.rounds &&
         (a.white ?? null) === (b.white ?? null) &&
         (a.black ?? null) === (b.black ?? null) &&
-        (a.computer ?? null) === (b.computer ?? null)
+        (a.computer ?? null) === (b.computer ?? null) &&
+        (a.table ?? null) === (b.table ?? null) &&
+        (a.seats ?? []).join(',') === (b.seats ?? []).join(',')
     );
 }
 
@@ -457,8 +578,25 @@ export function choiceBody(choice: SetupChoice): Record<string, unknown> {
         mechanic: choice.mechanic,
         difficulty: choice.difficulty,
     };
+    const kind = kindOf(choice.mechanic);
 
-    if (kindOf(choice.mechanic) === 'race') {
+    // A domino game's table (null: the room's to fit), its seats only with a table, the computer's level (ADR 038 decision 75).
+    if (kind === 'domino') {
+        return {
+            ...body,
+            ...(choice.table === undefined ? {} : { table: choice.table }),
+            ...(choice.seats === undefined ||
+            choice.table === undefined ||
+            choice.table === null
+                ? {}
+                : { seats: choice.seats }),
+            ...(choice.computer === undefined
+                ? {}
+                : { computer: choice.computer }),
+        };
+    }
+
+    if (kind === 'race') {
         return choice.rounds === undefined
             ? body
             : { ...body, rounds: choice.rounds };

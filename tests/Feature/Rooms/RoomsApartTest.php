@@ -386,22 +386,24 @@ it('sells a letter by the round\'s question, never by the mechanic\'s name', fun
 });
 
 it('asks for a game\'s kind in one place per concern on the page side', function (): void {
-    // ADR 034 decision 27: a page looks at the kind of a game through one
-    // function per concern — `roomMoment()`, `phaseEnds()` and
-    // `waitsForOthers()`, `roomCues()`, `stripRows()`, `finalRows()`,
-    // `GAME_VIEWS` and `choiceParts()` — and the draughts parts themselves;
-    // no other file compares a kind or a mechanic with a board game's, or
-    // reads the state's match (a game's drawing has a case per mechanic).
+    // ADR 034 decision 27, ADR 038 decision 44: a page looks at the kind of a
+    // game through one function per concern — `roomMoment()`, `phaseEnds()`
+    // and `waitsForOthers()`, `roomCues()`, `stripRows()`, `finalRows()`,
+    // `GAME_VIEWS` and `choiceParts()` — and the draughts and domino parts
+    // themselves; no other file compares a kind or a mechanic with a board or
+    // a domino game's, or reads the state's match or domino (a game's drawing
+    // has a case per mechanic).
     $js = resource_path('js');
     $readers = [];
-    $pattern = "/\\.kind\\s*[!=]==\\s*'(race|board)'|kind:\\s*'(race|board)'|\\bkindOf\\(|\\bstate\\??\\.match\\b|(?<![.\\w])match\\??\\.(phase|ply|sides|position|legal|offer|can_offer|result|last|moves|turn|since_ms|flag_ms|starts_ms)\\b|'draughts'/";
+    $pattern = "/\\.kind\\s*[!=]==\\s*'(race|board|domino)'|kind:\\s*'(race|board|domino)'|\\bkindOf\\(|\\bstate\\??\\.(match|domino)\\b|(?<![.\\w])match\\??\\.(phase|ply|sides|position|legal|offer|can_offer|result|last|moves|turn|since_ms|flag_ms|starts_ms)\\b|(?<![.\\w])domino\\??\\.(phase|ply|sides|seats|hand|turn|since_ms|flag_ms|starts_ms|line|first|ends|boneyard|last|mine|sheet|result|bank)\\b|'draughts'|'domino_101'/";
 
     foreach (File::allFiles($js) as $file) {
         $path = str_replace($js.'/', '', $file->getPathname());
 
         if (! in_array($file->getExtension(), ['ts', 'tsx'], true)
             || str_ends_with($path, '.test.ts')
-            || str_starts_with($path, 'components/rooms/draughts/')) {
+            || str_starts_with($path, 'components/rooms/draughts/')
+            || str_starts_with($path, 'components/rooms/domino/')) {
             continue;
         }
 

@@ -96,9 +96,9 @@ The app shows the same list on its `/credits` page.
 - Source: <https://github.com/sgossner/VSCO-2-CE>
 - Changes: Downloaded from commit 440300901dfe9275fd84e0b7763af1f8443ae62e and checked by SHA-256; mixed down to mono, trimmed, faded, some pitched by resampling, layered, given a small synthetic room where noted and levelled to one loudness, then encoded as 96 kb/s MP3 by scripts/room-sounds/make.py, whose README lists each cue's recordings
 
-### Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's capture and crown, and a phone's undo, «answer sent», «wrong» and a draw offer
+### Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's capture and crown, and a phone's undo, «answer sent», «wrong», a draw offer and a domino game's turn
 
-- Files: `content/assets/rooms/sounds/question.mp3`, `content/assets/rooms/sounds/ranking.mp3`, `content/assets/rooms/sounds/place.mp3`, `content/assets/rooms/sounds/join.mp3`, `content/assets/rooms/sounds/capture.mp3`, `content/assets/rooms/sounds/crown.mp3`, `content/assets/rooms/sounds/undo.mp3`, `content/assets/rooms/sounds/sent.mp3`, `content/assets/rooms/sounds/wrong.mp3`, `content/assets/rooms/sounds/offer.mp3`
+- Files: `content/assets/rooms/sounds/question.mp3`, `content/assets/rooms/sounds/ranking.mp3`, `content/assets/rooms/sounds/place.mp3`, `content/assets/rooms/sounds/join.mp3`, `content/assets/rooms/sounds/capture.mp3`, `content/assets/rooms/sounds/crown.mp3`, `content/assets/rooms/sounds/undo.mp3`, `content/assets/rooms/sounds/sent.mp3`, `content/assets/rooms/sounds/wrong.mp3`, `content/assets/rooms/sounds/offer.mp3`, `content/assets/rooms/sounds/turn.mp3`
 - Author: Elifba contributors
 - License: [MIT License](https://opensource.org/license/mit) (`MIT`)
 - Source: <https://github.com/nijataliyev7/elifba>
@@ -110,6 +110,38 @@ The app shows the same list on its `/credits` page.
 - License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (`CC0-1.0`)
 - Source: <https://freesound.org/people/JJTaynos/sounds/733932/>
 - Changes: Downloaded without a login as Freesound's preview of sound 733932 (733932_15803939-hq.mp3) and checked by SHA-256; one touch cut from 14.36 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 35 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py
+
+### A domino game's play: one domino put on a table («Domino pieces 1»)
+
+- Files: `content/assets/rooms/sounds/tile.mp3`
+- Author: Macif
+- License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (`CC0-1.0`)
+- Source: <https://freesound.org/people/Macif/sounds/329099/>
+- Changes: Downloaded without a login as Freesound's preview of sound 329099 (329099_3035766-hq.mp3) and checked by SHA-256; 170 ms cut from 16.71 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 35 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py
+
+### A domino game's draw: a tile taken up from the table («domino_draw»)
+
+- Files: `content/assets/rooms/sounds/draw.mp3`
+- Author: UnycodeAdmin
+- License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (`CC0-1.0`)
+- Source: <https://freesound.org/people/UnycodeAdmin/sounds/705348/>
+- Changes: Downloaded without a login as Freesound's preview of sound 705348 (705348_15297425-hq.mp3) and checked by SHA-256; the 0.45 s from 0.30 s cut, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 80 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py
+
+### A domino game's pass: two knuckle knocks on a wooden table («knocking.wav»)
+
+- Files: `content/assets/rooms/sounds/knock.mp3`
+- Author: Yoshicakes77
+- License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (`CC0-1.0`)
+- Source: <https://freesound.org/people/Yoshicakes77/sounds/645927/>
+- Changes: Downloaded without a login as Freesound's preview of sound 645927 (645927_12983992-hq.mp3) and checked by SHA-256; 300 ms cut from 0.70 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 50 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py
+
+### A domino game's hand ending: dominoes shuffled about on a table («Shuffling Dominos»)
+
+- Files: `content/assets/rooms/sounds/hand.mp3`
+- Author: RobertWulfman
+- License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) (`CC0-1.0`)
+- Source: <https://freesound.org/people/RobertWulfman/sounds/220839/>
+- Changes: Downloaded without a login as Freesound's preview of sound 220839 (220839_3908792-hq.mp3) and checked by SHA-256; 1.2 s cut from 1.77 s, below 70 Hz and above 9 kHz removed, faded in over 50 ms and out over 350 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py
 
 ### The adults' word list: everyday Azerbaijani nouns and adjectives for the word games, starting from the theme packs' words, with the spellings that are correct too; written for Elifba, copied from no dictionary or list
 

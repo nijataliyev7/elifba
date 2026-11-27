@@ -25,9 +25,26 @@ import type {
  */
 export const COMPUTER_SEAT = 'computer';
 
-/** The key a page draws a seat under: its player's row, or the computer's own key. */
-export function seatKey(playerId: string | null): string {
-    return playerId ?? COMPUTER_SEAT;
+/**
+ * The key a page draws a seat under: its player's row, or the computer's
+ * own key — in a domino game, where several seats may be the computer's,
+ * with the seat (`computer:2`, ADR 038 decision 57), so each row is its
+ * own. A match has one such seat and names none.
+ */
+export function seatKey(playerId: string | null, seat?: number): string {
+    if (playerId !== null) {
+        return playerId;
+    }
+
+    return seat === undefined ? COMPUTER_SEAT : `${COMPUTER_SEAT}:${seat}`;
+}
+
+/** Whether a row's key is a seat the computer plays (`seatKey()`), never a player's. */
+export function isComputerKey(key: string | null): boolean {
+    return (
+        key !== null &&
+        (key === COMPUTER_SEAT || key.startsWith(`${COMPUTER_SEAT}:`))
+    );
 }
 
 /** The levels the computer plays at, lowest first: the contract's (ADR 036 decision 4). */
@@ -40,8 +57,9 @@ export const COMPUTER_DEFAULT: RoomComputerLevel = 2;
 
 /**
  * The computer's level in a game or a choice (the state's `game` or
- * `setup`, a past game's row): a board game's `computer`; null for a race,
- * a match of two players and no game at all.
+ * `setup`, a past game's row): a board game's or a domino game's
+ * `computer`; null for a race, a match of two players, a table of players
+ * and no game at all.
  */
 export function computerOf(
     game:
@@ -75,7 +93,7 @@ export function seatName(
     key: string | null,
     level: RoomComputerLevel | null,
 ): string {
-    if (key === COMPUTER_SEAT) {
+    if (isComputerKey(key)) {
         return computerName(t, level);
     }
 

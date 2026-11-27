@@ -15,13 +15,30 @@ import type { RoomRankedPlayer, RoomSpent, RoomState } from '@/rooms/contract';
  * final looks at the game's kind: a race's are the state's ranking — the
  * room's standing once it is over; a board game's are its match's own two
  * places, the winner first or both first in a draw, by the outcome; a
- * match stopped without a result opens none. A seat the computer played
- * has no player (ADR 036 decision 11): its row is keyed `COMPUTER_SEAT`
- * (`seatKey()`), nobody's own.
+ * domino game's are its own standing — the winning side's players first,
+ * each with the points the game gave it, the others placed by their side's
+ * balance (ADR 038 decision 50); a match or a domino game stopped without
+ * a result opens none. A seat the computer played has no player (ADR 036
+ * decision 11): its row is keyed `COMPUTER_SEAT` (`seatKey()`, with its
+ * seat in a domino game), nobody's own.
  */
 export function finalRows(
-    state: Pick<RoomState, 'ranking' | 'match'>,
+    state: Pick<RoomState, 'ranking' | 'match'> & {
+        domino?: RoomState['domino'];
+    },
 ): RoomRankedPlayer[] {
+    const domino = state.domino ?? null;
+
+    if (domino !== null && domino.phase === 'over') {
+        return domino.result.ending === 'stopped'
+            ? []
+            : domino.result.standing.map((row) => ({
+                  player_id: seatKey(row.player_id, row.seat),
+                  points: row.points,
+                  place: row.place,
+              }));
+    }
+
     if (state.match === null || state.match.phase !== 'over') {
         return state.ranking;
     }
@@ -35,11 +52,18 @@ export function finalRows(
 }
 
 /**
- * The taunts a game's final counts beside its rows: a match's, all counted
- * at its end (`result.spent`, ADR 034 decision 22); none for a race, whose
- * reveals told them round by round.
+ * The taunts a game's final counts beside its rows: a match's and a
+ * domino game's, all counted at its end (`result.spent`, ADR 034 decision
+ * 22, ADR 038 decision 32); none for a race, whose reveals told them round
+ * by round.
  */
-export function finalSpent(state: Pick<RoomState, 'match'>): RoomSpent[] {
+export function finalSpent(
+    state: Pick<RoomState, 'match'> & { domino?: RoomState['domino'] },
+): RoomSpent[] {
+    if (state.domino?.phase === 'over') {
+        return state.domino.result.spent;
+    }
+
     return state.match !== null && state.match.phase === 'over'
         ? state.match.result.spent
         : [];

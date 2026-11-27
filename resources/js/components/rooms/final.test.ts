@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vite-plus/test';
 import { RoomState } from '@/rooms/contract';
 import type { RoomRankedPlayer } from '@/rooms/contract';
 import { COMPUTER_SEAT } from './computer';
-import { finalRows, finalTier, finalTimeline, holdsFirst } from './final';
+import {
+    finalRows,
+    finalSpent,
+    finalTier,
+    finalTimeline,
+    holdsFirst,
+} from './final';
+import dominoOver from '../../../../tests/Fixtures/rooms/state.domino.over.json';
+import dominoStopped from '../../../../tests/Fixtures/rooms/state.domino.stopped.json';
 import over from '../../../../tests/Fixtures/rooms/state.match.over.json';
 import raceOver from '../../../../tests/Fixtures/rooms/state.over.json';
 import { standingGroups } from './standing-groups';
@@ -233,5 +241,86 @@ describe('finalRows', () => {
         expect(
             finalTimeline(standingGroups(rows, LABELS), 'phone').winnerAt,
         ).not.toBeNull();
+    });
+});
+
+describe('a domino game’s final (ADR 038 decision 50)', () => {
+    const AYGUN = '01kaqrx3mn4p5q6r7s8t9vwxyz';
+    const LEYLA = '01kaqrx5cd6e7f8g9h0jkmnpqr';
+    const RESAD = '01kaqrx2ab3c4d5e6f7g8h9jkm';
+    const TURAL = '01kaqrx4bc5d6e7f8g9h0jkmnp';
+
+    it('opens the game’s own standing: the winning pair first with what the game gave each, a dry win’s 6 less a taunt', () => {
+        const state = RoomState.parse(dominoOver);
+
+        expect(finalRows(state)).toEqual([
+            { player_id: AYGUN, points: 5, place: 1 },
+            { player_id: LEYLA, points: 6, place: 1 },
+            { player_id: RESAD, points: 0, place: 2 },
+            { player_id: TURAL, points: 0, place: 2 },
+        ]);
+        expect(finalSpent(state)).toEqual([{ player_id: AYGUN, count: 1 }]);
+
+        // The pair shares the first place: one group, opened at once.
+        const groups = standingGroups(finalRows(state), LABELS);
+
+        expect(groups.map((group) => group.place)).toEqual([1, 2]);
+        expect(finalTimeline(groups, 'screen').winnerAt).not.toBeNull();
+    });
+
+    it('opens the room’s ranking while a game is live, and the game’s own standing once it is over, on every fixture', () => {
+        const fixtures = import.meta.glob<unknown>(
+            '../../../../tests/Fixtures/rooms/state.domino.*.json',
+            { eager: true, import: 'default' },
+        );
+
+        expect(Object.keys(fixtures)).toHaveLength(14);
+
+        for (const [name, data] of Object.entries(fixtures)) {
+            const state = RoomState.parse(data);
+
+            if (state.domino?.phase === 'over') {
+                expect(finalRows(state), name).toHaveLength(
+                    state.domino.result.ending === 'stopped'
+                        ? 0
+                        : state.domino.result.standing.length,
+                );
+            } else {
+                expect(finalRows(state), name).toBe(state.ranking);
+                expect(finalSpent(state), name).toEqual([]);
+            }
+        }
+    });
+
+    it('opens nothing for a game the host stopped, and keys a computer’s row by its seat', () => {
+        expect(finalRows(RoomState.parse(dominoStopped))).toEqual([]);
+        expect(finalSpent(RoomState.parse(dominoStopped))).toEqual([]);
+
+        const state = RoomState.parse(dominoOver);
+        const game = state.domino;
+
+        if (game === null || game.phase !== 'over') {
+            throw new Error('over has a result');
+        }
+
+        const computer = {
+            ...state,
+            domino: {
+                ...game,
+                result: {
+                    ...game.result,
+                    standing: game.result.standing.map((row) =>
+                        row.seat === 2 ? { ...row, player_id: null } : row,
+                    ),
+                },
+            },
+        };
+
+        expect(finalRows(computer).map((row) => row.player_id)).toEqual([
+            AYGUN,
+            LEYLA,
+            RESAD,
+            `${COMPUTER_SEAT}:2`,
+        ]);
     });
 });

@@ -539,3 +539,41 @@ describe('the time bar', () => {
         });
     });
 });
+
+describe('a domino game’s moments of time', () => {
+    it('ends the countdown at the first hand, a turn at its flag, a pause at the next hand (ADR 038 decision 40)', () => {
+        const ends: Record<string, number | null> = {
+            chosen: null,
+            countdown: 1795534802000,
+            play: 1795534838000,
+            screen: 1795534838000,
+            watch: 1795534838000,
+            away: 1795534836000,
+            drew: 1795534863000,
+            opener: 1795534863000,
+            'sheet.blocked': 1795534833000,
+            'sheet.finished': 1795534837000,
+            'sheet.tied': 1795534836000,
+            'sheet.void': 1795534813000,
+            over: null,
+            stopped: null,
+        };
+
+        expect(
+            Object.keys(fixtures).filter((key) =>
+                key.includes('state.domino.'),
+            ),
+        ).toHaveLength(14);
+
+        for (const [name, moment] of Object.entries(ends)) {
+            const fixture = state(`domino.${name}`);
+
+            expect(phaseEnds(fixture), name).toBe(moment);
+            // A live game waits for every seat's play and the server's for a seat; before and after it, only a start.
+            expect(waitsForOthers(fixture), name).toBe(
+                fixture.game?.phase === 'live',
+            );
+            expect(waitsForSignal(fixture), name).toBe(true);
+        }
+    });
+});

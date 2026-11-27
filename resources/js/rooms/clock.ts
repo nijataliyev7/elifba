@@ -99,6 +99,20 @@ export function serverClock(local: LocalClock = localNow): ServerClock {
 export function phaseEnds(state: RoomState): number | null {
     const round = state.round;
 
+    // A live domino game has three moments of time (ADR 038 decision 40): the first hand's opening, the flag, the pause's end.
+    if (state.domino !== null) {
+        switch (state.domino.phase) {
+            case 'countdown':
+                return state.domino.starts_ms;
+            case 'play':
+                return state.domino.flag_ms;
+            case 'sheet':
+                return state.domino.sheet.until_ms;
+            default:
+                return null;
+        }
+    }
+
     if (round === null) {
         // A live match ends its phase at two moments only: the clock's start and the flag (ADR 034 decision 18).
         switch (state.match?.phase) {
@@ -151,6 +165,11 @@ export function waitsForOthers(state: RoomState, answers = true): boolean {
 
     // A live match waits for the other seat's act, which only a signal or a state tells (ADR 034 decision 18).
     if (state.match !== null && state.match.phase !== 'over') {
+        return true;
+    }
+
+    // So does a live domino game, for every seat's play and the server's for a seat (ADR 038 decision 40).
+    if (state.domino !== null && state.domino.phase !== 'over') {
         return true;
     }
 

@@ -15,11 +15,16 @@
         "move": "rooms/sounds/move.mp3",
         "capture": "rooms/sounds/capture.mp3",
         "crown": "rooms/sounds/crown.mp3",
+        "tile": "rooms/sounds/tile.mp3",
+        "draw": "rooms/sounds/draw.mp3",
+        "knock": "rooms/sounds/knock.mp3",
+        "hand": "rooms/sounds/hand.mp3",
         "tap": "rooms/sounds/tap.mp3",
         "undo": "rooms/sounds/undo.mp3",
         "sent": "rooms/sounds/sent.mp3",
         "right": "rooms/sounds/right.mp3",
         "wrong": "rooms/sounds/wrong.mp3",
-        "offer": "rooms/sounds/offer.mp3"
+        "offer": "rooms/sounds/offer.mp3",
+        "turn": "rooms/sounds/turn.mp3"
     }
 }

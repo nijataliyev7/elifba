@@ -85,8 +85,8 @@ it('sends a page only its own speaker\'s room sounds, as content URLs with the f
     $screen = $sounds->urls(RoomSpeaker::Screen);
     $phone = $sounds->urls(RoomSpeaker::Phone);
 
-    expect(array_keys($screen))->toBe(['countdown', 'go', 'study', 'question', 'clock', 'close', 'ranking', 'place', 'roll', 'fanfare', 'join', 'move', 'capture', 'crown'])
-        ->and(array_keys($phone))->toBe(['tap', 'undo', 'sent', 'right', 'wrong', 'offer'])
+    expect(array_keys($screen))->toBe(['countdown', 'go', 'study', 'question', 'clock', 'close', 'ranking', 'place', 'roll', 'fanfare', 'join', 'move', 'capture', 'crown', 'tile', 'draw', 'knock', 'hand'])
+        ->and(array_keys($phone))->toBe(['tap', 'undo', 'sent', 'right', 'wrong', 'offer', 'turn'])
         ->and($phone['tap'])->toBe(asset('content/rooms/sounds/tap.mp3').'?v='.$sounds->version);
 });
 

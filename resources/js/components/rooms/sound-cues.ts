@@ -1,4 +1,10 @@
-import { COMPUTER_SEAT } from '@/components/rooms/computer';
+import { isComputerKey } from '@/components/rooms/computer';
+import {
+    AFTER_STEPS_MS,
+    PLAY_LANDS_MS,
+    turnSteps,
+    yourPlay,
+} from '@/components/rooms/domino/turn';
 import {
     offerTo,
     seatOf,
@@ -10,6 +16,7 @@ import { momentKey, REVEAL_MS, roomMoment } from '@/components/rooms/motion';
 import { standingGroups } from '@/components/rooms/standing-groups';
 import { TAUNT_REACTION_MS } from '@/components/rooms/taunts';
 import type {
+    RoomDomino,
     RoomLastMove,
     RoomMatch,
     RoomMatchResult,
@@ -56,6 +63,19 @@ import type { RoomSoundName, RoomSpeaker } from '@/rooms/sound';
  * move as it lands — and its own clock, and one `buzz` as the turn begins;
  * a phone that carries the room already plays the cues, so it adds the
  * buzz alone. The seat that just moved and a watcher hear nothing new.
+ *
+ * A domino game (ADR 038 decisions 53 and 90) is the room's too, timed by
+ * its turn's one timeline (`turnSteps()`): its countdown ending at
+ * `starts_ms`, `go` as the first hand opens, then for each play the page
+ * saw arrive `tile` as the tile settles — a double's too —, `draw` at each
+ * step of a seat drawing and `knock` at each pass; the clock in the seat
+ * to move's last `CLOCK_MS`, ending at its flag and stopped by the play;
+ * `hand` as a hand's sheet rises after its steps; at its end the last
+ * play's `tile`, `close` after it and the final of its own places
+ * (`finalRows()`). The seat whose turn begins (`yourPlay()`) plays its own
+ * `turn` and one `buzz` as its turn begins — after the steps before it —
+ * with a screen too; a seat the server plays for while its player is away
+ * hears nothing of it. A seat's taps are silent here, as in a match.
  *
  * A taunt is said (ADR 029 as amended 2026-11-19, decisions 47 and 48) by
  * the devices that draw its reaction: the target's phone, for a taunt of
@@ -143,7 +163,9 @@ export const CALL_GAP_MS = 800;
  * with nobody in first place, a little after the last place opened.
  */
 export function readyCallAt(
-    state: Pick<RoomState, 'ranking' | 'match'>,
+    state: Pick<RoomState, 'ranking' | 'match'> & {
+        domino?: RoomState['domino'];
+    },
     pace: RoomSpeaker,
 ): number {
     const timeline = finalTimeline(standingGroups(finalRows(state), []), pace);
@@ -200,11 +222,12 @@ const now0 = (sound: RoomSoundName): RoomCue => ({ sound, at: 0 });
  * more than `MAX_NAMES` share it — and whether it is shared. It names only
  * a player (ADR 036 decision 15): the computer's seat is nobody, so a final
  * it wins keeps its fanfare and has no cheer at all — null here — and a
- * draw with it cheers the one player.
+ * draw with it cheers the one player. A domino pair that wins is two first
+ * names; a side the computer played is nobody.
  */
 function cheer(state: RoomState, at: number): RoomCue | null {
     const first = finalRows(state)
-        .filter((row) => row.place === 1 && row.player_id !== COMPUTER_SEAT)
+        .filter((row) => row.place === 1 && !isComputerKey(row.player_id))
         .map((row) => row.player_id);
 
     // The computer alone is first: nobody is there to praise.
@@ -304,6 +327,110 @@ function endCues(match: RoomMatch | null): RoomCue[] {
 }
 
 /**
+ * A domino turn's sounds, from its one timeline (ADR 038 decision 90):
+ * `tile` as a play settles, `draw` as a seat's draw is drawn, `knock` at a
+ * pass; a «Sən aç» is silent.
+ */
+function stepCues(domino: Pick<RoomDomino, 'last'>): RoomCue[] {
+    return turnSteps(domino).steps.flatMap((step): RoomCue[] => {
+        switch (step.kind) {
+            case 'play':
+                return [{ sound: 'tile', at: step.lands }];
+            case 'draw':
+                return [{ sound: 'draw', at: step.at }];
+            case 'pass':
+                return [{ sound: 'knock', at: step.at }];
+            default:
+                return [];
+        }
+    });
+}
+
+/**
+ * A domino game's end: the play that ended it as it settles, then `close`
+ * (ADR 038 decision 90) — neither the last hand's passes nor `hand`, since
+ * the final stands where the sheet would rise; a game the host stopped,
+ * `close` alone.
+ */
+function dominoEndCues(domino: RoomDomino | null): RoomCue[] {
+    if (domino === null || domino.phase !== 'over') {
+        return [];
+    }
+
+    if (domino.result.ending === 'target' && domino.last?.kind === 'play') {
+        return [
+            { sound: 'tile', at: PLAY_LANDS_MS },
+            { sound: 'close', at: PLAY_LANDS_MS + AFTER_STEPS_MS },
+        ];
+    }
+
+    return [now0('close')];
+}
+
+/**
+ * A live domino game's moments, as the room's speaker plays them: the
+ * countdown ending at `starts_ms`; `go` as the first hand opens and nothing
+ * as a later one does; each later ply's steps as they are drawn; in the
+ * seat to move's last `CLOCK_MS` the clock ending at its flag — a beat of
+ * the ply, stopped by the next play —; and a hand's steps, then `hand`, as
+ * its sheet rises.
+ */
+function hearDomino(
+    domino: RoomDomino,
+    now: number | null,
+    quiet: Heard,
+): Heard {
+    switch (domino.phase) {
+        case 'countdown':
+            return now === null
+                ? quiet
+                : {
+                      ...quiet,
+                      cues: [
+                          {
+                              sound: 'countdown',
+                              at: domino.starts_ms - now,
+                              ends: true,
+                          },
+                      ],
+                  };
+        case 'play': {
+            const left = now === null ? null : domino.flag_ms - now;
+            const clock =
+                left !== null && left > 0 && left <= CLOCK_MS + LEAD_MS;
+
+            return {
+                ...quiet,
+                began: domino.since_ms,
+                cues:
+                    domino.last === null
+                        ? domino.hand.number === 1
+                            ? [now0('go')]
+                            : []
+                        : stepCues(domino),
+                beats:
+                    clock && left !== null
+                        ? { clock: [{ sound: 'clock', at: left, ends: true }] }
+                        : {},
+            };
+        }
+        case 'sheet':
+            return {
+                ...quiet,
+                cues: [
+                    ...stepCues(domino),
+                    {
+                        sound: 'hand',
+                        at: turnSteps(domino).ends + AFTER_STEPS_MS,
+                    },
+                ],
+            };
+        default:
+            return quiet;
+    }
+}
+
+/**
  * A live match's moments, as the room's speaker plays them: the countdown
  * ending at `starts_ms`; `go` as the clock starts; each later ply's move
  * as it arrives; and, in the side to move's last `CLOCK_MS`, the clock
@@ -375,7 +502,11 @@ function hearScreen(
     if (state.game.phase === 'over') {
         return {
             ...quiet,
-            cues: [...endCues(state.match), ...finalCues(state, pace)],
+            cues: [
+                ...endCues(state.match),
+                ...dominoEndCues(state.domino),
+                ...finalCues(state, pace),
+            ],
             players,
         };
     }
@@ -383,6 +514,10 @@ function hearScreen(
     const round = state.round;
 
     if (round === null) {
+        if (state.domino !== null) {
+            return hearDomino(state.domino, now, quiet);
+        }
+
         return state.match === null
             ? quiet
             : hearMatch(state.match, now, quiet);
@@ -475,6 +610,24 @@ function hearPhone(
                     ? { offer: [now0('offer')] }
                     : {}),
             },
+        };
+    }
+
+    const domino = state?.game?.phase === 'live' ? state.domino : null;
+
+    if (domino !== null && domino.phase === 'play') {
+        // The seat whose turn began plays its own `turn` and feels it once, as the steps before it end (ADR 038 decision 90).
+        const begins = turnSteps(domino).ends;
+
+        return {
+            ...quiet,
+            began: domino.since_ms,
+            cues: yourPlay(domino, state?.me.player_id ?? null)
+                ? [
+                      { sound: 'turn', at: begins },
+                      { sound: 'buzz', at: begins },
+                  ]
+                : [],
         };
     }
 

@@ -135,9 +135,10 @@
                 "content/assets/rooms/sounds/undo.mp3",
                 "content/assets/rooms/sounds/sent.mp3",
                 "content/assets/rooms/sounds/wrong.mp3",
-                "content/assets/rooms/sounds/offer.mp3"
+                "content/assets/rooms/sounds/offer.mp3",
+                "content/assets/rooms/sounds/turn.mp3"
             ],
-            "title": "Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's capture and crown, and a phone's undo, «answer sent», «wrong» and a draw offer",
+            "title": "Sounds of the adults' room games synthesised by scripts/room-sounds/make.py: the screen's question, ranking, place and join, a board game's capture and crown, and a phone's undo, «answer sent», «wrong», a draw offer and a domino game's turn",
             "author": "Elifba contributors",
             "source": "https://github.com/nijataliyev7/elifba",
             "license": "MIT"
@@ -149,6 +150,38 @@
             "source": "https://freesound.org/people/JJTaynos/sounds/733932/",
             "license": "CC0-1.0",
             "changes": "Downloaded without a login as Freesound's preview of sound 733932 (733932_15803939-hq.mp3) and checked by SHA-256; one touch cut from 14.36 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 35 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
+        },
+        {
+            "files": ["content/assets/rooms/sounds/tile.mp3"],
+            "title": "A domino game's play: one domino put on a table («Domino pieces 1»)",
+            "author": "Macif",
+            "source": "https://freesound.org/people/Macif/sounds/329099/",
+            "license": "CC0-1.0",
+            "changes": "Downloaded without a login as Freesound's preview of sound 329099 (329099_3035766-hq.mp3) and checked by SHA-256; 170 ms cut from 16.71 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 35 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
+        },
+        {
+            "files": ["content/assets/rooms/sounds/draw.mp3"],
+            "title": "A domino game's draw: a tile taken up from the table («domino_draw»)",
+            "author": "UnycodeAdmin",
+            "source": "https://freesound.org/people/UnycodeAdmin/sounds/705348/",
+            "license": "CC0-1.0",
+            "changes": "Downloaded without a login as Freesound's preview of sound 705348 (705348_15297425-hq.mp3) and checked by SHA-256; the 0.45 s from 0.30 s cut, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 80 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
+        },
+        {
+            "files": ["content/assets/rooms/sounds/knock.mp3"],
+            "title": "A domino game's pass: two knuckle knocks on a wooden table («knocking.wav»)",
+            "author": "Yoshicakes77",
+            "source": "https://freesound.org/people/Yoshicakes77/sounds/645927/",
+            "license": "CC0-1.0",
+            "changes": "Downloaded without a login as Freesound's preview of sound 645927 (645927_12983992-hq.mp3) and checked by SHA-256; 300 ms cut from 0.70 s, below 70 Hz and above 9 kHz removed, faded in over 1 ms and out over 50 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
+        },
+        {
+            "files": ["content/assets/rooms/sounds/hand.mp3"],
+            "title": "A domino game's hand ending: dominoes shuffled about on a table («Shuffling Dominos»)",
+            "author": "RobertWulfman",
+            "source": "https://freesound.org/people/RobertWulfman/sounds/220839/",
+            "license": "CC0-1.0",
+            "changes": "Downloaded without a login as Freesound's preview of sound 220839 (220839_3908792-hq.mp3) and checked by SHA-256; 1.2 s cut from 1.77 s, below 70 Hz and above 9 kHz removed, faded in over 50 ms and out over 350 ms, levelled and encoded as 96 kb/s MP3 by scripts/room-sounds/make.py"
         },
         {
             "files": ["content/rooms/words.json"],

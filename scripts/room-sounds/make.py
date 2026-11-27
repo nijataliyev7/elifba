@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 The sounds of a room game (docs/architecture.md §12 "Room content", ADR
-025 "Sound", ADR 028; a board game's four, ADR 034 decision 31): the
-screen's — the room's speaker — and a phone's quiet cues of its own. Each
-file is made here from recordings of the VS Chamber Orchestra: Community
-Edition (CC0-1.0, downloaded from a pinned commit and checked by
-SHA-256), from a Freesound recording (CC0-1.0, its preview pinned by name
-and SHA-256) and from our own synthesis (MIT); ffmpeg levels the set to one
+025 "Sound", ADR 028; a board game's four, ADR 034 decision 31; a domino
+game's five, ADR 038 decision 90): the screen's — the room's speaker — and
+a phone's quiet cues of its own. Each file is made here from recordings of
+the VS Chamber Orchestra: Community Edition (CC0-1.0, downloaded from a
+pinned commit and checked by SHA-256), from Freesound recordings (CC0-1.0,
+each preview pinned by name and SHA-256) and from our own synthesis (MIT); ffmpeg levels the set to one
 loudness and writes the mono MP3 files a room page plays. Plain Python 3
 (standard library only) and ffmpeg.
 
@@ -103,6 +103,14 @@ FREESOUND_URL = "https://cdn.freesound.org/previews/{folder}/{file}"
 FREESOUND = {
     # «Chess Pieces Move (Far)» by JJTaynos, https://freesound.org/people/JJTaynos/sounds/733932/, CC0-1.0
     "chess-move-far": ("733932_15803939-hq.mp3", "fe7c7d8db858edea34360ae2a79b70d6e4610e4598e15d52ad42f00208b08663"),
+    # «Domino pieces 1» by Macif, https://freesound.org/people/Macif/sounds/329099/, CC0-1.0
+    "domino-pieces-1": ("329099_3035766-hq.mp3", "3dfdeabd0ef01cc12d3af6f10142c5e07ce9e4480e0c075d14db24bcc57375cb"),
+    # «knocking.wav» by Yoshicakes77, https://freesound.org/people/Yoshicakes77/sounds/645927/, CC0-1.0
+    "knock-table": ("645927_12983992-hq.mp3", "dfa1c44a727a5dd711b060f22bb79a462748554beed6b884587fcf7421bc136b"),
+    # «domino_draw.mp3» by UnycodeAdmin, https://freesound.org/people/UnycodeAdmin/sounds/705348/, CC0-1.0
+    "domino-draw": ("705348_15297425-hq.mp3", "1af8a11e4211e2321b201f19e5d04befe191cf774ef387145bb414360d488fcb"),
+    # «Shuffling Dominos» by RobertWulfman, https://freesound.org/people/RobertWulfman/sounds/220839/, CC0-1.0
+    "shuffle-wulfman": ("220839_3908792-hq.mp3", "854fb251baceffb38a794009fb216a28566f6207d44e6c3fe7ca2627f82d2314"),
 }
 
 FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
@@ -624,7 +632,68 @@ def crown():
     return fade_out(out[: seconds(0.36)], 0.08)
 
 
+# ── the screen: a domino game's moments (ADR 038 decision 90) ───────────
+# As the owner chose them on Y3's variant page (2026-11-26): each recipe is
+# the page's own text, so each file is the auditioned one byte for byte.
+
+
+def cut(name, start, length, low=70.0, high=9000.0, fade=0.035):
+    """`length` s of the pinned recording `name` from `start` s: below `low` and above `high` Hz removed (a
+    fourth-order Butterworth each, settled over the half second before), a 1 ms fade in, a `fade` s fade out,
+    peak-normalised."""
+    x = decode(fetch(name))
+    first = seconds(start)
+    lead = min(first, seconds(0.5))
+    part = butterworth(x[first - lead: first + seconds(length)], low, "high")[lead:]
+    part = butterworth(part, high, "low")
+    return normalized(fade_out(fade_in(part, 0.001), fade))
+
+
+def twice(one, gap, second=0.8):
+    """The same touch twice, `gap` s apart, the second at `second` of the first."""
+    out = silence(gap + len(one) / RATE)
+    place(out, 0.0, one, 1.0)
+    place(out, gap, one, second)
+    return out
+
+
+def tile(r, length=0.12, centre=1900.0, body=0.35):
+    """A bone or resin domino set down on a table (our synthesis): sixteen modes 600–4200 Hz, loudest near
+    `centre`, a 0.8 ms contact, the table under it at 170 Hz; nothing rings."""
+    return board(r, 600.0, 4200.0, 16, length, contact=0.0008, decay_low=0.016, decay_high=0.004, centre=centre, width=0.6, body=body, body_hz=170.0, lp=6000.0)
+
+
+def tile_cue():
+    """A play the page saw arrive, a double's too («qoy» a, «qoşa» eyni): Macif «Domino pieces 1»
+    (Freesound 329099, CC0-1.0), one domino put on a table, 16.71 s in."""
+    return cut("domino-pieces-1", 16.707, 0.17)
+
+
+def draw():
+    """A seat drew from the boneyard («bazar» a): UnycodeAdmin «domino_draw» (Freesound 705348, CC0-1.0),
+    a tile taken up from the table, 0.30–0.75 s."""
+    return cut("domino-draw", 0.30, 0.45, fade=0.08)
+
+
+def knock():
+    """A seat passed («pas» a): Yoshicakes77 «knocking» (Freesound 645927, CC0-1.0), two knuckle knocks on a
+    wooden table, 0.70 s in, as they fell."""
+    return cut("knock-table", 0.695, 0.30, fade=0.05)
+
+
+def hand():
+    """A hand ended and its sheet rises («əl sonu» b): RobertWulfman «Shuffling Dominos» (Freesound 220839,
+    CC0-1.0), the tiles gathered and mixed, 1.2 s from 1.77 s."""
+    return fade_in(cut("shuffle-wulfman", 1.77, 1.2, fade=0.35), 0.05)
+
+
 # ── a phone's quiet cues ─────────────────────────────────────────────────
+
+
+def turn():
+    """The viewer's own turn begins in a domino game («növbə» s2, our synthesis): a fingertip taps a tile
+    twice — tık-tık, small and high."""
+    return twice(tile(rng("domino-turn"), 0.08, centre=2800.0, body=0.0), 0.11, 0.7)
 
 
 def tap():
@@ -744,12 +813,17 @@ CUES = {
     "move": move,
     "capture": capture,
     "crown": crown,
+    "tile": tile_cue,
+    "draw": draw,
+    "knock": knock,
+    "hand": hand,
     "tap": tap,
     "undo": undo,
     "sent": sent,
     "right": right,
     "wrong": wrong,
     "offer": offer,
+    "turn": turn,
 }
 
 
