@@ -63,12 +63,10 @@ describe('the line on the table', () => {
             }),
             width: 351,
             height: 288,
-            ends: [],
             last: '1-0',
             pending: null,
             hidden: null,
             targets: [],
-            badgePx: 24,
             label: 'Domino masası',
         }),
     );
@@ -91,5 +89,11 @@ describe('the line on the table', () => {
 
         expect(markup.split('url(#dm-pip)').length - 1).toBe(pips);
         expect(markup.split('data-tile=').length - 1).toBe(played.length);
+    });
+
+    it('draws no badge by the ends: the pips say them (decision 101)', () => {
+        expect(markup).not.toContain('<text');
+        expect(markup).not.toContain('var(--card)');
+        expect(markup).toContain('aria-label="Domino masası"');
     });
 });

@@ -313,8 +313,8 @@ export function layoutChain(
 }
 
 /**
- * The centre of a placed tile's `near` or `far` half, in units: where a
- * page puts an end's badge, and where two tiles that meet in the line touch.
+ * The centre of a placed tile's `near` or `far` half, in units: where
+ * two tiles that meet in the line touch.
  */
 export function halfCentre(
     item: { x: number; y: number; angle: number },

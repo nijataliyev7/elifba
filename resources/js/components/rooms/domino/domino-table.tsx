@@ -2,7 +2,6 @@ import { Bot, Flag, Timer } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import {
-    halfCentre,
     layoutChain,
     PHONE_CHAIN,
     SCREEN_CHAIN,
@@ -184,8 +183,8 @@ function chainBox(
  * The table (docs/frontend.md rule 15 "Domino" → "The table", ADR 038
  * decisions 45, 47, 52 and 86–89), one part on the phone and the screen
  * (`big`): the felt; the line as a snake from its top left
- * (`layoutChain()`), the last tile framed, the two ends' numbers as
- * badges and — while the viewer's lifted tile fits both — a dashed target
+ * (`layoutChain()`), the last tile framed, no badge at its ends
+ * (decision 101) and — while the viewer's lifted tile fits both — a dashed target
  * at each end, a 44px button at least; the seats round it as chips, the
  * viewer's own at the bottom; and the boneyard where the table has one.
  *
@@ -342,12 +341,10 @@ export function DominoTable({
                         layout={layout}
                         width={area.width}
                         height={area.height}
-                        ends={domino.ends}
                         last={last}
                         pending={pending?.[0] ?? null}
                         hidden={hidden}
                         targets={targets}
-                        badgePx={big ? 40 : 20}
                         label={
                             domino.line.length === 0
                                 ? t('rooms.domino.line_empty')
@@ -500,32 +497,26 @@ function TileFrame({ pending }: { pending: boolean }) {
     );
 }
 
-/** The line as one SVG: the tiles with their shadow, the last one framed, the lit targets and the two ends' badges. */
+/** The line as one SVG: the tiles with their shadow, the last one framed and the lit targets; the ends carry no badge (ADR 038 decision 101). */
 export function ChainSvg({
     layout,
     width,
     height,
-    ends,
     last,
     pending,
     hidden,
     targets,
-    badgePx,
     label,
 }: {
     layout: ChainLayout;
     width: number;
     height: number;
-    ends: RoomDomino['ends'];
     last: string | null;
     pending: string | null;
     hidden: string | null;
     targets: RoomDominoEnd[];
-    badgePx: number;
     label: string;
 }) {
-    const r = Math.max(0.36, badgePx / 2 / layout.unit);
-
     return (
         <svg
             viewBox={layout.viewBox.join(' ')}
@@ -570,9 +561,6 @@ export function ChainSvg({
                 ))}
             </g>
             {layout.targets.map((target) => {
-                const number =
-                    ends.find((end) => end.end === target.end)?.number ?? null;
-                const [bx, by] = halfCentre(target, 'near');
                 const lit = targets.includes(target.end);
 
                 return (
@@ -595,33 +583,6 @@ export function ChainSvg({
                                     strokeWidth="0.05"
                                     strokeDasharray="0.14 0.09"
                                 />
-                            </g>
-                        )}
-                        {number !== null && (
-                            <g aria-hidden>
-                                <circle
-                                    cx={bx}
-                                    cy={by}
-                                    r={r}
-                                    style={{
-                                        fill: 'var(--card)',
-                                        stroke: lit
-                                            ? 'var(--primary)'
-                                            : 'var(--border)',
-                                    }}
-                                    strokeWidth={r * (lit ? 0.2 : 0.12)}
-                                />
-                                <text
-                                    x={bx}
-                                    y={by}
-                                    fontSize={r * 1.25}
-                                    fontWeight="700"
-                                    textAnchor="middle"
-                                    dominantBaseline="central"
-                                    style={{ fill: 'var(--foreground)' }}
-                                >
-                                    {number}
-                                </text>
                             </g>
                         )}
                     </g>
